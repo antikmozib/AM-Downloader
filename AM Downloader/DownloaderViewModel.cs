@@ -1,13 +1,17 @@
 ﻿using System.Collections.ObjectModel;
 using System.IO;
+using System.Net.Http;
 using System.Windows;
-using static AM_Downloader.DownloaderModel;
+using static AM_Downloader.DownloaderModels;
 
 namespace AM_Downloader
 {
     class DownloaderViewModel
     {
+        public HttpClient httpClient = new HttpClient();
         public ObservableCollection<DownloaderItemModel> DownloadItemsList;
+
+        public RelayCommand AddCommand { get; set; }
         public RelayCommand StartCommand { get; set; }
         public RelayCommand RemoveCommand { private get; set; }
         public RelayCommand CancelCommand { private get; set; }
@@ -35,7 +39,7 @@ namespace AM_Downloader
             if (item == null) return;
 
             DownloaderItemModel downloaderItem = item as DownloaderItemModel;
-            downloaderItem.Pause();
+            downloaderItem.PauseAsync();
         }
 
         void Cancel(object item)

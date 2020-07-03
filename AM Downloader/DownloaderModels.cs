@@ -7,10 +7,11 @@ using System.Net.Http;
 using System.Linq;
 using System.Net.Http.Headers;
 using System.Collections.ObjectModel;
+using System.Security.Cryptography;
 
 namespace AM_Downloader
 {
-    class DownloaderModel
+    class DownloaderModels
     {
         static readonly string downloadFolderPath = @"c:\users\antik\downloads\";
 
@@ -20,47 +21,42 @@ namespace AM_Downloader
             private CancellationTokenSource ctsPause, ctsCancel;
             private CancellationToken ctPause, ctCancel;
             private Task downloadItemTask;
+            private TaskCompletionSource<DownloadStatus> downloadTaskCompletionSource;
 
             public event PropertyChangedEventHandler PropertyChanged;
-            public enum DownloadStatusType
+            public enum DownloadStatus
             {
-                ReadyToDownload, Queued, Downloading, Paused, Cancelled, Completed
+                Ready, Queued, Downloading, Paused, Completed, Error, Cancelling
             }
 
             #region Properties
             public string ShortFilename { get; private set; }
             public string Url { get; private set; }
             public string LongFilename { get; private set; }
-            public DownloadStatusType Status { get; private set; }
+            public DownloadStatus Status { get; private set; }
             public int Progress { get; private set; }
             public long BytesDownloadedSoFar { get; private set; }
             public long TotalBytesToDownload { get; private set; }
             public bool SupportsResume { get; private set; }
             #endregion
 
-            public DownloaderItemModel(ref HttpClient httpClient, String url, bool? addToQueue = true, bool start = true)
+            public DownloaderItemModel(ref HttpClient httpClient, AddDownloaderItemModel addDownloadItem)
             {
                 _httpClient = httpClient;
 
-                string fileName = Path.GetFileName(url);
-                string LongFilename = downloadFolderPath + "\\" + fileName;
-
-                // Get a unique filename
-                if (File.Exists(LongFilename))
+                // The file we're trying to download must NOT exist...
+                if (File.Exists(addDownloadItem.Destination))
                 {
-                    int i = 0;
-                    while (File.Exists(LongFilename))
-                    {
-                        LongFilename = downloadFolderPath + "\\"
-                            + fileName.Substring(0, fileName.Length - Path.GetExtension(fileName).Length)
-                            + " (" + ++i + ")" + Path.GetExtension(fileName);
-                    };
+                    // throw new Exception();
                 }
 
+                string fileName = Path.GetFileName(addDownloadItem.Url);
+                string LongFilename = addDownloadItem.Destination;
+
                 this.ShortFilename = Path.GetFileName(LongFilename);
-                this.Url = url;
+                this.Url = addDownloadItem.Url;
                 this.LongFilename = LongFilename;
-                this.Status = DownloadStatusType.Queued;
+                this.Status = DownloadStatus.Ready;
                 this.Progress = 0;
                 this.BytesDownloadedSoFar = 0;
                 this.TotalBytesToDownload = 0;
@@ -76,20 +72,18 @@ namespace AM_Downloader
                     }
                 });
 
-                if (start)
+                if (addDownloadItem.Start)
                     Start();
             }
 
-            // HELLO WORLDs
-
-            private async Task DownloadItemAsync(IProgress<int> progressReporter)
+            private async Task DownloadAsync(IProgress<int> progressReporter)
             {
-                // We need to add range to our request
                 _httpClient.DefaultRequestHeaders.Clear();
                 HttpRequestMessage request;
 
-                if (this.Status == DownloadStatusType.Paused)
+                if (this.Status == DownloadStatus.Paused)
                 {
+                    // resume download by requesting data from an advanced point
                     request = new HttpRequestMessage
                     {
                         RequestUri = new Uri(this.Url),
@@ -102,7 +96,7 @@ namespace AM_Downloader
                     request = new HttpRequestMessage { RequestUri = new Uri(this.Url), Method = HttpMethod.Get };
                 }
 
-                this.Status = DownloadStatusType.Downloading;
+                this.Status = DownloadStatus.Downloading;
                 RaisePropertyChanged("Status");
 
                 HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
@@ -124,6 +118,19 @@ namespace AM_Downloader
                                 {
                                     response.Dispose();
                                     request.Dispose();
+                                    binaryWriter.Close();
+                                    destinationStream.Close();
+
+                                    if (ctPause.IsCancellationRequested)
+                                    {
+                                        downloadTaskCompletionSource.SetResult(DownloadStatus.Paused);
+                                    }
+                                    else
+                                    {
+                                        /*await Task.Delay(4000);*/
+                                        downloadTaskCompletionSource.SetResult(DownloadStatus.Ready);
+                                    }
+
                                     return;
                                 }
 
@@ -155,22 +162,37 @@ namespace AM_Downloader
                             }
                         }
 
+                        // Force progress to 100 if download completed successfully
                         this.Progress = 100;
                         RaisePropertyChanged("Progress");
-                        this.Status = DownloadStatusType.Completed;
+
+                        this.Status = DownloadStatus.Completed;
                         RaisePropertyChanged("Status");
 
                         response.Dispose();
                         request.Dispose();
+                        downloadTaskCompletionSource.SetResult(DownloadStatus.Completed);
                     }
                 }
             }
 
-            public void Start()
+            public void Start(bool redownload = true)
             {
-                if (File.Exists(this.LongFilename) && this.Status == DownloadStatusType.Completed)
+                // already downloading...
+                if (this.Status == DownloadStatus.Downloading)
+                    return;
+
+                // if already downloaded, delete the file and restart
+                if (File.Exists(this.LongFilename) && this.Status == DownloadStatus.Completed && redownload)
                 {
-                    File.Delete(this.LongFilename);
+                    try
+                    {
+                        File.Delete(this.LongFilename);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw ex;
+                    }
                 }
 
                 ctsCancel = new CancellationTokenSource();
@@ -178,79 +200,117 @@ namespace AM_Downloader
                 ctsPause = new CancellationTokenSource();
                 ctPause = ctsPause.Token;
 
-                downloadItemTask = new Task(async () => await DownloadItemAsync(new Progress<int>((int value) =>
+                Progress<int> progress = new Progress<int>((int value) =>
                 {
                     this.Progress = value;
                     RaisePropertyChanged("Progress");
-                })));
+                });
 
+                downloadTaskCompletionSource = new TaskCompletionSource<DownloadStatus>();
+
+                downloadItemTask = new Task(async () => await DownloadAsync(progress));
                 downloadItemTask.Start();
             }
 
-            public void Pause()
+            public async Task PauseAsync()
             {
-                if (this.Status == DownloadStatusType.Downloading)
-                {
-                    ctsPause.Cancel();
-                    downloadItemTask.GetAwaiter().GetResult();
+                if (this.Status != DownloadStatus.Downloading)
+                    return;
 
-                    this.Status = DownloadStatusType.Paused;
-                    RaisePropertyChanged("Status");
-                }
+                ctsPause.Cancel();
+                await downloadTaskCompletionSource.Task;
+
+                this.Status = downloadTaskCompletionSource.Task.Result;
+                RaisePropertyChanged("Status");
             }
 
             public async Task CancelAsync()
             {
-                if (this.Status == DownloadStatusType.Downloading)
-                {
-                    ctsCancel.Cancel();
-                    downloadItemTask.GetAwaiter().GetResult();
-                    await Task.Delay(1000); // otherwise file deletion fails
-                }
+                if ((this.Status != DownloadStatus.Downloading && 
+                    this.Status != DownloadStatus.Paused) || 
+                    this.Status == DownloadStatus.Cancelling)
+                    return;
 
-                File.Delete(this.LongFilename);
-
-                this.Progress = 0;
-                RaisePropertyChanged("Progress");
-
-                this.BytesDownloadedSoFar = 0;
-                RaisePropertyChanged("BytesDownloadedSoFar");
-
-                this.Status = DownloadStatusType.Cancelled;
+                this.Status = DownloadStatus.Cancelling;
                 RaisePropertyChanged("Status");
+
+                ctsCancel.Cancel();
+                await downloadTaskCompletionSource.Task;
+
+                try
+                {
+                    File.Delete(this.LongFilename);
+
+                    this.Progress = 0;
+                    RaisePropertyChanged("Progress");
+                    this.BytesDownloadedSoFar = 0;
+                    RaisePropertyChanged("BytesDownloadedSoFar");
+
+                    this.Status = downloadTaskCompletionSource.Task.Result;
+                }
+                catch (Exception ex)
+                {
+                    this.Status = DownloadStatus.Error;
+                }
+                finally
+                {
+                    RaisePropertyChanged("Status");
+                }
             }
 
             protected void RaisePropertyChanged(string prop)
             {
-                PropertyChangedEventHandler handler = PropertyChanged;
-                if (handler != null)
-                {
-                    handler(this, new PropertyChangedEventArgs(prop));
-                }
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
             }
         }
 
-        public class AddDownloadItemModel
+        private static string GetValidFilename(string defaultFilename)
         {
-            private ObservableCollection<DownloaderItemModel> _downloadItems;
+            string _path = Path.GetDirectoryName(defaultFilename);
+            string _filename = Path.GetFileName(defaultFilename);
+            string result = _path + Path.DirectorySeparatorChar + _filename;
+
+            int i = 0;
+            while (File.Exists(result))
+            {
+                result = _path + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(_filename) + " (" + ++i + ")" + Path.GetExtension(_filename);
+            };
+
+            return result;
+        }
+
+        public class AddDownloaderItemModel
+        {
+            private ObservableCollection<DownloaderItemModel> _downloadList;
             private HttpClient _httpClient;
 
-            public string Url { private get; set; }
-            public bool Start { private get; set; }
-            public bool AddToQueue { private get; set; }
+            public string Url { get; set; }
+            public string Destination { get; set; }
+            public bool AddToQueue { get; set; }
+            public bool Start { get; set; }
 
-            public RelayCommand AddCommand { private get; set; }
+            public RelayCommand AddCommand { get; set; }
 
-            public AddDownloadItemModel(ref HttpClient httpClient, ref ObservableCollection<DownloaderItemModel> downloadItems)
+            public AddDownloaderItemModel(ref HttpClient httpClient, ref ObservableCollection<DownloaderItemModel> downloadList)
             {
-                _downloadItems = downloadItems;
+                _downloadList = downloadList;
                 _httpClient = httpClient;
-                AddCommand = new RelayCommand(add);
+                AddCommand = new RelayCommand(Add);
             }
 
-            private void add(object item)
+            public void Add(object item)
             {
-                _downloadItems.Add(new DownloaderItemModel(ref _httpClient, this.Url, null, Start));
+                if (this.Url == null)
+                {
+                    return;
+                }
+
+                if (this.Destination == null)
+                {
+                    Destination = GetValidFilename(@"c:\users\antik\desktop\" + Path.GetFileName(this.Url));
+                }
+
+                _downloadList.Add(new DownloaderItemModel(ref _httpClient, this));
             }
         }
     }

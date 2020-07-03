@@ -5,22 +5,59 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AM_Downloader"
         mc:Ignorable="d"
-        Title="Add URL" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterOwner" ShowInTaskbar="False" ResizeMode="CanResizeWithGrip">
-    <Grid Margin="10">
+        Title="Add URL" 
+        SizeToContent="WidthAndHeight" 
+        WindowStartupLocation="CenterOwner" 
+        ShowInTaskbar="False" 
+        ResizeMode="CanResizeWithGrip">
+    <Grid 
+        Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="10"/>
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
-        <Label Content="Enter URL or pattern to add. You can enter multiple URLs on separate lines."/>
-        <TextBox x:Name="txtUrl" Grid.Row="1" Padding="5" Text="{Binding Path = URL}" Width="auto" TabIndex="0" ScrollViewer.CanContentScroll="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" AcceptsReturn="True"/>
-        <WrapPanel Grid.Row="3" HorizontalAlignment="Right">
-            <CheckBox x:Name="cbAddToQueue" VerticalAlignment="Center" Content="Add to queue" Margin="0 0 10 0" IsEnabled="False" IsChecked="{Binding Path = AddToQueue, Mode=TwoWay}"/>
-            <CheckBox x:Name="cbStartDownloadingImmediately" VerticalAlignment="Center" Content="Start downloading immediately" Margin="0 0 10 0" IsChecked="{Binding Path = Start, Mode=TwoWay}"/>
-            <Button Content="Add" MinWidth="100" Command="{Binding Add}"
-                    Click="Button_Click" IsDefault="True" TabIndex="1"/>
-            <Button Content="Cancel" MinWidth="100" IsCancel="True" TabIndex="2"/>
+        <Label 
+            Content="Enter URL or pattern to add. You can enter multiple URLs on separate lines."/>
+        <TextBox 
+            x:Name="txtUrl" 
+            Grid.Row="1" 
+            Padding="5" 
+            Text="{Binding Path=Url}" 
+            Width="auto" 
+            TabIndex="0" 
+            ScrollViewer.CanContentScroll="True" 
+            HorizontalScrollBarVisibility="Auto" 
+            VerticalScrollBarVisibility="Auto" 
+            AcceptsReturn="True"/>
+        <WrapPanel 
+            Grid.Row="3" 
+            HorizontalAlignment="Right">
+            <CheckBox 
+                x:Name="cbAddToQueue" 
+                VerticalAlignment="Center" 
+                Content="Add to queue" 
+                Margin="0 0 10 0" 
+                IsEnabled="False" 
+                IsChecked="{Binding Path=AddToQueue}"/>
+            <CheckBox 
+                x:Name="cbStartDownloadingImmediately" 
+                VerticalAlignment="Center" 
+                Content="Start downloading immediately" 
+                Margin="0 0 10 0" 
+                IsChecked="{Binding Path=Start}"/>
+            <Button 
+                Content="Add" 
+                MinWidth="100" 
+                Command="{Binding AddCommand}"
+                IsDefault="True" 
+                TabIndex="1" Click="Button_Click"/>
+            <Button 
+                Content="Cancel" 
+                MinWidth="100" 
+                IsCancel="True" 
+                TabIndex="2"/>
         </WrapPanel>
     </Grid>
 </Window>

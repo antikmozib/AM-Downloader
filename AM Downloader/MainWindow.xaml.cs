@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System.IO;
+using System.Net.Http;
 using System.Windows;
 
 namespace AM_Downloader
@@ -9,26 +10,31 @@ namespace AM_Downloader
     public partial class MainWindow : Window
     {
         private DownloaderViewModel primaryViewModel = new DownloaderViewModel();
-        private DownloaderModel.AddDownloadItemModel addItemViewModel;
-        private HttpClient httpClient = new HttpClient();
 
         public MainWindow()
         {
             InitializeComponent();
 
+            string test = @"https://download-installer.cdn.mozilla.net/pub/firefox/releases/77.0.1/win64/en-US/Firefox%20Setup%2077.0.1.exe";
+
             DataContext = primaryViewModel;
             lvDownload.ItemsSource = primaryViewModel.DownloadItemsList;
-            primaryViewModel.DownloadItemsList.Add(new DownloaderModel.DownloaderItemModel(ref httpClient, @"https://download-installer.cdn.mozilla.net/pub/firefox/releases/77.0.1/win64/en-US/Firefox%20Setup%2077.0.1.exe", null, false));
+
+            /*DownloaderModel.AddDownloadItemModel addDownloadItem = new DownloaderModel.AddDownloadItemModel(
+                url: test,
+                destination: @"c:\users\antik\desktop\" + Path.GetFileName(test)
+                );
+
+            primaryViewModel.DownloadItemsList.Add(new DownloaderModel.DownloaderItemModel(ref DownloaderViewModel.httpClient, addDownloadItem));*/
         }
 
         private void btnAdd_Click(object sender, RoutedEventArgs e)
         {
             AddDownloadWindow addDownloadWindow = new AddDownloadWindow();
-            addItemViewModel = new DownloaderModel.AddDownloadItemModel(ref httpClient, ref primaryViewModel.DownloadItemsList);
-
-            addDownloadWindow.DataContext = addItemViewModel;
+            DownloaderModels.AddDownloaderItemModel addItemModel = new DownloaderModels.AddDownloaderItemModel(ref primaryViewModel.httpClient, ref primaryViewModel.DownloadItemsList);
+            addItemModel.Url = @"https://download-installer.cdn.mozilla.net/pub/firefox/releases/77.0.1/win64/en-US/Firefox%20Setup%2077.0.1.exe";
+            addDownloadWindow.DataContext = addItemModel;         
             addDownloadWindow.Owner = this;
-
             addDownloadWindow.ShowDialog();
         }
     }
