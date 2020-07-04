@@ -15,8 +15,6 @@ namespace AM_Downloader
         {
             InitializeComponent();
 
-            string test = @"https://download-installer.cdn.mozilla.net/pub/firefox/releases/77.0.1/win64/en-US/Firefox%20Setup%2077.0.1.exe";
-
             DataContext = primaryViewModel;
             lvDownload.ItemsSource = primaryViewModel.DownloadItemsList;
 

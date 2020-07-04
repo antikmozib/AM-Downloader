@@ -1,7 +1,10 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Net.Http;
+using System.Threading.Tasks;
 using System.Windows;
+using System.Collections.Generic;
 using static AM_Downloader.DownloaderModels;
 
 namespace AM_Downloader
@@ -17,6 +20,12 @@ namespace AM_Downloader
         public RelayCommand CancelCommand { private get; set; }
         public RelayCommand PauseCommand { get; private set; }
 
+        public string TotalSize(object item)
+        {
+            DownloaderItemModel dItem = item as DownloaderItemModel;
+            return (dItem.TotalBytesToDownload / (1024 * 1024)).ToString() + " MB";
+        }
+
         public DownloaderViewModel()
         {
             DownloadItemsList = new ObservableCollection<DownloaderItemModel>();
@@ -26,57 +35,65 @@ namespace AM_Downloader
             PauseCommand = new RelayCommand(Pause);
         }
 
-        void Start(object item)
+        async void Start(object item)
         {
             if (item == null) return;
 
             var downloaderItem = item as DownloaderItemModel;
-            downloaderItem.Start();
+            await downloaderItem.StartAsync();
         }
 
-        void Pause(object item)
+        async void Pause(object item)
         {
             if (item == null) return;
 
             DownloaderItemModel downloaderItem = item as DownloaderItemModel;
-            downloaderItem.PauseAsync();
+                await downloaderItem.PauseAsync();
         }
 
-        void Cancel(object item)
+        async void Cancel(object item)
         {
             if (item == null) return;
 
             var downloaderItem = item as DownloaderItemModel;
-            _ = downloaderItem.CancelAsync();
+            await downloaderItem.CancelAsync();
         }
 
-        void Remove(object item)
+        async void Remove(object item)
         {
             if (item == null) return;
-
-            bool deleteFile = false;
             var downloaderItem = item as DownloaderItemModel;
 
-            if (File.Exists(downloaderItem.LongFilename))
+            if (downloaderItem.Status != DownloaderItemModel.DownloadStatus.Completed)
             {
-                MessageBoxResult result = MessageBox.Show("Delete file \"" + Path.GetFileName(downloaderItem.LongFilename) + "\" from disk?", "Remove", System.Windows.MessageBoxButton.YesNoCancel);
+                if (downloaderItem.Status == DownloaderItemModel.DownloadStatus.Downloading)
+                {
+                    MessageBoxResult result = MessageBox.Show("Cancel downloading \"" + downloaderItem.Filename + "\" ?", "Cancel Download", System.Windows.MessageBoxButton.YesNo);
 
-                if (result == System.Windows.MessageBoxResult.Yes)
-                {
-                    deleteFile = true;
+                    if (result == MessageBoxResult.No)
+                    {
+                        return;
+                    }
+                    else
+                    {
+                        await downloaderItem.CancelAsync();
+                    }
                 }
-                else if (result == MessageBoxResult.Cancel)
+
+                if (File.Exists(downloaderItem.Destination))
                 {
-                    return;
+                    try
+                    {
+                        File.Delete(downloaderItem.Destination);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(ex.Message);
+                    }
                 }
             }
 
             DownloadItemsList.Remove(downloaderItem);
-
-            if (deleteFile && File.Exists(downloaderItem.LongFilename))
-            {
-                File.Delete(downloaderItem.LongFilename);
-            }
         }
     }
 }

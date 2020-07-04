@@ -74,18 +74,17 @@
                         HeaderTemplate="{StaticResource Templ}" 
                         HeaderContainerStyle="{StaticResource HeaderStyle}" 
                         Header="Name" 
-                        DisplayMemberBinding="{Binding ShortFilename}" 
-                        Width="200" />
+                        DisplayMemberBinding="{Binding Filename}" 
+                        Width="150"/>
                     <GridViewColumn 
                         Header="Progress" 
-                        Width="150">
+                        Width="100">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
                                 <Grid>
                                     <ProgressBar 
                                         x:Name="pbProgress" 
                                         VerticalAlignment="Stretch" 
-                                        MinWidth="150" 
                                         Minimum="0" 
                                         Maximum="100" 
                                         Value="{Binding Progress, Mode=OneWay}" />
@@ -100,27 +99,33 @@
                     <GridViewColumn 
                         HeaderTemplate="{StaticResource Templ}" 
                         HeaderContainerStyle="{StaticResource HeaderStyle}" 
+                        Header="Status" 
+                        DisplayMemberBinding="{Binding Status}" 
+                        Width="75" />
+                    <GridViewColumn 
+                        HeaderTemplate="{StaticResource Templ}" 
+                        HeaderContainerStyle="{StaticResource HeaderStyle}" 
                         Header="Size" 
                         DisplayMemberBinding="{Binding TotalBytesToDownload}" 
-                        Width="125" />
+                        Width="100" />
                     <GridViewColumn 
                         HeaderTemplate="{StaticResource Templ}" 
                         HeaderContainerStyle="{StaticResource HeaderStyle}" 
                         Header="Downloaded" 
                         DisplayMemberBinding="{Binding BytesDownloadedSoFar}" 
-                        Width="125" />
-                    <GridViewColumn 
-                        HeaderTemplate="{StaticResource Templ}" 
-                        HeaderContainerStyle="{StaticResource HeaderStyle}" 
-                        Header="Status" 
-                        DisplayMemberBinding="{Binding Status}" 
-                        Width="125" />
+                        Width="100" />
                     <GridViewColumn 
                         HeaderTemplate="{StaticResource Templ}" 
                         HeaderContainerStyle="{StaticResource HeaderStyle}" 
                         Header="URL" 
                         DisplayMemberBinding="{Binding Url}"
-                        Width="400" />
+                        Width="200" />
+                    <GridViewColumn 
+                        HeaderTemplate="{StaticResource Templ}" 
+                        HeaderContainerStyle="{StaticResource HeaderStyle}" 
+                        Header="Destination" 
+                        DisplayMemberBinding="{Binding Destination}"
+                        Width="200" />
                 </GridView>
             </ListView.View>
         </ListView>
