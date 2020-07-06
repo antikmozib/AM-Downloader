@@ -48,7 +48,7 @@ namespace AM_Downloader
             if (item == null) return;
 
             DownloaderItemModel downloaderItem = item as DownloaderItemModel;
-                await downloaderItem.PauseAsync();
+            downloaderItem.Pause();
         }
 
         async void Cancel(object item)
@@ -56,7 +56,7 @@ namespace AM_Downloader
             if (item == null) return;
 
             var downloaderItem = item as DownloaderItemModel;
-            await downloaderItem.CancelAsync();
+            downloaderItem.Cancel();
         }
 
         async void Remove(object item)
@@ -76,7 +76,7 @@ namespace AM_Downloader
                     }
                     else
                     {
-                        await downloaderItem.CancelAsync();
+                        downloaderItem.Cancel();
                     }
                 }
 
