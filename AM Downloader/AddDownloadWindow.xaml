@@ -24,8 +24,9 @@
             x:Name="txtUrl" 
             Grid.Row="1" 
             Padding="5" 
-            Text="{Binding Path=Url}" 
+            Text="{Binding Path=Urls}" 
             Width="auto" 
+            Height="200"
             TabIndex="0" 
             ScrollViewer.CanContentScroll="True" 
             HorizontalScrollBarVisibility="Auto" 
@@ -38,24 +39,22 @@
                 x:Name="cbAddToQueue" 
                 VerticalAlignment="Center" 
                 Content="Add to queue" 
-                Margin="0 0 10 0" 
                 IsEnabled="False" 
                 IsChecked="{Binding Path=AddToQueue}"/>
             <CheckBox 
                 x:Name="cbStartDownloadingImmediately" 
                 VerticalAlignment="Center" 
                 Content="Start downloading immediately" 
-                Margin="0 0 10 0" 
                 IsChecked="{Binding Path=Start}"/>
             <Button 
                 Content="Add" 
-                MinWidth="100" 
+                MinWidth="85" 
                 Command="{Binding AddCommand}"
                 IsDefault="True" 
                 TabIndex="1" Click="Button_Click"/>
             <Button 
                 Content="Cancel" 
-                MinWidth="100" 
+                MinWidth="85" 
                 IsCancel="True" 
                 TabIndex="2"/>
         </WrapPanel>

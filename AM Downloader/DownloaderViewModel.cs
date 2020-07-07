@@ -35,15 +35,15 @@ namespace AM_Downloader
             PauseCommand = new RelayCommand(Pause);
         }
 
-        async void Start(object item)
+        void Start(object item)
         {
             if (item == null) return;
 
             var downloaderItem = item as DownloaderItemModel;
-            await downloaderItem.StartAsync();
+            Task.Run(() => downloaderItem.StartAsync());
         }
 
-        async void Pause(object item)
+        void Pause(object item)
         {
             if (item == null) return;
 
@@ -51,7 +51,7 @@ namespace AM_Downloader
             downloaderItem.Pause();
         }
 
-        async void Cancel(object item)
+        void Cancel(object item)
         {
             if (item == null) return;
 
@@ -59,38 +59,24 @@ namespace AM_Downloader
             downloaderItem.Cancel();
         }
 
-        async void Remove(object item)
+        void Remove(object item)
         {
             if (item == null) return;
             var downloaderItem = item as DownloaderItemModel;
 
-            if (downloaderItem.Status != DownloaderItemModel.DownloadStatus.Completed)
+            if (downloaderItem.Status == DownloaderItemModel.DownloadStatus.Downloading)
             {
-                if (downloaderItem.Status == DownloaderItemModel.DownloadStatus.Downloading)
-                {
-                    MessageBoxResult result = MessageBox.Show("Cancel downloading \"" + downloaderItem.Filename + "\" ?", "Cancel Download", System.Windows.MessageBoxButton.YesNo);
+                MessageBoxResult result = MessageBox.Show("Cancel downloading \"" + downloaderItem.Filename + "\" ?", "Cancel Download", System.Windows.MessageBoxButton.YesNo);
 
-                    if (result == MessageBoxResult.No)
-                    {
-                        return;
-                    }
-                    else
-                    {
-                        downloaderItem.Cancel();
-                    }
+                if (result == MessageBoxResult.No)
+                {
+                    return;
+                }
+                else
+                {
+                    downloaderItem.Cancel();
                 }
 
-                if (File.Exists(downloaderItem.Destination))
-                {
-                    try
-                    {
-                        File.Delete(downloaderItem.Destination);
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show(ex.Message);
-                    }
-                }
             }
 
             DownloadItemsList.Remove(downloaderItem);

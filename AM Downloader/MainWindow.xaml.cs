@@ -30,7 +30,7 @@ namespace AM_Downloader
         {
             AddDownloadWindow addDownloadWindow = new AddDownloadWindow();
             DownloaderModels.AddDownloaderItemModel addItemModel = new DownloaderModels.AddDownloaderItemModel(ref primaryViewModel.httpClient, ref primaryViewModel.DownloadItemsList);
-            addItemModel.Url = @"https://download-installer.cdn.mozilla.net/pub/firefox/releases/77.0.1/win64/en-US/Firefox%20Setup%2077.0.1.exe";
+            addItemModel.Urls = @"https://download-installer.cdn.mozilla.net/pub/firefox/releases/77.0.1/win64/en-US/Firefox%20Setup%2077.0.1.exe" + '\n' + @"https://download3.operacdn.com/pub/opera/desktop/69.0.3686.49/win/Opera_69.0.3686.49_Setup_x64.exe";
             addDownloadWindow.DataContext = addItemModel;         
             addDownloadWindow.Owner = this;
             addDownloadWindow.ShowDialog();
