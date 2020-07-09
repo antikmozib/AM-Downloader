@@ -64,7 +64,7 @@ namespace AM_Downloader
             if (item == null) return;
             var downloaderItem = item as DownloaderItemModel;
 
-            if (downloaderItem.Status == DownloaderItemModel.DownloadStatus.Downloading)
+            if (downloaderItem.Status == DownloaderItemModel.DownloadStatus.Downloading || downloaderItem.Status==DownloaderItemModel.DownloadStatus.Paused)
             {
                 MessageBoxResult result = MessageBox.Show("Cancel downloading \"" + downloaderItem.Filename + "\" ?", "Cancel Download", System.Windows.MessageBoxButton.YesNo);
 
