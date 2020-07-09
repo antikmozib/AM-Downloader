@@ -10,6 +10,7 @@ using System.Collections.ObjectModel;
 using System.Security.Cryptography;
 using System.Windows;
 using System.Diagnostics;
+using System.Collections.Concurrent;
 
 namespace AM_Downloader
 {
@@ -31,7 +32,7 @@ namespace AM_Downloader
             public event PropertyChangedEventHandler PropertyChanged;
             public enum DownloadStatus
             {
-                Ready, Queued, Downloading, Paused, Pausing, Complete, Error, Cancelling
+                Ready, Queued, Downloading, Paused, Pausing, Complete, Error, Cancelling, Connecting
             }
 
             public string Filename { get; private set; }
@@ -94,11 +95,14 @@ namespace AM_Downloader
                 else
                 {
                     this.Destination = destination;
+                    this.Filename = Path.GetFileName(destination);
+                    AnnouncePropertyChanged(nameof(this.Destination));
+                    AnnouncePropertyChanged(nameof(this.Filename));
                     return true;
                 }
             }
 
-            public DownloaderItemModel(ref HttpClient httpClient, string url, string destination, bool start = false)
+            public DownloaderItemModel(ref HttpClient httpClient, string url, string destination, bool start = false, bool addToQueue = false)
             {
                 this.httpClient = httpClient;
 
@@ -126,26 +130,64 @@ namespace AM_Downloader
                 this.KiloBytesPerSec = null;
                 this.SupportsResume = false;
 
+
                 Task.Run(async () =>
                 {
-                    // Determine total size to download ASYNC!
-                    using (HttpResponseMessage response = await this.httpClient.GetAsync(this.Url, HttpCompletionOption.ResponseHeadersRead))
-                    {
-                        this.TotalBytesToDownload = response.Content.Headers.ContentLength ?? null;
-                        if (this.TotalBytesToDownload != null)
-                        {
-                            this.SupportsResume = true;
-                        }
-                        AnnouncePropertyChanged("TotalBytesToDownload");
-                        AnnouncePropertyChanged(nameof(this.PrettyTotalSize));
-                    }
-                });
+                    this.Status = DownloadStatus.Connecting;
+                    AnnouncePropertyChanged(nameof(this.Status));
 
-                if (start)
-                    Task.Run(async () => await this.StartAsync());
+                    // Determine total size to download ASYNC!
+                    if (!await this.IsValidUrlAsync())
+                    {
+                        throw new Exception();
+                    }
+
+                    try
+                    {
+                        using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Head, url);
+                        using (HttpResponseMessage response = await this.httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
+                        {
+                            this.TotalBytesToDownload = response.Content.Headers.ContentLength ?? null;
+                            if (this.TotalBytesToDownload != null)
+                            {
+                                this.SupportsResume = true;
+                            }
+                            AnnouncePropertyChanged("TotalBytesToDownload");
+                            AnnouncePropertyChanged(nameof(this.PrettyTotalSize));
+                        }
+                    }
+                    catch
+                    {
+                        throw new Exception();
+                    }
+
+                }).ContinueWith(t =>
+                {
+                    if (t.Exception == null)
+                    {
+                        if (addToQueue)
+                        {
+                            this.Status = DownloadStatus.Queued;
+                        }
+                        else
+                        {
+                            if (start)
+                            {
+                                Task.Run(async () => await this.StartAsync());
+                            }
+                        }
+                    }
+                    else
+                    {
+                        this.TotalBytesToDownload = null;
+                        this.Status = DownloadStatus.Error;
+
+                    }
+                    AnnouncePropertyChanged(nameof(this.Status));
+                });
             }
 
-            private async Task<DownloadStatus> DownloadAsync(IProgress<int> progressReporter, long bytesDownloadedPreviously = 0)
+            private async Task DownloadAsync(IProgress<int> progressReporter, long bytesDownloadedPreviously = 0)
             {
                 CancellationToken linkedTokenSource;
                 DownloadStatus _status = DownloadStatus.Error;
@@ -262,9 +304,10 @@ namespace AM_Downloader
                 }
 
                 ctsCanceled = null;
-                ctsPaused = null; // no more pausable
+                ctsPaused = null;
                 tcsDownloadItem.SetResult(_status);
-                return _status;
+
+
             }
 
             private void StartMeasuringSpeed()
@@ -313,7 +356,16 @@ namespace AM_Downloader
                     }
                     else
                     {
-                        if (File.Exists(this.Destination))
+                        this.Status = DownloadStatus.Connecting;
+                        AnnouncePropertyChanged(nameof(this.Status));
+
+                        if (!await IsValidUrlAsync())
+                        {
+                            this.Status = DownloadStatus.Error;
+                            AnnouncePropertyChanged(nameof(this.Status));
+                            return;
+                        }
+                        else if (File.Exists(this.Destination))
                         {
                             // Download is paused; resume from specific point
                             bytesAlreadyDownloaded = new FileInfo(this.Destination).Length;
@@ -374,7 +426,7 @@ namespace AM_Downloader
 
             public void Cancel()
             {
-                if (IsDownloadComplete() || tcsDownloadItem == null)
+                if (tcsDownloadItem == null)
                 {
                     return;
                 }
@@ -387,7 +439,7 @@ namespace AM_Downloader
                     this.Status = DownloadStatus.Cancelling;
                     AnnouncePropertyChanged(nameof(this.Status));
                 }
-                else if (tcsDownloadItem.Task.Result == DownloadStatus.Ready || tcsDownloadItem.Task.Result == DownloadStatus.Paused)
+                else if (!IsDownloadComplete())
                 {
                     // Delete partially downloaded file
                     Task.Run(async () =>
@@ -430,11 +482,20 @@ namespace AM_Downloader
 
             private bool IsDownloadComplete()
             {
-                if (this.TotalBytesToDownload > 0 && File.Exists(this.Destination) && new FileInfo(this.Destination).Length >= this.TotalBytesToDownload)
+                return (this.TotalBytesToDownload != null && this.TotalBytesToDownload > 0 && File.Exists(this.Destination) && new FileInfo(this.Destination).Length >= this.TotalBytesToDownload);
+            }
+
+            private async Task<bool> IsValidUrlAsync()
+            {
+                try
                 {
-                    return true;
+                    using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Head, this.Url);
+                    using (HttpResponseMessage response = await this.httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
+                    {
+                        return true;
+                    }
                 }
-                else
+                catch
                 {
                     return false;
                 }
@@ -444,6 +505,7 @@ namespace AM_Downloader
         public class AddDownloaderItemModel
         {
             private ObservableCollection<DownloaderItemModel> _downloadList;
+            private BlockingCollection<DownloaderItemModel> _queueList;
             private HttpClient _httpClient;
 
             public string Urls { get; set; }
@@ -453,7 +515,7 @@ namespace AM_Downloader
 
             public RelayCommand AddCommand { private get; set; }
 
-            public AddDownloaderItemModel(ref HttpClient httpClient, ref ObservableCollection<DownloaderItemModel> downloadList)
+            public AddDownloaderItemModel(ref HttpClient httpClient, ref ObservableCollection<DownloaderItemModel> downloadList, ref BlockingCollection<DownloaderItemModel> queueList)
             {
                 this.SaveToFolder = null;
                 this.Urls = null;
@@ -461,9 +523,9 @@ namespace AM_Downloader
                 this.AddToQueue = true;
 
                 _downloadList = downloadList;
+                _queueList = queueList;
                 _httpClient = httpClient;
                 AddCommand = new RelayCommand(Add);
-
             }
 
             public void Add(object item)
@@ -481,7 +543,22 @@ namespace AM_Downloader
 
                     foreach (var url in Urls.Split('\n').ToList<string>())
                     {
-                        _downloadList.Add(new DownloaderItemModel(ref _httpClient, url, GetValidFilename(SaveToFolder + Path.GetFileName(url)), this.Start));
+                        try
+                        {
+
+                            var dlItem = new DownloaderItemModel(ref _httpClient, url, GetValidFilename(SaveToFolder + Path.GetFileName(url)), this.Start, this.AddToQueue);
+
+                            _downloadList.Add(dlItem);
+
+                            if (AddToQueue)
+                            {
+                                _queueList.Add(dlItem);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            MessageBox.Show(e.Message);
+                        }
                     }
                 }
             }
@@ -489,6 +566,11 @@ namespace AM_Downloader
 
         private static string PrettyNum<T>(T num)
         {
+            if (num == null)
+            {
+                return string.Empty;
+            }
+
             double result = 0;
             double.TryParse(num.ToString(), out result);
 

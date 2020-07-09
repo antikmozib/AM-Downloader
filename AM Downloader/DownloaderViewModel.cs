@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Collections.Generic;
 using static AM_Downloader.DownloaderModels;
+using System.Collections.Concurrent;
 
 namespace AM_Downloader
 {
@@ -13,6 +14,7 @@ namespace AM_Downloader
     {
         public HttpClient httpClient = new HttpClient();
         public ObservableCollection<DownloaderItemModel> DownloadItemsList;
+        public BlockingCollection<DownloaderItemModel> QueueList;
 
         public RelayCommand AddCommand { get; set; }
         public RelayCommand StartCommand { get; set; }
@@ -29,6 +31,7 @@ namespace AM_Downloader
         public DownloaderViewModel()
         {
             DownloadItemsList = new ObservableCollection<DownloaderItemModel>();
+            QueueList = new BlockingCollection<DownloaderItemModel>();
             StartCommand = new RelayCommand(Start);
             RemoveCommand = new RelayCommand(Remove);
             CancelCommand = new RelayCommand(Cancel);

@@ -128,15 +128,15 @@
                     <GridViewColumn 
                         HeaderTemplate="{StaticResource Templ}" 
                         HeaderContainerStyle="{StaticResource HeaderStyle}" 
-                        Header="URL" 
-                        DisplayMemberBinding="{Binding Url}"
-                        Width="300" />
+                        Header="Location" 
+                        DisplayMemberBinding="{Binding Destination}"
+                        Width="250" />
                     <GridViewColumn 
                         HeaderTemplate="{StaticResource Templ}" 
                         HeaderContainerStyle="{StaticResource HeaderStyle}" 
-                        Header="Destination" 
-                        DisplayMemberBinding="{Binding Destination}"
-                        Width="250" />
+                        Header="URL" 
+                        DisplayMemberBinding="{Binding Url}"
+                        Width="300" />
                 </GridView>
             </ListView.View>
         </ListView>

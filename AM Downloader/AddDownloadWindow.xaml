@@ -39,7 +39,6 @@
                 x:Name="cbAddToQueue" 
                 VerticalAlignment="Center" 
                 Content="Add to queue" 
-                IsEnabled="False" 
                 IsChecked="{Binding Path=AddToQueue}"/>
             <CheckBox 
                 x:Name="cbStartDownloadingImmediately" 
