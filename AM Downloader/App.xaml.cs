@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 
-namespace AM_Downloader
+namespace AMDownloader
 {
     /// <summary>
     /// Interaction logic for App.xaml

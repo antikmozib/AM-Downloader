@@ -1,10 +1,10 @@
 ﻿<Window 
-    x:Class="AM_Downloader.MainWindow" 
+    x:Class="AMDownloader.MainWindow" 
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-    xmlns:local="clr-namespace:AM_Downloader" 
+    xmlns:local="clr-namespace:AMDownloader" 
     mc:Ignorable="d" 
     Title="AM Downloader" 
     Height="450" 
@@ -18,7 +18,8 @@
                     Content="&#xf067; Add" 
                     FontFamily="{StaticResource FontAwesome}" 
                     x:Name="btnAdd" 
-                    Click="btnAdd_Click" />
+                    Command="{Binding AddCommand}" 
+                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
                 <Button 
                     Command="{Binding RemoveCommand}" 
                     CommandParameter="{Binding SelectedItem, ElementName=lvDownload}" 

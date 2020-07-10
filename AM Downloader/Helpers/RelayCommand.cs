@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Input;
 
-namespace AM_Downloader
+namespace AMDownloader
 {
     public class RelayCommand : ICommand
     {

@@ -1,6 +1,7 @@
 ﻿using System.Windows;
+using Ookii.Dialogs.Wpf;
 
-namespace AM_Downloader
+namespace AMDownloader
 {
     /// <summary>
     /// Interaction logic for AddDownloadWindow.xaml
@@ -13,9 +14,18 @@ namespace AM_Downloader
             txtUrl.Focus();
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void btnAdd_Click(object sender, RoutedEventArgs e)
         {
             this.Close();
+        }
+
+        private void btnBrowse_Click(object sender, RoutedEventArgs e)
+        {
+            var folderPicker = new VistaFolderBrowserDialog();
+            if ((bool)folderPicker.ShowDialog(this))
+            {
+                txtDestination.Text = folderPicker.SelectedPath;
+            }
         }
     }
 }
