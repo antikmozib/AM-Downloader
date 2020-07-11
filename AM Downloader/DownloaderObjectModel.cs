@@ -13,19 +13,49 @@ namespace AMDownloader
 {
     class DownloaderObjectModel : INotifyPropertyChanged
     {
-        private CancellationTokenSource ctsPaused, ctsCanceled;
-        private CancellationToken ctPause, ctCancel;
-        private TaskCompletionSource<DownloadStatus> tcsDownloadItem;
-        private IProgress<int> reporterProgress;
+        private CancellationTokenSource _ctsPaused, _ctsCanceled;
+        private CancellationToken _ctPause, _ctCancel;
+        private TaskCompletionSource<DownloadStatus> _tcsDownloadItem;
+        private IProgress<int> _progressReporter;
+        private QueueProcessor _queueProcessor;
+        private HttpClient _httpClient;
 
         public event PropertyChangedEventHandler PropertyChanged;
         public enum DownloadStatus
         {
-            Ready, Queued, Downloading, Paused, Pausing, Complete, Error, Cancelling, Connecting
+            Ready, Queued, Downloading, Paused, Pausing, Finished, Error, Cancelling, Connecting
         }
 
         #region Properties
-        public HttpClient Client { get; private set; }
+        public bool IsInQueue
+        {
+            get
+            {
+                return (_queueProcessor != null);
+            }
+        }
+        public QueueProcessor QProcessor
+        {
+            get
+            {
+                return _queueProcessor;
+            }
+            private set
+            {
+                QProcessor = _queueProcessor;
+            }
+        }
+        public HttpClient Client
+        {
+            get
+            {
+                return _httpClient;
+            }
+            private set
+            {
+                Client = _httpClient;
+            }
+        }
         public string Filename { get; private set; }
         public string Url { get; private set; }
         public string Destination { get; private set; }
@@ -36,6 +66,7 @@ namespace AMDownloader
         public long BytesDownloadedThisSession { get; private set; }
         public bool SupportsResume { get; private set; }
         public long? Speed { get; private set; } // nullable
+        public DateTime DateCreated { get; private set; }
         public string PrettySpeed
         {
             get
@@ -71,15 +102,19 @@ namespace AMDownloader
                 return PrettyNum<long>(this.TotalBytesCompleted);
             }
         }
+
         #endregion
 
-        public DownloaderObjectModel(ref HttpClient client, string url, string destination, bool start = false, bool addToQueue = false)
+        public DownloaderObjectModel(ref HttpClient httpClient, string url, string destination, QueueProcessor queueProcessor = null)
         {
+            this._httpClient = httpClient;
+            this._queueProcessor = queueProcessor;
+
             // capture sync context
-            reporterProgress = new Progress<int>((value) =>
+            _progressReporter = new Progress<int>((value) =>
             {
                 this.Progress = value;
-                AnnouncePropertyChanged("Progress");
+                AnnouncePropertyChanged(nameof(this.Progress));
             });
 
             if (File.Exists(destination))
@@ -98,29 +133,18 @@ namespace AMDownloader
             this.BytesDownloadedThisSession = 0;
             this.Speed = null;
             this.SupportsResume = false;
-            this.Client = client;
+            this.DateCreated = DateTime.Now;
+            if (queueProcessor != null)
+            {
+                this.Status = DownloadStatus.Queued;
+            }
 
             Task.Run(async () => await DetermineTotalBytesToDownload()).ContinueWith(t =>
             {
-                if (t.Exception == null)
-                {
-                    if (addToQueue)
-                    {
-                        this.Status = DownloadStatus.Queued;
-                    }
-                    else
-                    {
-                        if (start)
-                        {
-                            Task.Run(async () => await this.StartAsync());
-                        }
-                    }
-                }
-                else
+                if (t.Exception != null)
                 {
                     this.TotalBytesToDownload = null;
                     this.Status = DownloadStatus.Error;
-
                 }
                 AnnouncePropertyChanged(nameof(this.Status));
             });
@@ -139,14 +163,14 @@ namespace AMDownloader
             try
             {
                 using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Head, this.Url);
-                using (HttpResponseMessage response = await this.Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
+                using (HttpResponseMessage response = await this._httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
                 {
                     this.TotalBytesToDownload = response.Content.Headers.ContentLength ?? null;
                     if (this.TotalBytesToDownload != null)
                     {
                         this.SupportsResume = true;
                     }
-                    AnnouncePropertyChanged("TotalBytesToDownload");
+                    AnnouncePropertyChanged(nameof(this.TotalBytesToDownload));
                     AnnouncePropertyChanged(nameof(this.PrettyTotalSize));
                 }
             }
@@ -163,8 +187,8 @@ namespace AMDownloader
             DownloadStatus _status = DownloadStatus.Error;
             HttpRequestMessage request;
 
-            ctsPaused = new CancellationTokenSource();
-            ctsCanceled = new CancellationTokenSource();
+            _ctsPaused = new CancellationTokenSource();
+            _ctsCanceled = new CancellationTokenSource();
 
             if (this.SupportsResume)
             {
@@ -184,11 +208,11 @@ namespace AMDownloader
                 };
             }
 
-            ctPause = ctsPaused.Token;
-            ctCancel = ctsCanceled.Token;
-            linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(ctPause, ctCancel).Token;
+            _ctPause = _ctsPaused.Token;
+            _ctCancel = _ctsCanceled.Token;
+            linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(_ctPause, _ctCancel).Token;
 
-            using (HttpResponseMessage response = await Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
+            using (HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
             using (Stream sourceStream = await response.Content.ReadAsStreamAsync())
             using (FileStream destinationStream = new FileStream(this.Destination, FileMode.Append))
             using (BinaryWriter binaryWriter = new BinaryWriter(destinationStream))
@@ -220,12 +244,12 @@ namespace AMDownloader
                 {
                     if (linkedTokenSource.IsCancellationRequested)
                     {
-                        if (ctPause.IsCancellationRequested)
+                        if (_ctPause.IsCancellationRequested)
                         {
                             // Paused...
                             _status = DownloadStatus.Paused;
                         }
-                        if (ctCancel.IsCancellationRequested)
+                        if (_ctCancel.IsCancellationRequested)
                         {
                             // Cancelled...
                             _status = DownloadStatus.Ready;
@@ -238,8 +262,14 @@ namespace AMDownloader
                     if (read == 0)
                     {
                         moreToRead = false;
-                        _status = DownloadStatus.Complete;
+                        _status = DownloadStatus.Finished;
                         progressReporter.Report(100);
+
+                        if (this.TotalBytesToDownload != null)
+                        {
+                            // For downloads without total size, update total size once completed
+                            this.TotalBytesToDownload = this.TotalBytesCompleted;
+                        }
                     }
                     else
                     {
@@ -273,9 +303,9 @@ namespace AMDownloader
                 }
             }
 
-            ctsCanceled = null;
-            ctsPaused = null;
-            tcsDownloadItem.SetResult(_status);
+            _ctsCanceled = null;
+            _ctsPaused = null;
+            _tcsDownloadItem.SetResult(_status);
         }
 
         private void StartMeasuringSpeed()
@@ -325,7 +355,7 @@ namespace AMDownloader
             try
             {
                 using var request = new HttpRequestMessage(HttpMethod.Head, this.Url);
-                using (HttpResponseMessage response = await this.Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
+                using (HttpResponseMessage response = await this._httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
                 {
                     return true;
                 }
@@ -365,12 +395,12 @@ namespace AMDownloader
         {
             long bytesAlreadyDownloaded = 0;
 
-            if (ctsPaused != null)
+            if (_ctsPaused != null)
             {
                 // Download in progress
                 return;
             }
-            else if (ctsCanceled != null || (ctsPaused == null && ctsCanceled == null))
+            else if (_ctsCanceled != null || (_ctsPaused == null && _ctsCanceled == null))
             {
                 if (IsDownloadComplete())
                 {
@@ -395,17 +425,22 @@ namespace AMDownloader
                         // Download is paused; resume from specific point
                         bytesAlreadyDownloaded = new FileInfo(this.Destination).Length;
                     }
+                    else if (_queueProcessor != null && _queueProcessor.QueueList.Contains<DownloaderObjectModel>(this))
+                    {
+                        await _queueProcessor.StartAsync(this);
+                        return;
+                    }
                 }
             }
 
-            tcsDownloadItem = new TaskCompletionSource<DownloadStatus>(DownloadAsync(reporterProgress, bytesAlreadyDownloaded));
+            _tcsDownloadItem = new TaskCompletionSource<DownloadStatus>(DownloadAsync(_progressReporter, bytesAlreadyDownloaded));
 
             this.BytesDownloadedThisSession = 0;
             this.Status = DownloadStatus.Downloading;
-            AnnouncePropertyChanged("Status");
+            AnnouncePropertyChanged(nameof(this.Status));
 
-            await tcsDownloadItem.Task;
-            switch (tcsDownloadItem.Task.Result)
+            await _tcsDownloadItem.Task;
+            switch (_tcsDownloadItem.Task.Result)
             {
                 case (DownloadStatus.Ready): // a.k.a canceled
                     this.Cancel();
@@ -415,9 +450,10 @@ namespace AMDownloader
                     this.Pause();
                     break;
 
-                case (DownloadStatus.Complete):
-                    this.Status = DownloadStatus.Complete;
-                    AnnouncePropertyChanged("Status");
+                case (DownloadStatus.Finished):
+                    this.Status = DownloadStatus.Finished;
+                    AnnouncePropertyChanged(nameof(this.Status));
+                    _queueProcessor = null;
                     break;
 
                 default:
@@ -428,60 +464,60 @@ namespace AMDownloader
 
         public void Pause()
         {
-            if (IsDownloadComplete() || tcsDownloadItem == null)
+            if (IsDownloadComplete() || _tcsDownloadItem == null)
             {
                 // Nothing to pause
                 return;
             }
 
-            if (ctsPaused != null)
+            if (_ctsPaused != null)
             {
                 // Download in progress; request cancellation
-                ctsPaused.Cancel();
+                _ctsPaused.Cancel();
 
                 this.Status = DownloadStatus.Pausing;
                 AnnouncePropertyChanged(nameof(this.Status));
             }
-            else if (tcsDownloadItem.Task.Result == DownloadStatus.Paused)
+            else if (_tcsDownloadItem.Task.Result == DownloadStatus.Paused)
             {
                 // Download paused; update status
                 this.Status = DownloadStatus.Paused;
-                AnnouncePropertyChanged("Status");
+                AnnouncePropertyChanged(nameof(this.Status));
             }
         }
 
         public void Cancel()
         {
-            if (tcsDownloadItem == null)
+            if (_tcsDownloadItem == null)
             {
                 // Nothing to cancel
                 return;
             }
 
-            if (ctsCanceled != null)
+            if (_ctsCanceled != null)
             {
                 // Download in progress; request cancellation
-                ctsCanceled.Cancel();
+                _ctsCanceled.Cancel();
 
                 this.Status = DownloadStatus.Cancelling;
                 AnnouncePropertyChanged(nameof(this.Status));
             }
             else if (!IsDownloadComplete())
             {
-                // Delete partially downloaded file
+                // Cancellation complete; delete partially downloaded file
                 Task.Run(async () =>
                 {
                     int numRetries = 0;
 
                     while (File.Exists(this.Destination) && numRetries++ < 30)
                     {
-                        // if deletion fails, retry every 1 sec for 30 secs
+                        // if deletion fails, retry 30 times with 1 sec interval
                         try
                         {
                             File.Delete(this.Destination);
-                            reporterProgress.Report(0);
+                            _progressReporter.Report(0);
                             this.TotalBytesCompleted = 0;
-                            AnnouncePropertyChanged("TotalBytesCompleted");
+                            AnnouncePropertyChanged(nameof(this.TotalBytesCompleted));
                             AnnouncePropertyChanged(nameof(this.PrettyDownloadedSoFar));
                         }
                         catch (IOException)
@@ -498,7 +534,13 @@ namespace AMDownloader
                 }).ContinueWith(t =>
                 {
                     this.Status = DownloadStatus.Ready;
-                    AnnouncePropertyChanged("Status");
+                    AnnouncePropertyChanged(nameof(this.Status));
+                    if (_queueProcessor != null)
+                    {
+                        // If in queue, cancel queue and remove from it
+                        _queueProcessor.Stop();
+                        _queueProcessor = null;
+                    }
                 });
             }
         }

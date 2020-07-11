@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using System.Net.Http;
+using System.Text.RegularExpressions;
 using static AMDownloader.Shared;
 using System.Windows;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace AMDownloader
 {
@@ -27,7 +27,7 @@ namespace AMDownloader
         }
 
         public void Add(object item)
-        {            
+        {
             if (Urls == null || SaveToFolder == null || !Directory.Exists(SaveToFolder))
             {
                 return;
@@ -38,25 +38,38 @@ namespace AMDownloader
                     SaveToFolder = SaveToFolder + Path.DirectorySeparatorChar;
                 }
 
-                foreach (var url in Urls.Split('\n').ToList<string>())
+                // Get rid of empty strings
+                IEnumerable<string> filteredUrls = from url
+                                                   in Urls.Split('\n').ToList<string>()
+                                                   where url.Trim().Length > 0
+                                                   select url;
+
+                foreach (var url in filteredUrls)
                 {
-                    try
+                    var fileName = GetValidFilename(SaveToFolder + Path.GetFileName(url), parentViewModel.DownloadItemsList);
+                    DownloaderObjectModel dItem;
+
+                    if (AddToQueue)
                     {
-
-                        var dlItem = new DownloaderObjectModel(ref parentViewModel.httpClient, 
-                            url, GetValidFilename(SaveToFolder + Path.GetFileName(url)), StartDownload, AddToQueue);
-
-                        parentViewModel.DownloadItemsList.Add(dlItem);
-
-                        if (AddToQueue)
-                        {
-                            parentViewModel.QueueList.Add(dlItem);
-                        }
+                        dItem = new DownloaderObjectModel(ref parentViewModel.Client, url, fileName, parentViewModel.QProcessor);
+                        parentViewModel.QProcessor.Add(dItem);
                     }
-                    catch (Exception e)
+                    else
                     {
-                        MessageBox.Show(e.Message);
+                        dItem = new DownloaderObjectModel(ref parentViewModel.Client, url, fileName, null);
                     }
+
+                    parentViewModel.DownloadItemsList.Add(dItem);
+
+                    if (!AddToQueue && StartDownload)
+                    {
+                        Task.Run(async () => await dItem.StartAsync());
+                    }
+                }
+
+                if (AddToQueue && StartDownload)
+                {
+                    Task.Run(async () => await parentViewModel.QProcessor.StartAsync());
                 }
             }
         }

@@ -43,11 +43,24 @@
                     CommandParameter="{Binding SelectedItem, ElementName=lvDownload}" />
                 <Button 
                     Padding="10" 
-                    Content="&#xf04d; Cancel" 
+                    Content="&#xf00d; Cancel" 
                     FontFamily="{StaticResource FontAwesome}" 
                     x:Name="btnCancel" 
                     Command="{Binding CancelCommand}" 
                     CommandParameter="{Binding SelectedItem, ElementName=lvDownload}"  />
+                <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                <Button 
+                    Padding="10" 
+                    Content="&#xf04b; Start Queue" 
+                    FontFamily="{StaticResource FontAwesome}" 
+                    x:Name="btnStartQueue" 
+                    Command="{Binding StartQueueCommand}" />                
+                <Button 
+                    Padding="10" 
+                    Content="&#xf04d; Stop Queue" 
+                    FontFamily="{StaticResource FontAwesome}" 
+                    x:Name="btnCancelQueue" 
+                    Command="{Binding StopQueueCommand}" />
             </ToolBar>
         </ToolBarTray>
         <ListView 
@@ -60,35 +73,48 @@
                         Text="{Binding}" 
                         Padding="5" />
                 </DataTemplate>
-                <Style x:Key="HeaderStyle" TargetType="GridViewColumnHeader">
+                <Style x:Key="LeftAligned" TargetType="GridViewColumnHeader">
                     <Setter Property="HorizontalContentAlignment" Value="Left" />
+                </Style>
+                <Style x:Key="MiddleAligned" TargetType="GridViewColumnHeader">
+                    <Setter Property="HorizontalContentAlignment" Value="Center" />
+                </Style>
+                <Style x:Key="RightAligned" TargetType="GridViewColumnHeader">
+                    <Setter Property="HorizontalContentAlignment" Value="Right" />
                 </Style>
             </ListView.Resources>
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListViewItem">
-                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                    <Style.Triggers>
-                        <DataTrigger Binding = "{Binding Path=Filename }">
-                            <Setter Property="FontWeight" Value="Bold" />
-                        </DataTrigger>
-                    </Style.Triggers>
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />                    
                 </Style>
             </ListView.ItemContainerStyle>
             <ListView.View>
                 <GridView>
                     <GridViewColumn 
                         HeaderTemplate="{StaticResource Templ}" 
-                        HeaderContainerStyle="{StaticResource HeaderStyle}" 
+                        HeaderContainerStyle="{StaticResource LeftAligned}" 
                         Header="Name" 
                         DisplayMemberBinding="{Binding Filename}" 
                         Width="250"/>
+
                     <GridViewColumn 
                         HeaderTemplate="{StaticResource Templ}" 
-                        HeaderContainerStyle="{StaticResource HeaderStyle}" 
+                        HeaderContainerStyle="{StaticResource LeftAligned}" 
                         Header="Status" 
-                        DisplayMemberBinding="{Binding Status}" 
-                        Width="100" />
+                        Width="100">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <TextBlock 
+                                        Text="{Binding Status}" 
+                                        HorizontalAlignment="Left" />
+                                </Grid>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
                     <GridViewColumn 
+                        HeaderTemplate="{StaticResource Templ}" 
+                        HeaderContainerStyle="{StaticResource MiddleAligned}" 
                         Header="Progress" 
                         Width="100">
                         <GridViewColumn.CellTemplate>
@@ -110,34 +136,67 @@
                     </GridViewColumn>
                     <GridViewColumn 
                         HeaderTemplate="{StaticResource Templ}" 
-                        HeaderContainerStyle="{StaticResource HeaderStyle}" 
+                        HeaderContainerStyle="{StaticResource RightAligned}" 
                         Header="Downloaded" 
-                        DisplayMemberBinding="{Binding PrettyDownloadedSoFar}" 
-                        Width="80" />
+                        Width="100">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <TextBlock 
+                                        Text="{Binding PrettyDownloadedSoFar}" 
+                                        HorizontalAlignment="Right" />
+                                </Grid>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
                     <GridViewColumn 
                         HeaderTemplate="{StaticResource Templ}" 
-                        HeaderContainerStyle="{StaticResource HeaderStyle}" 
+                        HeaderContainerStyle="{StaticResource LeftAligned}" 
                         Header="Size" 
                         DisplayMemberBinding="{Binding PrettyTotalSize}" 
                         Width="75" />
                     <GridViewColumn 
                         HeaderTemplate="{StaticResource Templ}" 
-                        HeaderContainerStyle="{StaticResource HeaderStyle}" 
+                        HeaderContainerStyle="{StaticResource RightAligned}" 
                         Header="Speed" 
-                        DisplayMemberBinding="{Binding PrettySpeed}" 
-                        Width="75" />
+                        Width="75">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <TextBlock 
+                                        Text="{Binding PrettySpeed}" 
+                                        HorizontalAlignment="Right" />
+                                </Grid>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
                     <GridViewColumn 
                         HeaderTemplate="{StaticResource Templ}" 
-                        HeaderContainerStyle="{StaticResource HeaderStyle}" 
+                        HeaderContainerStyle="{StaticResource LeftAligned}" 
                         Header="Location" 
                         DisplayMemberBinding="{Binding Destination}"
-                        Width="250" />
+                        Width="400" />
                     <GridViewColumn 
                         HeaderTemplate="{StaticResource Templ}" 
-                        HeaderContainerStyle="{StaticResource HeaderStyle}" 
+                        HeaderContainerStyle="{StaticResource LeftAligned}" 
                         Header="URL" 
                         DisplayMemberBinding="{Binding Url}"
-                        Width="300" />
+                        Width="400" />
+                    <GridViewColumn 
+                        HeaderTemplate="{StaticResource Templ}" 
+                        HeaderContainerStyle="{StaticResource RightAligned}" 
+                        Header="Created" 
+                        Width="150">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <TextBlock 
+                                        Text="{Binding DateCreated}" 
+                                        HorizontalAlignment="Right" />
+                                </Grid>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
                 </GridView>
             </ListView.View>
         </ListView>

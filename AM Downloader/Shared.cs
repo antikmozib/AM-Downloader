@@ -1,11 +1,8 @@
 ﻿using System;
 using System.ComponentModel;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Net.Http;
-using System.Linq;
-using System.Net.Http.Headers;
+using System.Collections;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Diagnostics;
@@ -51,17 +48,26 @@ namespace AMDownloader
             }
         }
 
-        public static string GetValidFilename(string defaultFilename)
+        public static string GetValidFilename(string defaultFilename, ObservableCollection<DownloaderObjectModel> checkAgainstList = null)
         {
             string _path = Path.GetDirectoryName(defaultFilename);
             string _filename = Path.GetFileName(defaultFilename);
             string result = _path + Path.DirectorySeparatorChar + _filename;
-
             int i = 0;
+
             while (File.Exists(result))
             {
                 result = _path + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(_filename) + " (" + ++i + ")" + Path.GetExtension(_filename);
             };
+
+
+            foreach (DownloaderObjectModel item in checkAgainstList)
+            {
+                if (item.Filename == Path.GetFileName(result) && item.Destination == result)
+                {
+                    result = _path + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(_filename) + " (" + ++i + ")" + Path.GetExtension(_filename);
+                }
+            }
 
             return result;
         }
