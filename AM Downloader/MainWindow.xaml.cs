@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using System.Windows.Input;
 
 namespace AMDownloader
 {
@@ -16,5 +17,7 @@ namespace AMDownloader
             DataContext = primaryViewModel;
             lvDownload.ItemsSource = primaryViewModel.DownloadItemsList;
         }
+
+
     }
 }

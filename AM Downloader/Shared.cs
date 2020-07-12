@@ -1,12 +1,6 @@
 ﻿using System;
-using System.ComponentModel;
 using System.IO;
-using System.Collections;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Windows;
-using System.Diagnostics;
-using System.Collections.Concurrent;
 
 namespace AMDownloader
 {
@@ -63,7 +57,7 @@ namespace AMDownloader
 
             foreach (DownloaderObjectModel item in checkAgainstList)
             {
-                if (item.Filename == Path.GetFileName(result) && item.Destination == result)
+                if (item.Name == Path.GetFileName(result) && item.Destination == result)
                 {
                     result = _path + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(_filename) + " (" + ++i + ")" + Path.GetExtension(_filename);
                 }

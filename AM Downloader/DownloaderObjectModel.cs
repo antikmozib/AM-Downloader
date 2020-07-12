@@ -27,7 +27,8 @@ namespace AMDownloader
         }
 
         #region Properties
-        public bool IsInQueue
+
+        public bool IsQueued
         {
             get
             {
@@ -48,7 +49,7 @@ namespace AMDownloader
                 return _httpClient;
             }
         }
-        public string Filename { get; private set; }
+        public string Name { get; private set; }
         public string Url { get; private set; }
         public string Destination { get; private set; }
         public DownloadStatus Status { get; private set; }
@@ -94,7 +95,13 @@ namespace AMDownloader
                 return PrettyNum<long>(this.TotalBytesCompleted);
             }
         }
-
+        public string PrettyDestination
+        {
+            get
+            {
+                return new FileInfo(this.Destination).Directory.Name + " (" + this.Destination.Substring(0, this.Destination.Length - this.Name.Length - 1) + ")";
+            }
+        }
         #endregion
 
         public DownloaderObjectModel(ref HttpClient httpClient, string url, string destination, QueueProcessor queueProcessor = null)
@@ -115,7 +122,7 @@ namespace AMDownloader
                 throw new IOException();
             }
 
-            this.Filename = Path.GetFileName(destination);
+            this.Name = Path.GetFileName(destination);
             this.Url = url;
             this.Destination = destination;
             this.Status = DownloadStatus.Ready;
@@ -143,6 +150,11 @@ namespace AMDownloader
         }
 
         #region Private methods
+
+        private void RemoveFromQueue()
+        {
+
+        }
 
         private async Task DetermineTotalBytesToDownload()
         {
@@ -362,6 +374,14 @@ namespace AMDownloader
 
         #region Public methods
 
+        public void DeQueue()
+        {
+            if (_queueProcessor != null)
+            {
+                _queueProcessor = null;
+            }
+        }
+
         public bool TrySetDestination(string destination)
         {
             if (File.Exists(destination))
@@ -376,9 +396,9 @@ namespace AMDownloader
             else
             {
                 this.Destination = destination;
-                this.Filename = Path.GetFileName(destination);
+                this.Name = Path.GetFileName(destination);
                 AnnouncePropertyChanged(nameof(this.Destination));
-                AnnouncePropertyChanged(nameof(this.Filename));
+                AnnouncePropertyChanged(nameof(this.Name));
                 return true;
             }
         }
@@ -409,6 +429,7 @@ namespace AMDownloader
                     {
                         this.Status = DownloadStatus.Error;
                         AnnouncePropertyChanged(nameof(this.Status));
+                        _queueProcessor = null;
                         return;
                     }
 
@@ -417,7 +438,7 @@ namespace AMDownloader
                         // Download is paused; resume from specific point
                         bytesAlreadyDownloaded = new FileInfo(this.Destination).Length;
                     }
-                    else if (_queueProcessor != null && _queueProcessor.QueueList.Contains<DownloaderObjectModel>(this))
+                    else if (_queueProcessor != null && _queueProcessor.Contains(this))
                     {
                         await _queueProcessor.StartAsync(this);
                         return;

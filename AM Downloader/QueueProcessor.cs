@@ -23,7 +23,7 @@ namespace AMDownloader
             }
         }
 
-        public bool IsProcessing
+        public bool IsBusy
         {
             get
             {
@@ -31,17 +31,9 @@ namespace AMDownloader
             }
         }
 
-        public BlockingCollection<DownloaderObjectModel> QueueList
+        public QueueProcessor()
         {
-            get
-            {
-                return _queueList;
-            }
-        }
-
-        public QueueProcessor(ref BlockingCollection<DownloaderObjectModel> queueList)
-        {
-            this._queueList = queueList;
+            this._queueList = new BlockingCollection<DownloaderObjectModel>();
         }
 
         // Producer
@@ -51,7 +43,7 @@ namespace AMDownloader
 
             try
             {
-                success = _queueList.TryAdd(item, 1000);
+                success = _queueList.TryAdd(item);
             }
             catch (OperationCanceledException)
             {
@@ -60,31 +52,31 @@ namespace AMDownloader
         }
 
         // Consumer
-        public async Task StartAsync(DownloaderObjectModel StartWithThis = null)
+        public async Task StartAsync(params DownloaderObjectModel[] firstItems)
         {
             if (_ctsCancel != null)
             {
                 return;
             }
 
-            if (StartWithThis != null)
+            if (firstItems != null)
             {
-                RecreateQueue(StartWithThis);
+                RecreateQueue(firstItems);
             }
 
-            await ProcessQueue();
+            await ProcessQueueAsync();
         }
 
-        public void Stop(ObservableCollection<DownloaderObjectModel> CheckMainList = null)
+        public void Stop(ObservableCollection<DownloaderObjectModel> checkMainList = null)
         {
             if (_ctsCancel != null)
             {
                 _ctsCancel.Cancel();
             }
 
-            if (CheckMainList != null)
+            if (checkMainList != null)
             {
-                var items = (from item in CheckMainList
+                var items = (from item in checkMainList
                              where item.Status == DownloaderObjectModel.DownloadStatus.Downloading
                              where item.QProcessor != null
                              select item).ToArray();
@@ -98,7 +90,7 @@ namespace AMDownloader
             }
         }
 
-        private async Task ProcessQueue()
+        private async Task ProcessQueueAsync()
         {
             _ctsCancel = new CancellationTokenSource();
             _ctCancel = _ctsCancel.Token;
@@ -174,9 +166,14 @@ namespace AMDownloader
                 }
             }
 
-            var _disposeList = _queueList;
+            var disposeList = _queueList;
             _queueList = newList;
-            _disposeList.Dispose();
+            disposeList.Dispose();
+        }
+
+        public bool Contains(DownloaderObjectModel value)
+        {
+            return (_queueList.Contains<DownloaderObjectModel>(value));
         }
     }
 }

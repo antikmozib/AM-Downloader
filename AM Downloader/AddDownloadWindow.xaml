@@ -9,16 +9,20 @@
         WindowStartupLocation="CenterOwner" 
         ShowInTaskbar="False" 
         ResizeMode="CanResizeWithGrip"        
-        SizeToContent="WidthAndHeight" d:DesignHeight="200" WindowStyle="ToolWindow">
+        MinWidth="640"
+        MinHeight="360"
+        Width="640"
+        Height="360"
+        d:DesignHeight="200" WindowStyle="ToolWindow">
     <Grid 
         Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="10"/>
-            <RowDefinition Height="auto"/>
-            <RowDefinition Height="10"/>
-            <RowDefinition Height="auto"/>
+            <RowDefinition Height="15"/>
+            <RowDefinition Height="25"/>
+            <RowDefinition Height="15"/>
+            <RowDefinition Height="25"/>
         </Grid.RowDefinitions>
         <Label 
             Content="Enter URL or pattern to add. You can enter multiple URLs on separate lines."/>
@@ -47,6 +51,7 @@
                 Width="100" 
                 Click="btnBrowse_Click"/>
             <TextBox 
+                Margin="0 0 5 0"
                 x:Name="txtDestination"
                 Text="{Binding Path=SaveToFolder, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                 Width="auto" 
@@ -67,14 +72,16 @@
                 Content="Start downloading" 
                 IsChecked="{Binding Path=StartDownload, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
                 VerticalAlignment="Center"
-                Margin="0 0 5 0"/>
+                Margin="0 0 15 0"/>
             <Button x:Name="btnAdd" 
+                Margin="0 0 5 0"
                 Content="Add" 
                 Width="100" 
                 Command="{Binding AddCommand}"
                 IsDefault="True" 
                 TabIndex="1" Click="btnAdd_Click"/>
             <Button
+                Margin="0 0 5 0"
                 Content="Cancel" 
                 Width="100" 
                 IsCancel="True" 

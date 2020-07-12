@@ -8,9 +8,11 @@
     xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity" 
     xmlns:i1="http://schemas.microsoft.com/netfx/2009/xaml/presentation"
     mc:Ignorable="d" 
-    Title="AM Downloader" 
+    Title="AM Downloader"
+    MinHeight="450" 
+    MinWidth="800" 
     Height="450" 
-    Width="1024" 
+    Width="800" 
     WindowStartupLocation="CenterScreen">
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Closing">
@@ -22,49 +24,49 @@
             <ToolBar>
                 <Button 
                     Padding="10" 
-                    Content="&#xf067; Add" 
+                    Content="&#xF067; Add" 
                     FontFamily="{StaticResource FontAwesome}" 
                     x:Name="btnAdd" 
-                    Command="{Binding AddCommand}" 
-                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                    Command="{Binding AddCommand}"  />
                 <Button 
+                    CommandParameter="{Binding SelectedItems, ElementName=lvDownload}" 
                     Command="{Binding RemoveCommand}" 
-                    CommandParameter="{Binding SelectedItem, ElementName=lvDownload}" 
                     Padding="10" x:Name="btnRemove" 
-                    Content="&#xf068; Remove" 
+                    Content="&#xF068; Remove" 
                     FontFamily="{StaticResource FontAwesome}" />
                 <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
                 <Button 
                     Padding="10" 
-                    Content="&#xf04b; Start" 
+                    Content="&#xF04B; Start" 
                     FontFamily="{StaticResource FontAwesome}" 
                     x:Name="btnStart" 
-                    Command="{Binding StartCommand}" 
-                    CommandParameter="{Binding SelectedItem, ElementName=lvDownload}" />
+                    CommandParameter="{Binding Path=SelectedItems, ElementName=lvDownload}"
+                    Command="{Binding StartCommand}"  />
                 <Button 
                     Padding="10" 
-                    Content="&#xf04c; Pause" 
+                    Content="&#xF04C; Pause" 
                     FontFamily="{StaticResource FontAwesome}" 
                     x:Name="btnPause" 
-                    Command="{Binding PauseCommand}"
-                    CommandParameter="{Binding SelectedItem, ElementName=lvDownload}" />
+                    CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
+                    Command="{Binding PauseCommand}" />
                 <Button 
                     Padding="10" 
-                    Content="&#xf00d; Cancel" 
+                    Content="&#xF00D; Cancel" 
                     FontFamily="{StaticResource FontAwesome}" 
                     x:Name="btnCancel" 
-                    Command="{Binding CancelCommand}" 
-                    CommandParameter="{Binding SelectedItem, ElementName=lvDownload}"  />
+                    CommandParameter="{Binding SelectedItems, ElementName=lvDownload}" 
+                    Command="{Binding CancelCommand}"  />
                 <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
                 <Button 
                     Padding="10" 
-                    Content="&#xf04b; Start Queue" 
+                    Content="&#xF04B; Start Queue" 
                     FontFamily="{StaticResource FontAwesome}" 
                     x:Name="btnStartQueue" 
-                    Command="{Binding StartQueueCommand}" />                
+                    Command="{Binding StartQueueCommand}" />
                 <Button 
                     Padding="10" 
-                    Content="&#xf04d; Stop Queue" 
+                    Content="&#xF04D; Stop Queue" 
                     FontFamily="{StaticResource FontAwesome}" 
                     x:Name="btnCancelQueue" 
                     Command="{Binding StopQueueCommand}" />
@@ -80,19 +82,19 @@
                         Text="{Binding}" 
                         Padding="5" />
                 </DataTemplate>
-                <Style x:Key="LeftAligned" TargetType="GridViewColumnHeader">
+                <Style x:Key="LeftAligned" TargetType="{x:Type GridViewColumnHeader}">
                     <Setter Property="HorizontalContentAlignment" Value="Left" />
                 </Style>
-                <Style x:Key="MiddleAligned" TargetType="GridViewColumnHeader">
+                <Style x:Key="MiddleAligned" TargetType="{x:Type GridViewColumnHeader}">
                     <Setter Property="HorizontalContentAlignment" Value="Center" />
                 </Style>
-                <Style x:Key="RightAligned" TargetType="GridViewColumnHeader">
+                <Style x:Key="RightAligned" TargetType="{x:Type GridViewColumnHeader}">
                     <Setter Property="HorizontalContentAlignment" Value="Right" />
                 </Style>
             </ListView.Resources>
             <ListView.ItemContainerStyle>
-                <Style TargetType="ListViewItem">
-                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />                    
+                <Style TargetType="{x:Type ListViewItem}">
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                 </Style>
             </ListView.ItemContainerStyle>
             <ListView.View>
@@ -101,7 +103,7 @@
                         HeaderTemplate="{StaticResource Templ}" 
                         HeaderContainerStyle="{StaticResource LeftAligned}" 
                         Header="Name" 
-                        DisplayMemberBinding="{Binding Filename}" 
+                        DisplayMemberBinding="{Binding Name}" 
                         Width="250"/>
 
                     <GridViewColumn 
@@ -134,7 +136,7 @@
                                         Maximum="100" 
                                         Value="{Binding Progress, Mode=OneWay}" />
                                     <TextBlock 
-                                        Text="{Binding ElementName=pbProgress, Path=Value, StringFormat={}{0:0}%}" 
+                                        Text="{Binding Value, ElementName=pbProgress, StringFormat=\{0:0\}%}" 
                                         HorizontalAlignment="Center" 
                                         VerticalAlignment="Center" />
                                 </Grid>
@@ -181,7 +183,7 @@
                         HeaderTemplate="{StaticResource Templ}" 
                         HeaderContainerStyle="{StaticResource LeftAligned}" 
                         Header="Location" 
-                        DisplayMemberBinding="{Binding Destination}"
+                        DisplayMemberBinding="{Binding PrettyDestination}"
                         Width="400" />
                     <GridViewColumn 
                         HeaderTemplate="{StaticResource Templ}" 
