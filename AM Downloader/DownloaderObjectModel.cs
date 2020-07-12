@@ -40,20 +40,12 @@ namespace AMDownloader
             {
                 return _queueProcessor;
             }
-            private set
-            {
-                QProcessor = _queueProcessor;
-            }
         }
         public HttpClient Client
         {
             get
             {
                 return _httpClient;
-            }
-            private set
-            {
-                Client = _httpClient;
             }
         }
         public string Filename { get; private set; }
@@ -537,7 +529,7 @@ namespace AMDownloader
                     AnnouncePropertyChanged(nameof(this.Status));
                     if (_queueProcessor != null)
                     {
-                        // If in queue, cancel queue and remove from it
+                        // If was in queue, cancel queue
                         _queueProcessor.Stop();
                         _queueProcessor = null;
                     }

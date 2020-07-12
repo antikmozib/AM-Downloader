@@ -8,9 +8,7 @@
         Title="Add URL" 
         WindowStartupLocation="CenterOwner" 
         ShowInTaskbar="False" 
-        ResizeMode="CanResizeWithGrip"
-        MinHeight="250"
-        MinWidth="500"
+        ResizeMode="CanResizeWithGrip"        
         SizeToContent="WidthAndHeight" d:DesignHeight="200" WindowStyle="ToolWindow">
     <Grid 
         Margin="10">
@@ -81,6 +79,11 @@
                 Width="100" 
                 IsCancel="True" 
                 TabIndex="2"/>
+            <Button
+                Command="{Binding PreviewCommand}"
+                Content="Preview" 
+                Width="100" 
+                TabIndex="3"/>
         </StackPanel>
     </Grid>
 </Window>

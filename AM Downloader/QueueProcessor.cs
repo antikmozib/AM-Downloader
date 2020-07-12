@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
-using System.Collections;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Data;
-using System.Windows.Documents;
 using System.Collections.ObjectModel;
 using System.Linq;
 
@@ -17,6 +14,22 @@ namespace AMDownloader
         private BlockingCollection<DownloaderObjectModel> _queueList;
         private CancellationTokenSource _ctsCancel;
         private CancellationToken _ctCancel;
+
+        public int Count
+        {
+            get
+            {
+                return _queueList.Count;
+            }
+        }
+
+        public bool IsProcessing
+        {
+            get
+            {
+                return (_ctsCancel != null);
+            }
+        }
 
         public BlockingCollection<DownloaderObjectModel> QueueList
         {
@@ -62,17 +75,26 @@ namespace AMDownloader
             await ProcessQueue();
         }
 
-        public void Stop(ObservableCollection<DownloaderObjectModel> CancelThese = null)
+        public void Stop(ObservableCollection<DownloaderObjectModel> CheckMainList = null)
         {
             if (_ctsCancel != null)
             {
                 _ctsCancel.Cancel();
             }
 
-            if (CancelThese != null)
+            if (CheckMainList != null)
             {
-                var items = from item in CancelThese where item.Status == DownloaderObjectModel.DownloadStatus.Downloading select item;
-                Parallel.ForEach(items, (item) => item.Cancel());
+                var items = (from item in CheckMainList
+                             where item.Status == DownloaderObjectModel.DownloadStatus.Downloading
+                             where item.QProcessor != null
+                             select item).ToArray();
+
+                Parallel.ForEach(items, (item) =>
+                {
+                    item.Pause();
+                });
+
+                RecreateQueue(items.ToArray());
             }
         }
 
@@ -85,14 +107,14 @@ namespace AMDownloader
             {
                 try
                 {
-                    // Download max 5 times
-                    DownloaderObjectModel[] items = { null, null, null, null, null };
+                    // Download max n items
+                    DownloaderObjectModel[] items = { null, null, null };
 
                     for (int i = 0; i < items.Length; i++)
                     {
                         items[i] = null;
 
-                        if (!_queueList.TryTake(out items[i], 1000, _ctCancel))
+                        if (!_queueList.TryTake(out items[i]))
                         {
                             break;
                         }
@@ -117,9 +139,9 @@ namespace AMDownloader
             _ctsCancel = null;
         }
 
-        private void RecreateQueue(DownloaderObjectModel firstItem)
+        private void RecreateQueue(params DownloaderObjectModel[] firstItems)
         {
-            if (this._queueList == null)// || _ctsCancel != null)
+            if (this._queueList == null)
             {
                 return;
             }
@@ -131,14 +153,17 @@ namespace AMDownloader
 
             BlockingCollection<DownloaderObjectModel> newList = new BlockingCollection<DownloaderObjectModel>();
 
-            newList.Add(firstItem);
+            foreach (DownloaderObjectModel obj in firstItems)
+            {
+                newList.Add(obj);
+            }
 
-            foreach (DownloaderObjectModel objects in _queueList)
+            foreach (DownloaderObjectModel obj in _queueList)
             {
                 DownloaderObjectModel item = null;
                 if (_queueList.TryTake(out item))
                 {
-                    if (item == firstItem)
+                    if (firstItems.Contains<DownloaderObjectModel>(item))
                     {
                         continue;
                     }
@@ -149,8 +174,9 @@ namespace AMDownloader
                 }
             }
 
-            _queueList.Dispose();
+            var _disposeList = _queueList;
             _queueList = newList;
+            _disposeList.Dispose();
         }
     }
 }

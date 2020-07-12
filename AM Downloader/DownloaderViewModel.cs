@@ -5,6 +5,8 @@ using System.Windows;
 using System.Collections.Concurrent;
 using static AMDownloader.DownloaderObjectModel;
 using System.Diagnostics;
+using System.Windows.Input;
+using System.Linq;
 
 namespace AMDownloader
 {
@@ -17,13 +19,14 @@ namespace AMDownloader
         public QueueProcessor QProcessor;
 
         public RelayCommand AddCommand { get; private set; }
-        public RelayCommand StartCommand { get; private set; }
+        public ICommand StartCommand { get; private set; }
         public RelayCommand RemoveCommand { private get; set; }
         public RelayCommand CancelCommand { private get; set; }
         public RelayCommand PauseCommand { get; private set; }
         public RelayCommand OpenCommand { get; private set; }
         public RelayCommand StartQueueCommand { get; private set; }
         public RelayCommand StopQueueCommand { get; private set; }
+        public RelayCommand WindowClosingCommand { get; private set; }
 
         public DownloaderViewModel()
         {
@@ -33,13 +36,14 @@ namespace AMDownloader
             QProcessor = new QueueProcessor(ref this._queueList);
 
             AddCommand = new RelayCommand(Add);
-            StartCommand = new RelayCommand(Start);
-            RemoveCommand = new RelayCommand(Remove);
-            CancelCommand = new RelayCommand(Cancel);
-            PauseCommand = new RelayCommand(Pause);
-            OpenCommand = new RelayCommand(Open);
-            StartQueueCommand = new RelayCommand(StartQueue);
-            StopQueueCommand = new RelayCommand(StopQueue);
+            StartCommand = new RelayCommand(Start, Start_CanExecute);
+            RemoveCommand = new RelayCommand(Remove, Remove_CanExecute);
+            CancelCommand = new RelayCommand(Cancel, Cancel_CanExecute);
+            PauseCommand = new RelayCommand(Pause, Pause_CanExecute);
+            OpenCommand = new RelayCommand(Open, Open_CanExecute);
+            StartQueueCommand = new RelayCommand(StartQueue, StartQueue_CanExecute);
+            StopQueueCommand = new RelayCommand(StopQueue, StopQueue_CanExecute);
+            WindowClosingCommand = new RelayCommand(WindowClosing);
         }
 
         void Start(object item)
@@ -50,12 +54,41 @@ namespace AMDownloader
             Task.Run(() => downloaderItem.StartAsync());
         }
 
+        public bool Start_CanExecute(object item)
+        {
+            if (item == null) return false;
+
+            var dItem = item as DownloaderObjectModel;
+            if (dItem.Status == DownloadStatus.Downloading)
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
+
         void Pause(object item)
         {
             if (item == null) return;
 
             DownloaderObjectModel downloaderItem = item as DownloaderObjectModel;
             downloaderItem.Pause();
+        }
+        public bool Pause_CanExecute(object item)
+        {
+            if (item == null) return false;
+
+            var dItem = item as DownloaderObjectModel;
+            if (dItem.Status == DownloadStatus.Downloading)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         void Cancel(object item)
@@ -64,6 +97,21 @@ namespace AMDownloader
 
             var downloaderItem = item as DownloaderObjectModel;
             downloaderItem.Cancel();
+        }
+
+        public bool Cancel_CanExecute(object item)
+        {
+            if (item == null) return false;
+
+            var dItem = item as DownloaderObjectModel;
+            if (dItem.Status == DownloadStatus.Downloading || dItem.Status == DownloadStatus.Paused)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         void Remove(object item)
@@ -88,6 +136,18 @@ namespace AMDownloader
             }
 
             DownloadItemsList.Remove(downloaderItem);
+        }
+
+        public bool Remove_CanExecute(object item)
+        {
+            if (item == null) 
+            { 
+                return false; 
+            }
+            else 
+            { 
+                return true; 
+            }
         }
 
         void Add(object item)
@@ -118,14 +178,57 @@ namespace AMDownloader
             }
         }
 
+        public bool Open_CanExecute(object item)
+        {
+            if (item!=null )
+            {
+                var dItem = item as DownloaderObjectModel;
+                if (dItem.Status == DownloadStatus.Finished)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         void StartQueue(object item)
         {
             Task.Run(async () => await QProcessor.StartAsync());
         }
 
+        public bool StartQueue_CanExecute(object item)
+        {
+            if (!QProcessor.IsProcessing && QProcessor.Count > 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         void StopQueue(object item)
         {
             QProcessor.Stop(DownloadItemsList);
+        }
+
+        public bool StopQueue_CanExecute(object item)
+        {
+            return (item != null || QProcessor.IsProcessing);
+        }
+
+        void WindowClosing(object item)
+        {
+            var items = from dItem in DownloadItemsList 
+                        where dItem.Status == DownloadStatus.Downloading 
+                        select dItem;
+
+            Parallel.ForEach(items, (dItem) => 
+            { 
+                dItem.Pause(); 
+            });
         }
     }
 }
