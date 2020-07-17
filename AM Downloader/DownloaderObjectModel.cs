@@ -64,14 +64,14 @@ namespace AMDownloader
         {
             get
             {
-                return PrettyNum<long?>(this.TotalBytesToDownload);
+                return PrettyNum(this.TotalBytesToDownload);
             }
         }
         public string PrettyDownloadedSoFar
         {
             get
             {
-                return PrettyNum<long>(this.TotalBytesCompleted);
+                return PrettyNum(this.TotalBytesCompleted);
             }
         }
         public string PrettyDestination
@@ -137,6 +137,7 @@ namespace AMDownloader
                 {
                     this.TotalBytesToDownload = null;
                     this.Status = DownloadStatus.Error;
+                    this.Dequeue();
                 }
                 AnnouncePropertyChanged(nameof(this.Status));
             });
@@ -171,7 +172,6 @@ namespace AMDownloader
             {
                 throw new Exception();
             }
-
         }
 
         private async Task DownloadAsync(IProgress<int> progressReporter, long bytesDownloadedPreviously = 0)

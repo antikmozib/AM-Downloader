@@ -11,14 +11,7 @@ namespace AMDownloader
         public const long GIGABYTE = MEGABYTE * KILOBYTE;
         public const long TERABYTE = GIGABYTE * KILOBYTE;
 
-        public interface IClipboard
-        {
-            public void SetText(string value);
-            public string GetText();
-            public void Clear();
-        }
-
-        public static string PrettyNum<T>(T num)
+        public static string PrettyNum(long? num)
         {
             if (num == null)
             {

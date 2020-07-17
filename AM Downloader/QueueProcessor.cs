@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Data;
-using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace AMDownloader
@@ -74,6 +72,8 @@ namespace AMDownloader
                         if (item != null)
                         {
                             tasks.Add(item.StartAsync());
+
+                            // keep a temporary reference to each item we are processing
                             _itemsProcessing.Add(item);
                         }
                     }
@@ -81,7 +81,7 @@ namespace AMDownloader
                     await Task.WhenAll(tasks);
 
                     // Download complete; remove from processing list
-                    foreach(DownloaderObjectModel item in items)
+                    foreach (DownloaderObjectModel item in items)
                     {
                         if (item != null)
                         {

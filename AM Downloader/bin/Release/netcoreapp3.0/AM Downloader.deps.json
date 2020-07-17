@@ -7,8 +7,32 @@
   "targets": {
     ".NETCoreApp,Version=v3.0": {
       "AM Downloader/1.0.0": {
+        "dependencies": {
+          "Ookii.Dialogs.Wpf": "1.1.0",
+          "System.Windows.Interactivity.WPF": "2.0.20525"
+        },
         "runtime": {
           "AM Downloader.dll": {}
+        }
+      },
+      "Ookii.Dialogs.Wpf/1.1.0": {
+        "runtime": {
+          "lib/net45/Ookii.Dialogs.Wpf.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "System.Windows.Interactivity.WPF/2.0.20525": {
+        "runtime": {
+          "lib/net40/Microsoft.Expression.Interactions.dll": {
+            "assemblyVersion": "4.0.0.0",
+            "fileVersion": "2.0.20525.0"
+          },
+          "lib/net40/System.Windows.Interactivity.dll": {
+            "assemblyVersion": "4.0.0.0",
+            "fileVersion": "2.0.20525.0"
+          }
         }
       }
     }
@@ -18,6 +42,20 @@
       "type": "project",
       "serviceable": false,
       "sha512": ""
+    },
+    "Ookii.Dialogs.Wpf/1.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-7VvWZe1PoZHp+MN3nb6gIwXW+DsxUREf+24O9DBDLS+gTmh/F1PYAEnd7AIKXD+Ni7JPjkRXcYAcsdcSo1G3vg==",
+      "path": "ookii.dialogs.wpf/1.1.0",
+      "hashPath": "ookii.dialogs.wpf.1.1.0.nupkg.sha512"
+    },
+    "System.Windows.Interactivity.WPF/2.0.20525": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-0r+Le4E7hCm4zToUvBzjSUyTcuU3rFeoPa7JyTdWIzR/F7wH6+O/pWkjHIG40hIA0z1wvRdZayvoizA4wcK1dg==",
+      "path": "system.windows.interactivity.wpf/2.0.20525",
+      "hashPath": "system.windows.interactivity.wpf.2.0.20525.nupkg.sha512"
     }
   }
 }

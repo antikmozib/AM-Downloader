@@ -246,6 +246,7 @@ namespace AMDownloader
                 dItem.Pause();
             }
         }
+        
         public bool Pause_CanExecute(object item)
         {
             if (item == null)

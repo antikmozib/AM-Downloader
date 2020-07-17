@@ -1,11 +1,6 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Reflection;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Input;
-using static AMDownloader.DownloaderViewModel;
 
 namespace AMDownloader
 {
@@ -32,14 +27,12 @@ namespace AMDownloader
 
         private void menuAbout_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show(
-                Assembly.GetExecutingAssembly().GetName().Name + '\n' +
-                "Version " + Assembly.GetExecutingAssembly().GetName().Version +
-                '\n' + '\n' +
-                Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyDescriptionAttribute), false).OfType<AssemblyDescriptionAttribute>().FirstOrDefault()?.Description +
-                '\n' + '\n' +
-                Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyCopyrightAttribute), true).OfType<AssemblyCopyrightAttribute>().FirstOrDefault()?.Copyright, "About"
-                );
+            var name = Assembly.GetExecutingAssembly().GetName().Name;
+            var version = Assembly.GetExecutingAssembly().GetName().Version;
+            var description = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyDescriptionAttribute), false).OfType<AssemblyDescriptionAttribute>().FirstOrDefault()?.Description;
+            var copyright = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyCopyrightAttribute), true).OfType<AssemblyCopyrightAttribute>().FirstOrDefault()?.Copyright;
+
+            MessageBox.Show(this, name + " " + version + "\n\n" + description + "\n\n" + copyright, "About");
         }
     }
 }

@@ -4,15 +4,12 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-    xmlns:local="clr-namespace:AMDownloader" 
     xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity" 
-    xmlns:i1="http://schemas.microsoft.com/netfx/2009/xaml/presentation"
-    xmlns:helpers="AMDownloader.DownloaderViewModel"
     mc:Ignorable="d" 
     Title="AM Downloader"
     Height="450" 
     Width="800" 
-    WindowStartupLocation="CenterScreen">
+    WindowStartupLocation="CenterScreen">    
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Closing">
             <i:InvokeCommandAction Command="{Binding WindowClosingCommand, Mode=OneTime}" />
@@ -83,14 +80,14 @@
         </ToolBarTray>
         <DockPanel DockPanel.Dock="Bottom">
             <StatusBar>
-                <StatusBarItem Margin="5 0 15 5" DockPanel.Dock="Left">
+                <StatusBarItem Margin="5 3 15 5" DockPanel.Dock="Left">
                     <TextBlock Text="{Binding StatusDownloading}"/>
                 </StatusBarItem>
-                <StatusBarItem Margin="0 0 0 5" DockPanel.Dock="Left">
+                <StatusBarItem Margin="0 3 0 5" DockPanel.Dock="Left">
                     <TextBlock Text="{Binding StatusQueued}"/>
                 </StatusBarItem>
-                <StatusBarItem Margin="0 0 5 5" DockPanel.Dock="Right" HorizontalAlignment="Right">
-                    <TextBlock Text="{Binding StatusSpeed}"/>
+                <StatusBarItem Margin="0 3 5 5" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                    <TextBlock Text="{Binding StatusSpeed}" FontWeight="Bold"/>
                 </StatusBarItem>
             </StatusBar>
         </DockPanel>
@@ -106,41 +103,188 @@
                         <i:InvokeCommandAction Command="{Binding CategoryChangedCommand}" CommandParameter="{Binding ElementName=tvCategories, Path=SelectedItem}"/>
                     </i:EventTrigger>
                 </i:Interaction.Triggers>
+                <TreeView.Resources>                   
+                    <ControlTemplate TargetType="TreeViewItem" x:Key="QueuedTemplate">
+                        <StackPanel 
+                            Height="25"
+                            Orientation="Horizontal" 
+                            Background="{TemplateBinding Background}">
+                            <Ellipse
+                                Margin="5 0 5 0"
+                                Width="12"
+                                Height="12"
+                                Fill="DarkOrange"/>
+                            <TextBlock 
+                                VerticalAlignment="Center" 
+                                Text="{Binding}"/>
+                        </StackPanel>
+                    </ControlTemplate>
+                    <ControlTemplate TargetType="TreeViewItem" x:Key="DownloadTemplate">
+                        <StackPanel 
+                            Height="25"
+                            Background="{TemplateBinding Background}"                            
+                            Orientation="Horizontal">
+                            <Ellipse                               
+                                Margin="5 0 5 0"
+                                Width="12"
+                                Height="12"
+                                Fill="Green"/>
+                            <TextBlock 
+                                VerticalAlignment="Center" 
+                                Text="{Binding}"/>
+                        </StackPanel>
+                    </ControlTemplate>
+                    <ControlTemplate TargetType="TreeViewItem" x:Key="AllTemplate">
+                        <StackPanel 
+                            Height="25"
+                            Background="{TemplateBinding Background}"                            
+                            Orientation="Horizontal">
+                            <Ellipse                               
+                                Margin="5 0 5 0"
+                                Width="12"
+                                Height="12"
+                                Fill="Black"/>
+                            <TextBlock 
+                                VerticalAlignment="Center" 
+                                Text="{Binding}"/>
+                        </StackPanel>
+                    </ControlTemplate>
+                    <ControlTemplate TargetType="TreeViewItem" x:Key="ReadyTemplate">
+                        <StackPanel 
+                            Height="25"
+                            Background="{TemplateBinding Background}"                            
+                            Orientation="Horizontal">
+                            <Ellipse                               
+                                Margin="5 0 5 0"
+                                Width="12"
+                                Height="12"
+                                Fill="LightGreen"/>
+                            <TextBlock 
+                                VerticalAlignment="Center" 
+                                Text="{Binding}"/>
+                        </StackPanel>
+                    </ControlTemplate>
+                    <ControlTemplate TargetType="TreeViewItem" x:Key="PausedTemplate">
+                        <StackPanel 
+                            Height="25"
+                            Background="{TemplateBinding Background}"                            
+                            Orientation="Horizontal">
+                            <Ellipse                               
+                                Margin="5 0 5 0"
+                                Width="12"
+                                Height="12"
+                                Fill="Yellow"/>
+                            <TextBlock 
+                                VerticalAlignment="Center" 
+                                Text="{Binding}"/>
+                        </StackPanel>
+                    </ControlTemplate>
+                    <ControlTemplate TargetType="TreeViewItem" x:Key="ErrorTemplate">
+                        <StackPanel 
+                            Height="25"
+                            Background="{TemplateBinding Background}"                            
+                            Orientation="Horizontal">
+                            <Ellipse                               
+                                Margin="5 0 5 0"
+                                Width="12"
+                                Height="12"
+                                Fill="Red"/>
+                            <TextBlock 
+                                VerticalAlignment="Center" 
+                                Text="{Binding}"/>
+                        </StackPanel>
+                    </ControlTemplate>
+                    <ControlTemplate TargetType="TreeViewItem" x:Key="FinishedTemplate">
+                        <StackPanel 
+                            Height="25"
+                            Background="{TemplateBinding Background}"                            
+                            Orientation="Horizontal">
+                            <Ellipse                               
+                                Margin="5 0 5 0"
+                                Width="12"
+                                Height="12"
+                                Fill="Blue"/>
+                            <TextBlock 
+                                VerticalAlignment="Center" 
+                                Text="{Binding}"/>
+                        </StackPanel>
+                    </ControlTemplate>
+                </TreeView.Resources>
                 <TreeView.ItemContainerStyle>
                     <Style TargetType="{x:Type TreeViewItem}">
-                        <Setter Property="Padding" Value="5 2 5 2" />
                         <Style.Triggers>
                             <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="LightBlue"/>
+                                <Setter Property="Foreground" Value="Black"/>
                                 <Setter Property="FontWeight" Value="Bold"/>
                             </Trigger>
+                            <DataTrigger Binding="{Binding}" Value="Downloading">
+                                <Setter Property="Template" Value="{StaticResource DownloadTemplate}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding}" Value="Queued">
+                                <Setter Property="Template" Value="{StaticResource QueuedTemplate}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding}" Value="All">
+                                <Setter Property="Template" Value="{StaticResource AllTemplate}"/>
+                                <Setter Property="IsSelected" Value="True"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding}" Value="Ready">
+                                <Setter Property="Template" Value="{StaticResource ReadyTemplate}"/>                                
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding}" Value="Paused">
+                                <Setter Property="Template" Value="{StaticResource PausedTemplate}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding}" Value="Error">
+                                <Setter Property="Template" Value="{StaticResource ErrorTemplate}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding}" Value="Finished">
+                                <Setter Property="Template" Value="{StaticResource FinishedTemplate}"/>
+                            </DataTrigger>
                         </Style.Triggers>
                     </Style>
-                </TreeView.ItemContainerStyle>
+                </TreeView.ItemContainerStyle>                
             </TreeView>
             <GridSplitter Grid.Column="1" Width="3" HorizontalAlignment="Stretch"/>
             <ListView 
-                    Grid.Column="2"
-                    x:Name="lvDownload" TabIndex="1">
-                <ListView.Resources>
+                Grid.Column="2"
+                x:Name="lvDownload" TabIndex="1">                
+                <ListView.Resources>                    
+                    <ContextMenu 
+                        x:Key="ItemContextMenu"
+                        DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">                        
+                        <MenuItem Header="Start" 
+                                  Command="{Binding StartCommand}"
+                                  CommandParameter="{Binding Path=SelectedItem}"/>                        
+                        <MenuItem Header="Pause"/>
+                        <MenuItem Header="Stop"/>
+                        <Separator/>
+                        <MenuItem Header="Remove from queue"/>
+                        <Separator/>
+                        <MenuItem Header="Open containing folder"/>
+                        <MenuItem Header="Delete"/>
+                    </ContextMenu>                    
                     <DataTemplate x:Key="Templ">
                         <TextBlock 
-                        HorizontalAlignment="Left" 
-                        Text="{Binding}" 
-                        Padding="5" />
-                    </DataTemplate>
+                            Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType={x:Type ListView}}}" 
+                            ContextMenu="{StaticResource ItemContextMenu}"
+                            HorizontalAlignment="Left" 
+                            Text="{Binding}" 
+                            Padding="5" />
+                    </DataTemplate>                    
                     <Style x:Key="LeftAligned" TargetType="{x:Type GridViewColumnHeader}">
                         <Setter Property="HorizontalContentAlignment" Value="Left" />
-                    </Style>
+                    </Style>                    
                     <Style x:Key="MiddleAligned" TargetType="{x:Type GridViewColumnHeader}">
                         <Setter Property="HorizontalContentAlignment" Value="Center" />
-                    </Style>
+                    </Style>                    
                     <Style x:Key="RightAligned" TargetType="{x:Type GridViewColumnHeader}">
                         <Setter Property="HorizontalContentAlignment" Value="Right" />
-                    </Style>
-                </ListView.Resources>
+                    </Style>                    
+                </ListView.Resources>                
                 <ListView.ItemContainerStyle>
                     <Style TargetType="{x:Type ListViewItem}">
                         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}"/>
                     </Style>
                 </ListView.ItemContainerStyle>
                 <ListView.View>
@@ -151,7 +295,6 @@
                         Header="Name" 
                         DisplayMemberBinding="{Binding Name}" 
                         Width="250"/>
-
                         <GridViewColumn 
                         HeaderTemplate="{StaticResource Templ}" 
                         HeaderContainerStyle="{StaticResource RightAligned}" 
@@ -257,5 +400,5 @@
                 </ListView.View>
             </ListView>
         </Grid>
-    </DockPanel>    
-</Window>
+    </DockPanel>
+</Window>    
