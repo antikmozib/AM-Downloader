@@ -12,16 +12,11 @@ namespace AMDownloader
     class QueueProcessor
     {
         private BlockingCollection<DownloaderObjectModel> _queueList;
+        private List<DownloaderObjectModel> _itemsProcessing;
         private CancellationTokenSource _ctsCancel;
         private CancellationToken _ctCancel;
 
-        public int Count
-        {
-            get
-            {
-                return _queueList.Count;
-            }
-        }
+        #region Properties
 
         public bool IsBusy
         {
@@ -31,69 +26,24 @@ namespace AMDownloader
             }
         }
 
+        #endregion
+
+        #region Constructors
+
         public QueueProcessor()
         {
             this._queueList = new BlockingCollection<DownloaderObjectModel>();
         }
 
-        // Producer
-        public void Add(DownloaderObjectModel item)
-        {
-            bool success = false;
+        #endregion
 
-            try
-            {
-                success = _queueList.TryAdd(item);
-            }
-            catch (OperationCanceledException)
-            {
-                _queueList.CompleteAdding();
-            }
-        }
-
-        // Consumer
-        public async Task StartAsync(params DownloaderObjectModel[] firstItems)
-        {
-            if (_ctsCancel != null)
-            {
-                return;
-            }
-
-            if (firstItems != null)
-            {
-                RecreateQueue(firstItems);
-            }
-
-            await ProcessQueueAsync();
-        }
-
-        public void Stop(ObservableCollection<DownloaderObjectModel> checkMainList = null)
-        {
-            if (_ctsCancel != null)
-            {
-                _ctsCancel.Cancel();
-            }
-
-            if (checkMainList != null)
-            {
-                var items = (from item in checkMainList
-                             where item.Status == DownloaderObjectModel.DownloadStatus.Downloading
-                             where item.QProcessor != null
-                             select item).ToArray();
-
-                Parallel.ForEach(items, (item) =>
-                {
-                    item.Pause();
-                });
-
-                RecreateQueue(items.ToArray());
-            }
-        }
+        #region Private methods
 
         private async Task ProcessQueueAsync()
         {
             _ctsCancel = new CancellationTokenSource();
             _ctCancel = _ctsCancel.Token;
+            _itemsProcessing = new List<DownloaderObjectModel>();
 
             while (!_ctCancel.IsCancellationRequested && _queueList.Count > 0)
             {
@@ -110,6 +60,11 @@ namespace AMDownloader
                         {
                             break;
                         }
+
+                        if (!items[i].IsQueued)
+                        {
+                            continue;
+                        }
                     }
 
                     List<Task> tasks = new List<Task>(items.Length);
@@ -117,10 +72,22 @@ namespace AMDownloader
                     foreach (DownloaderObjectModel item in items)
                     {
                         if (item != null)
+                        {
                             tasks.Add(item.StartAsync());
+                            _itemsProcessing.Add(item);
+                        }
                     }
 
                     await Task.WhenAll(tasks);
+
+                    // Download complete; remove from processing list
+                    foreach(DownloaderObjectModel item in items)
+                    {
+                        if (item != null)
+                        {
+                            _itemsProcessing.Remove(item);
+                        }
+                    }
                 }
                 catch (OperationCanceledException)
                 {
@@ -171,9 +138,72 @@ namespace AMDownloader
             disposeList.Dispose();
         }
 
+        #endregion
+
+        #region Public methods
+
+        // Producer
+        public void Add(DownloaderObjectModel item)
+        {
+            bool success = false;
+
+            try
+            {
+                success = _queueList.TryAdd(item);
+            }
+            catch (OperationCanceledException)
+            {
+                _queueList.CompleteAdding();
+            }
+        }
+
+        // Consumer
+        public async Task StartAsync(params DownloaderObjectModel[] firstItems)
+        {
+            if (_ctsCancel != null)
+            {
+                return;
+            }
+
+            if (firstItems != null)
+            {
+                RecreateQueue(firstItems);
+            }
+
+            await ProcessQueueAsync();
+        }
+
+        public void Stop()
+        {
+            _ctsCancel?.Cancel();
+
+            if (_itemsProcessing != null)
+            {
+                // Pause all downloads started as part of the queue
+                Parallel.ForEach(_itemsProcessing, (item) =>
+                {
+                    item.Pause();
+                });
+
+                // Items that were being downloaded were removed from the queue; add them back
+                RecreateQueue(_itemsProcessing.ToArray());
+            }
+        }
+
+        #endregion
+
+        #region Public functions
+
         public bool Contains(DownloaderObjectModel value)
         {
             return (_queueList.Contains<DownloaderObjectModel>(value));
         }
+
+        public int Count()
+        {
+            return _queueList.Count();
+        }
+
+        #endregion
     }
 }

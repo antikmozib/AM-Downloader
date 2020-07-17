@@ -6,6 +6,10 @@
     <RootNamespace>AMDownloader</RootNamespace>
     <UseWPF>true</UseWPF>
     <ApplicationIcon>app.ico</ApplicationIcon>
+    <Company>Antik Mozib</Company>
+    <Description>A free, modern download manager for Windows.
+https://github.com/antikmozib/am-downloader</Description>
+    <Copyright>Developed by Antik Mozib. Released under GNU GPLv3.</Copyright>
   </PropertyGroup>
 
   <ItemGroup>

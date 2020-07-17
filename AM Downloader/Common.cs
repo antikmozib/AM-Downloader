@@ -4,12 +4,19 @@ using System.Collections.ObjectModel;
 
 namespace AMDownloader
 {
-    class Shared
+    class Common
     {
         public const long KILOBYTE = 1024;
         public const long MEGABYTE = KILOBYTE * KILOBYTE;
         public const long GIGABYTE = MEGABYTE * KILOBYTE;
         public const long TERABYTE = GIGABYTE * KILOBYTE;
+
+        public interface IClipboard
+        {
+            public void SetText(string value);
+            public string GetText();
+            public void Clear();
+        }
 
         public static string PrettyNum<T>(T num)
         {
@@ -64,6 +71,25 @@ namespace AMDownloader
             }
 
             return result;
+        }
+
+        public static string PrettySpeed(long? speed)
+        {
+            if (speed > 1024)
+            {
+                return ((double)speed / (double)1024).ToString("#0.00") + " MB/s";
+            }
+            else
+            {
+                if (speed == null)
+                {
+                    return string.Empty;
+                }
+                else
+                {
+                    return speed.ToString() + " KB/s";
+                }
+            }
         }
     }
 }

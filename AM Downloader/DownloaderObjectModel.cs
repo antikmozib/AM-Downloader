@@ -7,7 +7,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
-using static AMDownloader.Shared;
+using static AMDownloader.Common;
 
 namespace AMDownloader
 {
@@ -35,13 +35,6 @@ namespace AMDownloader
                 return (_queueProcessor != null);
             }
         }
-        public QueueProcessor QProcessor
-        {
-            get
-            {
-                return _queueProcessor;
-            }
-        }
         public HttpClient Client
         {
             get
@@ -64,21 +57,7 @@ namespace AMDownloader
         {
             get
             {
-                if (this.Speed > 1024)
-                {
-                    return ((double)this.Speed / (double)1024).ToString("#0.00") + " MB/s";
-                }
-                else
-                {
-                    if (this.Speed == null)
-                    {
-                        return string.Empty;
-                    }
-                    else
-                    {
-                        return this.Speed.ToString() + " KB/s";
-                    }
-                }
+                return PrettySpeed(this.Speed);
             }
         }
         public string PrettyTotalSize
@@ -102,9 +81,23 @@ namespace AMDownloader
                 return new FileInfo(this.Destination).Directory.Name + " (" + this.Destination.Substring(0, this.Destination.Length - this.Name.Length - 1) + ")";
             }
         }
+        public string PrettyDateCreated
+        {
+            get
+            {
+                return this.DateCreated.ToString("dd MMM yy H:mm:ss");
+            }
+        }
+
         #endregion
 
-        public DownloaderObjectModel(ref HttpClient httpClient, string url, string destination, QueueProcessor queueProcessor = null)
+        #region Constructors
+
+        public DownloaderObjectModel(ref HttpClient httpClient, string url, string destination) : this(ref httpClient, url, destination, null)
+        {
+        }
+
+        public DownloaderObjectModel(ref HttpClient httpClient, string url, string destination, QueueProcessor queueProcessor)
         {
             this._httpClient = httpClient;
             this._queueProcessor = queueProcessor;
@@ -138,7 +131,7 @@ namespace AMDownloader
                 this.Status = DownloadStatus.Queued;
             }
 
-            Task.Run(async () => await DetermineTotalBytesToDownload()).ContinueWith(t =>
+            Task.Run(async () => await DetermineTotalBytesToDownloadAsync()).ContinueWith(t =>
             {
                 if (t.Exception != null)
                 {
@@ -149,16 +142,12 @@ namespace AMDownloader
             });
         }
 
+        #endregion
+
         #region Private methods
 
-        private void RemoveFromQueue()
+        private async Task DetermineTotalBytesToDownloadAsync()
         {
-
-        }
-
-        private async Task DetermineTotalBytesToDownload()
-        {
-            // Determine total size to download ASYNC!
             if (!await this.IsValidUrlAsync())
             {
                 throw new Exception();
@@ -269,7 +258,7 @@ namespace AMDownloader
                         _status = DownloadStatus.Finished;
                         progressReporter.Report(100);
 
-                        if (this.TotalBytesToDownload != null)
+                        if (this.TotalBytesToDownload == null)
                         {
                             // For downloads without total size, update total size once completed
                             this.TotalBytesToDownload = this.TotalBytesCompleted;
@@ -309,6 +298,8 @@ namespace AMDownloader
 
             _ctsCanceled = null;
             _ctsPaused = null;
+            _ctCancel = default;
+            _ctPause = default;
             _tcsDownloadItem.SetResult(_status);
         }
 
@@ -374,11 +365,12 @@ namespace AMDownloader
 
         #region Public methods
 
-        public void DeQueue()
+        public void Dequeue()
         {
             if (_queueProcessor != null)
             {
                 _queueProcessor = null;
+                AnnouncePropertyChanged(nameof(this.IsQueued));
             }
         }
 
@@ -429,7 +421,7 @@ namespace AMDownloader
                     {
                         this.Status = DownloadStatus.Error;
                         AnnouncePropertyChanged(nameof(this.Status));
-                        _queueProcessor = null;
+                        this.Dequeue();
                         return;
                     }
 
@@ -440,6 +432,7 @@ namespace AMDownloader
                     }
                     else if (_queueProcessor != null && _queueProcessor.Contains(this))
                     {
+                        // This is a part of the queue; start queue instead
                         await _queueProcessor.StartAsync(this);
                         return;
                     }
@@ -466,7 +459,7 @@ namespace AMDownloader
                 case (DownloadStatus.Finished):
                     this.Status = DownloadStatus.Finished;
                     AnnouncePropertyChanged(nameof(this.Status));
-                    _queueProcessor = null;
+                    this.Dequeue();
                     break;
 
                 default:
@@ -550,9 +543,9 @@ namespace AMDownloader
                     AnnouncePropertyChanged(nameof(this.Status));
                     if (_queueProcessor != null)
                     {
-                        // If was in queue, cancel queue
+                        // If was in queue, stop queue and dequeue this item
                         _queueProcessor.Stop();
-                        _queueProcessor = null;
+                        this.Dequeue();
                     }
                 });
             }
