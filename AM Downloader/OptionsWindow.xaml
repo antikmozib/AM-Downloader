@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AMDownloader"
         mc:Ignorable="d"
-        Title="OptionsWindow" Height="450" Width="800">
+        Title="Options" Height="250" Width="600" WindowStartupLocation="CenterOwner" WindowStyle="ToolWindow" ShowInTaskbar="False" ResizeMode="NoResize">
     <Grid>
         
     </Grid>

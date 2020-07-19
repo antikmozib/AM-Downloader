@@ -35,11 +35,11 @@ namespace AMDownloader
                 return (_queueProcessor != null);
             }
         }
-        public HttpClient Client
+        public bool IsBeingDownloaded
         {
             get
             {
-                return _httpClient;
+                return (_ctsPaused != null);
             }
         }
         public string Name { get; private set; }
@@ -135,6 +135,7 @@ namespace AMDownloader
             {
                 if (t.Exception != null)
                 {
+                    // invalid url
                     this.TotalBytesToDownload = null;
                     this.Status = DownloadStatus.Error;
                     this.Dequeue();
@@ -311,7 +312,7 @@ namespace AMDownloader
 
             Task.Run(async () =>
             {
-                while (this.Status == DownloadStatus.Downloading)
+                while (this.IsBeingDownloaded)
                 {
                     if (sw.ElapsedMilliseconds >= 1000 && this.BytesDownloadedThisSession > 0)
                     {
@@ -365,12 +366,33 @@ namespace AMDownloader
 
         #region Public methods
 
+        public void Enqueue(QueueProcessor queueProcessor)
+        {
+            if (this.IsQueued || this.Status != DownloadStatus.Ready) return;
+
+            this._queueProcessor = queueProcessor;
+
+            if (!queueProcessor.Contains(this))
+            {
+                queueProcessor.Add(this);
+            }
+
+            this.Status = DownloadStatus.Queued;
+            AnnouncePropertyChanged(nameof(this.Status));
+        }
+
         public void Dequeue()
         {
-            if (_queueProcessor != null)
+            if (_queueProcessor != null && !this.IsBeingDownloaded)
             {
                 _queueProcessor = null;
                 AnnouncePropertyChanged(nameof(this.IsQueued));
+
+                if (this.Status == DownloadStatus.Queued)
+                {
+                    this.Status = DownloadStatus.Ready;
+                    AnnouncePropertyChanged(nameof(this.Status));
+                }
             }
         }
 

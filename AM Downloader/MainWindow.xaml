@@ -1,14 +1,14 @@
-﻿<Window 
-    x:Class="AMDownloader.MainWindow" 
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-    xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity" 
+﻿<Window
+    x:Class="AMDownloader.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
     mc:Ignorable="d" 
     Title="AM Downloader"
     Height="450" 
-    Width="800" 
+    Width="1000" 
     WindowStartupLocation="CenterScreen">    
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Closing">
@@ -18,9 +18,12 @@
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File" TabIndex="9">
-                <MenuItem Header="_Options" />
+                <MenuItem 
+                    Header="_Options"
+                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                    Command="{Binding OptionsCommand}"/>
                 <Separator/>
-                <MenuItem x:Name="menuExit" Header="_Exit" Click="menuExit_Click" />
+                <MenuItem x:Name="menuExit" Header="E_xit" Click="menuExit_Click" />
             </MenuItem>
             <MenuItem Header="_Help" TabIndex="10">
                 <MenuItem x:Name="menuAbout" Header="_About" Click="menuAbout_Click" />
@@ -29,52 +32,52 @@
         <ToolBarTray DockPanel.Dock="Top">
             <ToolBar>
                 <Button 
-                    Padding="10" 
-                    Content="&#xF067; Add" 
-                    FontFamily="{StaticResource FontAwesome}" 
-                    x:Name="btnAdd" 
+                    Padding="10"
+                    Content="&#xF067; Add"
+                    FontFamily="{StaticResource FontAwesome}"
+                    x:Name="btnAdd"
                     CommandParameter="{Binding RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
                     Command="{Binding AddCommand}" TabIndex="2"  />
-                <Button 
-                    CommandParameter="{Binding SelectedItems, ElementName=lvDownload}" 
-                    Command="{Binding RemoveCommand}" 
-                    Padding="10" x:Name="btnRemove" 
-                    Content="&#xF068; Remove" 
+                <Button
+                    CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
+                    Command="{Binding RemoveCommand}"
+                    Padding="10" x:Name="btnRemove"
+                    Content="&#xF068; Remove"
                     FontFamily="{StaticResource FontAwesome}" TabIndex="3" />
                 <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
-                <Button 
-                    Padding="10" 
-                    Content="&#xF04B; Start" 
-                    FontFamily="{StaticResource FontAwesome}" 
-                    x:Name="btnStart" 
+                <Button
+                    Padding="10"
+                    Content="&#xF04B; Start"
+                    FontFamily="{StaticResource FontAwesome}"
+                    x:Name="btnStart"
                     CommandParameter="{Binding Path=SelectedItems, ElementName=lvDownload}"
                     Command="{Binding StartCommand}" TabIndex="4"  />
-                <Button 
-                    Padding="10" 
-                    Content="&#xF04C; Pause" 
-                    FontFamily="{StaticResource FontAwesome}" 
-                    x:Name="btnPause" 
+                <Button
+                    Padding="10"
+                    Content="&#xF04C; Pause"
+                    FontFamily="{StaticResource FontAwesome}"
+                    x:Name="btnPause"
                     CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
                     Command="{Binding PauseCommand}" TabIndex="5" />
-                <Button 
-                    Padding="10" 
-                    Content="&#xF00D; Cancel" 
-                    FontFamily="{StaticResource FontAwesome}" 
-                    x:Name="btnCancel" 
-                    CommandParameter="{Binding SelectedItems, ElementName=lvDownload}" 
+                <Button
+                    Padding="10"
+                    Content="&#xF00D; Cancel"
+                    FontFamily="{StaticResource FontAwesome}"
+                    x:Name="btnCancel"
+                    CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
                     Command="{Binding CancelCommand}" TabIndex="6"  />
                 <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
-                <Button 
-                    Padding="10" 
-                    Content="&#xF04B; Start Queue" 
-                    FontFamily="{StaticResource FontAwesome}" 
-                    x:Name="btnStartQueue" 
+                <Button
+                    Padding="10"
+                    Content="&#xF04B; Start Queue"
+                    FontFamily="{StaticResource FontAwesome}"
+                    x:Name="btnStartQueue"
                     Command="{Binding StartQueueCommand}" TabIndex="7" />
-                <Button 
-                    Padding="10" 
-                    Content="&#xF04D; Stop Queue" 
-                    FontFamily="{StaticResource FontAwesome}" 
-                    x:Name="btnCancelQueue" 
+                <Button
+                    Padding="10"
+                    Content="&#xF04D; Stop Queue"
+                    FontFamily="{StaticResource FontAwesome}"
+                    x:Name="btnCancelQueue"
                     Command="{Binding StopQueueCommand}" TabIndex="8" />
             </ToolBar>
         </ToolBarTray>
@@ -105,7 +108,7 @@
                 </i:Interaction.Triggers>
                 <TreeView.Resources>                   
                     <ControlTemplate TargetType="TreeViewItem" x:Key="QueuedTemplate">
-                        <StackPanel 
+                        <StackPanel
                             Height="25"
                             Orientation="Horizontal" 
                             Background="{TemplateBinding Background}">
@@ -113,53 +116,53 @@
                                 Margin="5 0 5 0"
                                 Width="12"
                                 Height="12"
-                                Fill="DarkOrange"/>
-                            <TextBlock 
+                                Fill="SandyBrown"/>
+                            <TextBlock
                                 VerticalAlignment="Center" 
                                 Text="{Binding}"/>
                         </StackPanel>
                     </ControlTemplate>
                     <ControlTemplate TargetType="TreeViewItem" x:Key="DownloadTemplate">
-                        <StackPanel 
+                        <StackPanel
                             Height="25"
                             Background="{TemplateBinding Background}"                            
                             Orientation="Horizontal">
-                            <Ellipse                               
+                            <Ellipse
                                 Margin="5 0 5 0"
                                 Width="12"
                                 Height="12"
-                                Fill="Green"/>
-                            <TextBlock 
-                                VerticalAlignment="Center" 
+                                Fill="LimeGreen"/>
+                            <TextBlock
+                                VerticalAlignment="Center"
                                 Text="{Binding}"/>
                         </StackPanel>
                     </ControlTemplate>
                     <ControlTemplate TargetType="TreeViewItem" x:Key="AllTemplate">
-                        <StackPanel 
+                        <StackPanel
                             Height="25"
-                            Background="{TemplateBinding Background}"                            
+                            Background="{TemplateBinding Background}"
                             Orientation="Horizontal">
-                            <Ellipse                               
+                            <Ellipse
                                 Margin="5 0 5 0"
                                 Width="12"
                                 Height="12"
-                                Fill="Black"/>
-                            <TextBlock 
-                                VerticalAlignment="Center" 
+                                Fill="DarkSlateBlue"/>
+                            <TextBlock
+                                VerticalAlignment="Center"
                                 Text="{Binding}"/>
                         </StackPanel>
                     </ControlTemplate>
                     <ControlTemplate TargetType="TreeViewItem" x:Key="ReadyTemplate">
-                        <StackPanel 
+                        <StackPanel
                             Height="25"
-                            Background="{TemplateBinding Background}"                            
+                            Background="{TemplateBinding Background}"
                             Orientation="Horizontal">
-                            <Ellipse                               
+                            <Ellipse
                                 Margin="5 0 5 0"
                                 Width="12"
                                 Height="12"
-                                Fill="LightGreen"/>
-                            <TextBlock 
+                                Fill="LightSeaGreen"/>
+                            <TextBlock
                                 VerticalAlignment="Center" 
                                 Text="{Binding}"/>
                         </StackPanel>
@@ -169,43 +172,43 @@
                             Height="25"
                             Background="{TemplateBinding Background}"                            
                             Orientation="Horizontal">
-                            <Ellipse                               
+                            <Ellipse
                                 Margin="5 0 5 0"
                                 Width="12"
                                 Height="12"
-                                Fill="Yellow"/>
-                            <TextBlock 
-                                VerticalAlignment="Center" 
+                                Fill="Gold"/>
+                            <TextBlock
+                                VerticalAlignment="Center"
                                 Text="{Binding}"/>
                         </StackPanel>
                     </ControlTemplate>
                     <ControlTemplate TargetType="TreeViewItem" x:Key="ErrorTemplate">
-                        <StackPanel 
+                        <StackPanel
                             Height="25"
-                            Background="{TemplateBinding Background}"                            
+                            Background="{TemplateBinding Background}"
                             Orientation="Horizontal">
-                            <Ellipse                               
+                            <Ellipse
                                 Margin="5 0 5 0"
                                 Width="12"
                                 Height="12"
                                 Fill="Red"/>
-                            <TextBlock 
-                                VerticalAlignment="Center" 
+                            <TextBlock
+                                VerticalAlignment="Center"
                                 Text="{Binding}"/>
                         </StackPanel>
                     </ControlTemplate>
                     <ControlTemplate TargetType="TreeViewItem" x:Key="FinishedTemplate">
-                        <StackPanel 
+                        <StackPanel
                             Height="25"
-                            Background="{TemplateBinding Background}"                            
+                            Background="{TemplateBinding Background}"
                             Orientation="Horizontal">
-                            <Ellipse                               
+                            <Ellipse
                                 Margin="5 0 5 0"
                                 Width="12"
                                 Height="12"
-                                Fill="Blue"/>
-                            <TextBlock 
-                                VerticalAlignment="Center" 
+                                Fill="LightSlateGray"/>
+                            <TextBlock
+                                VerticalAlignment="Center"
                                 Text="{Binding}"/>
                         </StackPanel>
                     </ControlTemplate>
@@ -214,8 +217,7 @@
                     <Style TargetType="{x:Type TreeViewItem}">
                         <Style.Triggers>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="LightBlue"/>
-                                <Setter Property="Foreground" Value="Black"/>
+                                <Setter Property="Background" Value="PowderBlue"/>
                                 <Setter Property="FontWeight" Value="Bold"/>
                             </Trigger>
                             <DataTrigger Binding="{Binding}" Value="Downloading">
@@ -229,7 +231,7 @@
                                 <Setter Property="IsSelected" Value="True"/>
                             </DataTrigger>
                             <DataTrigger Binding="{Binding}" Value="Ready">
-                                <Setter Property="Template" Value="{StaticResource ReadyTemplate}"/>                                
+                                <Setter Property="Template" Value="{StaticResource ReadyTemplate}"/>
                             </DataTrigger>
                             <DataTrigger Binding="{Binding}" Value="Paused">
                                 <Setter Property="Template" Value="{StaticResource PausedTemplate}"/>
@@ -245,104 +247,101 @@
                 </TreeView.ItemContainerStyle>                
             </TreeView>
             <GridSplitter Grid.Column="1" Width="3" HorizontalAlignment="Stretch"/>
-            <ListView 
-                Grid.Column="2"
-                x:Name="lvDownload" TabIndex="1">                
-                <ListView.Resources>                    
-                    <ContextMenu 
-                        x:Key="ItemContextMenu"
-                        DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">                        
-                        <MenuItem Header="Start" 
-                                  Command="{Binding StartCommand}"
-                                  CommandParameter="{Binding Path=SelectedItem}"/>                        
-                        <MenuItem Header="Pause"/>
-                        <MenuItem Header="Stop"/>
-                        <Separator/>
-                        <MenuItem Header="Remove from queue"/>
-                        <Separator/>
+            <ListView
+                x:Name="lvDownload" TabIndex="1" Grid.Column="2">
+                <ListView.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Open"/>
                         <MenuItem Header="Open containing folder"/>
-                        <MenuItem Header="Delete"/>
-                    </ContextMenu>                    
+                        <Separator/>
+                        <MenuItem Header="Start" Command="{Binding StartCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                        <MenuItem Header="Pause" Command="{Binding PauseCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                        <MenuItem Header="Cancel" Command="{Binding CancelCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                        <Separator/>
+                        <MenuItem Header="Add to queue" Command="{Binding AddToQueueCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                        <MenuItem Header="Remove from queue" Command="{Binding RemoveFromQueueCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                        <Separator/>
+                        <MenuItem Header="Remove" Command="{Binding RemoveCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                    </ContextMenu>
+                </ListView.ContextMenu>
+                <ListView.Resources>
                     <DataTemplate x:Key="Templ">
-                        <TextBlock 
-                            Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType={x:Type ListView}}}" 
-                            ContextMenu="{StaticResource ItemContextMenu}"
+                        <TextBlock
                             HorizontalAlignment="Left" 
                             Text="{Binding}" 
-                            Padding="5" />
-                    </DataTemplate>                    
+                            Padding="5"/>
+                    </DataTemplate>
                     <Style x:Key="LeftAligned" TargetType="{x:Type GridViewColumnHeader}">
                         <Setter Property="HorizontalContentAlignment" Value="Left" />
-                    </Style>                    
+                    </Style>
                     <Style x:Key="MiddleAligned" TargetType="{x:Type GridViewColumnHeader}">
                         <Setter Property="HorizontalContentAlignment" Value="Center" />
-                    </Style>                    
+                    </Style>
                     <Style x:Key="RightAligned" TargetType="{x:Type GridViewColumnHeader}">
                         <Setter Property="HorizontalContentAlignment" Value="Right" />
-                    </Style>                    
-                </ListView.Resources>                
+                    </Style>
+                </ListView.Resources>
                 <ListView.ItemContainerStyle>
                     <Style TargetType="{x:Type ListViewItem}">
                         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                        <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}"/>
                     </Style>
                 </ListView.ItemContainerStyle>
                 <ListView.View>
                     <GridView>
-                        <GridViewColumn 
-                        HeaderTemplate="{StaticResource Templ}" 
-                        HeaderContainerStyle="{StaticResource LeftAligned}" 
-                        Header="Name" 
-                        DisplayMemberBinding="{Binding Name}" 
+                        <GridViewColumn
+                        HeaderTemplate="{StaticResource Templ}"
+                        HeaderContainerStyle="{StaticResource LeftAligned}"
+                        Header="Name"
+                        DisplayMemberBinding="{Binding Name}"
                         Width="250"/>
-                        <GridViewColumn 
-                        HeaderTemplate="{StaticResource Templ}" 
-                        HeaderContainerStyle="{StaticResource RightAligned}" 
-                        Header="Status" 
+                        <GridViewColumn
+                        HeaderTemplate="{StaticResource Templ}"
+                        HeaderContainerStyle="{StaticResource RightAligned}"
+                        Header="Status"
                         Width="100">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <TextBlock 
-                                        Text="{Binding Status}" 
+                                        <TextBlock
+                                        Text="{Binding Status}"
                                         HorizontalAlignment="Right" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn 
-                        HeaderTemplate="{StaticResource Templ}" 
-                        HeaderContainerStyle="{StaticResource MiddleAligned}" 
-                        Header="Progress" 
-                        Width="100">
+                        <GridViewColumn
+                            HeaderTemplate="{StaticResource Templ}" 
+                            HeaderContainerStyle="{StaticResource MiddleAligned}" 
+                            Header="Progress" 
+                            Width="100">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <ProgressBar 
-                                        x:Name="pbProgress" 
-                                        VerticalAlignment="Stretch" 
+                                        <ProgressBar
+                                        x:Name="pbProgress"
+                                        VerticalAlignment="Stretch"
                                         HorizontalAlignment="Stretch"
-                                        Minimum="0" 
-                                        Maximum="100" 
+                                        Minimum="0"
+                                        Maximum="100"
                                         Value="{Binding Progress, Mode=OneWay}" />
-                                        <TextBlock 
+                                        <TextBlock
                                         Text="{Binding Value, ElementName=pbProgress, StringFormat=\{0:0\}%}" 
-                                        HorizontalAlignment="Center" 
+                                        HorizontalAlignment="Center"
                                         VerticalAlignment="Center" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn 
-                        HeaderTemplate="{StaticResource Templ}" 
-                        HeaderContainerStyle="{StaticResource RightAligned}" 
-                        Header="Downloaded" 
-                        Width="100">
+                        <GridViewColumn
+                            HeaderTemplate="{StaticResource Templ}"
+                            HeaderContainerStyle="{StaticResource RightAligned}"
+                            Header="Downloaded"
+                            Width="100">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <TextBlock 
-                                        Text="{Binding PrettyDownloadedSoFar}" 
+                                        <TextBlock
+                                        Text="{Binding PrettyDownloadedSoFar}"
                                         HorizontalAlignment="Right" />
                                     </Grid>
                                 </DataTemplate>

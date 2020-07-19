@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using Ookii.Dialogs.Wpf;
 
 namespace AMDownloader
@@ -6,11 +7,13 @@ namespace AMDownloader
     /// <summary>
     /// Interaction logic for AddDownloadWindow.xaml
     /// </summary>
+    /// 
     public partial class AddDownloadWindow : Window
     {
         public AddDownloadWindow()
         {
             InitializeComponent();
+            cboDestination.Items.Add(Environment.GetFolderPath(Environment.SpecialFolder.Desktop));
             txtUrl.Focus();
         }
 
@@ -24,7 +27,8 @@ namespace AMDownloader
             var folderPicker = new VistaFolderBrowserDialog();
             if ((bool)folderPicker.ShowDialog(this))
             {
-                txtDestination.Text = folderPicker.SelectedPath;
+                cboDestination.Items.Add(folderPicker.SelectedPath);
+                cboDestination.SelectedIndex = cboDestination.Items.Count - 1;
             }
         }
 

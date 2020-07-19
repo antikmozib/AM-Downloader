@@ -15,7 +15,8 @@
     <Grid 
         Margin="10">
         <Grid.RowDefinitions>
-            <RowDefinition Height="auto"/>
+            <RowDefinition Height="25"/>
+            <RowDefinition Height="15"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="15"/>
             <RowDefinition Height="25"/>
@@ -35,9 +36,9 @@
                 />
         </DockPanel>        
         <TextBox 
+            Padding="2"
             x:Name="txtUrl" 
-            Grid.Row="1" 
-            Padding="5" 
+            Grid.Row="2" 
             Text="{Binding Path=Urls}" 
             Width="auto" 
             Height="auto"
@@ -47,7 +48,7 @@
             VerticalScrollBarVisibility="Auto" 
             AcceptsReturn="True"/>
         <DockPanel
-            Grid.Row="3"
+            Grid.Row="4"
             HorizontalAlignment="Stretch">
             <Label 
                 DockPanel.Dock="Left" 
@@ -58,16 +59,15 @@
                 Content="Browse" 
                 Width="100" 
                 Click="btnBrowse_Click"/>
-            <TextBox 
+            <ComboBox
+                x:Name="cboDestination"
                 Margin="0 0 10 0"
-                x:Name="txtDestination"
-                Text="{Binding Path=SaveToFolder, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                Width="auto" 
-                HorizontalAlignment="Stretch" 
-                VerticalContentAlignment="Center" 
-                IsReadOnly="True"/>
+                Text="{Binding Path=SaveToFolder, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                Width="auto"
+                HorizontalAlignment="Stretch"
+                VerticalContentAlignment="Center" IsEditable="True" IsReadOnly="True"/>
         </DockPanel>
-        <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right">
+        <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Right">
             <CheckBox 
                 x:Name="cbAddToQueue" 
                 Content="Add to queue" 

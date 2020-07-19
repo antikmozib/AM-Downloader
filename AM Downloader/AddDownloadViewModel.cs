@@ -7,8 +7,8 @@ using System.Diagnostics;
 using static AMDownloader.Common;
 using System.ComponentModel;
 using System.Threading;
-using System.Windows;
 using System;
+using System.Windows.Input;
 
 namespace AMDownloader
 {
@@ -55,9 +55,8 @@ namespace AMDownloader
                                 {
                                     if (!this.Urls.Contains(clip))
                                     {
-                                        this.Urls += '\n' + clip;
+                                        this.Urls += clip + '\n';
                                         AnnouncePropertyChanged(nameof(this.Urls));
-                                        _clipboardService.Clear();
                                     }
                                 }
                             }
@@ -78,15 +77,28 @@ namespace AMDownloader
             }
         }
 
-        public RelayCommand AddCommand { get; private set; }
-        public RelayCommand PreviewCommand { get; private set; }
+        public ICommand AddCommand { get; private set; }
+        public ICommand PreviewCommand { get; private set; }
 
         public AddDownloadViewModel(DownloaderViewModel parentViewModel)
         {
             _parentViewModel = parentViewModel;
+
             AddCommand = new RelayCommand(Add);
             PreviewCommand = new RelayCommand(Preview);
+
             _clipboardService = new ClipboardObserver();
+
+            this.SaveToFolder = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            this.AddToQueue = true;
+            this.StartDownload = false;
+            this.Urls = string.Empty;
+
+            var clipText = _clipboardService.GetText();
+            if (clipText.Contains("http"))
+            {
+                this.Urls += clipText;
+            }
         }
 
         public void Preview(object item)
@@ -117,7 +129,7 @@ namespace AMDownloader
 
             if (AddToQueue && StartDownload)
             {
-                Task.Run(async () => await _parentViewModel.MainQueueProcessor.StartAsync());
+                Task.Run(async () => await _parentViewModel.QueueProcessor.StartAsync());
             }
         }
 
@@ -128,8 +140,8 @@ namespace AMDownloader
 
             if (AddToQueue)
             {
-                dItem = new DownloaderObjectModel(ref _parentViewModel.Client, url, fileName, _parentViewModel.MainQueueProcessor);
-                _parentViewModel.MainQueueProcessor.Add(dItem);
+                dItem = new DownloaderObjectModel(ref _parentViewModel.Client, url, fileName, _parentViewModel.QueueProcessor);
+                _parentViewModel.QueueProcessor.Add(dItem);
             }
             else
             {
@@ -168,14 +180,14 @@ namespace AMDownloader
 
                     for (int i = lBound; i <= uBound; i++)
                     {
-                        var newurl = url.Replace(bounds, i.ToString());
+                        var newurl = url.Replace(bounds, i.ToString()).Trim();
                         urlList.Add(newurl);
                     }
                 }
                 else
                 {
                     // normal url
-                    urlList.Add(url);
+                    urlList.Add(url.Trim());
                 }
             }
 

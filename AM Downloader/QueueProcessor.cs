@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
@@ -9,6 +10,7 @@ namespace AMDownloader
 {
     class QueueProcessor
     {
+        private ObservableCollection<DownloaderObjectModel> _mainDownloadsList;
         private BlockingCollection<DownloaderObjectModel> _queueList;
         private List<DownloaderObjectModel> _itemsProcessing;
         private CancellationTokenSource _ctsCancel;
@@ -28,8 +30,9 @@ namespace AMDownloader
 
         #region Constructors
 
-        public QueueProcessor()
+        public QueueProcessor(ObservableCollection<DownloaderObjectModel> mainDownloadsList)
         {
+            this._mainDownloadsList = mainDownloadsList;
             this._queueList = new BlockingCollection<DownloaderObjectModel>();
         }
 
@@ -50,19 +53,33 @@ namespace AMDownloader
                     // Download max n items
                     DownloaderObjectModel[] items = { null, null, null };
 
-                    for (int i = 0; i < items.Length; i++)
-                    {
-                        items[i] = null;
+                    int itemsAdded = 0;
 
-                        if (!_queueList.TryTake(out items[i]))
+                    while (itemsAdded < items.Count<DownloaderObjectModel>())
+                    {
+                        items[itemsAdded] = null;
+
+                        if (_ctCancel.IsCancellationRequested)
                         {
                             break;
                         }
 
-                        if (!items[i].IsQueued)
+                        if (!_queueList.TryTake(out items[itemsAdded]))
+                        {
+                            break;
+                        }
+
+                        if (!items[itemsAdded].IsQueued)
                         {
                             continue;
                         }
+
+                        if (!_mainDownloadsList.Contains(items[itemsAdded]))
+                        {
+                            continue;
+                        }
+
+                        itemsAdded++;
                     }
 
                     List<Task> tasks = new List<Task>(items.Length);
@@ -96,6 +113,7 @@ namespace AMDownloader
             }
 
             _ctsCancel = null;
+            _ctCancel = default;
         }
 
         private void RecreateQueue(params DownloaderObjectModel[] firstItems)
