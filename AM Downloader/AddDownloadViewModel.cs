@@ -51,13 +51,10 @@ namespace AMDownloader
 
                                 string clip = _clipboardService.GetText();
 
-                                if (clip.Contains("http") || clip.Contains("ftp"))
+                                if ((clip.Contains("http") || clip.Contains("ftp")) && !this.Urls.Contains(clip))
                                 {
-                                    if (!this.Urls.Contains(clip))
-                                    {
-                                        this.Urls += clip + '\n';
-                                        AnnouncePropertyChanged(nameof(this.Urls));
-                                    }
+                                    this.Urls += clip + '\n';
+                                    AnnouncePropertyChanged(nameof(this.Urls));
                                 }
                             }
 

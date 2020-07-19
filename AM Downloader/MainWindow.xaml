@@ -72,7 +72,7 @@
                     Content="&#xF04B; Start Queue"
                     FontFamily="{StaticResource FontAwesome}"
                     x:Name="btnStartQueue"
-                    Command="{Binding StartQueueCommand}" TabIndex="7" />
+                    Command="{Binding StartQueueCommand}" CommandParameter="{Binding SelectedItems, ElementName=lvDownload}" TabIndex="7" />
                 <Button
                     Padding="10"
                     Content="&#xF04D; Stop Queue"
@@ -251,8 +251,8 @@
                 x:Name="lvDownload" TabIndex="1" Grid.Column="2">
                 <ListView.ContextMenu>
                     <ContextMenu>
-                        <MenuItem Header="Open"/>
-                        <MenuItem Header="Open containing folder"/>
+                        <MenuItem Header="Open" Command="{Binding OpenCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                        <MenuItem Header="Open containing folder" Command="{Binding OpenContainingFolderCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                         <Separator/>
                         <MenuItem Header="Start" Command="{Binding StartCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                         <MenuItem Header="Pause" Command="{Binding PauseCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
@@ -348,16 +348,16 @@
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
                         <GridViewColumn 
-                        HeaderTemplate="{StaticResource Templ}" 
-                        HeaderContainerStyle="{StaticResource LeftAligned}" 
-                        Header="Size" 
-                        DisplayMemberBinding="{Binding PrettyTotalSize}" 
-                        Width="75" />
+                            HeaderTemplate="{StaticResource Templ}" 
+                            HeaderContainerStyle="{StaticResource LeftAligned}" 
+                            Header="Size" 
+                            DisplayMemberBinding="{Binding PrettyTotalSize}" 
+                            Width="75" />
                         <GridViewColumn 
-                        HeaderTemplate="{StaticResource Templ}" 
-                        HeaderContainerStyle="{StaticResource RightAligned}" 
-                        Header="Speed" 
-                        Width="75">
+                            HeaderTemplate="{StaticResource Templ}" 
+                            HeaderContainerStyle="{StaticResource RightAligned}" 
+                            Header="Speed" 
+                            Width="75">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
@@ -369,22 +369,22 @@
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
                         <GridViewColumn 
-                        HeaderTemplate="{StaticResource Templ}" 
-                        HeaderContainerStyle="{StaticResource LeftAligned}" 
-                        Header="Location" 
-                        DisplayMemberBinding="{Binding PrettyDestination}"
-                        Width="250" />
+                            HeaderTemplate="{StaticResource Templ}" 
+                            HeaderContainerStyle="{StaticResource LeftAligned}" 
+                            Header="Location" 
+                            DisplayMemberBinding="{Binding PrettyDestination}"
+                            Width="250" />
                         <GridViewColumn 
-                        HeaderTemplate="{StaticResource Templ}" 
-                        HeaderContainerStyle="{StaticResource LeftAligned}" 
-                        Header="URL" 
-                        DisplayMemberBinding="{Binding Url}"
-                        Width="400" />
+                            HeaderTemplate="{StaticResource Templ}" 
+                            HeaderContainerStyle="{StaticResource LeftAligned}" 
+                            Header="URL" 
+                            DisplayMemberBinding="{Binding Url}"
+                            Width="400" />
                         <GridViewColumn 
-                        HeaderTemplate="{StaticResource Templ}" 
-                        HeaderContainerStyle="{StaticResource RightAligned}" 
-                        Header="Created" 
-                        Width="150">
+                            HeaderTemplate="{StaticResource Templ}" 
+                            HeaderContainerStyle="{StaticResource RightAligned}" 
+                            Header="Created" 
+                            Width="150">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>

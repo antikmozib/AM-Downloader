@@ -9,6 +9,7 @@ using System.ComponentModel;
 using System;
 using System.Windows.Data;
 using static AMDownloader.DownloaderObjectModel;
+using System.IO;
 
 namespace AMDownloader
 {
@@ -33,6 +34,7 @@ namespace AMDownloader
         public ICommand CancelCommand { private get; set; }
         public ICommand PauseCommand { get; private set; }
         public ICommand OpenCommand { get; private set; }
+        public ICommand OpenContainingFolderCommand { get; private set; }
         public ICommand StartQueueCommand { get; private set; }
         public ICommand StopQueueCommand { get; private set; }
         public ICommand WindowClosingCommand { get; private set; }
@@ -60,6 +62,7 @@ namespace AMDownloader
             CancelCommand = new RelayCommand(Cancel, Cancel_CanExecute);
             PauseCommand = new RelayCommand(Pause, Pause_CanExecute);
             OpenCommand = new RelayCommand(Open, Open_CanExecute);
+            OpenContainingFolderCommand = new RelayCommand(OpenContainingFolder, OpenContainingFolder_CanExecute);
             StartQueueCommand = new RelayCommand(StartQueue, StartQueue_CanExecute);
             StopQueueCommand = new RelayCommand(StopQueue, StopQueue_CanExecute);
             WindowClosingCommand = new RelayCommand(WindowClosing);
@@ -383,9 +386,10 @@ namespace AMDownloader
         {
             if (obj == null) return;
 
-            DownloaderObjectModel item = obj as DownloaderObjectModel;
+            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
+            var itemsFinished = from item in items where item.Status == DownloadStatus.Finished where new FileInfo(item.Destination).Exists select item;
 
-            if (item.Status == DownloadStatus.Finished)
+            foreach (var item in itemsFinished)
             {
                 Process.Start(item.Destination);
             }
@@ -393,13 +397,42 @@ namespace AMDownloader
 
         public bool Open_CanExecute(object obj)
         {
-            if (obj != null)
+            if (obj == null) return false;
+
+            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
+            var itemsFinished = from item in items where item.Status == DownloadStatus.Finished where new FileInfo(item.Destination).Exists select item;
+
+            if (itemsFinished.Count<DownloaderObjectModel>() > 0)
             {
-                var item = obj as DownloaderObjectModel;
-                if (item.Status == DownloadStatus.Finished)
-                {
-                    return true;
-                }
+                return true;
+            }
+
+            return false;
+        }
+
+        void OpenContainingFolder(object obj)
+        {
+            if (obj == null) return;
+
+            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
+            var itemsExist = from item in items where new FileInfo(item.Destination).Exists select item;
+
+            foreach (var item in itemsExist)
+            {
+                Process.Start("explorer.exe","/select, \"\"" + item.Destination + "\"\"");
+            }
+        }
+
+        bool OpenContainingFolder_CanExecute(object obj)
+        {
+            if (obj == null) return false;
+
+            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
+            var itemsExist = from item in items where new FileInfo(item.Destination).Exists select item;
+
+            if (itemsExist.Count<DownloaderObjectModel>() > 0)
+            {
+                return true;
             }
 
             return false;
@@ -412,7 +445,12 @@ namespace AMDownloader
 
         public bool StartQueue_CanExecute(object obj)
         {
-            if (!QueueProcessor.IsBusy && QueueProcessor.Count() > 0)
+            if (obj == null) return false;
+
+            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
+            var itemsInQueue = from item in items where item.IsQueued where !item.IsBeingDownloaded select item;
+
+            if (!QueueProcessor.IsBusy && itemsInQueue.Count() > 0)
             {
                 return true;
             }

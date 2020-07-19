@@ -383,7 +383,7 @@ namespace AMDownloader
 
         public void Dequeue()
         {
-            if (_queueProcessor != null && !this.IsBeingDownloaded)
+            if (this.IsQueued && !this.IsBeingDownloaded)
             {
                 _queueProcessor = null;
                 AnnouncePropertyChanged(nameof(this.IsQueued));
@@ -452,7 +452,7 @@ namespace AMDownloader
                         // Download is paused; resume from specific point
                         bytesAlreadyDownloaded = new FileInfo(this.Destination).Length;
                     }
-                    else if (_queueProcessor != null && _queueProcessor.Contains(this))
+                    else if (this.IsQueued && _queueProcessor.Contains(this))
                     {
                         // This is a part of the queue; start queue instead
                         await _queueProcessor.StartAsync(this);
@@ -563,7 +563,7 @@ namespace AMDownloader
                 {
                     this.Status = DownloadStatus.Ready;
                     AnnouncePropertyChanged(nameof(this.Status));
-                    if (_queueProcessor != null)
+                    if (this.IsQueued)
                     {
                         // If was in queue, stop queue and dequeue this item
                         _queueProcessor.Stop();
