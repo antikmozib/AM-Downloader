@@ -28,20 +28,8 @@ namespace AMDownloader
 
         #region Properties
 
-        public bool IsQueued
-        {
-            get
-            {
-                return (_queueProcessor != null);
-            }
-        }
-        public bool IsBeingDownloaded
-        {
-            get
-            {
-                return (_ctsPaused != null);
-            }
-        }
+        public bool IsQueued { get { return (_queueProcessor != null); } }
+        public bool IsBeingDownloaded { get { return (_ctsPaused != null); } }
         public string Name { get; private set; }
         public string Url { get; private set; }
         public string Destination { get; private set; }
@@ -53,41 +41,11 @@ namespace AMDownloader
         public bool SupportsResume { get; private set; }
         public long? Speed { get; private set; } // nullable
         public DateTime DateCreated { get; private set; }
-        public string PrettySpeed
-        {
-            get
-            {
-                return PrettySpeed(this.Speed);
-            }
-        }
-        public string PrettyTotalSize
-        {
-            get
-            {
-                return PrettyNum(this.TotalBytesToDownload);
-            }
-        }
-        public string PrettyDownloadedSoFar
-        {
-            get
-            {
-                return PrettyNum(this.TotalBytesCompleted);
-            }
-        }
-        public string PrettyDestination
-        {
-            get
-            {
-                return new FileInfo(this.Destination).Directory.Name + " (" + this.Destination.Substring(0, this.Destination.Length - this.Name.Length - 1) + ")";
-            }
-        }
-        public string PrettyDateCreated
-        {
-            get
-            {
-                return this.DateCreated.ToString("dd MMM yy H:mm:ss");
-            }
-        }
+        public string PrettySpeed { get { return PrettySpeed(this.Speed); } }
+        public string PrettyTotalSize { get { return PrettyNum(this.TotalBytesToDownload); } }
+        public string PrettyDownloadedSoFar { get { return PrettyNum(this.TotalBytesCompleted); } }
+        public string PrettyDestination { get { return new FileInfo(this.Destination).Directory.Name + " (" + this.Destination.Substring(0, this.Destination.Length - this.Name.Length - 1) + ")"; } }
+        public string PrettyDateCreated { get { return this.DateCreated.ToString("dd MMM yy H:mm:ss"); } }
 
         #endregion
 
@@ -263,6 +221,7 @@ namespace AMDownloader
                         {
                             // For downloads without total size, update total size once completed
                             this.TotalBytesToDownload = this.TotalBytesCompleted;
+                            AnnouncePropertyChanged(nameof(this.PrettyTotalSize));
                         }
                     }
                     else
@@ -324,7 +283,7 @@ namespace AMDownloader
                     await Task.Delay(1000);
 
                 }
-            }).ContinueWith((cw) =>
+            }).ContinueWith((t) =>
             {
                 sw.Stop();
                 this.Speed = null;

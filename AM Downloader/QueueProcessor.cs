@@ -18,13 +18,7 @@ namespace AMDownloader
 
         #region Properties
 
-        public bool IsBusy
-        {
-            get
-            {
-                return (_ctsCancel != null);
-            }
-        }
+        public bool IsBusy { get { return (_ctsCancel != null); } }
 
         #endregion
 
@@ -59,32 +53,15 @@ namespace AMDownloader
                     {
                         items[itemsAdded] = null;
 
-                        if (_ctCancel.IsCancellationRequested)
-                        {
-                            break;
-                        }
-
-                        if (!_queueList.TryTake(out items[itemsAdded]))
-                        {
-                            break;
-                        }
-
-                        if (!items[itemsAdded].IsQueued)
-                        {
-                            continue;
-                        }
-
-                        if (!_mainDownloadsList.Contains(items[itemsAdded]))
-                        {
-                            continue;
-                        }
+                        if (_ctCancel.IsCancellationRequested || !_queueList.TryTake(out items[itemsAdded])) break;
+                        if (!items[itemsAdded].IsQueued || !_mainDownloadsList.Contains(items[itemsAdded])) continue;
 
                         itemsAdded++;
                     }
 
                     List<Task> tasks = new List<Task>(items.Length);
 
-                    foreach (DownloaderObjectModel item in items)
+                    foreach (var item in items)
                     {
                         if (item != null)
                         {
@@ -98,13 +75,8 @@ namespace AMDownloader
                     await Task.WhenAll(tasks);
 
                     // Download complete; remove from processing list
-                    foreach (DownloaderObjectModel item in items)
-                    {
-                        if (item != null)
-                        {
-                            _itemsProcessing.Remove(item);
-                        }
-                    }
+                    foreach (var item in items)
+                        if (item != null) _itemsProcessing.Remove(item);
                 }
                 catch (OperationCanceledException)
                 {
@@ -118,36 +90,24 @@ namespace AMDownloader
 
         private void RecreateQueue(params DownloaderObjectModel[] firstItems)
         {
-            if (this._queueList == null)
-            {
-                return;
-            }
+            if (this._queueList == null) return;
 
-            if (_ctsCancel != null)
-            {
-                _ctsCancel.Cancel();
-            }
+            _ctsCancel?.Cancel();
 
-            BlockingCollection<DownloaderObjectModel> newList = new BlockingCollection<DownloaderObjectModel>();
+            var newList = new BlockingCollection<DownloaderObjectModel>();
 
-            foreach (DownloaderObjectModel obj in firstItems)
-            {
+            foreach (var obj in firstItems)
                 newList.Add(obj);
-            }
 
-            foreach (DownloaderObjectModel obj in _queueList)
+            foreach (var obj in _queueList)
             {
                 DownloaderObjectModel item = null;
                 if (_queueList.TryTake(out item))
                 {
                     if (firstItems.Contains<DownloaderObjectModel>(item))
-                    {
                         continue;
-                    }
                     else
-                    {
                         newList.Add(item);
-                    }
                 }
             }
 
@@ -178,15 +138,9 @@ namespace AMDownloader
         // Consumer
         public async Task StartAsync(params DownloaderObjectModel[] firstItems)
         {
-            if (_ctsCancel != null)
-            {
-                return;
-            }
+            if (_ctsCancel != null) return;
 
-            if (firstItems != null)
-            {
-                RecreateQueue(firstItems);
-            }
+            if (firstItems != null) RecreateQueue(firstItems);
 
             await ProcessQueueAsync();
         }

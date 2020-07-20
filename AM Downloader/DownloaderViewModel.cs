@@ -8,8 +8,8 @@ using System.Linq;
 using System.ComponentModel;
 using System;
 using System.Windows.Data;
-using static AMDownloader.DownloaderObjectModel;
 using System.IO;
+using static AMDownloader.DownloaderObjectModel;
 
 namespace AMDownloader
 {
@@ -42,6 +42,7 @@ namespace AMDownloader
         public ICommand OptionsCommand { get; private set; }
         public ICommand AddToQueueCommand { get; private set; }
         public ICommand RemoveFromQueueCommand { get; private set; }
+        public ICommand DeleteCommand { get; private set; }
 
         public enum ViewStatus
         {
@@ -70,6 +71,7 @@ namespace AMDownloader
             OptionsCommand = new RelayCommand(ShowOptions);
             AddToQueueCommand = new RelayCommand(AddToQueue, AddToQueue_CanExecute);
             RemoveFromQueueCommand = new RelayCommand(RemoveFromQueue, RemoveFromQueue_CanExecute);
+            DeleteCommand = new RelayCommand(Delete, Delete_CanExecute);
 
             this.StatusDownloading = "Ready";
             AnnouncePropertyChanged(nameof(this.StatusDownloading));
@@ -89,109 +91,76 @@ namespace AMDownloader
             switch (status)
             {
                 case ViewStatus.All:
-                    _collectionView.Filter = new Predicate<object>(FilterAll);
+                    _collectionView.Filter = new Predicate<object>((obj) => { return true; });
                     break;
                 case ViewStatus.Downloading:
-                    _collectionView.Filter = new Predicate<object>(FilterDownloading);
+                    _collectionView.Filter = new Predicate<object>((obj)=>
+                    {
+                        var item = obj as DownloaderObjectModel;
+
+                        if (item.IsBeingDownloaded)                        
+                            return true;                        
+
+                        return false;
+                    });
                     break;
                 case ViewStatus.Finished:
-                    _collectionView.Filter = new Predicate<object>(FilterFinished);
+                    _collectionView.Filter = new Predicate<object>((obj)=>
+                    {
+                        var item = obj as DownloaderObjectModel;
+
+                        if (item.Status == DownloadStatus.Finished)                        
+                            return true;                        
+
+                        return false;
+                    });
                     break;
                 case ViewStatus.Paused:
-                    _collectionView.Filter = new Predicate<object>(FilterPaused);
+                    _collectionView.Filter = new Predicate<object>((obj)=>
+                    {
+                        var item = obj as DownloaderObjectModel;
+
+                        if (item.Status == DownloadStatus.Paused)                        
+                            return true;                        
+
+                        return false;
+                    });
                     break;
                 case ViewStatus.Queued:
-                    _collectionView.Filter = new Predicate<object>(FilterQueued);
+                    _collectionView.Filter = new Predicate<object>((obj)=>
+                    {
+                        var item = obj as DownloaderObjectModel;
+
+                        if (item.IsQueued)                        
+                            return true;                        
+
+                        return false;
+                    });
                     break;
                 case ViewStatus.Ready:
-                    _collectionView.Filter = new Predicate<object>(FilterReady);
+                    _collectionView.Filter = new Predicate<object>((obj)=>
+                    {
+                        var item = obj as DownloaderObjectModel;
+
+                        if (item.Status == DownloadStatus.Ready)                        
+                            return true;                        
+
+                        return false;
+                    });
                     break;
                 case ViewStatus.Error:
-                    _collectionView.Filter = new Predicate<object>(FilterError);
+                    _collectionView.Filter = new Predicate<object>((obj)=>
+                    {
+                        var item = obj as DownloaderObjectModel;
+
+                        if (item.Status == DownloadStatus.Error)                        
+                            return true;                        
+
+                        return false;
+                    });
                     break;
             }
         }
-
-        #region  View filters
-
-        private bool FilterAll(object obj)
-        {
-            return true;
-        }
-
-        private bool FilterDownloading(object obj)
-        {
-            var item = obj as DownloaderObjectModel;
-
-            if (item.IsBeingDownloaded)
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        private bool FilterReady(object obj)
-        {
-            var item = obj as DownloaderObjectModel;
-
-            if (item.Status == DownloadStatus.Ready)
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        private bool FilterQueued(object obj)
-        {
-            var item = obj as DownloaderObjectModel;
-
-            if (item.IsQueued)
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        private bool FilterFinished(object obj)
-        {
-            var item = obj as DownloaderObjectModel;
-
-            if (item.Status == DownloadStatus.Finished)
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        private bool FilterPaused(object obj)
-        {
-            var item = obj as DownloaderObjectModel;
-
-            if (item.Status == DownloadStatus.Paused)
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        private bool FilterError(object obj)
-        {
-            var item = obj as DownloaderObjectModel;
-
-            if (item.Status == DownloadStatus.Error)
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        #endregion
 
         void Start(object obj)
         {
@@ -308,6 +277,7 @@ namespace AMDownloader
             }
 
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
+
             if (items == null)
             {
                 return false;
@@ -353,7 +323,6 @@ namespace AMDownloader
                 }
 
                 DownloadItemsList.Remove(item);
-                if (item.IsQueued) item.Dequeue();
             }
         }
 
@@ -389,9 +358,19 @@ namespace AMDownloader
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
             var itemsFinished = from item in items where item.Status == DownloadStatus.Finished where new FileInfo(item.Destination).Exists select item;
 
+            if (itemsFinished.Count() > 5)
+            {
+                MessageBoxResult r = MessageBox.Show("You have elected to open " + itemsFinished.Count() + " files. Opening too many files at the same file may cause system freezeups.\n\nDo you wish to proceed?", "Open", MessageBoxButton.YesNo, MessageBoxImage.Information);
+
+                if (r == MessageBoxResult.No)
+                {
+                    return;
+                }
+            }
+
             foreach (var item in itemsFinished)
             {
-                Process.Start(item.Destination);
+                Process.Start("explorer.exe", "\"" + item.Destination + "\"");
             }
         }
 
@@ -402,7 +381,7 @@ namespace AMDownloader
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
             var itemsFinished = from item in items where item.Status == DownloadStatus.Finished where new FileInfo(item.Destination).Exists select item;
 
-            if (itemsFinished.Count<DownloaderObjectModel>() > 0)
+            if (itemsFinished.Count() > 0)
             {
                 return true;
             }
@@ -419,7 +398,7 @@ namespace AMDownloader
 
             foreach (var item in itemsExist)
             {
-                Process.Start("explorer.exe","/select, \"\"" + item.Destination + "\"\"");
+                Process.Start("explorer.exe", "/select, \"\"" + item.Destination + "\"\"");
             }
         }
 
@@ -509,7 +488,7 @@ namespace AMDownloader
 
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
 
-            return ((from item in items where item.IsQueued == false where item.Status == DownloadStatus.Ready select item).Count<DownloaderObjectModel>() > 0);
+            return (from item in items where item.IsQueued == false where item.Status == DownloadStatus.Ready select item).Count<DownloaderObjectModel>() > 0;
         }
 
         void RemoveFromQueue(object obj)
@@ -538,6 +517,42 @@ namespace AMDownloader
                 }
             }
 
+            return false;
+        }
+
+        void Delete(object obj)
+        {
+            if (obj == null) return;
+
+            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
+            var itemsDeletable = from item in items where !item.IsBeingDownloaded where File.Exists(item.Destination) select item;
+
+            foreach (var item in itemsDeletable)
+            {
+                if (item.IsBeingDownloaded) continue; // prevent race condition
+
+                try
+                {
+                    File.Delete(item.Destination);
+                    DownloadItemsList.Remove(item);
+                }
+                catch (Exception e)
+                {
+                    MessageBoxResult r = MessageBox.Show(e.Message, "Delete", MessageBoxButton.OKCancel, MessageBoxImage.Error);
+                    if (r == MessageBoxResult.Cancel) break;
+                    continue;
+                }
+            }
+        }
+
+        bool Delete_CanExecute(object obj)
+        {
+            if (obj == null) return false;
+
+            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
+            var itemsDeletable = from item in items where !item.IsBeingDownloaded where File.Exists(item.Destination) select item;
+
+            if (itemsDeletable.Count() > 0) return true;
             return false;
         }
 

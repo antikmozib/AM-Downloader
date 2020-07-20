@@ -4,11 +4,11 @@ using System.Text.RegularExpressions;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Diagnostics;
-using static AMDownloader.Common;
 using System.ComponentModel;
 using System.Threading;
 using System;
 using System.Windows.Input;
+using static AMDownloader.Common;
 
 namespace AMDownloader
 {
@@ -16,7 +16,6 @@ namespace AMDownloader
     {
         private readonly DownloaderViewModel _parentViewModel;
         private CancellationTokenSource _ctsClipboard;
-        private CancellationToken _ctClipboard;
         private bool _monitorClipboard;
         private ClipboardObserver _clipboardService;
 
@@ -38,38 +37,11 @@ namespace AMDownloader
 
                 if (value == true)
                 {
-                    if (_ctsClipboard == null)
-                    {
-                        _ctsClipboard = new CancellationTokenSource();
-                        _ctClipboard = _ctsClipboard.Token;
-
-                        Task.Run(async () =>
-                        {
-                            while (!_ctClipboard.IsCancellationRequested)
-                            {
-                                await Task.Delay(1000);
-
-                                string clip = _clipboardService.GetText();
-
-                                if ((clip.Contains("http") || clip.Contains("ftp")) && !this.Urls.Contains(clip))
-                                {
-                                    this.Urls += clip + '\n';
-                                    AnnouncePropertyChanged(nameof(this.Urls));
-                                }
-                            }
-
-                            _ctsClipboard = null;
-                            _ctClipboard = default;
-
-                        }, _ctClipboard);
-                    }
+                    Task.Run(async () => await MonitorClipboardAsync(_ctsClipboard));
                 }
                 else
                 {
-                    if (_ctsClipboard != null)
-                    {
-                        _ctsClipboard.Cancel();
-                    }
+                    if (_ctsClipboard != null) _ctsClipboard.Cancel();
                 }
             }
         }
@@ -92,10 +64,7 @@ namespace AMDownloader
             this.Urls = string.Empty;
 
             var clipText = _clipboardService.GetText();
-            if (clipText.Contains("http"))
-            {
-                this.Urls += clipText;
-            }
+            if (clipText.Contains("http")) this.Urls += clipText;
         }
 
         public void Preview(object item)
@@ -108,50 +77,38 @@ namespace AMDownloader
 
         public void Add(object item)
         {
-
-            if (Urls == null || SaveToFolder == null || !Directory.Exists(SaveToFolder))
-            {
-                return;
-            }
+            if (Urls == null || SaveToFolder == null || !Directory.Exists(SaveToFolder)) return;
 
             if (SaveToFolder.LastIndexOf(Path.DirectorySeparatorChar) != SaveToFolder.Length - 1)
-            {
                 SaveToFolder = SaveToFolder + Path.DirectorySeparatorChar;
-            }
 
             foreach (var url in ListifyUrls())
-            {
                 AddItemToList(url);
-            }
 
             if (AddToQueue && StartDownload)
-            {
                 Task.Run(async () => await _parentViewModel.QueueProcessor.StartAsync());
-            }
         }
 
         private void AddItemToList(string url)
         {
             var fileName = GetValidFilename(SaveToFolder + Path.GetFileName(url), _parentViewModel.DownloadItemsList);
-            DownloaderObjectModel dItem;
+            DownloaderObjectModel item;
 
             if (AddToQueue)
             {
-                dItem = new DownloaderObjectModel(ref _parentViewModel.Client, url, fileName, _parentViewModel.QueueProcessor);
-                _parentViewModel.QueueProcessor.Add(dItem);
+                item = new DownloaderObjectModel(ref _parentViewModel.Client, url, fileName, _parentViewModel.QueueProcessor);
+                _parentViewModel.QueueProcessor.Add(item);
             }
             else
             {
-                dItem = new DownloaderObjectModel(ref _parentViewModel.Client, url, fileName);
+                item = new DownloaderObjectModel(ref _parentViewModel.Client, url, fileName);
             }
 
             if (!AddToQueue && StartDownload)
-            {
-                Task.Run(async () => await dItem.StartAsync());
-            }
+                Task.Run(async () => await item.StartAsync());
 
-            _parentViewModel.DownloadItemsList.Add(dItem);
-            dItem.PropertyChanged += new PropertyChangedEventHandler(_parentViewModel.OnDownloadPropertyChange);
+            _parentViewModel.DownloadItemsList.Add(item);
+            item.PropertyChanged += new PropertyChangedEventHandler(_parentViewModel.OnDownloadPropertyChange);
         }
 
         private List<string> ListifyUrls()
@@ -189,6 +146,28 @@ namespace AMDownloader
             }
 
             return urlList;
+        }
+
+        private async Task MonitorClipboardAsync(CancellationTokenSource cts)
+        {
+            cts = new CancellationTokenSource();
+            CancellationToken ct = cts.Token;
+
+            while (!ct.IsCancellationRequested)
+            {
+                await Task.Delay(1000);
+
+                string clip = _clipboardService.GetText();
+
+                if ((clip.Contains("http") || clip.Contains("ftp")) && !this.Urls.Contains(clip))
+                {
+                    this.Urls += clip + '\n';
+                    AnnouncePropertyChanged(nameof(this.Urls));
+                }
+            }
+
+            cts = null;
+            ct = default;
         }
 
         protected void AnnouncePropertyChanged(string prop)
