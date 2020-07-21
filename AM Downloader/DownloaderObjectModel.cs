@@ -69,7 +69,7 @@ namespace AMDownloader
 
             if (File.Exists(destination))
             {
-                // The file we're trying to download must NOT exist...
+                // The file we're trying to download must NOT exist; halt object creation
                 throw new IOException();
             }
 
@@ -331,10 +331,7 @@ namespace AMDownloader
 
             this._queueProcessor = queueProcessor;
 
-            if (!queueProcessor.Contains(this))
-            {
-                queueProcessor.Add(this);
-            }
+            if (!queueProcessor.Contains(this)) queueProcessor.Add(this);            
 
             this.Status = DownloadStatus.Queued;
             AnnouncePropertyChanged(nameof(this.Status));
