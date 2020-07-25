@@ -239,10 +239,10 @@ namespace AMDownloader
 
             foreach (DownloaderObjectModel item in items)
             {
-                if (item.IsBeingDownloaded)
+                if (item.IsBeingDownloaded || item.Status == DownloadStatus.Paused)
                 {
                     MessageBoxResult result = MessageBox.Show("Cancel downloading \"" + item.Name + "\" ?",
-                    "Cancel Download", System.Windows.MessageBoxButton.YesNo);
+                    "Cancel Download", MessageBoxButton.YesNo, MessageBoxImage.Exclamation);
 
                     if (result == MessageBoxResult.No)
                         continue;
@@ -282,7 +282,10 @@ namespace AMDownloader
 
             if (itemsFinished.Count() > 5)
             {
-                MessageBoxResult r = MessageBox.Show("You have elected to open " + itemsFinished.Count() + " files. Opening too many files at the same file may cause system freezeups.\n\nDo you wish to proceed?", "Open", MessageBoxButton.YesNo, MessageBoxImage.Information);
+                MessageBoxResult r = MessageBox.Show(
+                    "You have elected to open " + itemsFinished.Count() + " files. " +
+                    "Opening too many files at the same file may cause system freezeups.\n\nDo you wish to proceed?",
+                    "Open", MessageBoxButton.YesNo, MessageBoxImage.Information);
 
                 if (r == MessageBoxResult.No) return;
             }
@@ -321,7 +324,7 @@ namespace AMDownloader
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
             var itemsExist = from item in items where new FileInfo(item.Destination).Exists select item;
 
-            if (itemsExist.Count<DownloaderObjectModel>() > 0) return true;
+            if (itemsExist.Count() > 0) return true;
 
             return false;
         }
@@ -359,10 +362,7 @@ namespace AMDownloader
                         where item.IsBeingDownloaded
                         select item;
 
-            Parallel.ForEach(items, (item) =>
-            {
-                item.Pause();
-            });
+            Parallel.ForEach(items, (item) => { item.Pause(); });
         }
 
         void ShowOptions(object obj)

@@ -49,7 +49,7 @@ namespace AMDownloader
 
                     int itemsAdded = 0;
 
-                    while (itemsAdded < items.Count<DownloaderObjectModel>())
+                    while (itemsAdded < items.Count())
                     {
                         items[itemsAdded] = null;
 
@@ -104,7 +104,7 @@ namespace AMDownloader
                 DownloaderObjectModel item = null;
                 if (_queueList.TryTake(out item))
                 {
-                    if (firstItems.Contains<DownloaderObjectModel>(item))
+                    if (firstItems.Contains(item))
                         continue;
                     else
                         newList.Add(item);
@@ -123,11 +123,9 @@ namespace AMDownloader
         // Producer
         public void Add(DownloaderObjectModel item)
         {
-            bool success = false;
-
             try
             {
-                success = _queueList.TryAdd(item);
+                _queueList.TryAdd(item);
             }
             catch (OperationCanceledException)
             {
@@ -168,7 +166,7 @@ namespace AMDownloader
 
         public bool Contains(DownloaderObjectModel value)
         {
-            return (_queueList.Contains<DownloaderObjectModel>(value));
+            return (_queueList.Contains(value));
         }
 
         public int Count()

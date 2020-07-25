@@ -4,7 +4,7 @@ using System.Collections.ObjectModel;
 
 namespace AMDownloader
 {
-    class Common
+    static class Common
     {
         public const long KILOBYTE = 1024;
         public const long MEGABYTE = KILOBYTE * KILOBYTE;
@@ -42,26 +42,17 @@ namespace AMDownloader
             }
         }
 
-        public static string GetValidFilename(string defaultFilename, ObservableCollection<DownloaderObjectModel> checkAgainstList = null)
+        public static string GetValidFilename(string defaultFilename)
         {
-            string _path = Path.GetDirectoryName(defaultFilename);
-            string _filename = Path.GetFileName(defaultFilename);
-            string result = _path + Path.DirectorySeparatorChar + _filename;
+            string path = Path.GetDirectoryName(defaultFilename);
+            string filename = Path.GetFileName(defaultFilename);
+            string result = path + Path.DirectorySeparatorChar + filename;
             int i = 0;
 
             while (File.Exists(result))
             {
-                result = _path + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(_filename) + " (" + ++i + ")" + Path.GetExtension(_filename);
+                result = path + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(filename) + " (" + ++i + ")" + Path.GetExtension(filename);
             };
-
-
-            foreach (DownloaderObjectModel item in checkAgainstList)
-            {
-                if (item.Name == Path.GetFileName(result) && item.Destination == result)
-                {
-                    result = _path + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(_filename) + " (" + ++i + ")" + Path.GetExtension(_filename);
-                }
-            }
 
             return result;
         }

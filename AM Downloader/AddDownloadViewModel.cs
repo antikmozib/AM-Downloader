@@ -91,7 +91,7 @@ namespace AMDownloader
 
         private void AddItemToList(string url)
         {
-            var fileName = GetValidFilename(SaveToFolder + Path.GetFileName(url), _parentViewModel.DownloadItemsList);
+            var fileName = GetValidFilename(SaveToFolder + Path.GetFileName(url));
             DownloaderObjectModel item;
 
             if (AddToQueue)
