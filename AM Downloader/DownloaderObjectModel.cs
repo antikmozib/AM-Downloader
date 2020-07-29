@@ -31,12 +31,18 @@ namespace AMDownloader
             Ready, Queued, Downloading, Paused, Pausing, Finished, Error, Cancelling, Connecting
         }
 <<<<<<< HEAD
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 
         #region Properties
 
         public bool IsQueued { get { return (_queueProcessor != null); } }
 =======
+=======
+
+        #region Properties
+
+>>>>>>> parent of 7cf2952... Nightly
 =======
 
         #region Properties
