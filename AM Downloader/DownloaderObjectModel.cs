@@ -171,23 +171,23 @@ namespace AMDownloader
                 request.Dispose();
                 byte[] buffer = new byte[1024];
                 bool moreToRead = true;
-                long nextProgressUpdate;
-                long progressUpdateFrequency; // num bytes after which to report progress
+                long nextProgressReportAt;
+                long progressReportingFrequency; // num bytes after which to report progress
 
                 this.Speed = new long();
 
                 if (this.TotalBytesToDownload != null)
                 {
                     // report progress every 1%
-                    progressUpdateFrequency = (long)this.TotalBytesToDownload / 100;
+                    progressReportingFrequency = (long)this.TotalBytesToDownload / 100;
                 }
                 else
                 {
                     // report progress every buffer
-                    progressUpdateFrequency = buffer.Length;
+                    progressReportingFrequency = buffer.Length;
                 }
 
-                nextProgressUpdate = progressUpdateFrequency;
+                nextProgressReportAt = progressReportingFrequency;
 
                 StartMeasuringSpeed();
 
@@ -233,20 +233,20 @@ namespace AMDownloader
                         this.BytesDownloadedThisSession += read;
                         this.TotalBytesCompleted = bytesDownloadedPreviously + this.BytesDownloadedThisSession;
 
-                        if (this.TotalBytesCompleted >= nextProgressUpdate)
+                        if (this.TotalBytesCompleted >= nextProgressReportAt)
                         {
                             if (this.TotalBytesToDownload != null)
                             {
                                 progressReporter.Report((int)
                                     ((double)this.TotalBytesCompleted / (double)this.TotalBytesToDownload * 100));
 
-                                if (nextProgressUpdate >= this.TotalBytesToDownload - progressUpdateFrequency)
+                                if (nextProgressReportAt >= this.TotalBytesToDownload - progressReportingFrequency)
                                 {
-                                    progressUpdateFrequency = (long)this.TotalBytesToDownload - this.TotalBytesCompleted;
+                                    progressReportingFrequency = (long)this.TotalBytesToDownload - this.TotalBytesCompleted;
                                 }
                             }
 
-                            nextProgressUpdate = this.TotalBytesCompleted + progressUpdateFrequency;
+                            nextProgressReportAt = this.TotalBytesCompleted + progressReportingFrequency;
                             AnnouncePropertyChanged(nameof(this.BytesDownloadedThisSession));
                             AnnouncePropertyChanged(nameof(this.PrettyDownloadedSoFar));
                             AnnouncePropertyChanged(nameof(this.TotalBytesCompleted));
