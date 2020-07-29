@@ -11,22 +11,25 @@ using static AMDownloader.Common;
 
 namespace AMDownloader
 {
-    class DownloaderObjectModel : INotifyPropertyChanged
+    class DownloaderObjectModel : INotifyPropertyChanged, IQueueable
     {
+        #region Fields
+
         private CancellationTokenSource _ctsPaused, _ctsCanceled;
         private CancellationToken _ctPause, _ctCancel;
         private TaskCompletionSource<DownloadStatus> _tcsDownloadItem;
         private readonly IProgress<int> _progressReporter;
         private HttpClient _httpClient;
 
+        #endregion // Fields
+
+        #region Properties
+
         public event PropertyChangedEventHandler PropertyChanged;
         public enum DownloadStatus
         {
             Ready, Queued, Downloading, Paused, Pausing, Finished, Error, Cancelling, Connecting
-        }
-
-        #region Properties
-
+        }        
         public bool IsQueued { get; private set; }
         public bool IsBeingDownloaded { get { return (_ctsPaused != null); } }
         public string Name { get; private set; }
@@ -46,7 +49,7 @@ namespace AMDownloader
         public string PrettyDestination { get { return new FileInfo(this.Destination).Directory.Name + " (" + this.Destination.Substring(0, this.Destination.Length - this.Name.Length - 1) + ")"; } }
         public string PrettyDateCreated { get { return this.DateCreated.ToString("dd MMM yy H:mm:ss"); } }
 
-        #endregion
+        #endregion // Properties
 
         #region Constructors
 
@@ -98,7 +101,7 @@ namespace AMDownloader
             });
         }
 
-        #endregion
+        #endregion // Constructors
 
         #region Private methods
 
@@ -316,7 +319,7 @@ namespace AMDownloader
             }
         }
 
-        #endregion
+        #endregion // Private methods
 
         #region Public methods
 
@@ -515,6 +518,6 @@ namespace AMDownloader
             }
         }
 
-        #endregion
+        #endregion // Public methods
     }
 }
