@@ -15,8 +15,8 @@ namespace AMDownloader
     class AddDownloadViewModel : INotifyPropertyChanged
     {
         private readonly DownloaderViewModel _parentViewModel;
-        private bool _monitorClipboard;
         private CancellationTokenSource _ctsClipboard;
+        private bool _monitorClipboard;
         private ClipboardObserver _clipboardService;
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -27,13 +27,18 @@ namespace AMDownloader
         public bool AddToQueue { get; set; }
         public bool MonitorClipboard
         {
-            get { return _monitorClipboard; }
+            get
+            {
+                return _monitorClipboard;
+            }
             set
             {
                 _monitorClipboard = value;
 
                 if (value == true)
-                    Task.Run(async () => await MonitorClipboardAsync());
+                {
+                    Task.Run(async () => await MonitorClipboardAsync(_ctsClipboard));
+                }
                 else
                 {
                     if (_ctsClipboard != null) _ctsClipboard.Cancel();
@@ -91,7 +96,7 @@ namespace AMDownloader
 
             if (AddToQueue)
             {
-                item = new DownloaderObjectModel(ref _parentViewModel.Client, url, fileName, true);
+                item = new DownloaderObjectModel(ref _parentViewModel.Client, url, fileName,true);
                 _parentViewModel.QueueProcessor.Add(item);
             }
             else
@@ -143,11 +148,12 @@ namespace AMDownloader
             return urlList;
         }
 
-        private async Task MonitorClipboardAsync()
+        private async Task MonitorClipboardAsync(CancellationTokenSource cts)
         {
-            _ctsClipboard = new CancellationTokenSource();
+            cts = new CancellationTokenSource();
+            CancellationToken ct = cts.Token;
 
-            while (!_ctsClipboard.Token.IsCancellationRequested)
+            while (!ct.IsCancellationRequested)
             {
                 await Task.Delay(1000);
 
@@ -160,7 +166,8 @@ namespace AMDownloader
                 }
             }
 
-            _ctsClipboard = null;
+            cts = null;
+            ct = default;
         }
 
         protected void AnnouncePropertyChanged(string prop)

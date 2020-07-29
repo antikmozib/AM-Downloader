@@ -263,8 +263,8 @@
                         <MenuItem Header="Enqueue" Command="{Binding EnqueueCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                         <MenuItem Header="Dequeue" Command="{Binding DequeueCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                         <Separator/>
-                        <MenuItem Header="Remove from list" Command="{Binding RemoveFromListCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                        <MenuItem Header="Delete file" Command="{Binding DeleteFileCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                        <MenuItem Header="Remove from list" Command="{Binding RemoveCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                        <MenuItem Header="Delete file" Command="{Binding DeleteCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                     </ContextMenu>
                 </ListView.ContextMenu>
                 <ListView.Resources>
@@ -365,8 +365,8 @@
                                 <DataTemplate>
                                     <Grid>
                                         <TextBlock 
-                                            Text="{Binding PrettySpeed}" 
-                                            HorizontalAlignment="Right" />
+                                        Text="{Binding PrettySpeed}" 
+                                        HorizontalAlignment="Right" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
@@ -392,8 +392,8 @@
                                 <DataTemplate>
                                     <Grid>
                                         <TextBlock 
-                                            Text="{Binding PrettyDateCreated}" 
-                                            HorizontalAlignment="Right" />
+                                        Text="{Binding PrettyDateCreated}" 
+                                        HorizontalAlignment="Right" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>

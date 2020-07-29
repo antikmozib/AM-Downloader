@@ -7,45 +7,32 @@ using System.Linq;
 
 namespace AMDownloader
 {
-    // Represents contracts that can be used by the QueueProcessor
-    public interface IQueueable
-    {
-        public Task StartAsync();
-        public void Pause();
-        public bool IsQueued { get; }
-    }
-
     class QueueProcessor
     {
-        #region Fields
-
-        private const int DEFAULT_MAX_PARALLEL_DOWNLOADS = 2;
-        private readonly SemaphoreSlim _semaphore;
-        private readonly List<IQueueable> _itemsProcessing;
-        private BlockingCollection<IQueueable> _queueList;
+        private BlockingCollection<DownloaderObjectModel> _queueList;
+        private readonly List<DownloaderObjectModel> _itemsProcessing;
         private CancellationTokenSource _ctsCancel;
         private CancellationToken _ctCancel;
+        private readonly SemaphoreSlim _semaphore;
 
-        #endregion // Fields
-        
         #region Properties
 
         public bool IsBusy { get { return (_ctsCancel != null); } }
 
-        #endregion // Properties
+        #endregion
 
         #region Constructors
 
-        public QueueProcessor() : this(DEFAULT_MAX_PARALLEL_DOWNLOADS) { }
+        public QueueProcessor() : this(2) { }
 
         public QueueProcessor(int maxParallelDownloads)
         {
-            _queueList = new BlockingCollection<IQueueable>();
-            _itemsProcessing = new List<IQueueable>();
+            _queueList = new BlockingCollection<DownloaderObjectModel>();
+            _itemsProcessing = new List<DownloaderObjectModel>();
             _semaphore = new SemaphoreSlim(maxParallelDownloads);
         }
 
-        #endregion // Constructors
+        #endregion
 
         #region Private methods
 
@@ -59,7 +46,7 @@ namespace AMDownloader
 
             while (_queueList.Count() > 0 && !_ctCancel.IsCancellationRequested)
             {
-                IQueueable item;
+                DownloaderObjectModel item;
                 if (!_queueList.TryTake(out item)) break;
 
                 if (!item.IsQueued) continue;
@@ -87,25 +74,27 @@ namespace AMDownloader
             _ctCancel = default;
         }
 
-        private void RecreateQueue(params IQueueable[] itemsOnTop)
+        private void RecreateQueue(params DownloaderObjectModel[] addToTop)
         {
+            if (this._queueList == null) return;
+
             _ctsCancel?.Cancel();
 
-            var tempList = new BlockingCollection<IQueueable>();
+            var newList = new BlockingCollection<DownloaderObjectModel>();
 
-            foreach (var item in itemsOnTop)
-                tempList.Add(item);
+            foreach (var item in addToTop)
+                newList.Add(item);
 
             while (_queueList.Count > 0)
             {
-                IQueueable item;
+                DownloaderObjectModel item;
 
                 if (_queueList.TryTake(out item))
                 {
-                    if (itemsOnTop.Contains(item))
+                    if (addToTop.Contains(item))
                         continue;
                     else
-                        tempList.Add(item);
+                        newList.Add(item);
                 }
                 else
                 {
@@ -114,16 +103,16 @@ namespace AMDownloader
             }
 
             var disposeList = _queueList;
-            _queueList = tempList;
+            _queueList = newList;
             disposeList.Dispose();
         }
 
-        #endregion // Private methods
+        #endregion
 
         #region Public methods
 
         // Producer
-        public void Add(IQueueable item)
+        public void Add(DownloaderObjectModel item)
         {
             if (_queueList.Contains(item)) return;
 
@@ -138,7 +127,7 @@ namespace AMDownloader
         }
 
         // Consumer
-        public async Task StartAsync(params IQueueable[] firstItems)
+        public async Task StartAsync(params DownloaderObjectModel[] firstItems)
         {
             if (_ctsCancel != null) return;
             if (firstItems != null) RecreateQueue(firstItems);
@@ -158,11 +147,11 @@ namespace AMDownloader
             }
         }
 
-        #endregion // Public methods
+        #endregion
 
         #region Public functions
 
-        public bool Contains(IQueueable value)
+        public bool Contains(DownloaderObjectModel value)
         {
             return (_queueList.Contains(value));
         }
@@ -172,6 +161,6 @@ namespace AMDownloader
             return _queueList.Count();
         }
 
-        #endregion // Public functions
+        #endregion
     }
 }

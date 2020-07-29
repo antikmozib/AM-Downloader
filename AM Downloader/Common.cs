@@ -60,7 +60,7 @@ namespace AMDownloader
         {
             if (speed > 1024)
             {
-                return ((double)speed / 1024).ToString("#0.00") + " MB/s";
+                return ((double)speed / (double)1024).ToString("#0.00") + " MB/s";
             }
             else
             {

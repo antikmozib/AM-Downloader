@@ -23,14 +23,14 @@ namespace AMDownloader
 
         public HttpClient Client;
         public ObservableCollection<DownloaderObjectModel> DownloadItemsList;
-        public ObservableCollection<Categories> CategoriesList;
+        public ObservableCollection<ViewStatus> CategoriesList;
         public QueueProcessor QueueProcessor;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
         public ICommand AddCommand { get; private set; }
         public ICommand StartCommand { get; private set; }
-        public ICommand RemoveFromListCommand { private get; set; }
+        public ICommand RemoveCommand { private get; set; }
         public ICommand CancelCommand { private get; set; }
         public ICommand PauseCommand { get; private set; }
         public ICommand OpenCommand { get; private set; }
@@ -42,9 +42,9 @@ namespace AMDownloader
         public ICommand OptionsCommand { get; private set; }
         public ICommand EnqueueCommand { get; private set; }
         public ICommand DequeueCommand { get; private set; }
-        public ICommand DeleteFileCommand { get; private set; }
+        public ICommand DeleteCommand { get; private set; }
 
-        public enum Categories
+        public enum ViewStatus
         {
             All, Ready, Queued, Downloading, Paused, Finished, Error
         }
@@ -53,13 +53,13 @@ namespace AMDownloader
         {
             Client = new HttpClient();
             DownloadItemsList = new ObservableCollection<DownloaderObjectModel>();
-            CategoriesList = new ObservableCollection<Categories>();
+            CategoriesList = new ObservableCollection<ViewStatus>();
             QueueProcessor = new QueueProcessor();
             _collectionView = CollectionViewSource.GetDefaultView(DownloadItemsList);
 
             AddCommand = new RelayCommand(Add);
             StartCommand = new RelayCommand(Start, Start_CanExecute);
-            RemoveFromListCommand = new RelayCommand(RemoveFromList, RemoveFromList_CanExecute);
+            RemoveCommand = new RelayCommand(Remove, Remove_CanExecute);
             CancelCommand = new RelayCommand(Cancel, Cancel_CanExecute);
             PauseCommand = new RelayCommand(Pause, Pause_CanExecute);
             OpenCommand = new RelayCommand(Open, Open_CanExecute);
@@ -71,12 +71,12 @@ namespace AMDownloader
             OptionsCommand = new RelayCommand(ShowOptions);
             EnqueueCommand = new RelayCommand(AddToQueue, AddToQueue_CanExecute);
             DequeueCommand = new RelayCommand(RemoveFromQueue, RemoveFromQueue_CanExecute);
-            DeleteFileCommand = new RelayCommand(DeleteFile, DeleteFile_CanExecute);
+            DeleteCommand = new RelayCommand(Delete, Delete_CanExecute);
 
             this.StatusDownloading = "Ready";
             AnnouncePropertyChanged(nameof(this.StatusDownloading));
 
-            foreach (Categories status in (Categories[])Enum.GetValues(typeof(Categories)))
+            foreach (ViewStatus status in (ViewStatus[])Enum.GetValues(typeof(ViewStatus)))
                 CategoriesList.Add(status);
         }
 
@@ -84,14 +84,14 @@ namespace AMDownloader
         {
             if (obj == null) return;
 
-            var status = (Categories)obj;
+            var status = (ViewStatus)obj;
 
             switch (status)
             {
-                case Categories.All:
+                case ViewStatus.All:
                     _collectionView.Filter = new Predicate<object>((o) => { return true; });
                     break;
-                case Categories.Downloading:
+                case ViewStatus.Downloading:
                     _collectionView.Filter = new Predicate<object>((o) =>
                     {
                         var item = o as DownloaderObjectModel;
@@ -99,7 +99,7 @@ namespace AMDownloader
                         return false;
                     });
                     break;
-                case Categories.Finished:
+                case ViewStatus.Finished:
                     _collectionView.Filter = new Predicate<object>((o) =>
                     {
                         var item = o as DownloaderObjectModel;
@@ -107,7 +107,7 @@ namespace AMDownloader
                         return false;
                     });
                     break;
-                case Categories.Paused:
+                case ViewStatus.Paused:
                     _collectionView.Filter = new Predicate<object>((o) =>
                     {
                         var item = o as DownloaderObjectModel;
@@ -115,7 +115,7 @@ namespace AMDownloader
                         return false;
                     });
                     break;
-                case Categories.Queued:
+                case ViewStatus.Queued:
                     _collectionView.Filter = new Predicate<object>((o) =>
                     {
                         var item = o as DownloaderObjectModel;
@@ -123,7 +123,7 @@ namespace AMDownloader
                         return false;
                     });
                     break;
-                case Categories.Ready:
+                case ViewStatus.Ready:
                     _collectionView.Filter = new Predicate<object>((o) =>
                     {
                         var item = o as DownloaderObjectModel;
@@ -131,7 +131,7 @@ namespace AMDownloader
                         return false;
                     });
                     break;
-                case Categories.Error:
+                case ViewStatus.Error:
                     _collectionView.Filter = new Predicate<object>((o) =>
                     {
                         var item = o as DownloaderObjectModel;
@@ -231,7 +231,7 @@ namespace AMDownloader
             return false;
         }
 
-        void RemoveFromList(object obj)
+        void Remove(object obj)
         {
             if (obj == null) return;
 
@@ -250,12 +250,11 @@ namespace AMDownloader
                         item.Cancel();
                 }
 
-                if (item.IsQueued) item.Dequeue();
                 DownloadItemsList.Remove(item);
             }
         }
 
-        public bool RemoveFromList_CanExecute(object obj)
+        public bool Remove_CanExecute(object obj)
         {
             if (obj == null) return false;
 
@@ -416,7 +415,7 @@ namespace AMDownloader
             return false;
         }
 
-        void DeleteFile(object obj)
+        void Delete(object obj)
         {
             if (obj == null) return;
 
@@ -441,7 +440,7 @@ namespace AMDownloader
             }
         }
 
-        bool DeleteFile_CanExecute(object obj)
+        bool Delete_CanExecute(object obj)
         {
             if (obj == null) return false;
 
