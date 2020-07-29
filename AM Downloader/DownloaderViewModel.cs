@@ -10,6 +10,7 @@ using System;
 using System.Windows.Data;
 using System.IO;
 using static AMDownloader.DownloaderObjectModel;
+using AMDownloader.Properties;
 
 namespace AMDownloader
 {
@@ -54,7 +55,7 @@ namespace AMDownloader
             Client = new HttpClient();
             DownloadItemsList = new ObservableCollection<DownloaderObjectModel>();
             CategoriesList = new ObservableCollection<Categories>();
-            QueueProcessor = new QueueProcessor();
+            QueueProcessor = new QueueProcessor(Settings.Default.MaxParallelDownloads);
             _collectionView = CollectionViewSource.GetDefaultView(DownloadItemsList);
 
             AddCommand = new RelayCommand(Add);
@@ -69,24 +70,24 @@ namespace AMDownloader
             WindowClosingCommand = new RelayCommand(WindowClosing);
             CategoryChangedCommand = new RelayCommand(CategoryChanged);
             OptionsCommand = new RelayCommand(ShowOptions);
-            EnqueueCommand = new RelayCommand(AddToQueue, AddToQueue_CanExecute);
-            DequeueCommand = new RelayCommand(RemoveFromQueue, RemoveFromQueue_CanExecute);
+            EnqueueCommand = new RelayCommand(Enqueue, Enqueue_CanExecute);
+            DequeueCommand = new RelayCommand(Dequeue, Dequeue_CanExecute);
             DeleteFileCommand = new RelayCommand(DeleteFile, DeleteFile_CanExecute);
 
             this.StatusDownloading = "Ready";
             AnnouncePropertyChanged(nameof(this.StatusDownloading));
 
-            foreach (Categories status in (Categories[])Enum.GetValues(typeof(Categories)))
-                CategoriesList.Add(status);
+            foreach (Categories cat in (Categories[])Enum.GetValues(typeof(Categories)))
+                CategoriesList.Add(cat);
         }
 
         void CategoryChanged(object obj)
         {
             if (obj == null) return;
 
-            var status = (Categories)obj;
+            var selectedCategory = (Categories)obj;
 
-            switch (status)
+            switch (selectedCategory)
             {
                 case Categories.All:
                     _collectionView.Filter = new Predicate<object>((o) => { return true; });
@@ -373,7 +374,7 @@ namespace AMDownloader
             win.ShowDialog();
         }
 
-        void AddToQueue(object obj)
+        void Enqueue(object obj)
         {
             if (obj == null) return;
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
@@ -385,7 +386,7 @@ namespace AMDownloader
             }
         }
 
-        bool AddToQueue_CanExecute(object obj)
+        bool Enqueue_CanExecute(object obj)
         {
             if (obj == null) return false;
 
@@ -394,7 +395,7 @@ namespace AMDownloader
             return (from item in items where item.IsQueued == false where item.Status == DownloadStatus.Ready select item).Count<DownloaderObjectModel>() > 0;
         }
 
-        void RemoveFromQueue(object obj)
+        void Dequeue(object obj)
         {
             if (obj == null) return;
 
@@ -404,7 +405,7 @@ namespace AMDownloader
                 item.Dequeue();
         }
 
-        bool RemoveFromQueue_CanExecute(object obj)
+        bool Dequeue_CanExecute(object obj)
         {
             if (obj == null) return false;
 
