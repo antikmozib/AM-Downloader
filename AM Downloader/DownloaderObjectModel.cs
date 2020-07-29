@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -29,7 +31,7 @@ namespace AMDownloader
         public enum DownloadStatus
         {
             Ready, Queued, Downloading, Paused, Pausing, Finished, Error, Cancelling, Connecting
-        }        
+        }
         public bool IsQueued { get; private set; }
         public bool IsBeingDownloaded { get { return (_ctsPaused != null); } }
         public string Name { get; private set; }
@@ -46,7 +48,10 @@ namespace AMDownloader
         public string PrettySpeed { get { return PrettySpeed(this.Speed); } }
         public string PrettyTotalSize { get { return PrettyNum(this.TotalBytesToDownload); } }
         public string PrettyDownloadedSoFar { get { return PrettyNum(this.TotalBytesCompleted); } }
-        public string PrettyDestination { get { return new FileInfo(this.Destination).Directory.Name + " (" + this.Destination.Substring(0, this.Destination.Length - this.Name.Length - 1) + ")"; } }
+        public string PrettyDestination
+        {
+            get { return new FileInfo(this.Destination).Directory.Name + " (" + this.Destination.Substring(0, this.Destination.Length - this.Name.Length - 1) + ")"; }
+        }
         public string PrettyDateCreated { get { return this.DateCreated.ToString("dd MMM yy H:mm:ss"); } }
 
         #endregion // Properties
@@ -129,6 +134,40 @@ namespace AMDownloader
             catch
             {
                 throw new Exception();
+            }
+        }
+
+        private async Task StartStreamsAsync()
+        {
+            int numStreams = 2;
+            long lastPoint = 0;
+            long pointFrequency = this.TotalBytesToDownload ?? 0 / numStreams;
+
+            List<HttpRequestMessage> requests = new List<HttpRequestMessage>();
+
+            while (lastPoint <= this.TotalBytesToDownload)
+            {
+                var request = new HttpRequestMessage
+                {
+                    RequestUri = new Uri(this.Url),
+                    Method = HttpMethod.Get,
+                    Headers = { Range = new RangeHeaderValue(lastPoint, lastPoint + pointFrequency) }
+                };
+                requests.Add(request);
+                lastPoint = lastPoint + pointFrequency + 1;
+            }
+
+            foreach(var request in requests)
+            {
+                Task t = Task.Run(async () => 
+                {
+                    var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+                    var sourceStream = await response.Content.ReadAsStreamAsync();
+                    var destinationStream = new FileStream(this.Destination + ".part" + requests.IndexOf(request), FileMode.Append);
+                    var binaryWriter = new BinaryWriter(destinationStream);
+
+
+                });
             }
         }
 
@@ -298,9 +337,9 @@ namespace AMDownloader
         private bool IsDownloadComplete()
         {
             return (this.TotalBytesToDownload != null &&
-                        this.TotalBytesToDownload > 0 &&
-                        File.Exists(this.Destination) &&
-                        new FileInfo(this.Destination).Length >= this.TotalBytesToDownload);
+                    this.TotalBytesToDownload > 0 &&
+                    File.Exists(this.Destination) &&
+                    new FileInfo(this.Destination).Length >= this.TotalBytesToDownload);
         }
 
         private async Task<bool> IsValidUrlAsync()
