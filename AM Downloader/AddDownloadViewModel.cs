@@ -87,6 +87,11 @@ namespace AMDownloader
         private void AddItemToList(string url)
         {
             var fileName = GetValidFilename(SaveToFolder + Path.GetFileName(url));
+            var checkIfUrlExists = from di in _parentViewModel.DownloadItemsList where di.Url == url select di;
+            var checkIfDestinationExists = from di in _parentViewModel.DownloadItemsList where di.Destination == fileName select di;
+
+            if (checkIfUrlExists.Count() > 0 || checkIfDestinationExists.Count() > 0) return;
+
             DownloaderObjectModel item;
 
             if (AddToQueue)

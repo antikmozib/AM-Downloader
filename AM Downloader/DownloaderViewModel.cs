@@ -511,7 +511,6 @@ namespace AMDownloader
                 statusQueued = string.Empty;
             }
 
-
             if (this.StatusQueued != statusQueued)
             {
                 this.StatusQueued = statusQueued;
@@ -523,6 +522,8 @@ namespace AMDownloader
                 this.StatusDownloading = statusDownloading;
                 AnnouncePropertyChanged(nameof(this.StatusDownloading));
             }
+            
+            //Application.Current.Dispatcher.Invoke(() => _collectionView.Refresh());
         }
     }
 }

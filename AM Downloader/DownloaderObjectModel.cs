@@ -145,6 +145,8 @@ namespace AMDownloader
 
             foreach (var file in files)
             {
+                if (!file.Exists) continue;
+
                 var sourceStream = new FileStream(file.FullName, FileMode.Open);
                 byte[] buffer = new byte[1024];
 
@@ -512,10 +514,9 @@ namespace AMDownloader
 
                     if (this.Progress < 100)
                     {
-                        this.Progress = 100;
-                        AnnouncePropertyChanged(nameof(this.Progress));
+                        _progressReporter.Report(100);
                     }
-
+                    
                     break;
 
                 default:
