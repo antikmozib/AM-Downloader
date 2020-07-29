@@ -9,6 +9,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Media.Animation;
 using static AMDownloader.Common;
 
 namespace AMDownloader
@@ -19,9 +20,9 @@ namespace AMDownloader
 
         private CancellationTokenSource _ctsPaused, _ctsCanceled;
         private CancellationToken _ctPause, _ctCancel;
-        private TaskCompletionSource<DownloadStatus> _tcsDownloadItem;
         private readonly IProgress<int> _progressReporter;
         private HttpClient _httpClient;
+        private TaskCompletionSource<DownloadStatus> _taskCompletion;
 
         #endregion // Fields
 
@@ -30,7 +31,7 @@ namespace AMDownloader
         public event PropertyChangedEventHandler PropertyChanged;
         public enum DownloadStatus
         {
-            Ready, Queued, Downloading, Paused, Pausing, Finished, Error, Cancelling, Connecting
+            Ready, Queued, Downloading, Paused, Pausing, Finished, Error, Cancelling, Connecting, Merging
         }
         public bool IsQueued { get; private set; }
         public bool IsBeingDownloaded { get { return (_ctsPaused != null); } }
@@ -137,160 +138,189 @@ namespace AMDownloader
             }
         }
 
-        private async Task StartStreamsAsync()
+        private async Task MergeFilesAsync(params FileInfo[] files)
         {
-            int numStreams = 2;
-            long lastPoint = 0;
-            long pointFrequency = this.TotalBytesToDownload ?? 0 / numStreams;
+            var destStream = new FileStream(this.Destination, FileMode.Append, FileAccess.Write);
+            var binaryWriter = new BinaryWriter(destStream);
 
-            List<HttpRequestMessage> requests = new List<HttpRequestMessage>();
-
-            while (lastPoint <= this.TotalBytesToDownload)
+            foreach (var file in files)
             {
+                var sourceStream = new FileStream(file.FullName, FileMode.Open);
+                byte[] buffer = new byte[1024];
+
+                while (true)
+                {
+                    int read = await sourceStream.ReadAsync(buffer, 0, buffer.Length);
+                    if (read > 0)
+                    {
+                        byte[] data = new byte[read];
+                        buffer.ToList().CopyTo(0, data, 0, read);
+                        binaryWriter.Write(data, 0, data.Length);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                sourceStream.Close();
+                file.Delete();
+            }
+
+            binaryWriter.Close();
+            destStream.Close();
+        }
+
+        private async Task<DownloadStatus> ProcessStreamsAsync(int numStreams, long bytesDownloadedPreviously = 0)
+        {
+            var status = DownloadStatus.Error;
+            List<HttpRequestMessage> requests = new List<HttpRequestMessage>();
+            List<Task> tasks = new List<Task>();
+            IProgress<long> streamProgress = new Progress<long>((value) =>
+            {
+                this.BytesDownloadedThisSession += value;
+                this.TotalBytesCompleted = bytesDownloadedPreviously + this.BytesDownloadedThisSession;
+                AnnouncePropertyChanged(nameof(this.PrettyDownloadedSoFar));
+
+                if (this.TotalBytesToDownload != null)
+                {
+                    double progress = (double)this.TotalBytesCompleted / (double)this.TotalBytesToDownload * 100;
+                    _progressReporter.Report((int)progress);
+                }
+            });
+
+            long pointFrequency = ((this.TotalBytesToDownload ?? 0) - bytesDownloadedPreviously) / numStreams;
+
+            _ctsPaused = new CancellationTokenSource();
+            _ctsCanceled = new CancellationTokenSource();
+            _ctPause = _ctsPaused.Token;
+            _ctCancel = _ctsCanceled.Token;
+            var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(_ctPause, _ctCancel).Token;
+
+            if (this.TotalBytesToDownload == null)
+            {
+                // cannot support multiple streams
                 var request = new HttpRequestMessage
                 {
                     RequestUri = new Uri(this.Url),
-                    Method = HttpMethod.Get,
-                    Headers = { Range = new RangeHeaderValue(lastPoint, lastPoint + pointFrequency) }
+                    Method = HttpMethod.Get
                 };
                 requests.Add(request);
-                lastPoint = lastPoint + pointFrequency + 1;
+            }
+            else
+            {
+                // Set up the requests
+                long startPos = 0;
+
+                if (bytesDownloadedPreviously > 0)
+                {
+                    startPos = bytesDownloadedPreviously;
+                }
+
+                for (int i = 0; i < numStreams; i++)
+                {
+                    long fromPos = startPos + pointFrequency * i;
+                    long toPos;
+
+                    if (i == 0 && startPos == 0) fromPos = 0;
+
+                    if (i == numStreams - 1)
+                    {
+                        toPos = this.TotalBytesToDownload ?? 0;
+                    }
+                    else
+                    {
+                        toPos = fromPos + pointFrequency - 1;
+                    }
+
+                    Debug.WriteLine("bytesDownloadedPreviously=" + bytesDownloadedPreviously + "  pointFrequency=" + pointFrequency + "   i=" + i + "   TotalBytesToDownload=" + this.TotalBytesToDownload);
+                    Debug.WriteLine(fromPos + "-->" + toPos);
+
+                    var request = new HttpRequestMessage
+                    {
+                        RequestUri = new Uri(this.Url),
+                        Method = HttpMethod.Get,
+                        Headers = { Range = new RangeHeaderValue(fromPos, toPos) }
+                    };
+
+                    requests.Add(request);
+                }
             }
 
-            foreach(var request in requests)
+            // Set up the tasks to process the requests
+            foreach (var request in requests)
             {
-                Task t = Task.Run(async () => 
+                Task t = Task.Run(async () =>
                 {
                     var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
                     var sourceStream = await response.Content.ReadAsStreamAsync();
                     var destinationStream = new FileStream(this.Destination + ".part" + requests.IndexOf(request), FileMode.Append);
                     var binaryWriter = new BinaryWriter(destinationStream);
 
+                    byte[] buffer = new byte[1024];
 
-                });
+                    while (true)
+                    {
+                        if (linkedToken.IsCancellationRequested)
+                            break;
+
+                        int read = await sourceStream.ReadAsync(buffer, 0, buffer.Length);
+
+                        if (read == 0)
+                        {
+                            // Stream complete
+                            break;
+                        }
+                        else
+                        {
+                            byte[] data = new byte[read];
+                            buffer.ToList().CopyTo(0, data, 0, read);
+
+                            binaryWriter.Write(data, 0, data.Length);
+                            streamProgress.Report(read);
+                        }
+                    }
+
+                    binaryWriter.Close();
+                    destinationStream.Close();
+                    sourceStream.Close();
+                    response.Dispose();
+                    request.Dispose();
+                }, linkedToken);
+
+                tasks.Add(t);
             }
-        }
 
-        private async Task DownloadAsync(IProgress<int> progressReporter, long bytesDownloadedPreviously = 0)
-        {
-            CancellationToken linkedTokenSource;
-            DownloadStatus _status = DownloadStatus.Error;
-            HttpRequestMessage request;
+            // Run the tasks
+            StartMeasuringSpeed();
+            await Task.WhenAll(tasks);
 
-            _ctsPaused = new CancellationTokenSource();
-            _ctsCanceled = new CancellationTokenSource();
-
-            if (this.SupportsResume)
+            FileInfo[] files = new FileInfo[numStreams];
+            for (int i = 0; i < numStreams; i++)
             {
-                request = new HttpRequestMessage
+                files[i] = new FileInfo(this.Destination + ".part" + i);
+            }
+
+            // Merge the streams
+            this.Status = DownloadStatus.Merging;
+            AnnouncePropertyChanged(nameof(this.Status));
+            await MergeFilesAsync(files);
+
+            if (linkedToken.IsCancellationRequested)
+            {
+                if (_ctPause.IsCancellationRequested)
                 {
-                    RequestUri = new Uri(this.Url),
-                    Method = HttpMethod.Get,
-                    Headers = { Range = new RangeHeaderValue(bytesDownloadedPreviously, this.TotalBytesToDownload) }
-                };
+                    status = DownloadStatus.Paused;
+                }
+                else if (_ctCancel.IsCancellationRequested)
+                {
+                    status = DownloadStatus.Ready;
+                }
             }
             else
             {
-                request = new HttpRequestMessage
+                if (new FileInfo(this.Destination).Length >= this.TotalBytesToDownload)
                 {
-                    RequestUri = new Uri(this.Url),
-                    Method = HttpMethod.Get
-                };
-            }
-
-            _ctPause = _ctsPaused.Token;
-            _ctCancel = _ctsCanceled.Token;
-            linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(_ctPause, _ctCancel).Token;
-
-            using (HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
-            using (Stream sourceStream = await response.Content.ReadAsStreamAsync())
-            using (FileStream destinationStream = new FileStream(this.Destination, FileMode.Append))
-            using (BinaryWriter binaryWriter = new BinaryWriter(destinationStream))
-            {
-                request.Dispose();
-                byte[] buffer = new byte[1024];
-                bool moreToRead = true;
-                long nextProgressReportAt;
-                long progressReportingFrequency; // num bytes after which to report progress
-
-                this.Speed = new long();
-
-                if (this.TotalBytesToDownload != null)
-                {
-                    // report progress every 1%
-                    progressReportingFrequency = (long)this.TotalBytesToDownload / 100;
-                }
-                else
-                {
-                    // report progress every buffer
-                    progressReportingFrequency = buffer.Length;
-                }
-
-                nextProgressReportAt = progressReportingFrequency;
-
-                StartMeasuringSpeed();
-
-                while (moreToRead == true)
-                {
-                    if (linkedTokenSource.IsCancellationRequested)
-                    {
-                        if (_ctPause.IsCancellationRequested)
-                        {
-                            // Paused...
-                            _status = DownloadStatus.Paused;
-                        }
-                        if (_ctCancel.IsCancellationRequested)
-                        {
-                            // Cancelled...
-                            _status = DownloadStatus.Ready;
-                        }
-                        break;
-                    }
-
-                    int read = await sourceStream.ReadAsync(buffer, 0, buffer.Length);
-
-                    if (read == 0)
-                    {
-                        moreToRead = false;
-                        _status = DownloadStatus.Finished;
-                        progressReporter.Report(100);
-
-                        if (this.TotalBytesToDownload == null)
-                        {
-                            // For downloads without total size, update total size once completed
-                            this.TotalBytesToDownload = this.TotalBytesCompleted;
-                            AnnouncePropertyChanged(nameof(this.PrettyTotalSize));
-                        }
-                    }
-                    else
-                    {
-                        byte[] data = new byte[read];
-                        buffer.ToList().CopyTo(0, data, 0, read);
-
-                        binaryWriter.Write(data, 0, data.Length);
-
-                        this.BytesDownloadedThisSession += read;
-                        this.TotalBytesCompleted = bytesDownloadedPreviously + this.BytesDownloadedThisSession;
-
-                        if (this.TotalBytesCompleted >= nextProgressReportAt)
-                        {
-                            if (this.TotalBytesToDownload != null)
-                            {
-                                progressReporter.Report((int)
-                                    ((double)this.TotalBytesCompleted / (double)this.TotalBytesToDownload * 100));
-
-                                if (nextProgressReportAt >= this.TotalBytesToDownload - progressReportingFrequency)
-                                {
-                                    progressReportingFrequency = (long)this.TotalBytesToDownload - this.TotalBytesCompleted;
-                                }
-                            }
-
-                            nextProgressReportAt = this.TotalBytesCompleted + progressReportingFrequency;
-                            AnnouncePropertyChanged(nameof(this.BytesDownloadedThisSession));
-                            AnnouncePropertyChanged(nameof(this.PrettyDownloadedSoFar));
-                            AnnouncePropertyChanged(nameof(this.TotalBytesCompleted));
-                        }
-                    }
+                    status = DownloadStatus.Finished;
                 }
             }
 
@@ -298,7 +328,9 @@ namespace AMDownloader
             _ctsPaused = null;
             _ctCancel = default;
             _ctPause = default;
-            _tcsDownloadItem.SetResult(_status);
+
+            _taskCompletion.SetResult(status);
+            return status;
         }
 
         private void StartMeasuringSpeed()
@@ -309,7 +341,7 @@ namespace AMDownloader
 
             Task.Run(async () =>
             {
-                while (this.IsBeingDownloaded)
+                while (this.Status == DownloadStatus.Downloading)
                 {
                     if (sw.ElapsedMilliseconds >= 1000 && this.BytesDownloadedThisSession > 0)
                     {
@@ -408,7 +440,7 @@ namespace AMDownloader
             }
         }
 
-        public async Task StartAsync()
+        public async Task StartAsync(int numStreams = 5)
         {
             long bytesAlreadyDownloaded = 0;
 
@@ -446,14 +478,17 @@ namespace AMDownloader
                 }
             }
 
-            _tcsDownloadItem = new TaskCompletionSource<DownloadStatus>(DownloadAsync(_progressReporter, bytesAlreadyDownloaded));
+            _taskCompletion = new TaskCompletionSource<DownloadStatus>(ProcessStreamsAsync(numStreams, bytesAlreadyDownloaded));
 
             this.BytesDownloadedThisSession = 0;
+            this.TotalBytesCompleted = bytesAlreadyDownloaded;
             this.Status = DownloadStatus.Downloading;
             AnnouncePropertyChanged(nameof(this.Status));
+            AnnouncePropertyChanged(nameof(this.PrettyDownloadedSoFar));
 
-            await _tcsDownloadItem.Task;
-            switch (_tcsDownloadItem.Task.Result)
+            await _taskCompletion.Task;
+
+            switch (_taskCompletion.Task.Result)
             {
                 case (DownloadStatus.Ready): // a.k.a canceled
                     this.Cancel();
@@ -467,6 +502,20 @@ namespace AMDownloader
                     this.Status = DownloadStatus.Finished;
                     AnnouncePropertyChanged(nameof(this.Status));
                     this.Dequeue();
+
+                    var fi = new FileInfo(this.Destination);
+                    if (this.TotalBytesCompleted < fi.Length)
+                    {
+                        this.TotalBytesCompleted = fi.Length;
+                        AnnouncePropertyChanged(nameof(this.PrettyDownloadedSoFar));
+                    }
+
+                    if (this.Progress < 100)
+                    {
+                        this.Progress = 100;
+                        AnnouncePropertyChanged(nameof(this.Progress));
+                    }
+
                     break;
 
                 default:
@@ -477,7 +526,7 @@ namespace AMDownloader
 
         public void Pause()
         {
-            if (IsDownloadComplete() || _tcsDownloadItem == null)
+            if (IsDownloadComplete() || _taskCompletion == null)
             {
                 // Nothing to pause
                 return;
@@ -491,7 +540,7 @@ namespace AMDownloader
                 this.Status = DownloadStatus.Pausing;
                 AnnouncePropertyChanged(nameof(this.Status));
             }
-            else if (_tcsDownloadItem.Task.Result == DownloadStatus.Paused)
+            else if (_taskCompletion.Task.Result == DownloadStatus.Paused)
             {
                 // Download paused; update status
                 this.Status = DownloadStatus.Paused;
@@ -501,7 +550,7 @@ namespace AMDownloader
 
         public void Cancel()
         {
-            if (_tcsDownloadItem == null)
+            if (_taskCompletion == null)
             {
                 // Nothing to cancel
                 return;

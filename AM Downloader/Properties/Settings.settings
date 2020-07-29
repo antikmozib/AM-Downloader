@@ -3,7 +3,10 @@
   <Profiles />
   <Settings>
     <Setting Name="MaxParallelDownloads" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">2</Value>
+      <Value Profile="(Default)">3</Value>
+    </Setting>
+    <Setting Name="MaxConnectionsPerDownload" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">3</Value>
     </Setting>
   </Settings>
 </SettingsFile>

@@ -153,7 +153,7 @@ namespace AMDownloader
             {
                 if (item.IsBeingDownloaded) continue;
                 if (item.IsQueued) item.Dequeue();
-                Task.Run(() => item.StartAsync());
+                Task.Run(() => item.StartAsync(Properties.Settings.Default.MaxConnectionsPerDownload));
             }
         }
 
@@ -333,7 +333,7 @@ namespace AMDownloader
 
         void StartQueue(object obj)
         {
-            Task.Run(async () => await QueueProcessor.StartAsync());
+            Task.Run(async () => await QueueProcessor.StartAsync(Properties.Settings.Default.MaxConnectionsPerDownload));
         }
 
         public bool StartQueue_CanExecute(object obj)

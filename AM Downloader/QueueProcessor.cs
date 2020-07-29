@@ -10,7 +10,7 @@ namespace AMDownloader
     // Represents contracts that can be used by the QueueProcessor
     public interface IQueueable
     {
-        public Task StartAsync();
+        public Task StartAsync(int numStreams);
         public void Pause();
         public bool IsQueued { get; }
     }
@@ -27,7 +27,7 @@ namespace AMDownloader
         private CancellationToken _ctCancel;
 
         #endregion // Fields
-        
+
         #region Properties
 
         public bool IsBusy { get { return (_ctsCancel != null); } }
@@ -49,7 +49,7 @@ namespace AMDownloader
 
         #region Private methods
 
-        private async Task ProcessQueueAsync()
+        private async Task ProcessQueueAsync(int numStreams)
         {
             var tasks = new List<Task>();
 
@@ -71,7 +71,7 @@ namespace AMDownloader
 
                     if (!_ctCancel.IsCancellationRequested && item.IsQueued)
                     {
-                        await item.StartAsync();
+                        await item.StartAsync(numStreams);
                     }
 
                     _semaphore.Release();
@@ -138,12 +138,12 @@ namespace AMDownloader
         }
 
         // Consumer
-        public async Task StartAsync(params IQueueable[] firstItems)
+        public async Task StartAsync(int numStreams = 5, params IQueueable[] firstItems)
         {
             if (_ctsCancel != null) return;
             if (firstItems != null) RecreateQueue(firstItems);
 
-            await ProcessQueueAsync();
+            await ProcessQueueAsync(numStreams);
         }
 
         public void Stop()
