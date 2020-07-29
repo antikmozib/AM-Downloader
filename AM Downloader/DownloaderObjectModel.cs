@@ -11,24 +11,26 @@ using static AMDownloader.Common;
 
 namespace AMDownloader
 {
-    class DownloaderObjectModel : INotifyPropertyChanged
+    class DownloaderObjectModel : INotifyPropertyChanged, IQueueable
     {
+        #region Fields
+
         private CancellationTokenSource _ctsPaused, _ctsCanceled;
         private CancellationToken _ctPause, _ctCancel;
         private TaskCompletionSource<DownloadStatus> _tcsDownloadItem;
-        private IProgress<int> _progressReporter;
-        private QueueProcessor _queueProcessor;
+        private readonly IProgress<int> _progressReporter;
         private HttpClient _httpClient;
+
+        #endregion // Fields
+
+        #region Properties
 
         public event PropertyChangedEventHandler PropertyChanged;
         public enum DownloadStatus
         {
             Ready, Queued, Downloading, Paused, Pausing, Finished, Error, Cancelling, Connecting
-        }
-
-        #region Properties
-
-        public bool IsQueued { get { return (_queueProcessor != null); } }
+        }        
+        public bool IsQueued { get; private set; }
         public bool IsBeingDownloaded { get { return (_ctsPaused != null); } }
         public string Name { get; private set; }
         public string Url { get; private set; }
@@ -47,16 +49,15 @@ namespace AMDownloader
         public string PrettyDestination { get { return new FileInfo(this.Destination).Directory.Name + " (" + this.Destination.Substring(0, this.Destination.Length - this.Name.Length - 1) + ")"; } }
         public string PrettyDateCreated { get { return this.DateCreated.ToString("dd MMM yy H:mm:ss"); } }
 
-        #endregion
+        #endregion // Properties
 
         #region Constructors
 
-        public DownloaderObjectModel(ref HttpClient httpClient, string url, string destination) : this(ref httpClient, url, destination, null) { }
+        public DownloaderObjectModel(ref HttpClient httpClient, string url, string destination) : this(ref httpClient, url, destination, false) { }
 
-        public DownloaderObjectModel(ref HttpClient httpClient, string url, string destination, QueueProcessor queueProcessor)
+        public DownloaderObjectModel(ref HttpClient httpClient, string url, string destination, bool enqueue)
         {
-            this._httpClient = httpClient;
-            this._queueProcessor = queueProcessor;
+            _httpClient = httpClient;
 
             // capture sync context
             _progressReporter = new Progress<int>((value) =>
@@ -82,9 +83,9 @@ namespace AMDownloader
             this.Speed = null;
             this.SupportsResume = false;
             this.DateCreated = DateTime.Now;
-            if (queueProcessor != null)
+            if (enqueue)
             {
-                this.Status = DownloadStatus.Queued;
+                this.Enqueue();
             }
 
             Task.Run(async () => await DetermineTotalBytesToDownloadAsync()).ContinueWith(t =>
@@ -100,7 +101,7 @@ namespace AMDownloader
             });
         }
 
-        #endregion
+        #endregion // Constructors
 
         #region Private methods
 
@@ -170,23 +171,23 @@ namespace AMDownloader
                 request.Dispose();
                 byte[] buffer = new byte[1024];
                 bool moreToRead = true;
-                long nextProgressUpdate;
-                long progressUpdateFrequency; // num bytes after which to report progress
+                long nextProgressReportAt;
+                long progressReportingFrequency; // num bytes after which to report progress
 
                 this.Speed = new long();
 
                 if (this.TotalBytesToDownload != null)
                 {
                     // report progress every 1%
-                    progressUpdateFrequency = (long)this.TotalBytesToDownload / 100;
+                    progressReportingFrequency = (long)this.TotalBytesToDownload / 100;
                 }
                 else
                 {
-                    // report progress every 1 byte
-                    progressUpdateFrequency = 1;
+                    // report progress every buffer
+                    progressReportingFrequency = buffer.Length;
                 }
 
-                nextProgressUpdate = progressUpdateFrequency;
+                nextProgressReportAt = progressReportingFrequency;
 
                 StartMeasuringSpeed();
 
@@ -232,20 +233,20 @@ namespace AMDownloader
                         this.BytesDownloadedThisSession += read;
                         this.TotalBytesCompleted = bytesDownloadedPreviously + this.BytesDownloadedThisSession;
 
-                        if (this.TotalBytesCompleted >= nextProgressUpdate)
+                        if (this.TotalBytesCompleted >= nextProgressReportAt)
                         {
                             if (this.TotalBytesToDownload != null)
                             {
                                 progressReporter.Report((int)
                                     ((double)this.TotalBytesCompleted / (double)this.TotalBytesToDownload * 100));
 
-                                if (nextProgressUpdate >= this.TotalBytesToDownload - progressUpdateFrequency)
+                                if (nextProgressReportAt >= this.TotalBytesToDownload - progressReportingFrequency)
                                 {
-                                    progressUpdateFrequency = (long)this.TotalBytesToDownload - this.TotalBytesCompleted;
+                                    progressReportingFrequency = (long)this.TotalBytesToDownload - this.TotalBytesCompleted;
                                 }
                             }
 
-                            nextProgressUpdate = this.TotalBytesCompleted + progressUpdateFrequency;
+                            nextProgressReportAt = this.TotalBytesCompleted + progressReportingFrequency;
                             AnnouncePropertyChanged(nameof(this.BytesDownloadedThisSession));
                             AnnouncePropertyChanged(nameof(this.PrettyDownloadedSoFar));
                             AnnouncePropertyChanged(nameof(this.TotalBytesCompleted));
@@ -318,26 +319,25 @@ namespace AMDownloader
             }
         }
 
-        #endregion
+        #endregion // Private methods
 
         #region Public methods
 
-        public void Enqueue(QueueProcessor queueProcessor)
+        public void Enqueue()
         {
             if (this.IsQueued || this.Status != DownloadStatus.Ready) return;
 
-            this._queueProcessor = queueProcessor;
-            queueProcessor.Add(this);
-
+            this.IsQueued = true;
             this.Status = DownloadStatus.Queued;
             AnnouncePropertyChanged(nameof(this.Status));
+            AnnouncePropertyChanged(nameof(this.IsQueued));
         }
 
         public void Dequeue()
         {
             if (this.IsQueued && !this.IsBeingDownloaded)
             {
-                _queueProcessor = null;
+                this.IsQueued = false;
                 AnnouncePropertyChanged(nameof(this.IsQueued));
 
                 if (this.Status == DownloadStatus.Queued)
@@ -403,12 +403,6 @@ namespace AMDownloader
                     {
                         // Download is paused; resume from specific point
                         bytesAlreadyDownloaded = new FileInfo(this.Destination).Length;
-                    }
-                    else if (this.IsQueued && _queueProcessor.Contains(this))
-                    {
-                        // This is a part of the queue; start queue instead
-                        await _queueProcessor.StartAsync(this);
-                        return;
                     }
                 }
             }
@@ -518,13 +512,12 @@ namespace AMDownloader
                     if (this.IsQueued)
                     {
                         // If was in queue, stop queue and dequeue this item
-                        _queueProcessor.Stop();
                         this.Dequeue();
                     }
                 });
             }
         }
 
-        #endregion
+        #endregion // Public methods
     }
 }

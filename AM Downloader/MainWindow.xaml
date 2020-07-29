@@ -42,7 +42,7 @@
                     Command="{Binding AddCommand}" TabIndex="2"  />
                 <Button
                     CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
-                    Command="{Binding RemoveCommand}"
+                    Command="{Binding RemoveFromListCommand}"
                     Padding="10" x:Name="btnRemove"
                     Content="&#xF068; Remove"
                     FontFamily="{StaticResource FontAwesome}" TabIndex="3" />
@@ -260,11 +260,11 @@
                         <MenuItem Header="Pause" Command="{Binding PauseCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                         <MenuItem Header="Cancel" Command="{Binding CancelCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                         <Separator/>
-                        <MenuItem Header="Add to queue" Command="{Binding AddToQueueCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                        <MenuItem Header="Remove from queue" Command="{Binding RemoveFromQueueCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                        <MenuItem Header="Enqueue" Command="{Binding EnqueueCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                        <MenuItem Header="Dequeue" Command="{Binding DequeueCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                         <Separator/>
-                        <MenuItem Header="Remove" Command="{Binding RemoveCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                        <MenuItem Header="Delete" Command="{Binding DeleteCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                        <MenuItem Header="Remove from list" Command="{Binding RemoveFromListCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                        <MenuItem Header="Delete file" Command="{Binding DeleteFileCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                     </ContextMenu>
                 </ListView.ContextMenu>
                 <ListView.Resources>
@@ -365,8 +365,8 @@
                                 <DataTemplate>
                                     <Grid>
                                         <TextBlock 
-                                        Text="{Binding PrettySpeed}" 
-                                        HorizontalAlignment="Right" />
+                                            Text="{Binding PrettySpeed}" 
+                                            HorizontalAlignment="Right" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
@@ -392,8 +392,8 @@
                                 <DataTemplate>
                                     <Grid>
                                         <TextBlock 
-                                        Text="{Binding PrettyDateCreated}" 
-                                        HorizontalAlignment="Right" />
+                                            Text="{Binding PrettyDateCreated}" 
+                                            HorizontalAlignment="Right" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>

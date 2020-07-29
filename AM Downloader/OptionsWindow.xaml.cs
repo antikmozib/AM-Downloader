@@ -17,9 +17,17 @@ namespace AMDownloader
     /// </summary>
     public partial class OptionsWindow : Window
     {
+        private OptionsViewModel optionsViewModel = new OptionsViewModel();
+
         public OptionsWindow()
         {
             InitializeComponent();
+            DataContext = optionsViewModel;
+        }
+
+        private void btnOK_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
         }
     }
 }
