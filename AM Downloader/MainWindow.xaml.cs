@@ -32,7 +32,7 @@ namespace AMDownloader
             var description = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyDescriptionAttribute), false).OfType<AssemblyDescriptionAttribute>().FirstOrDefault()?.Description;
             var copyright = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyCopyrightAttribute), true).OfType<AssemblyCopyrightAttribute>().FirstOrDefault()?.Copyright;
 
-            MessageBox.Show(this,name + "\nVersion " + version + "\n\n" + description + "\n\n" + copyright, "About",MessageBoxButton.OK,MessageBoxImage.Information);
+            MessageBox.Show(this,name + " " + version + "\n\n" + description + "\n\n" + copyright, "About",MessageBoxButton.OK,MessageBoxImage.Information);
         }
     }
 }

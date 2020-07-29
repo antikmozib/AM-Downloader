@@ -42,7 +42,7 @@
                     Command="{Binding AddCommand}" TabIndex="2"  />
                 <Button
                     CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
-                    Command="{Binding RemoveFromListCommand}"
+                    Command="{Binding RemoveCommand}"
                     Padding="10" x:Name="btnRemove"
                     Content="&#xF068; Remove"
                     FontFamily="{StaticResource FontAwesome}" TabIndex="3" />
