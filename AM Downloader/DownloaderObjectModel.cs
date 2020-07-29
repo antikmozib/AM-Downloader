@@ -51,9 +51,7 @@ namespace AMDownloader
 
         #region Constructors
 
-        public DownloaderObjectModel(ref HttpClient httpClient, string url, string destination) : this(ref httpClient, url, destination, null)
-        {
-        }
+        public DownloaderObjectModel(ref HttpClient httpClient, string url, string destination) : this(ref httpClient, url, destination, null) { }
 
         public DownloaderObjectModel(ref HttpClient httpClient, string url, string destination, QueueProcessor queueProcessor)
         {
@@ -281,7 +279,6 @@ namespace AMDownloader
                         AnnouncePropertyChanged(nameof(this.PrettySpeed));
                     }
                     await Task.Delay(1000);
-
                 }
             }).ContinueWith((t) =>
             {
@@ -330,8 +327,7 @@ namespace AMDownloader
             if (this.IsQueued || this.Status != DownloadStatus.Ready) return;
 
             this._queueProcessor = queueProcessor;
-
-            if (!queueProcessor.Contains(this)) queueProcessor.Add(this);            
+            queueProcessor.Add(this);
 
             this.Status = DownloadStatus.Queued;
             AnnouncePropertyChanged(nameof(this.Status));

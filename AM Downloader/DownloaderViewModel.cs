@@ -54,7 +54,7 @@ namespace AMDownloader
             Client = new HttpClient();
             DownloadItemsList = new ObservableCollection<DownloaderObjectModel>();
             CategoriesList = new ObservableCollection<ViewStatus>();
-            QueueProcessor = new QueueProcessor(DownloadItemsList);
+            QueueProcessor = new QueueProcessor(ref DownloadItemsList);
             _collectionView = CollectionViewSource.GetDefaultView(DownloadItemsList);
 
             AddCommand = new RelayCommand(Add);

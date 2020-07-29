@@ -16,17 +16,18 @@
     <Grid 
         Margin="10">
         <Grid.RowDefinitions>
-            <RowDefinition Height="25"/>
-            <RowDefinition Height="15"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="10"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="15"/>
+            <RowDefinition Height="10"/>
             <RowDefinition Height="25"/>
-            <RowDefinition Height="15"/>
+            <RowDefinition Height="10"/>
             <RowDefinition Height="25"/>
         </Grid.RowDefinitions>
         <DockPanel>
             <Label 
-            Content="Enter URL or pattern to add. You can enter multiple URLs on separate lines."/>
+                VerticalAlignment="Bottom"
+                Content="Enter URL or pattern to add. You can enter multiple URLs on separate lines."/>
             <CheckBox 
                 DockPanel.Dock="Right"
                 x:Name="cbMonitorClipboard" 
@@ -35,7 +36,7 @@
                 VerticalAlignment="Center"
                 HorizontalAlignment="Right"
                 />
-        </DockPanel>        
+        </DockPanel>
         <TextBox 
             Padding="2"
             x:Name="txtUrl" 
@@ -58,7 +59,7 @@
                 x:Name="btnBrowse" 
                 DockPanel.Dock="Right" 
                 Content="Browse" 
-                Width="100" 
+                Width="80" 
                 Click="btnBrowse_Click"/>
             <ComboBox
                 x:Name="cboDestination"
@@ -85,20 +86,20 @@
             <Button x:Name="btnAdd" 
                 Margin="0 0 10 0"
                 Content="Add" 
-                Width="100" 
+                Width="80" 
                 Command="{Binding AddCommand}"
                 IsDefault="True" 
                 TabIndex="1" Click="btnAdd_Click"/>
             <Button x:Name="btnCancel"
                 Margin="0 0 10 0"
                 Content="Cancel" 
-                Width="100" 
+                Width="80" 
                 IsCancel="True" 
                 TabIndex="2" Click="btnCancel_Click"/>
             <Button
                 Command="{Binding PreviewCommand}"
                 Content="Preview" 
-                Width="100" 
+                Width="80" 
                 TabIndex="3"/>
         </StackPanel>
     </Grid>

@@ -50,4 +50,3 @@ namespace AMDownloader
         #endregion // ICommand Members
     }
 }
-

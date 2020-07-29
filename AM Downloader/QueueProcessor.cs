@@ -15,6 +15,7 @@ namespace AMDownloader
         private List<DownloaderObjectModel> _itemsProcessing;
         private CancellationTokenSource _ctsCancel;
         private CancellationToken _ctCancel;
+        private SemaphoreSlim _semaphore;
 
         #region Properties
 
@@ -24,10 +25,15 @@ namespace AMDownloader
 
         #region Constructors
 
-        public QueueProcessor(ObservableCollection<DownloaderObjectModel> mainDownloadsList)
+        public QueueProcessor(ref ObservableCollection<DownloaderObjectModel> mainDownloadsList) : this(ref mainDownloadsList, 3) { }
+
+        public QueueProcessor(ref ObservableCollection<DownloaderObjectModel> mainDownloadsList, int maxParallelDownloads)
         {
-            this._mainDownloadsList = mainDownloadsList;
-            this._queueList = new BlockingCollection<DownloaderObjectModel>();
+            _mainDownloadsList = mainDownloadsList;
+
+            _queueList = new BlockingCollection<DownloaderObjectModel>();
+            _itemsProcessing = new List<DownloaderObjectModel>();
+            _semaphore = new SemaphoreSlim(maxParallelDownloads);
         }
 
         #endregion
@@ -36,59 +42,43 @@ namespace AMDownloader
 
         private async Task ProcessQueueAsync()
         {
+            var tasks = new List<Task>();
+
             _ctsCancel = new CancellationTokenSource();
             _ctCancel = _ctsCancel.Token;
-            _itemsProcessing = new List<DownloaderObjectModel>();
+            _itemsProcessing.Clear();
 
-            while (!_ctCancel.IsCancellationRequested && _queueList.Count > 0)
+            while (_queueList.Count() > 0 && !_ctCancel.IsCancellationRequested)
             {
-                try
+                DownloaderObjectModel item;
+                if (!_queueList.TryTake(out item)) break;
+
+                if (!item.IsQueued && !_mainDownloadsList.Contains(item)) continue;
+
+                Task t = Task.Run(async () =>
                 {
-                    // Download max n items
-                    DownloaderObjectModel[] items = { null, null, null };
+                    _itemsProcessing.Add(item);
+                    _semaphore.Wait();
 
-                    int itemsAdded = 0;
-
-                    while (itemsAdded < items.Count())
+                    if (!_ctCancel.IsCancellationRequested)
                     {
-                        items[itemsAdded] = null;
-
-                        if (_ctCancel.IsCancellationRequested || !_queueList.TryTake(out items[itemsAdded])) break;
-                        if (!items[itemsAdded].IsQueued || !_mainDownloadsList.Contains(items[itemsAdded])) continue;
-
-                        itemsAdded++;
+                        await item.StartAsync();
                     }
 
-                    List<Task> tasks = new List<Task>(items.Length);
+                    _semaphore.Release();
+                    _itemsProcessing.Remove(item);
+                });
 
-                    foreach (var item in items)
-                    {
-                        if (item != null)
-                        {
-                            tasks.Add(item.StartAsync());
-
-                            // keep a temporary reference to each item we are processing
-                            _itemsProcessing.Add(item);
-                        }
-                    }
-
-                    await Task.WhenAll(tasks);
-
-                    // Download complete; remove from processing list
-                    foreach (var item in items)
-                        if (item != null) _itemsProcessing.Remove(item);
-                }
-                catch (OperationCanceledException)
-                {
-                    break;
-                }
+                tasks.Add(t);
             }
+
+            await Task.WhenAll(tasks.ToArray());
 
             _ctsCancel = null;
             _ctCancel = default;
         }
 
-        private void RecreateQueue(params DownloaderObjectModel[] firstItems)
+        private void RecreateQueue(params DownloaderObjectModel[] addToTop)
         {
             if (this._queueList == null) return;
 
@@ -96,18 +86,23 @@ namespace AMDownloader
 
             var newList = new BlockingCollection<DownloaderObjectModel>();
 
-            foreach (var obj in firstItems)
-                newList.Add(obj);
+            foreach (var item in addToTop)
+                newList.Add(item);
 
-            foreach (var obj in _queueList)
+            while (_queueList.Count > 0)
             {
-                DownloaderObjectModel item = null;
+                DownloaderObjectModel item;
+
                 if (_queueList.TryTake(out item))
                 {
-                    if (firstItems.Contains(item))
+                    if (addToTop.Contains(item))
                         continue;
                     else
                         newList.Add(item);
+                }
+                else
+                {
+                    break;
                 }
             }
 
@@ -123,13 +118,15 @@ namespace AMDownloader
         // Producer
         public void Add(DownloaderObjectModel item)
         {
+            if (_queueList.Contains(item)) return;
+
             try
             {
                 _queueList.TryAdd(item);
             }
             catch (OperationCanceledException)
             {
-                _queueList.CompleteAdding();
+                return;
             }
         }
 
@@ -137,7 +134,6 @@ namespace AMDownloader
         public async Task StartAsync(params DownloaderObjectModel[] firstItems)
         {
             if (_ctsCancel != null) return;
-
             if (firstItems != null) RecreateQueue(firstItems);
 
             await ProcessQueueAsync();
@@ -147,15 +143,10 @@ namespace AMDownloader
         {
             _ctsCancel?.Cancel();
 
-            if (_itemsProcessing != null)
+            // items that are being downloaded were taken out of queue; add them back to the top
+            if (_itemsProcessing.Count > 0)
             {
-                // Pause all downloads started as part of the queue
-                Parallel.ForEach(_itemsProcessing, (item) =>
-                {
-                    item.Pause();
-                });
-
-                // Items that were being downloaded were removed from the queue; add them back
+                Parallel.ForEach(_itemsProcessing, (item) => { item.Pause(); });
                 RecreateQueue(_itemsProcessing.ToArray());
             }
         }
