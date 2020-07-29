@@ -15,7 +15,7 @@ namespace AMDownloader
 {
     class DownloaderViewModel : INotifyPropertyChanged
     {
-        private ICollectionView _collectionView;
+        private readonly ICollectionView _collectionView;
 
         public string StatusDownloading { get; private set; }
         public string StatusSpeed { get; private set; }
@@ -40,8 +40,8 @@ namespace AMDownloader
         public ICommand WindowClosingCommand { get; private set; }
         public ICommand CategoryChangedCommand { get; private set; }
         public ICommand OptionsCommand { get; private set; }
-        public ICommand AddToQueueCommand { get; private set; }
-        public ICommand RemoveFromQueueCommand { get; private set; }
+        public ICommand EnqueueCommand { get; private set; }
+        public ICommand DequeueCommand { get; private set; }
         public ICommand DeleteCommand { get; private set; }
 
         public enum ViewStatus
@@ -54,7 +54,7 @@ namespace AMDownloader
             Client = new HttpClient();
             DownloadItemsList = new ObservableCollection<DownloaderObjectModel>();
             CategoriesList = new ObservableCollection<ViewStatus>();
-            QueueProcessor = new QueueProcessor(ref DownloadItemsList);
+            QueueProcessor = new QueueProcessor();
             _collectionView = CollectionViewSource.GetDefaultView(DownloadItemsList);
 
             AddCommand = new RelayCommand(Add);
@@ -69,8 +69,8 @@ namespace AMDownloader
             WindowClosingCommand = new RelayCommand(WindowClosing);
             CategoryChangedCommand = new RelayCommand(CategoryChanged);
             OptionsCommand = new RelayCommand(ShowOptions);
-            AddToQueueCommand = new RelayCommand(AddToQueue, AddToQueue_CanExecute);
-            RemoveFromQueueCommand = new RelayCommand(RemoveFromQueue, RemoveFromQueue_CanExecute);
+            EnqueueCommand = new RelayCommand(AddToQueue, AddToQueue_CanExecute);
+            DequeueCommand = new RelayCommand(RemoveFromQueue, RemoveFromQueue_CanExecute);
             DeleteCommand = new RelayCommand(Delete, Delete_CanExecute);
 
             this.StatusDownloading = "Ready";
@@ -380,7 +380,7 @@ namespace AMDownloader
             foreach (var item in items)
             {
                 if (!item.IsQueued && item.Status == DownloadStatus.Ready)
-                    item.Enqueue(QueueProcessor);
+                    item.Enqueue();
             }
         }
 

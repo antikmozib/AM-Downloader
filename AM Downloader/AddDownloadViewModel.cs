@@ -96,7 +96,7 @@ namespace AMDownloader
 
             if (AddToQueue)
             {
-                item = new DownloaderObjectModel(ref _parentViewModel.Client, url, fileName, _parentViewModel.QueueProcessor);
+                item = new DownloaderObjectModel(ref _parentViewModel.Client, url, fileName,true);
                 _parentViewModel.QueueProcessor.Add(item);
             }
             else

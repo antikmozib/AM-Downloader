@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
-using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
@@ -10,12 +9,11 @@ namespace AMDownloader
 {
     class QueueProcessor
     {
-        private ObservableCollection<DownloaderObjectModel> _mainDownloadsList;
         private BlockingCollection<DownloaderObjectModel> _queueList;
-        private List<DownloaderObjectModel> _itemsProcessing;
+        private readonly List<DownloaderObjectModel> _itemsProcessing;
         private CancellationTokenSource _ctsCancel;
         private CancellationToken _ctCancel;
-        private SemaphoreSlim _semaphore;
+        private readonly SemaphoreSlim _semaphore;
 
         #region Properties
 
@@ -25,12 +23,10 @@ namespace AMDownloader
 
         #region Constructors
 
-        public QueueProcessor(ref ObservableCollection<DownloaderObjectModel> mainDownloadsList) : this(ref mainDownloadsList, 3) { }
+        public QueueProcessor() : this(2) { }
 
-        public QueueProcessor(ref ObservableCollection<DownloaderObjectModel> mainDownloadsList, int maxParallelDownloads)
+        public QueueProcessor(int maxParallelDownloads)
         {
-            _mainDownloadsList = mainDownloadsList;
-
             _queueList = new BlockingCollection<DownloaderObjectModel>();
             _itemsProcessing = new List<DownloaderObjectModel>();
             _semaphore = new SemaphoreSlim(maxParallelDownloads);
@@ -53,14 +49,14 @@ namespace AMDownloader
                 DownloaderObjectModel item;
                 if (!_queueList.TryTake(out item)) break;
 
-                if (!item.IsQueued && !_mainDownloadsList.Contains(item)) continue;
+                if (!item.IsQueued) continue;
 
                 Task t = Task.Run(async () =>
                 {
                     _itemsProcessing.Add(item);
                     _semaphore.Wait();
 
-                    if (!_ctCancel.IsCancellationRequested)
+                    if (!_ctCancel.IsCancellationRequested && item.IsQueued)
                     {
                         await item.StartAsync();
                     }

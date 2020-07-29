@@ -16,8 +16,7 @@ namespace AMDownloader
         private CancellationTokenSource _ctsPaused, _ctsCanceled;
         private CancellationToken _ctPause, _ctCancel;
         private TaskCompletionSource<DownloadStatus> _tcsDownloadItem;
-        private IProgress<int> _progressReporter;
-        private QueueProcessor _queueProcessor;
+        private readonly IProgress<int> _progressReporter;
         private HttpClient _httpClient;
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -28,7 +27,7 @@ namespace AMDownloader
 
         #region Properties
 
-        public bool IsQueued { get { return (_queueProcessor != null); } }
+        public bool IsQueued { get; private set; }
         public bool IsBeingDownloaded { get { return (_ctsPaused != null); } }
         public string Name { get; private set; }
         public string Url { get; private set; }
@@ -51,12 +50,11 @@ namespace AMDownloader
 
         #region Constructors
 
-        public DownloaderObjectModel(ref HttpClient httpClient, string url, string destination) : this(ref httpClient, url, destination, null) { }
+        public DownloaderObjectModel(ref HttpClient httpClient, string url, string destination) : this(ref httpClient, url, destination, false) { }
 
-        public DownloaderObjectModel(ref HttpClient httpClient, string url, string destination, QueueProcessor queueProcessor)
+        public DownloaderObjectModel(ref HttpClient httpClient, string url, string destination, bool enqueue)
         {
-            this._httpClient = httpClient;
-            this._queueProcessor = queueProcessor;
+            _httpClient = httpClient;
 
             // capture sync context
             _progressReporter = new Progress<int>((value) =>
@@ -82,9 +80,9 @@ namespace AMDownloader
             this.Speed = null;
             this.SupportsResume = false;
             this.DateCreated = DateTime.Now;
-            if (queueProcessor != null)
+            if (enqueue)
             {
-                this.Status = DownloadStatus.Queued;
+                this.Enqueue();
             }
 
             Task.Run(async () => await DetermineTotalBytesToDownloadAsync()).ContinueWith(t =>
@@ -322,22 +320,21 @@ namespace AMDownloader
 
         #region Public methods
 
-        public void Enqueue(QueueProcessor queueProcessor)
+        public void Enqueue()
         {
             if (this.IsQueued || this.Status != DownloadStatus.Ready) return;
 
-            this._queueProcessor = queueProcessor;
-            queueProcessor.Add(this);
-
+            this.IsQueued = true;
             this.Status = DownloadStatus.Queued;
             AnnouncePropertyChanged(nameof(this.Status));
+            AnnouncePropertyChanged(nameof(this.IsQueued));
         }
 
         public void Dequeue()
         {
             if (this.IsQueued && !this.IsBeingDownloaded)
             {
-                _queueProcessor = null;
+                this.IsQueued = false;
                 AnnouncePropertyChanged(nameof(this.IsQueued));
 
                 if (this.Status == DownloadStatus.Queued)
@@ -403,12 +400,6 @@ namespace AMDownloader
                     {
                         // Download is paused; resume from specific point
                         bytesAlreadyDownloaded = new FileInfo(this.Destination).Length;
-                    }
-                    else if (this.IsQueued && _queueProcessor.Contains(this))
-                    {
-                        // This is a part of the queue; start queue instead
-                        await _queueProcessor.StartAsync(this);
-                        return;
                     }
                 }
             }
@@ -518,7 +509,6 @@ namespace AMDownloader
                     if (this.IsQueued)
                     {
                         // If was in queue, stop queue and dequeue this item
-                        _queueProcessor.Stop();
                         this.Dequeue();
                     }
                 });
