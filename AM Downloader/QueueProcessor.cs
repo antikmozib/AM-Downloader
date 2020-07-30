@@ -10,7 +10,7 @@ namespace AMDownloader
     // Represents contracts that can be used by the QueueProcessor
     public interface IQueueable
     {
-        public Task StartAsync(int numStreams);
+        public Task StartAsync(int numStreams); // numStreams = max num of parallel streams/channel
         public void Pause();
         public bool IsQueued { get; }
     }

@@ -14,6 +14,8 @@ using static AMDownloader.Common;
 
 namespace AMDownloader
 {
+    public delegate void RefreshCollectionDelegate();
+
     class DownloaderObjectModel : INotifyPropertyChanged, IQueueable
     {
         #region Fields
@@ -28,6 +30,7 @@ namespace AMDownloader
 
         #region Properties
 
+        public RefreshCollectionDelegate RefreshCollectionDel;
         public event PropertyChangedEventHandler PropertyChanged;
         public enum DownloadStatus
         {
@@ -72,11 +75,11 @@ namespace AMDownloader
                 AnnouncePropertyChanged(nameof(this.Progress));
             });
 
-            if (File.Exists(destination))
+            /*if (File.Exists(destination))
             {
                 // The file we're trying to download must NOT exist; halt object creation
                 throw new IOException();
-            }
+            }*/
 
             this.Name = Path.GetFileName(destination);
             this.Url = url;
@@ -516,13 +519,14 @@ namespace AMDownloader
                     {
                         _progressReporter.Report(100);
                     }
-                    
                     break;
 
                 default:
                     this.Cancel();
                     break;
             }
+
+            if (RefreshCollectionDel != null) RefreshCollectionDel.Invoke();
         }
 
         public void Pause()
@@ -606,7 +610,6 @@ namespace AMDownloader
                 });
             }
         }
-
         #endregion // Public methods
     }
 }

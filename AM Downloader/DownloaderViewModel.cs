@@ -11,6 +11,9 @@ using System.Windows.Data;
 using System.IO;
 using static AMDownloader.DownloaderObjectModel;
 using AMDownloader.Properties;
+using System.Xml.Serialization;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace AMDownloader
 {
@@ -79,6 +82,34 @@ namespace AMDownloader
 
             foreach (Categories cat in (Categories[])Enum.GetValues(typeof(Categories)))
                 CategoriesList.Add(cat);
+
+            // Populate history
+
+            var historyPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "AMDownloader", "history");
+
+            if (Directory.Exists(historyPath))
+            {
+                var xmlReader = new XmlSerializer(typeof(SerializableDownloaderObjectModel));
+                foreach (var file in Directory.GetFiles(historyPath))
+                {
+                    var streamReader = new StreamReader(file);
+                    SerializableDownloaderObjectModel sItem;
+
+                    try
+                    {
+                        sItem = (SerializableDownloaderObjectModel)xmlReader.Deserialize(streamReader);
+                    }
+                    catch
+                    {
+                        streamReader.Close();
+                        continue;
+                    }
+
+                    var item = new DownloaderObjectModel(ref Client, sItem.Url, sItem.Destination, sItem.IsQueued);
+                    DownloadItemsList.Add(item);
+                    streamReader.Close();
+                }
+            }
         }
 
         void CategoryChanged(object obj)
@@ -360,11 +391,32 @@ namespace AMDownloader
 
         void WindowClosing(object obj)
         {
-            var items = from item in DownloadItemsList
-                        where item.IsBeingDownloaded
-                        select item;
+            XmlSerializer writer = new XmlSerializer(typeof(SerializableDownloaderObjectModel));
 
-            Parallel.ForEach(items, (item) => { item.Pause(); });
+            if (!Directory.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "AMDownloader", "history")))
+            {
+                Directory.CreateDirectory(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "AMDownloader", "history"));
+            }
+
+            foreach (var item in DownloadItemsList)
+            {
+                if (item.IsBeingDownloaded)
+                {
+                    item.Pause();
+                }
+
+                FileStream fs = new FileStream(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "AMDownloader", "history", item.Name + ".xml"), FileMode.OpenOrCreate, FileAccess.Write);
+
+                var sItem = new SerializableDownloaderObjectModel();
+
+                sItem.Url = item.Url;
+                sItem.Destination = item.Destination;
+                sItem.IsQueued = item.IsQueued;
+                sItem.DateCreated = item.DateCreated;
+
+                writer.Serialize(fs, sItem);
+                fs.Close();
+            }
         }
 
         void ShowOptions(object obj)
@@ -522,8 +574,11 @@ namespace AMDownloader
                 this.StatusDownloading = statusDownloading;
                 AnnouncePropertyChanged(nameof(this.StatusDownloading));
             }
-            
-            //Application.Current.Dispatcher.Invoke(() => _collectionView.Refresh());
+        }
+
+        internal void RefreshCollection()
+        {
+            Application.Current.Dispatcher.Invoke(() => _collectionView.Refresh());
         }
     }
 }

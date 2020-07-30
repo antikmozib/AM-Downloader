@@ -8,6 +8,8 @@ using System.ComponentModel;
 using System.Threading;
 using System;
 using System.Windows.Input;
+using System.Windows;
+using AMDownloader.Properties;
 using static AMDownloader.Common;
 
 namespace AMDownloader
@@ -81,7 +83,7 @@ namespace AMDownloader
                 AddItemToList(url);
 
             if (AddToQueue && StartDownload)
-                Task.Run(async () => await _parentViewModel.QueueProcessor.StartAsync());
+                Task.Run(async () => await _parentViewModel.QueueProcessor.StartAsync(Settings.Default.MaxParallelDownloads));
         }
 
         private void AddItemToList(string url)
@@ -105,10 +107,11 @@ namespace AMDownloader
             }
 
             if (!AddToQueue && StartDownload)
-                Task.Run(async () => await item.StartAsync());
+                Task.Run(async () => await item.StartAsync(Settings.Default.MaxConnectionsPerDownload));
 
             _parentViewModel.DownloadItemsList.Add(item);
             item.PropertyChanged += new PropertyChangedEventHandler(_parentViewModel.OnDownloadPropertyChange);
+            item.RefreshCollectionDel = _parentViewModel.RefreshCollection;
         }
 
         private List<string> ListifyUrls()
