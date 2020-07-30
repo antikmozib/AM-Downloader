@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using System.Windows;
 
 namespace AMDownloader
@@ -22,7 +23,7 @@ namespace AMDownloader
 
         private void menuExit_Click(object sender, RoutedEventArgs e)
         {
-            Application.Current.Shutdown();
+            this.Close();
         }
 
         private void menuAbout_Click(object sender, RoutedEventArgs e)
@@ -32,7 +33,23 @@ namespace AMDownloader
             var description = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyDescriptionAttribute), false).OfType<AssemblyDescriptionAttribute>().FirstOrDefault()?.Description;
             var copyright = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyCopyrightAttribute), true).OfType<AssemblyCopyrightAttribute>().FirstOrDefault()?.Copyright;
 
-            MessageBox.Show(this,name + "\nVersion " + version + "\n\n" + description + "\n\n" + copyright, "About",MessageBoxButton.OK,MessageBoxImage.Information);
+            MessageBox.Show(this, name + "\nVersion " + version + "\n\n" + description + "\n\n" + copyright, "About", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private async void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            var items = from item in primaryViewModel.DownloadItemsList where item.IsBeingDownloaded select item;
+
+            this.Hide();
+            e.Cancel = true;
+
+            if (items.Count() > 0)
+            {
+                Parallel.ForEach(items, item => item.Pause());
+                await Task.Delay(5000);
+            }
+
+            Application.Current.Shutdown();
         }
     }
 }

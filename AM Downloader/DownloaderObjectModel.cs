@@ -75,12 +75,6 @@ namespace AMDownloader
                 AnnouncePropertyChanged(nameof(this.Progress));
             });
 
-            /*if (File.Exists(destination))
-            {
-                // The file we're trying to download must NOT exist; halt object creation
-                throw new IOException();
-            }*/
-
             this.Name = Path.GetFileName(destination);
             this.Url = url;
             this.Destination = destination;
@@ -102,11 +96,33 @@ namespace AMDownloader
                 if (t.Exception != null)
                 {
                     // invalid url
+                    this.Dequeue();
                     this.TotalBytesToDownload = null;
                     this.Status = DownloadStatus.Error;
-                    this.Dequeue();
                 }
                 AnnouncePropertyChanged(nameof(this.Status));
+            }).ContinueWith(t =>
+            {
+                if (File.Exists(this.Destination) && this.Status != DownloadStatus.Error)
+                {
+                    this.TotalBytesCompleted = new FileInfo(this.Destination).Length;
+                    AnnouncePropertyChanged(nameof(this.PrettyDownloadedSoFar));
+
+                    if (IsDownloadComplete())
+                    {
+                        if (this.IsQueued) this.Dequeue();
+
+                        this.Progress = 100;
+                        this.Status = DownloadStatus.Finished;
+                    }
+                    else if (this.SupportsResume)
+                    {
+                        this.Progress = (int)((double)this.TotalBytesCompleted / (double)this.TotalBytesToDownload * 100);
+                        this.Status = DownloadStatus.Paused;
+                    }
+                    AnnouncePropertyChanged(nameof(this.Progress));
+                    AnnouncePropertyChanged(nameof(this.Status));
+                }
             });
         }
 
@@ -127,7 +143,7 @@ namespace AMDownloader
                 using (HttpResponseMessage response = await this._httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
                 {
                     this.TotalBytesToDownload = response.Content.Headers.ContentLength ?? null;
-                    if (this.TotalBytesToDownload != null)
+                    if (this.TotalBytesToDownload != null && this.TotalBytesToDownload > 0)
                     {
                         this.SupportsResume = true;
                     }

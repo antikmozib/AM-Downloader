@@ -14,6 +14,7 @@ using AMDownloader.Properties;
 using System.Xml.Serialization;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Threading;
 
 namespace AMDownloader
 {
@@ -92,22 +93,30 @@ namespace AMDownloader
                 var xmlReader = new XmlSerializer(typeof(SerializableDownloaderObjectModel));
                 foreach (var file in Directory.GetFiles(historyPath))
                 {
-                    var streamReader = new StreamReader(file);
-                    SerializableDownloaderObjectModel sItem;
-
-                    try
+                    using (var streamReader = new StreamReader(file))
                     {
-                        sItem = (SerializableDownloaderObjectModel)xmlReader.Deserialize(streamReader);
-                    }
-                    catch
-                    {
-                        streamReader.Close();
-                        continue;
+                        SerializableDownloaderObjectModel sItem;
+
+                        try
+                        {
+                            sItem = (SerializableDownloaderObjectModel)xmlReader.Deserialize(streamReader);
+                            var item = new DownloaderObjectModel(ref Client, sItem.Url, sItem.Destination, sItem.IsQueued);
+
+                            DownloadItemsList.Add(item);
+                            item.PropertyChanged += new PropertyChangedEventHandler(OnDownloadPropertyChange);
+                            item.RefreshCollectionDel = RefreshCollection;
+                            if (sItem.IsQueued)
+                            {
+                                QueueProcessor.Add(item);
+                            }                            
+                        }
+                        catch (Exception e)
+                        {
+                            MessageBox.Show(e.Message);
+                            continue;
+                        }
                     }
 
-                    var item = new DownloaderObjectModel(ref Client, sItem.Url, sItem.Destination, sItem.IsQueued);
-                    DownloadItemsList.Add(item);
-                    streamReader.Close();
                 }
             }
         }
@@ -405,7 +414,7 @@ namespace AMDownloader
                     item.Pause();
                 }
 
-                FileStream fs = new FileStream(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "AMDownloader", "history", item.Name + ".xml"), FileMode.OpenOrCreate, FileAccess.Write);
+                StreamWriter streamWriter = new StreamWriter(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "AMDownloader", "history", item.Name + ".xml"));
 
                 var sItem = new SerializableDownloaderObjectModel();
 
@@ -414,8 +423,8 @@ namespace AMDownloader
                 sItem.IsQueued = item.IsQueued;
                 sItem.DateCreated = item.DateCreated;
 
-                writer.Serialize(fs, sItem);
-                fs.Close();
+                writer.Serialize(streamWriter, sItem);
+                streamWriter.Close();
             }
         }
 

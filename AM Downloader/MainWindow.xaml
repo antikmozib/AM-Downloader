@@ -11,7 +11,7 @@
     MinHeight="270"
     Width="1000" 
     MinWidth="600"
-    WindowStartupLocation="CenterScreen">
+    WindowStartupLocation="CenterScreen" Closing="Window_Closing">
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Closing">
             <i:InvokeCommandAction Command="{Binding WindowClosingCommand, Mode=OneTime}" />
