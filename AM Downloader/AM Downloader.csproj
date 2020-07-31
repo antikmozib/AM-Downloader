@@ -5,7 +5,7 @@
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <RootNamespace>AMDownloader</RootNamespace>
     <UseWPF>true</UseWPF>
-    <ApplicationIcon>Resources\app.ico</ApplicationIcon>
+    <ApplicationIcon>app.ico</ApplicationIcon>
     <Company>Antik Mozib</Company>
     <Description>A free, modern download manager for Windows.
 https://github.com/antikmozib/am-downloader</Description>
@@ -13,6 +13,7 @@ https://github.com/antikmozib/am-downloader</Description>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="app.ico" />
     <None Remove="Fonts\fontawesome-webfont.ttf" />
   </ItemGroup>
 
@@ -24,6 +25,7 @@ https://github.com/antikmozib/am-downloader</Description>
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="app.ico" />
     <Resource Include="Fonts\fontawesome-webfont.ttf" />
   </ItemGroup>
 
@@ -45,10 +47,6 @@ https://github.com/antikmozib/am-downloader</Description>
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Resources\" />
   </ItemGroup>
 
   <ItemGroup>

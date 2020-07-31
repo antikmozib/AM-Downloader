@@ -63,7 +63,7 @@
                 Click="btnBrowse_Click"/>
             <ComboBox
                 x:Name="cboDestination"
-                Margin="0 0 10 0"
+                Margin="0 0 5 0"
                 Text="{Binding Path=SaveToFolder, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                 Width="auto"
                 HorizontalAlignment="Stretch"
@@ -84,14 +84,14 @@
                 VerticalAlignment="Center"
                 Margin="0 0 20 0"/>
             <Button x:Name="btnAdd" 
-                Margin="0 0 10 0"
+                Margin="0 0 5 0"
                 Content="Add" 
                 Width="80" 
                 Command="{Binding AddCommand}"
                 IsDefault="True" 
                 TabIndex="1" Click="btnAdd_Click"/>
             <Button x:Name="btnCancel"
-                Margin="0 0 10 0"
+                Margin="0 0 5 0"
                 Content="Cancel" 
                 Width="80" 
                 IsCancel="True" 

@@ -14,6 +14,7 @@ using AMDownloader.Properties;
 using static AMDownloader.SerializableModels;
 using static AMDownloader.DownloaderObjectModel;
 using static AMDownloader.Common;
+using Microsoft.VisualBasic.FileIO;
 
 namespace AMDownloader
 {
@@ -110,7 +111,6 @@ namespace AMDownloader
                             continue;
                         }
                     }
-
                 }
             }
         }
@@ -509,7 +509,7 @@ namespace AMDownloader
 
                 try
                 {
-                    File.Delete(item.Destination);
+                    FileSystem.DeleteFile(item.Destination, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
                     DownloadItemsList.Remove(item);
                 }
                 catch (Exception e)

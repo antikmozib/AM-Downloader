@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using System.ComponentModel;
 using System.Threading;
-using System;
 using System.Windows.Input;
 using AMDownloader.Properties;
 using static AMDownloader.Common;
@@ -54,7 +53,7 @@ namespace AMDownloader
 
             _clipboardService = new ClipboardObserver();
 
-            this.SaveToFolder = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            this.SaveToFolder = PATH_TO_DOWNLOADS_FOLDER;
             this.AddToQueue = true;
             this.StartDownload = false;
             this.Urls = string.Empty;
@@ -78,14 +77,16 @@ namespace AMDownloader
             if (SaveToFolder.LastIndexOf(Path.DirectorySeparatorChar) != SaveToFolder.Length - 1)
                 SaveToFolder = SaveToFolder + Path.DirectorySeparatorChar;
 
+            int counter = 0;
+
             foreach (var url in ListifyUrls())
-                AddItemToList(url);
+                AddItemToList(url, counter++);
 
             if (AddToQueue && StartDownload)
                 Task.Run(async () => await _parentViewModel.QueueProcessor.StartAsync(Settings.Default.MaxParallelDownloads));
         }
 
-        private void AddItemToList(string url)
+        private void AddItemToList(string url, int counter)
         {
             var fileName = GetValidFilename(SaveToFolder + Path.GetFileName(url));
             var checkIfUrlExists = from di in _parentViewModel.DownloadItemsList where di.Url == url select di;
@@ -97,7 +98,8 @@ namespace AMDownloader
 
             if (AddToQueue) _parentViewModel.QueueProcessor.Add(item);
 
-            if (!AddToQueue && StartDownload)
+            // Do not start more than 5 downloads at the same time
+            if (!AddToQueue && StartDownload && counter < 5)
                 Task.Run(async () => await item.StartAsync(Settings.Default.MaxConnectionsPerDownload));
 
             _parentViewModel.DownloadItemsList.Add(item);

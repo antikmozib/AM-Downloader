@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Windows;
 using System.Xml.Serialization;
 using Ookii.Dialogs.Wpf;
@@ -27,7 +26,7 @@ namespace AMDownloader
                     {
                         var streamReader = new StreamReader(file);
                         var item = (SerializableDownloadPathHistory)writer.Deserialize(streamReader);
-                        if (Directory.Exists(item.path))
+                        if (Directory.Exists(item.path) && !cboDestination.Items.Contains(item.path))
                         {
                             cboDestination.Items.Add(item.path);
                         }
@@ -39,10 +38,8 @@ namespace AMDownloader
                 }
             }
 
-            if (!cboDestination.Items.Contains(Environment.GetFolderPath(Environment.SpecialFolder.Desktop)))
-                cboDestination.Items.Add(Environment.GetFolderPath(Environment.SpecialFolder.Desktop));
-             
-            if (cboDestination.Items.Count > 0) cboDestination.SelectedIndex = cboDestination.Items.Count - 1;
+            if (!cboDestination.Items.Contains(PATH_TO_DOWNLOADS_FOLDER))
+                cboDestination.Items.Add(PATH_TO_DOWNLOADS_FOLDER);
 
             txtUrl.Focus();
         }
@@ -69,30 +66,30 @@ namespace AMDownloader
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            try
+            if (!Directory.Exists(PATH_TO_SAVED_LOCATIONS_HISTORY))
             {
-                if (!Directory.Exists(PATH_TO_SAVED_LOCATIONS_HISTORY))
+                try
                 {
                     Directory.CreateDirectory(PATH_TO_SAVED_LOCATIONS_HISTORY);
                 }
-
-                XmlSerializer writer = new XmlSerializer(typeof(SerializableDownloadPathHistory));
-                int i = 0;
-
-                foreach (var item in cboDestination.Items)
+                catch
                 {
-                    var model = new SerializableDownloadPathHistory();
-                    var streamWriter = new StreamWriter(Path.Combine(PATH_TO_SAVED_LOCATIONS_HISTORY, ++i + ".xml"));
-
-                    model.path = item.ToString();
-
-                    writer.Serialize(streamWriter, model);
-                    streamWriter.Close();
+                    return;
                 }
             }
-            catch
-            {
 
+            XmlSerializer writer = new XmlSerializer(typeof(SerializableDownloadPathHistory));
+            int i = 0;
+
+            foreach (var item in cboDestination.Items)
+            {
+                var model = new SerializableDownloadPathHistory();
+                var streamWriter = new StreamWriter(Path.Combine(PATH_TO_SAVED_LOCATIONS_HISTORY, ++i + ".xml"));
+
+                model.path = item.ToString();
+
+                writer.Serialize(streamWriter, model);
+                streamWriter.Close();
             }
         }
     }
