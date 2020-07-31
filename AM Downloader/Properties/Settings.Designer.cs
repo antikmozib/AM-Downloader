@@ -25,13 +25,37 @@ namespace AMDownloader.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("2")]
+        [global::System.Configuration.DefaultSettingValueAttribute("3")]
         public int MaxParallelDownloads {
             get {
                 return ((int)(this["MaxParallelDownloads"]));
             }
             set {
                 this["MaxParallelDownloads"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("3")]
+        public int MaxConnectionsPerDownload {
+            get {
+                return ((int)(this["MaxConnectionsPerDownload"]));
+            }
+            set {
+                this["MaxConnectionsPerDownload"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ClearFinishedOnExit {
+            get {
+                return ((bool)(this["ClearFinishedOnExit"]));
+            }
+            set {
+                this["ClearFinishedOnExit"] = value;
             }
         }
     }

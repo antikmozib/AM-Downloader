@@ -10,6 +10,10 @@ namespace AMDownloader
         public const long GIGABYTE = MEGABYTE * KILOBYTE;
         public const long TERABYTE = GIGABYTE * KILOBYTE;
 
+        public static readonly string PATH_TO_DOWNLOADS_HISTORY = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AMDownloader", "history");
+        public static readonly string PATH_TO_SAVED_LOCATIONS_HISTORY = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AMDownloader", "downloadpaths");
+        public static readonly string PATH_TO_DOWNLOADS_FOLDER = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+
         public static string PrettyNum(long? num)
         {
             if (num == null)

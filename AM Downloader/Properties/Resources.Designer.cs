@@ -59,15 +59,5 @@ namespace AMDownloader.Properties {
                 resourceCulture = value;
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] app {
-            get {
-                object obj = ResourceManager.GetObject("app", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
     }
 }

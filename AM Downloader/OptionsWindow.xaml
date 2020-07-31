@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"        
         xmlns:local="clr-namespace:AMDownloader"
         xmlns:properties="clr-namespace:AMDownloader.Properties"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         mc:Ignorable="d"
         Title="Options" WindowStartupLocation="CenterOwner" WindowStyle="ToolWindow" ShowInTaskbar="False" SizeToContent="WidthAndHeight" ResizeMode="NoResize">
     <Grid Margin="10">
@@ -13,16 +14,25 @@
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
-        <StackPanel Orientation="Horizontal">
-            <Label Content="Max _parallel downloads*:" TabIndex="0"/>
-            <TextBox VerticalAlignment="Center" HorizontalContentAlignment="Right" Text="{Binding Source={x:Static properties:Settings.Default}, Path=MaxParallelDownloads}" Width="50" TabIndex="1"/>
+        <StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Label Content="Max _parallel downloads*:" TabIndex="0"/>
+                <xctk:IntegerUpDown Value="{Binding Source={x:Static properties:Settings.Default}, Path=MaxParallelDownloads}" Width="50" Minimum="1" Maximum="5" IsTabStop="True" AllowTextInput="False" TabIndex="1"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Label Content="Max parallel _connections per download:" TabIndex="2"/>
+                <xctk:IntegerUpDown Value="{Binding Source={x:Static properties:Settings.Default}, Path=MaxConnectionsPerDownload}" Width="50" Minimum="1" Maximum="5" AllowTextInput="False" IsTabStop="True" TabIndex="3"/>
+            </StackPanel>
+            <StackPanel>
+                <CheckBox Content="Clear finished downloads on exit" IsChecked="{Binding Source={x:Static properties:Settings.Default}, Path=ClearFinishedOnExit}"/>
+            </StackPanel>
         </StackPanel>
         <StackPanel Grid.Row="1" Margin="0 10 0 0" >
             <Label Content="*Requires application restart" />
         </StackPanel>
         <StackPanel Margin="0 10 0 0"  HorizontalAlignment="Right" Orientation="Horizontal" Height="25" Grid.Row="2">
-            <Button x:Name="btnOK" Content="_OK" Width="80" Margin="0 0 5 0" IsDefault="True" Click="btnOK_Click" Command="{Binding SaveSettingsCommand}" TabIndex="2"/>
-            <Button Content="_Cancel" Width="80" IsCancel="True" TabIndex="3"/>
+            <Button x:Name="btnOK" Content="_OK" Width="80" Margin="0 0 5 0" IsDefault="True" Click="btnOK_Click" Command="{Binding SaveSettingsCommand}" TabIndex="4"/>
+            <Button Content="_Cancel" Width="80" IsCancel="True" TabIndex="5"/>
         </StackPanel>
     </Grid>
 </Window>

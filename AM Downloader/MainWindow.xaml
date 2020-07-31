@@ -11,7 +11,7 @@
     MinHeight="270"
     Width="1000" 
     MinWidth="600"
-    WindowStartupLocation="CenterScreen">
+    WindowStartupLocation="CenterScreen" Closing="Window_Closing" Icon="/app.ico">
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Closing">
             <i:InvokeCommandAction Command="{Binding WindowClosingCommand, Mode=OneTime}" />
@@ -371,6 +371,12 @@
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
+                        <GridViewColumn 
+                            HeaderTemplate="{StaticResource Templ}" 
+                            HeaderContainerStyle="{StaticResource LeftAligned}" 
+                            Header="Connections"
+                            Width="75"
+                            DisplayMemberBinding="{Binding NumberOfActiveStreams}"/>
                         <GridViewColumn 
                             HeaderTemplate="{StaticResource Templ}" 
                             HeaderContainerStyle="{StaticResource LeftAligned}" 

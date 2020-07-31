@@ -9,8 +9,12 @@ using System.ComponentModel;
 using System;
 using System.Windows.Data;
 using System.IO;
-using static AMDownloader.DownloaderObjectModel;
+using System.Xml.Serialization;
 using AMDownloader.Properties;
+using static AMDownloader.SerializableModels;
+using static AMDownloader.DownloaderObjectModel;
+using static AMDownloader.Common;
+using Microsoft.VisualBasic.FileIO;
 
 namespace AMDownloader
 {
@@ -26,7 +30,6 @@ namespace AMDownloader
         public ObservableCollection<DownloaderObjectModel> DownloadItemsList;
         public ObservableCollection<Categories> CategoriesList;
         public QueueProcessor QueueProcessor;
-
         public event PropertyChangedEventHandler PropertyChanged;
 
         public ICommand AddCommand { get; private set; }
@@ -79,6 +82,37 @@ namespace AMDownloader
 
             foreach (Categories cat in (Categories[])Enum.GetValues(typeof(Categories)))
                 CategoriesList.Add(cat);
+
+            // Populate history
+
+            if (Directory.Exists(PATH_TO_DOWNLOADS_HISTORY))
+            {
+                var xmlReader = new XmlSerializer(typeof(SerializableDownloaderObjectModel));
+                foreach (var file in Directory.GetFiles(PATH_TO_DOWNLOADS_HISTORY))
+                {
+                    using (var streamReader = new StreamReader(file))
+                    {
+                        SerializableDownloaderObjectModel sItem;
+
+                        try
+                        {
+                            sItem = (SerializableDownloaderObjectModel)xmlReader.Deserialize(streamReader);
+                            var item = new DownloaderObjectModel(ref Client, sItem.Url, sItem.Destination, sItem.IsQueued, OnDownloadPropertyChange, RefreshCollection);
+
+                            DownloadItemsList.Add(item);
+                            item.SetCreationTime(sItem.DateCreated);
+                            if (sItem.IsQueued)
+                            {
+                                QueueProcessor.Add(item);
+                            }
+                        }
+                        catch
+                        {
+                            continue;
+                        }
+                    }
+                }
+            }
         }
 
         void CategoryChanged(object obj)
@@ -153,7 +187,7 @@ namespace AMDownloader
             {
                 if (item.IsBeingDownloaded) continue;
                 if (item.IsQueued) item.Dequeue();
-                Task.Run(() => item.StartAsync());
+                Task.Run(() => item.StartAsync(Properties.Settings.Default.MaxConnectionsPerDownload));
             }
         }
 
@@ -333,7 +367,7 @@ namespace AMDownloader
 
         void StartQueue(object obj)
         {
-            Task.Run(async () => await QueueProcessor.StartAsync());
+            Task.Run(async () => await QueueProcessor.StartAsync(Settings.Default.MaxConnectionsPerDownload));
         }
 
         public bool StartQueue_CanExecute(object obj)
@@ -360,11 +394,50 @@ namespace AMDownloader
 
         void WindowClosing(object obj)
         {
-            var items = from item in DownloadItemsList
-                        where item.IsBeingDownloaded
-                        select item;
+            XmlSerializer writer = new XmlSerializer(typeof(SerializableDownloaderObjectModel));
 
-            Parallel.ForEach(items, (item) => { item.Pause(); });
+            if (!Directory.Exists(PATH_TO_DOWNLOADS_HISTORY))
+            {
+                Directory.CreateDirectory(PATH_TO_DOWNLOADS_HISTORY);
+            }
+
+            // Clear existing history
+            foreach (var file in Directory.GetFiles(PATH_TO_DOWNLOADS_HISTORY))
+            {
+                try
+                {
+                    File.Delete(file);
+                }
+                catch
+                {
+                    continue;
+                }
+            }
+
+            foreach (var item in DownloadItemsList)
+            {
+                if (item.IsBeingDownloaded)
+                {
+                    item.Pause();
+                }
+
+                if (item.Status == DownloadStatus.Finished && Settings.Default.ClearFinishedOnExit)
+                {
+                    continue;
+                }
+
+                StreamWriter streamWriter = new StreamWriter(Path.Combine(PATH_TO_DOWNLOADS_HISTORY, item.Name + ".xml"));
+
+                var sItem = new SerializableDownloaderObjectModel();
+
+                sItem.Url = item.Url;
+                sItem.Destination = item.Destination;
+                sItem.IsQueued = item.IsQueued;
+                sItem.DateCreated = item.DateCreated;
+
+                writer.Serialize(streamWriter, sItem);
+                streamWriter.Close();
+            }
         }
 
         void ShowOptions(object obj)
@@ -382,7 +455,13 @@ namespace AMDownloader
             foreach (var item in items)
             {
                 if (!item.IsQueued && item.Status == DownloadStatus.Ready)
+                {
                     item.Enqueue();
+                    if (!QueueProcessor.Contains(item))
+                    {
+                        QueueProcessor.Add(item);
+                    }
+                }
             }
         }
 
@@ -430,7 +509,7 @@ namespace AMDownloader
 
                 try
                 {
-                    File.Delete(item.Destination);
+                    FileSystem.DeleteFile(item.Destination, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
                     DownloadItemsList.Remove(item);
                 }
                 catch (Exception e)
@@ -511,7 +590,6 @@ namespace AMDownloader
                 statusQueued = string.Empty;
             }
 
-
             if (this.StatusQueued != statusQueued)
             {
                 this.StatusQueued = statusQueued;
@@ -523,6 +601,11 @@ namespace AMDownloader
                 this.StatusDownloading = statusDownloading;
                 AnnouncePropertyChanged(nameof(this.StatusDownloading));
             }
+        }
+
+        internal void RefreshCollection()
+        {
+            Application.Current.Dispatcher.Invoke(() => _collectionView.Refresh());
         }
     }
 }
