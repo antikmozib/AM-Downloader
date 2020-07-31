@@ -8,7 +8,6 @@ using System.ComponentModel;
 using System.Threading;
 using System;
 using System.Windows.Input;
-using System.Windows;
 using AMDownloader.Properties;
 using static AMDownloader.Common;
 
@@ -94,24 +93,14 @@ namespace AMDownloader
 
             if (checkIfUrlExists.Count() > 0 || checkIfDestinationExists.Count() > 0) return;
 
-            DownloaderObjectModel item;
+            var item = new DownloaderObjectModel(ref _parentViewModel.Client, url, fileName, AddToQueue, _parentViewModel.OnDownloadPropertyChange, _parentViewModel.RefreshCollection);
 
-            if (AddToQueue)
-            {
-                item = new DownloaderObjectModel(ref _parentViewModel.Client, url, fileName, true);
-                _parentViewModel.QueueProcessor.Add(item);
-            }
-            else
-            {
-                item = new DownloaderObjectModel(ref _parentViewModel.Client, url, fileName);
-            }
+            if (AddToQueue) _parentViewModel.QueueProcessor.Add(item);
 
             if (!AddToQueue && StartDownload)
                 Task.Run(async () => await item.StartAsync(Settings.Default.MaxConnectionsPerDownload));
 
             _parentViewModel.DownloadItemsList.Add(item);
-            item.PropertyChanged += new PropertyChangedEventHandler(_parentViewModel.OnDownloadPropertyChange);
-            item.RefreshCollectionDel = _parentViewModel.RefreshCollection;
         }
 
         private List<string> ListifyUrls()

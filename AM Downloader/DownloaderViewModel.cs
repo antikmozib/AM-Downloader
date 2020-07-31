@@ -9,12 +9,11 @@ using System.ComponentModel;
 using System;
 using System.Windows.Data;
 using System.IO;
-using static AMDownloader.DownloaderObjectModel;
-using AMDownloader.Properties;
 using System.Xml.Serialization;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Threading;
+using AMDownloader.Properties;
+using static AMDownloader.SerializableModels;
+using static AMDownloader.DownloaderObjectModel;
+using static AMDownloader.Common;
 
 namespace AMDownloader
 {
@@ -30,7 +29,6 @@ namespace AMDownloader
         public ObservableCollection<DownloaderObjectModel> DownloadItemsList;
         public ObservableCollection<Categories> CategoriesList;
         public QueueProcessor QueueProcessor;
-
         public event PropertyChangedEventHandler PropertyChanged;
 
         public ICommand AddCommand { get; private set; }
@@ -86,12 +84,10 @@ namespace AMDownloader
 
             // Populate history
 
-            var historyPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "AMDownloader", "history");
-
-            if (Directory.Exists(historyPath))
+            if (Directory.Exists(PATH_TO_DOWNLOADS_HISTORY))
             {
                 var xmlReader = new XmlSerializer(typeof(SerializableDownloaderObjectModel));
-                foreach (var file in Directory.GetFiles(historyPath))
+                foreach (var file in Directory.GetFiles(PATH_TO_DOWNLOADS_HISTORY))
                 {
                     using (var streamReader = new StreamReader(file))
                     {
@@ -100,19 +96,17 @@ namespace AMDownloader
                         try
                         {
                             sItem = (SerializableDownloaderObjectModel)xmlReader.Deserialize(streamReader);
-                            var item = new DownloaderObjectModel(ref Client, sItem.Url, sItem.Destination, sItem.IsQueued);
+                            var item = new DownloaderObjectModel(ref Client, sItem.Url, sItem.Destination, sItem.IsQueued, OnDownloadPropertyChange, RefreshCollection);
 
                             DownloadItemsList.Add(item);
-                            item.PropertyChanged += new PropertyChangedEventHandler(OnDownloadPropertyChange);
-                            item.RefreshCollectionDel = RefreshCollection;
+                            item.SetCreationTime(sItem.DateCreated);
                             if (sItem.IsQueued)
                             {
                                 QueueProcessor.Add(item);
-                            }                            
+                            }
                         }
-                        catch (Exception e)
+                        catch
                         {
-                            MessageBox.Show(e.Message);
                             continue;
                         }
                     }
@@ -373,7 +367,7 @@ namespace AMDownloader
 
         void StartQueue(object obj)
         {
-            Task.Run(async () => await QueueProcessor.StartAsync(Properties.Settings.Default.MaxConnectionsPerDownload));
+            Task.Run(async () => await QueueProcessor.StartAsync(Settings.Default.MaxConnectionsPerDownload));
         }
 
         public bool StartQueue_CanExecute(object obj)
@@ -402,9 +396,22 @@ namespace AMDownloader
         {
             XmlSerializer writer = new XmlSerializer(typeof(SerializableDownloaderObjectModel));
 
-            if (!Directory.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "AMDownloader", "history")))
+            if (!Directory.Exists(PATH_TO_DOWNLOADS_HISTORY))
             {
-                Directory.CreateDirectory(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "AMDownloader", "history"));
+                Directory.CreateDirectory(PATH_TO_DOWNLOADS_HISTORY);
+            }
+
+            // Clear existing history
+            foreach (var file in Directory.GetFiles(PATH_TO_DOWNLOADS_HISTORY))
+            {
+                try
+                {
+                    File.Delete(file);
+                }
+                catch
+                {
+                    continue;
+                }
             }
 
             foreach (var item in DownloadItemsList)
@@ -414,7 +421,12 @@ namespace AMDownloader
                     item.Pause();
                 }
 
-                StreamWriter streamWriter = new StreamWriter(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "AMDownloader", "history", item.Name + ".xml"));
+                if (item.Status == DownloadStatus.Finished && Settings.Default.ClearFinishedOnExit)
+                {
+                    continue;
+                }
+
+                StreamWriter streamWriter = new StreamWriter(Path.Combine(PATH_TO_DOWNLOADS_HISTORY, item.Name + ".xml"));
 
                 var sItem = new SerializableDownloaderObjectModel();
 
@@ -443,7 +455,13 @@ namespace AMDownloader
             foreach (var item in items)
             {
                 if (!item.IsQueued && item.Status == DownloadStatus.Ready)
+                {
                     item.Enqueue();
+                    if (!QueueProcessor.Contains(item))
+                    {
+                        QueueProcessor.Add(item);
+                    }
+                }
             }
         }
 

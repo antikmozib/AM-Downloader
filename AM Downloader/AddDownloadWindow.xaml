@@ -12,7 +12,7 @@
         MinHeight="250"
         Width="650"
         Height="250"
-        WindowStyle="ToolWindow">
+        WindowStyle="ToolWindow" Closing="Window_Closing">
     <Grid 
         Margin="10">
         <Grid.RowDefinitions>

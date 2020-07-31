@@ -2,14 +2,12 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Media.Animation;
 using static AMDownloader.Common;
 
 namespace AMDownloader
@@ -25,12 +23,12 @@ namespace AMDownloader
         private readonly IProgress<int> _progressReporter;
         private HttpClient _httpClient;
         private TaskCompletionSource<DownloadStatus> _taskCompletion;
+        private RefreshCollectionDelegate _refreshCollectionDel;
 
         #endregion // Fields
 
         #region Properties
 
-        public RefreshCollectionDelegate RefreshCollectionDel;
         public event PropertyChangedEventHandler PropertyChanged;
         public enum DownloadStatus
         {
@@ -57,16 +55,23 @@ namespace AMDownloader
             get { return new FileInfo(this.Destination).Directory.Name + " (" + this.Destination.Substring(0, this.Destination.Length - this.Name.Length - 1) + ")"; }
         }
         public string PrettyDateCreated { get { return this.DateCreated.ToString("dd MMM yy H:mm:ss"); } }
+        public int? NumberOfActiveStreams { get; private set; } // nullable
 
         #endregion // Properties
 
         #region Constructors
 
-        public DownloaderObjectModel(ref HttpClient httpClient, string url, string destination) : this(ref httpClient, url, destination, false) { }
-
-        public DownloaderObjectModel(ref HttpClient httpClient, string url, string destination, bool enqueue)
+        public DownloaderObjectModel(
+            ref HttpClient httpClient,
+            string url,
+            string destination,
+            bool enqueue,
+            PropertyChangedEventHandler propertyChangedEventHandler,
+            RefreshCollectionDelegate refreshCollectionDelegate)
         {
             _httpClient = httpClient;
+            PropertyChanged += propertyChangedEventHandler;
+            _refreshCollectionDel = refreshCollectionDelegate;
 
             // capture sync context
             _progressReporter = new Progress<int>((value) =>
@@ -86,6 +91,7 @@ namespace AMDownloader
             this.Speed = null;
             this.SupportsResume = false;
             this.DateCreated = DateTime.Now;
+            this.NumberOfActiveStreams = null;
             if (enqueue)
             {
                 this.Enqueue();
@@ -267,6 +273,9 @@ namespace AMDownloader
                 }
             }
 
+            this.NumberOfActiveStreams = requests.Count;
+            AnnouncePropertyChanged(nameof(this.NumberOfActiveStreams));
+
             // Set up the tasks to process the requests
             foreach (var request in requests)
             {
@@ -301,6 +310,9 @@ namespace AMDownloader
                         }
                     }
 
+                    this.NumberOfActiveStreams -= 1;
+                    AnnouncePropertyChanged(nameof(this.NumberOfActiveStreams));
+
                     binaryWriter.Close();
                     destinationStream.Close();
                     sourceStream.Close();
@@ -314,6 +326,9 @@ namespace AMDownloader
             // Run the tasks
             StartMeasuringSpeed();
             await Task.WhenAll(tasks);
+
+            this.NumberOfActiveStreams = null;
+            AnnouncePropertyChanged(nameof(this.NumberOfActiveStreams));
 
             FileInfo[] files = new FileInfo[numStreams];
             for (int i = 0; i < numStreams; i++)
@@ -542,7 +557,7 @@ namespace AMDownloader
                     break;
             }
 
-            if (RefreshCollectionDel != null) RefreshCollectionDel.Invoke();
+            if (_refreshCollectionDel != null) _refreshCollectionDel.Invoke();
         }
 
         public void Pause()
@@ -626,6 +641,13 @@ namespace AMDownloader
                 });
             }
         }
+
+        public void SetCreationTime(DateTime newDateCreated)
+        {
+            this.DateCreated = newDateCreated;
+            AnnouncePropertyChanged(nameof(this.DateCreated));
+        }
+
         #endregion // Public methods
     }
 }

@@ -46,5 +46,17 @@ namespace AMDownloader.Properties {
                 this["MaxConnectionsPerDownload"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ClearFinishedOnExit {
+            get {
+                return ((bool)(this["ClearFinishedOnExit"]));
+            }
+            set {
+                this["ClearFinishedOnExit"] = value;
+            }
+        }
     }
 }

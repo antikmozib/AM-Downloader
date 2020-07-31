@@ -374,6 +374,12 @@
                         <GridViewColumn 
                             HeaderTemplate="{StaticResource Templ}" 
                             HeaderContainerStyle="{StaticResource LeftAligned}" 
+                            Header="Connections"
+                            Width="75"
+                            DisplayMemberBinding="{Binding NumberOfActiveStreams}"/>
+                        <GridViewColumn 
+                            HeaderTemplate="{StaticResource Templ}" 
+                            HeaderContainerStyle="{StaticResource LeftAligned}" 
                             Header="Location" 
                             DisplayMemberBinding="{Binding PrettyDestination}"
                             Width="250" />
