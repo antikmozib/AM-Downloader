@@ -18,6 +18,7 @@ namespace AMDownloader
     {
         #region Fields
 
+        private const int DEFAULT_NUM_STREAMS = 1;
         private CancellationTokenSource _ctsPaused, _ctsCanceled;
         private CancellationToken _ctPause, _ctCancel;
         private readonly IProgress<int> _progressReporter;
@@ -202,16 +203,21 @@ namespace AMDownloader
             var status = DownloadStatus.Error;
             List<HttpRequestMessage> requests = new List<HttpRequestMessage>();
             List<Task> tasks = new List<Task>();
+            long progressReportingFrequency = 1024;
+            long nextProgressReportAt=1024;
+
             IProgress<long> streamProgress = new Progress<long>((value) =>
             {
                 this.BytesDownloadedThisSession += value;
                 this.TotalBytesCompleted = bytesDownloadedPreviously + this.BytesDownloadedThisSession;
-                AnnouncePropertyChanged(nameof(this.PrettyDownloadedSoFar));
 
-                if (this.TotalBytesToDownload != null)
+                if (this.SupportsResume && this.TotalBytesCompleted >= nextProgressReportAt)
                 {
                     double progress = (double)this.TotalBytesCompleted / (double)this.TotalBytesToDownload * 100;
                     _progressReporter.Report((int)progress);
+                    AnnouncePropertyChanged(nameof(this.PrettyDownloadedSoFar));
+                    nextProgressReportAt += progressReportingFrequency;
+                    if (nextProgressReportAt > this.TotalBytesToDownload) nextProgressReportAt = this.TotalBytesToDownload ?? 0;
                 }
             });
 
@@ -223,7 +229,7 @@ namespace AMDownloader
             _ctCancel = _ctsCanceled.Token;
             var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(_ctPause, _ctCancel).Token;
 
-            if (this.TotalBytesToDownload == null)
+            if (!this.SupportsResume)
             {
                 // cannot support multiple streams
                 var request = new HttpRequestMessage
@@ -235,6 +241,9 @@ namespace AMDownloader
             }
             else
             {
+                progressReportingFrequency = (this.TotalBytesToDownload ?? 0) / 100;
+                nextProgressReportAt = progressReportingFrequency;
+
                 // Set up the requests
                 long startPos = 0;
 
@@ -259,9 +268,6 @@ namespace AMDownloader
                         toPos = fromPos + pointFrequency - 1;
                     }
 
-                    Debug.WriteLine("bytesDownloadedPreviously=" + bytesDownloadedPreviously + "  pointFrequency=" + pointFrequency + "   i=" + i + "   TotalBytesToDownload=" + this.TotalBytesToDownload);
-                    Debug.WriteLine(fromPos + "-->" + toPos);
-
                     var request = new HttpRequestMessage
                     {
                         RequestUri = new Uri(this.Url),
@@ -273,7 +279,7 @@ namespace AMDownloader
                 }
             }
 
-            this.NumberOfActiveStreams = requests.Count;
+            this.NumberOfActiveStreams = 0;
             AnnouncePropertyChanged(nameof(this.NumberOfActiveStreams));
 
             // Set up the tasks to process the requests
@@ -281,6 +287,9 @@ namespace AMDownloader
             {
                 Task t = Task.Run(async () =>
                 {
+                    this.NumberOfActiveStreams += 1;
+                    AnnouncePropertyChanged(nameof(this.NumberOfActiveStreams));
+
                     var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
                     var sourceStream = await response.Content.ReadAsStreamAsync();
                     var destinationStream = new FileStream(this.Destination + ".part" + requests.IndexOf(request), FileMode.Append);
@@ -310,14 +319,14 @@ namespace AMDownloader
                         }
                     }
 
-                    this.NumberOfActiveStreams -= 1;
-                    AnnouncePropertyChanged(nameof(this.NumberOfActiveStreams));
-
                     binaryWriter.Close();
                     destinationStream.Close();
                     sourceStream.Close();
                     response.Dispose();
-                    request.Dispose();
+                    request.Dispose();                    
+
+                    this.NumberOfActiveStreams -= 1;
+                    AnnouncePropertyChanged(nameof(this.NumberOfActiveStreams));
                 }, linkedToken);
 
                 tasks.Add(t);
@@ -330,15 +339,14 @@ namespace AMDownloader
             this.NumberOfActiveStreams = null;
             AnnouncePropertyChanged(nameof(this.NumberOfActiveStreams));
 
+            // Merge the streams
+            this.Status = DownloadStatus.Merging;
+            AnnouncePropertyChanged(nameof(this.Status));            
             FileInfo[] files = new FileInfo[numStreams];
             for (int i = 0; i < numStreams; i++)
             {
                 files[i] = new FileInfo(this.Destination + ".part" + i);
             }
-
-            // Merge the streams
-            this.Status = DownloadStatus.Merging;
-            AnnouncePropertyChanged(nameof(this.Status));
             await MergeFilesAsync(files);
 
             if (linkedToken.IsCancellationRequested)
@@ -476,7 +484,7 @@ namespace AMDownloader
             }
         }
 
-        public async Task StartAsync(int numStreams = 5)
+        public async Task StartAsync(int numStreams = DEFAULT_NUM_STREAMS)
         {
             long bytesAlreadyDownloaded = 0;
 
@@ -539,10 +547,10 @@ namespace AMDownloader
                     AnnouncePropertyChanged(nameof(this.Status));
                     this.Dequeue();
 
-                    var fi = new FileInfo(this.Destination);
-                    if (this.TotalBytesCompleted < fi.Length)
+                    var fileInfo = new FileInfo(this.Destination);
+                    if (this.TotalBytesCompleted < fileInfo.Length)
                     {
-                        this.TotalBytesCompleted = fi.Length;
+                        this.TotalBytesCompleted = fileInfo.Length;
                         AnnouncePropertyChanged(nameof(this.PrettyDownloadedSoFar));
                     }
 

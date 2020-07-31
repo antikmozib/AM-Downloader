@@ -3,7 +3,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Diagnostics;
+using System.Windows;
 using System.ComponentModel;
 using System.Threading;
 using System.Windows.Input;
@@ -53,7 +53,7 @@ namespace AMDownloader
 
             _clipboardService = new ClipboardObserver();
 
-            this.SaveToFolder = PATH_TO_DOWNLOADS_FOLDER;
+            this.SaveToFolder = ApplicationPaths.DownloadsFolder;
             this.AddToQueue = true;
             this.StartDownload = false;
             this.Urls = string.Empty;
@@ -62,12 +62,29 @@ namespace AMDownloader
             if (clipText.Contains("http")) this.Urls += clipText;
         }
 
-        public void Preview(object item)
+        public void Preview(object obj)
         {
-            foreach (var url in ListifyUrls())
+            string[] urls = ListifyUrls().ToArray();
+            string output = string.Empty;
+
+            if (urls.Length==0) return;
+
+            if (urls.Length > 7)
             {
-                Debug.WriteLine(url);
+                for (int i = 0; i < 3; i++)
+                {
+                    output += urls[i] + "\n\n";
+                }
+                for (int i = urls.Length - 3; i < urls.Length; i++)
+                {
+                    output += urls[i] + "\n\n";
+                }
             }
+            else {
+                output = urls.ToString();
+            }
+
+            MessageBox.Show(output, "Preview", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         public void Add(object item)

@@ -255,6 +255,7 @@
                     <ContextMenu>
                         <MenuItem Header="Open" Command="{Binding OpenCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                         <MenuItem Header="Open containing folder" Command="{Binding OpenContainingFolderCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                        <MenuItem Header="Copy link to clipboard" Command="{Binding CopyLinkToClipboardCommand}" CommandParameter="{Binding PlacementTarget.SelectedItem, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                         <Separator/>
                         <MenuItem Header="Start" Command="{Binding StartCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                         <MenuItem Header="Pause" Command="{Binding PauseCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
@@ -375,7 +376,7 @@
                             HeaderTemplate="{StaticResource Templ}" 
                             HeaderContainerStyle="{StaticResource LeftAligned}" 
                             Header="Connections"
-                            Width="75"
+                            Width="100"
                             DisplayMemberBinding="{Binding NumberOfActiveStreams}"/>
                         <GridViewColumn 
                             HeaderTemplate="{StaticResource Templ}" 

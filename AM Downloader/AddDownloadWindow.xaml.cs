@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Windows;
 using System.Xml.Serialization;
 using Ookii.Dialogs.Wpf;
@@ -17,14 +18,17 @@ namespace AMDownloader
         {
             InitializeComponent();
 
-            if (Directory.Exists(PATH_TO_SAVED_LOCATIONS_HISTORY))
+            if (Directory.Exists(ApplicationPaths.SavedLocationsHistory))
             {
                 XmlSerializer writer = new XmlSerializer(typeof(SerializableDownloadPathHistory));
-                foreach (var file in Directory.GetFiles(PATH_TO_SAVED_LOCATIONS_HISTORY))
+                StreamReader streamReader;
+
+                foreach (var file in Directory.GetFiles(ApplicationPaths.SavedLocationsHistory))
                 {
+                    streamReader = new StreamReader(file);
+
                     try
                     {
-                        var streamReader = new StreamReader(file);
                         var item = (SerializableDownloadPathHistory)writer.Deserialize(streamReader);
                         if (Directory.Exists(item.path) && !cboDestination.Items.Contains(item.path))
                         {
@@ -33,13 +37,16 @@ namespace AMDownloader
                     }
                     catch
                     {
+                        streamReader.Close();
                         continue;
                     }
+
+                    streamReader.Close();
                 }
             }
 
-            if (!cboDestination.Items.Contains(PATH_TO_DOWNLOADS_FOLDER))
-                cboDestination.Items.Add(PATH_TO_DOWNLOADS_FOLDER);
+            if (!cboDestination.Items.Contains(ApplicationPaths.DownloadsFolder))
+                cboDestination.Items.Add(ApplicationPaths.DownloadsFolder);
 
             txtUrl.Focus();
         }
@@ -66,11 +73,11 @@ namespace AMDownloader
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            if (!Directory.Exists(PATH_TO_SAVED_LOCATIONS_HISTORY))
+            if (!Directory.Exists(ApplicationPaths.SavedLocationsHistory))
             {
                 try
                 {
-                    Directory.CreateDirectory(PATH_TO_SAVED_LOCATIONS_HISTORY);
+                    Directory.CreateDirectory(ApplicationPaths.SavedLocationsHistory);
                 }
                 catch
                 {
@@ -84,7 +91,7 @@ namespace AMDownloader
             foreach (var item in cboDestination.Items)
             {
                 var model = new SerializableDownloadPathHistory();
-                var streamWriter = new StreamWriter(Path.Combine(PATH_TO_SAVED_LOCATIONS_HISTORY, ++i + ".xml"));
+                var streamWriter = new StreamWriter(Path.Combine(ApplicationPaths.SavedLocationsHistory, ++i + ".xml"));
 
                 model.path = item.ToString();
 

@@ -10,17 +10,18 @@ using System;
 using System.Windows.Data;
 using System.IO;
 using System.Xml.Serialization;
+using Microsoft.VisualBasic.FileIO;
 using AMDownloader.Properties;
 using static AMDownloader.SerializableModels;
 using static AMDownloader.DownloaderObjectModel;
 using static AMDownloader.Common;
-using Microsoft.VisualBasic.FileIO;
 
 namespace AMDownloader
 {
     class DownloaderViewModel : INotifyPropertyChanged
     {
         private readonly ICollectionView _collectionView;
+        private ClipboardObserver _clipboardService;
 
         public string StatusDownloading { get; private set; }
         public string StatusSpeed { get; private set; }
@@ -47,6 +48,7 @@ namespace AMDownloader
         public ICommand EnqueueCommand { get; private set; }
         public ICommand DequeueCommand { get; private set; }
         public ICommand DeleteFileCommand { get; private set; }
+        public ICommand CopyLinkToClipboardCommand { get; private set; }
 
         public enum Categories
         {
@@ -60,6 +62,7 @@ namespace AMDownloader
             CategoriesList = new ObservableCollection<Categories>();
             QueueProcessor = new QueueProcessor(Settings.Default.MaxParallelDownloads);
             _collectionView = CollectionViewSource.GetDefaultView(DownloadItemsList);
+            _clipboardService = new ClipboardObserver();
 
             AddCommand = new RelayCommand(Add);
             StartCommand = new RelayCommand(Start, Start_CanExecute);
@@ -76,6 +79,7 @@ namespace AMDownloader
             EnqueueCommand = new RelayCommand(Enqueue, Enqueue_CanExecute);
             DequeueCommand = new RelayCommand(Dequeue, Dequeue_CanExecute);
             DeleteFileCommand = new RelayCommand(DeleteFile, DeleteFile_CanExecute);
+            CopyLinkToClipboardCommand = new RelayCommand(CopyLinkToClipboard, CopyLinkToClipboard_CanExecute);
 
             this.StatusDownloading = "Ready";
             AnnouncePropertyChanged(nameof(this.StatusDownloading));
@@ -85,10 +89,10 @@ namespace AMDownloader
 
             // Populate history
 
-            if (Directory.Exists(PATH_TO_DOWNLOADS_HISTORY))
+            if (Directory.Exists(ApplicationPaths.DownloadsHistory))
             {
                 var xmlReader = new XmlSerializer(typeof(SerializableDownloaderObjectModel));
-                foreach (var file in Directory.GetFiles(PATH_TO_DOWNLOADS_HISTORY))
+                foreach (var file in Directory.GetFiles(ApplicationPaths.DownloadsHistory))
                 {
                     using (var streamReader = new StreamReader(file))
                     {
@@ -396,13 +400,13 @@ namespace AMDownloader
         {
             XmlSerializer writer = new XmlSerializer(typeof(SerializableDownloaderObjectModel));
 
-            if (!Directory.Exists(PATH_TO_DOWNLOADS_HISTORY))
+            if (!Directory.Exists(ApplicationPaths.DownloadsHistory))
             {
-                Directory.CreateDirectory(PATH_TO_DOWNLOADS_HISTORY);
+                Directory.CreateDirectory(ApplicationPaths.DownloadsHistory);
             }
 
             // Clear existing history
-            foreach (var file in Directory.GetFiles(PATH_TO_DOWNLOADS_HISTORY))
+            foreach (var file in Directory.GetFiles(ApplicationPaths.DownloadsHistory))
             {
                 try
                 {
@@ -426,7 +430,7 @@ namespace AMDownloader
                     continue;
                 }
 
-                StreamWriter streamWriter = new StreamWriter(Path.Combine(PATH_TO_DOWNLOADS_HISTORY, item.Name + ".xml"));
+                StreamWriter streamWriter = new StreamWriter(Path.Combine(ApplicationPaths.DownloadsHistory, item.Name + ".xml"));
 
                 var sItem = new SerializableDownloaderObjectModel();
 
@@ -530,6 +534,19 @@ namespace AMDownloader
 
             if (itemsDeletable.Count() > 0) return true;
             return false;
+        }
+
+        void CopyLinkToClipboard(object obj)
+        {
+            if (obj == null) return;
+            var item = obj as DownloaderObjectModel;
+            _clipboardService.SetText(item.Url);
+        }
+
+        bool CopyLinkToClipboard_CanExecute(object obj)
+        {
+            if (obj == null) return false;
+            return true;
         }
 
         protected void AnnouncePropertyChanged(string prop)

@@ -36,9 +36,7 @@ namespace AMDownloader
 
         #region Constructors
 
-        public QueueProcessor() : this(DEFAULT_MAX_PARALLEL_DOWNLOADS) { }
-
-        public QueueProcessor(int maxParallelDownloads)
+        public QueueProcessor(int maxParallelDownloads = DEFAULT_MAX_PARALLEL_DOWNLOADS)
         {
             _queueList = new BlockingCollection<IQueueable>();
             _itemsProcessing = new List<IQueueable>();
