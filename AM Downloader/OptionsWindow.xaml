@@ -16,13 +16,13 @@
         </Grid.RowDefinitions>
         <StackPanel>
             <DockPanel>
-                <Label Content="Max _parallel downloads*:"/>
+                <Label Content="Max _parallel downloads (1-10)*:"/>
                 <TextBox VerticalAlignment="Center" HorizontalContentAlignment="Right" DockPanel.Dock="Right" Text="{Binding Source={x:Static properties:Settings.Default}, Path=MaxParallelDownloads}" Width="50" IsTabStop="True"/>
                 <Separator DockPanel.Dock="Right" Opacity="0"/>
             </DockPanel>
             <Separator Margin="0 5 0 5"/>
             <DockPanel>
-                <Label Content="Max parallel _connections per download:"/>
+                <Label Content="Max parallel _connections per download (1-5):"/>
                 <TextBox VerticalAlignment="Center" HorizontalContentAlignment="Right" DockPanel.Dock="Right" Text="{Binding Source={x:Static properties:Settings.Default}, Path=MaxConnectionsPerDownload}" Width="50" IsTabStop="True"/>
                 <Separator DockPanel.Dock="Right" Opacity="0"/>
             </DockPanel>
@@ -30,7 +30,7 @@
             <StackPanel>
                 <CheckBox Content="Clear finished downloads on exit" IsChecked="{Binding Source={x:Static properties:Settings.Default}, Path=ClearFinishedOnExit}"/>
                 <Separator Margin="0 5 0 5"/>
-                <CheckBox Content="Remember last save location" IsChecked="{Binding Source={x:Static properties:Settings.Default}, Path=RememberLastSavedLocation}"/>
+                <CheckBox Content="Remember last download location" IsChecked="{Binding Source={x:Static properties:Settings.Default}, Path=RememberLastSavedLocation}"/>
             </StackPanel>            
         </StackPanel>
         <StackPanel Margin="0 20 0 5" Grid.Row="1">

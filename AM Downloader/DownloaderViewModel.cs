@@ -10,13 +10,13 @@ using System;
 using System.Windows.Data;
 using System.IO;
 using System.Xml.Serialization;
+using System.Threading;
+using System.Collections.Generic;
 using Microsoft.VisualBasic.FileIO;
 using AMDownloader.Properties;
 using static AMDownloader.SerializableModels;
 using static AMDownloader.DownloaderObjectModel;
 using static AMDownloader.Common;
-using System.Threading;
-using System.Collections.Generic;
 
 namespace AMDownloader
 {
@@ -25,6 +25,8 @@ namespace AMDownloader
         private readonly ICollectionView _collectionView;
         private ClipboardObserver _clipboardService;
         private object _lock;
+        private SemaphoreSlim _semaphorePropertyUpdates;
+        private SemaphoreSlim _semaphoreRefreshCollection;
 
         public string StatusDownloading { get; private set; }
         public string StatusSpeed { get; private set; }
@@ -68,6 +70,8 @@ namespace AMDownloader
             _collectionView = CollectionViewSource.GetDefaultView(DownloadItemsList);
             _clipboardService = new ClipboardObserver();
             _lock = DownloadItemsList;
+            _semaphorePropertyUpdates = new SemaphoreSlim(1);
+            _semaphoreRefreshCollection = new SemaphoreSlim(1);
 
             AddCommand = new RelayCommand(Add);
             StartCommand = new RelayCommand(Start, Start_CanExecute);
@@ -94,7 +98,6 @@ namespace AMDownloader
                 CategoriesList.Add(cat);
 
             // Populate history
-
             if (Directory.Exists(ApplicationPaths.DownloadsHistory))
             {
                 Monitor.Enter(_lock);
@@ -620,28 +623,52 @@ namespace AMDownloader
 
         public void OnDownloadPropertyChange(object sender, PropertyChangedEventArgs e)
         {
-
-            Monitor.Enter(_lock);
-
-            try
+            Task.Run(async () =>
             {
-                IEnumerable<long> T_speed = from item in DownloadItemsList where item.IsBeingDownloaded select item.Speed ?? 0;
+                if (_semaphorePropertyUpdates.CurrentCount == 0) return;
 
-                string statusSpeed;
+                await _semaphorePropertyUpdates.WaitAsync();
+
+                string statusSpeed = string.Empty;
                 long totalspeed = 0;
+                IEnumerable<long> T_speed = null;
+                int numDownloading = 0;
+                int numQueued = 0;
+                string statusDownloading = "Ready";
+                string statusQueued = string.Empty;
 
-                foreach (long speed in T_speed)
+                Monitor.Enter(_lock);
+                try
                 {
-                    totalspeed += speed;
+                    T_speed = from item in DownloadItemsList where item.IsBeingDownloaded select item.Speed ?? 0;
+                    numDownloading = (from item in DownloadItemsList where item.IsBeingDownloaded select item).Count();
+                    numQueued = (from item in DownloadItemsList where item.IsQueued select item).Count();
+                }
+                finally
+                {
+                    Monitor.Exit(_lock);
                 }
 
-                if (totalspeed == 0)
+                if (T_speed?.Count() > 0)
                 {
-                    statusSpeed = string.Empty;
+                    foreach (long speed in T_speed) totalspeed += speed;
+                    if (totalspeed > 0) statusSpeed = PrettifySpeed(totalspeed);
                 }
-                else
+
+                if (numDownloading > 0) statusDownloading = numDownloading + " item(s) downloading";
+
+                if (numQueued > 0) statusQueued = numQueued + " item(s) queued";
+
+                if (this.StatusDownloading != statusDownloading)
                 {
-                    statusSpeed = PrettifySpeed(totalspeed);
+                    this.StatusDownloading = statusDownloading;
+                    AnnouncePropertyChanged(nameof(this.StatusDownloading));
+                }
+
+                if (this.StatusQueued != statusQueued)
+                {
+                    this.StatusQueued = statusQueued;
+                    AnnouncePropertyChanged(nameof(this.StatusQueued));
                 }
 
                 if (this.StatusSpeed != statusSpeed)
@@ -649,64 +676,22 @@ namespace AMDownloader
                     this.StatusSpeed = statusSpeed;
                     AnnouncePropertyChanged(nameof(this.StatusSpeed));
                 }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-            }
-            finally
-            {
-                Monitor.Exit(_lock);
-            }
+
+                _semaphorePropertyUpdates.Release();
+            });
         }
 
         internal void RefreshCollection()
         {
-            Application.Current.Dispatcher.Invoke(() => _collectionView.Refresh());
+            if (_semaphoreRefreshCollection.CurrentCount == 0) return;
 
-            Monitor.Enter(_lock);
-            try
-            {
-                int numDownloading = 0;
-                int numQueued = 0;
-
-                numDownloading = (from item in DownloadItemsList where item.IsBeingDownloaded select item).Count();
-                numQueued = (from item in DownloadItemsList where item.IsQueued select item).Count();
-
-                string statusDownloading;
-                string statusQueued;
-
-                if (numDownloading > 0)
-                {
-                    statusDownloading = numDownloading + " item(s) downloading";
-                }
-                else
-                {
-                    statusDownloading = "Ready";
-                }
-                if (numQueued > 0)
-                {
-                    statusQueued = numQueued + " item(s) queued";
-                }
-                else
-                {
-                    statusQueued = string.Empty;
-                }
-                if (this.StatusDownloading != statusDownloading)
-                {
-                    this.StatusDownloading = statusDownloading;
-                    AnnouncePropertyChanged(nameof(this.StatusDownloading));
-                }
-                if (this.StatusQueued != statusQueued)
-                {
-                    this.StatusQueued = statusQueued;
-                    AnnouncePropertyChanged(nameof(this.StatusQueued));
-                }
-            }
-            finally
-            {
-                Monitor.Exit(_lock);
-            }
+            _semaphoreRefreshCollection.Wait();
+            Application.Current.Dispatcher.Invoke(() =>
+                 {
+                     _collectionView.Refresh();
+                 });
+            _semaphoreRefreshCollection.Release();
         }
+
     }
 }

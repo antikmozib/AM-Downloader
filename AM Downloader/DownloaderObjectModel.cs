@@ -23,7 +23,7 @@ namespace AMDownloader
         private readonly IProgress<int> _progressReporter;
         private HttpClient _httpClient;
         private TaskCompletionSource<DownloadStatus> _taskCompletion;
-        private RefreshCollectionDelegate _refreshCollectionDel;
+        private readonly RefreshCollectionDelegate _refreshCollectionDel;
         #endregion // Fields
 
         #region Properties
@@ -54,6 +54,7 @@ namespace AMDownloader
         }
         public string PrettyDateCreated { get { return this.DateCreated.ToString("dd MMM yy H:mm:ss"); } }
         public int? NumberOfActiveStreams { get; private set; } // nullable
+        public bool IsCompleted => IsDownloadComplete();
         #endregion // Properties
 
         #region Constructors
@@ -273,9 +274,19 @@ namespace AMDownloader
                     AnnouncePropertyChanged(nameof(this.NumberOfActiveStreams));
                     try
                     {
+                        FileStream destinationStream;
+
+                        if (requests.Count == 1)
+                        {
+                            destinationStream = new FileStream(this.Destination, FileMode.Append);
+                        }
+                        else
+                        {
+                            destinationStream = new FileStream(this.Destination + ".part" + requests.IndexOf(request), FileMode.Append);
+                        }
+
                         using (var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
                         using (var sourceStream = await response.Content.ReadAsStreamAsync())
-                        using (var destinationStream = new FileStream(this.Destination + ".part" + requests.IndexOf(request), FileMode.Append))
                         using (var binaryWriter = new BinaryWriter(destinationStream))
                         {
                             byte[] buffer = new byte[bufferLength];
@@ -324,29 +335,29 @@ namespace AMDownloader
             {
                 // Run the tasks
                 await Task.WhenAll(tasks);
-                
+
+                this.NumberOfActiveStreams = null;
+                AnnouncePropertyChanged(nameof(this.NumberOfActiveStreams));
+
                 // Merge the streams
                 if (requests.Count > 1)
                 {
                     this.Status = DownloadStatus.Merging;
                     AnnouncePropertyChanged(nameof(this.Status));
-                }
 
-                FileInfo[] files = new FileInfo[requests.Count];
-                for (int i = 0; i < files.Length; i++)
-                {
-                    files[i] = new FileInfo(this.Destination + ".part" + i);
+                    FileInfo[] files = new FileInfo[requests.Count];
+                    for (int i = 0; i < files.Length; i++)
+                    {
+                        files[i] = new FileInfo(this.Destination + ".part" + i);
+                    }
+                    await MergeFilesAsync(files);
                 }
-                await MergeFilesAsync(files);
             }
             catch (Exception ex)
             {
                 status = DownloadStatus.Error;
                 Debug.WriteLine(ex.Message);
             }
-
-            this.NumberOfActiveStreams = null;
-            AnnouncePropertyChanged(nameof(this.NumberOfActiveStreams));
 
             // if final size was unknown, update it
             if (!this.SupportsResume)

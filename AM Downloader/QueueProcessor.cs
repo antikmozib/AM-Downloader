@@ -14,6 +14,7 @@ namespace AMDownloader
         public Task StartAsync(int numStreams); // numStreams = max num of parallel streams per IQueueable
         public void Pause();
         public bool IsQueued { get; }
+        public bool IsCompleted { get; }
     }
 
     class QueueProcessor
@@ -21,11 +22,10 @@ namespace AMDownloader
         #region Fields
         private const int DEFAULT_MAX_PARALLEL_DOWNLOADS = 2;
         private readonly SemaphoreSlim _semaphore;
-        private readonly List<IQueueable> _itemsProcessing;
-        private List<IQueueable> _itemsUnprocessed;
         private BlockingCollection<IQueueable> _queueList;
         private CancellationTokenSource _ctsCancel;
         private CancellationToken _ctCancel;
+        private List<IQueueable> _itemsProcessing;
         #endregion // Fields
 
         #region Properties
@@ -37,8 +37,8 @@ namespace AMDownloader
         public QueueProcessor(int maxParallelDownloads = DEFAULT_MAX_PARALLEL_DOWNLOADS)
         {
             _queueList = new BlockingCollection<IQueueable>();
-            _itemsProcessing = new List<IQueueable>();
             _semaphore = new SemaphoreSlim(maxParallelDownloads);
+            _itemsProcessing = new List<IQueueable>();
         }
         #endregion // Constructors
 
@@ -49,36 +49,35 @@ namespace AMDownloader
 
             _ctsCancel = new CancellationTokenSource();
             _ctCancel = _ctsCancel.Token;
-            _itemsProcessing.Clear();
 
             while (_queueList.Count() > 0 && !_ctCancel.IsCancellationRequested)
             {
                 IQueueable item;
                 if (!_queueList.TryTake(out item)) break;
-
                 if (!item.IsQueued) continue;
-                
-                _itemsUnprocessed.Add(item);
+                _itemsProcessing.Add(item);
                 Task t = Task.Run(async () =>
                 {
-                    _itemsProcessing.Add(item);
                     _semaphore.Wait();
-
                     if (!_ctCancel.IsCancellationRequested && item.IsQueued)
                     {
                         await item.StartAsync(numStreams);
-                        _itemsUnprocessed.Remove(item);
                     }
-
                     _semaphore.Release();
-                    _itemsProcessing.Remove(item);
                 });
-
                 tasks.Add(t);
             }
 
             await Task.WhenAll(tasks.ToArray());
+            foreach (var item in _itemsProcessing)
+            {
+                if (!item.IsCompleted && !this.Contains(item))
+                {
+                    this.Add(item);
+                }
+            }
 
+            _itemsProcessing.Clear();
             _ctsCancel = null;
             _ctCancel = default;
         }
@@ -125,9 +124,9 @@ namespace AMDownloader
             {
                 _queueList.TryAdd(item);
             }
-            catch (OperationCanceledException)
+            catch (Exception ex)
             {
-                return;
+                Debug.WriteLine(ex.Message);
             }
         }
 
@@ -137,26 +136,16 @@ namespace AMDownloader
             if (_ctsCancel != null) return;
             if (firstItems != null) RecreateQueue(firstItems);
 
-            _itemsUnprocessed = new List<IQueueable>();
             await ProcessQueueAsync(numStreams);
-
-            if (_ctCancel.IsCancellationRequested && _itemsProcessing.Count > 0)
-            {
-                // items that are being downloaded were taken out of queue; add them back to the top          
-                foreach(var item in _itemsProcessing)
-                {
-                    item.Pause();
-                }
-            }
-            foreach(var item in _itemsUnprocessed)
-            {
-                this.Add(item);
-            }
         }
 
         public void Stop()
         {
             _ctsCancel?.Cancel();
+            foreach (var item in _itemsProcessing)
+            {
+                item.Pause();
+            }
         }
         #endregion // Public methods
 
@@ -167,7 +156,7 @@ namespace AMDownloader
         }
         public int Count()
         {
-            return _queueList.Count;
+            return _queueList.Count + _itemsProcessing.Count;
         }
         #endregion // Public functions
     }
