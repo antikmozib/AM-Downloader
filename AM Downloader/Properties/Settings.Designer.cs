@@ -58,5 +58,29 @@ namespace AMDownloader.Properties {
                 this["ClearFinishedOnExit"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LastSavedLocation {
+            get {
+                return ((string)(this["LastSavedLocation"]));
+            }
+            set {
+                this["LastSavedLocation"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool RememberLastSavedLocation {
+            get {
+                return ((bool)(this["RememberLastSavedLocation"]));
+            }
+            set {
+                this["RememberLastSavedLocation"] = value;
+            }
+        }
     }
 }

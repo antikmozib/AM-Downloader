@@ -4,13 +4,14 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
+using System.Diagnostics;
 
 namespace AMDownloader
 {
     // Represents contracts that can be used by the QueueProcessor
     public interface IQueueable
     {
-        public Task StartAsync(int numStreams); // numStreams = max num of parallel streams/channel
+        public Task StartAsync(int numStreams); // numStreams = max num of parallel streams per IQueueable
         public void Pause();
         public bool IsQueued { get; }
     }
@@ -18,20 +19,17 @@ namespace AMDownloader
     class QueueProcessor
     {
         #region Fields
-
         private const int DEFAULT_MAX_PARALLEL_DOWNLOADS = 2;
         private readonly SemaphoreSlim _semaphore;
         private readonly List<IQueueable> _itemsProcessing;
+        private List<IQueueable> _itemsUnprocessed;
         private BlockingCollection<IQueueable> _queueList;
         private CancellationTokenSource _ctsCancel;
         private CancellationToken _ctCancel;
-
         #endregion // Fields
 
         #region Properties
-
         public bool IsBusy { get { return (_ctsCancel != null); } }
-
         #endregion // Properties
 
         #region Constructors
@@ -42,11 +40,9 @@ namespace AMDownloader
             _itemsProcessing = new List<IQueueable>();
             _semaphore = new SemaphoreSlim(maxParallelDownloads);
         }
-
         #endregion // Constructors
 
         #region Private methods
-
         private async Task ProcessQueueAsync(int numStreams)
         {
             var tasks = new List<Task>();
@@ -61,7 +57,8 @@ namespace AMDownloader
                 if (!_queueList.TryTake(out item)) break;
 
                 if (!item.IsQueued) continue;
-
+                
+                _itemsUnprocessed.Add(item);
                 Task t = Task.Run(async () =>
                 {
                     _itemsProcessing.Add(item);
@@ -70,6 +67,7 @@ namespace AMDownloader
                     if (!_ctCancel.IsCancellationRequested && item.IsQueued)
                     {
                         await item.StartAsync(numStreams);
+                        _itemsUnprocessed.Remove(item);
                     }
 
                     _semaphore.Release();
@@ -115,11 +113,9 @@ namespace AMDownloader
             _queueList = tempList;
             disposeList.Dispose();
         }
-
         #endregion // Private methods
 
         #region Public methods
-
         // Producer
         public void Add(IQueueable item)
         {
@@ -141,35 +137,38 @@ namespace AMDownloader
             if (_ctsCancel != null) return;
             if (firstItems != null) RecreateQueue(firstItems);
 
+            _itemsUnprocessed = new List<IQueueable>();
             await ProcessQueueAsync(numStreams);
+
+            if (_ctCancel.IsCancellationRequested && _itemsProcessing.Count > 0)
+            {
+                // items that are being downloaded were taken out of queue; add them back to the top          
+                foreach(var item in _itemsProcessing)
+                {
+                    item.Pause();
+                }
+            }
+            foreach(var item in _itemsUnprocessed)
+            {
+                this.Add(item);
+            }
         }
 
         public void Stop()
         {
             _ctsCancel?.Cancel();
-
-            // items that are being downloaded were taken out of queue; add them back to the top
-            if (_itemsProcessing.Count > 0)
-            {
-                Parallel.ForEach(_itemsProcessing, (item) => { item.Pause(); });
-                RecreateQueue(_itemsProcessing.ToArray());
-            }
         }
-
         #endregion // Public methods
 
         #region Public functions
-
         public bool Contains(IQueueable value)
         {
             return (_queueList.Contains(value));
         }
-
         public int Count()
         {
-            return _queueList.Count();
+            return _queueList.Count;
         }
-
         #endregion // Public functions
     }
 }

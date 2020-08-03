@@ -1,10 +1,9 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Windows;
 using System.Xml.Serialization;
-using Ookii.Dialogs.Wpf;
 using static AMDownloader.SerializableModels;
 using static AMDownloader.Common;
+using AMDownloader.Properties;
 
 namespace AMDownloader
 {
@@ -48,6 +47,11 @@ namespace AMDownloader
             if (!cboDestination.Items.Contains(ApplicationPaths.DownloadsFolder))
                 cboDestination.Items.Add(ApplicationPaths.DownloadsFolder);
 
+            if (Directory.Exists(Settings.Default.LastSavedLocation) && !cboDestination.Items.Contains(Settings.Default.LastSavedLocation))
+            {
+                cboDestination.Items.Add(Settings.Default.LastSavedLocation);
+            }
+
             txtUrl.Focus();
         }
 
@@ -58,10 +62,11 @@ namespace AMDownloader
 
         private void btnBrowse_Click(object sender, RoutedEventArgs e)
         {
-            var folderPicker = new VistaFolderBrowserDialog();
-            if ((bool)folderPicker.ShowDialog(this))
+            System.Windows.Forms.FolderBrowserDialog dlg = new System.Windows.Forms.FolderBrowserDialog();
+
+            if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                cboDestination.Items.Add(folderPicker.SelectedPath);
+                cboDestination.Items.Add(dlg.SelectedPath);
                 cboDestination.SelectedIndex = cboDestination.Items.Count - 1;
             }
         }
@@ -97,6 +102,12 @@ namespace AMDownloader
 
                 writer.Serialize(streamWriter, model);
                 streamWriter.Close();
+            }
+
+            if (Settings.Default.RememberLastSavedLocation)
+            {
+                Settings.Default.LastSavedLocation = cboDestination.Text;
+                Settings.Default.Save();
             }
         }
     }

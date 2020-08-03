@@ -15,6 +15,8 @@ using AMDownloader.Properties;
 using static AMDownloader.SerializableModels;
 using static AMDownloader.DownloaderObjectModel;
 using static AMDownloader.Common;
+using System.Threading;
+using System.Collections.Generic;
 
 namespace AMDownloader
 {
@@ -22,6 +24,7 @@ namespace AMDownloader
     {
         private readonly ICollectionView _collectionView;
         private ClipboardObserver _clipboardService;
+        private object _lock;
 
         public string StatusDownloading { get; private set; }
         public string StatusSpeed { get; private set; }
@@ -49,6 +52,7 @@ namespace AMDownloader
         public ICommand DequeueCommand { get; private set; }
         public ICommand DeleteFileCommand { get; private set; }
         public ICommand CopyLinkToClipboardCommand { get; private set; }
+        public ICommand ClearFinishedDownloadsCommand { get; private set; }
 
         public enum Categories
         {
@@ -63,6 +67,7 @@ namespace AMDownloader
             QueueProcessor = new QueueProcessor(Settings.Default.MaxParallelDownloads);
             _collectionView = CollectionViewSource.GetDefaultView(DownloadItemsList);
             _clipboardService = new ClipboardObserver();
+            _lock = DownloadItemsList;
 
             AddCommand = new RelayCommand(Add);
             StartCommand = new RelayCommand(Start, Start_CanExecute);
@@ -80,6 +85,7 @@ namespace AMDownloader
             DequeueCommand = new RelayCommand(Dequeue, Dequeue_CanExecute);
             DeleteFileCommand = new RelayCommand(DeleteFile, DeleteFile_CanExecute);
             CopyLinkToClipboardCommand = new RelayCommand(CopyLinkToClipboard, CopyLinkToClipboard_CanExecute);
+            ClearFinishedDownloadsCommand = new RelayCommand(ClearFinishedDownloads);
 
             this.StatusDownloading = "Ready";
             AnnouncePropertyChanged(nameof(this.StatusDownloading));
@@ -91,30 +97,39 @@ namespace AMDownloader
 
             if (Directory.Exists(ApplicationPaths.DownloadsHistory))
             {
-                var xmlReader = new XmlSerializer(typeof(SerializableDownloaderObjectModel));
-                foreach (var file in Directory.GetFiles(ApplicationPaths.DownloadsHistory))
+                Monitor.Enter(_lock);
+                try
                 {
-                    using (var streamReader = new StreamReader(file))
+                    var xmlReader = new XmlSerializer(typeof(SerializableDownloaderObjectModel));
+                    foreach (var file in Directory.GetFiles(ApplicationPaths.DownloadsHistory))
                     {
-                        SerializableDownloaderObjectModel sItem;
-
-                        try
+                        using (var streamReader = new StreamReader(file))
                         {
-                            sItem = (SerializableDownloaderObjectModel)xmlReader.Deserialize(streamReader);
-                            var item = new DownloaderObjectModel(ref Client, sItem.Url, sItem.Destination, sItem.IsQueued, OnDownloadPropertyChange, RefreshCollection);
+                            SerializableDownloaderObjectModel sItem;
 
-                            DownloadItemsList.Add(item);
-                            item.SetCreationTime(sItem.DateCreated);
-                            if (sItem.IsQueued)
+                            try
                             {
-                                QueueProcessor.Add(item);
+                                sItem = (SerializableDownloaderObjectModel)xmlReader.Deserialize(streamReader);
+                                var item = new DownloaderObjectModel(ref Client, sItem.Url, sItem.Destination, sItem.IsQueued, OnDownloadPropertyChange, RefreshCollection);
+
+                                DownloadItemsList.Add(item);
+                                item.SetCreationTime(sItem.DateCreated);
+                                if (sItem.IsQueued)
+                                {
+                                    QueueProcessor.Add(item);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.WriteLine(ex.Message);
                             }
                         }
-                        catch
-                        {
-                            continue;
-                        }
                     }
+                }
+                finally
+                {
+                    Monitor.Exit(_lock);
+                    RefreshCollection();
                 }
             }
         }
@@ -209,6 +224,7 @@ namespace AMDownloader
                     case DownloadStatus.Paused:
                     case DownloadStatus.Ready:
                     case DownloadStatus.Queued:
+                    case DownloadStatus.Error:
                         return true;
                 }
             }
@@ -274,23 +290,32 @@ namespace AMDownloader
         {
             if (obj == null) return;
 
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
+            Monitor.Enter(_lock);
 
-            foreach (DownloaderObjectModel item in items)
+            try
             {
-                if (item.IsBeingDownloaded || item.Status == DownloadStatus.Paused)
+                var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
+
+                foreach (DownloaderObjectModel item in items)
                 {
-                    MessageBoxResult result = MessageBox.Show("Cancel downloading \"" + item.Name + "\" ?",
-                    "Cancel Download", MessageBoxButton.YesNo, MessageBoxImage.Exclamation);
+                    if (item.IsBeingDownloaded || item.Status == DownloadStatus.Paused)
+                    {
+                        MessageBoxResult result = MessageBox.Show("Cancel downloading \"" + item.Name + "\" ?",
+                        "Cancel Download", MessageBoxButton.YesNo, MessageBoxImage.Exclamation);
 
-                    if (result == MessageBoxResult.No)
-                        continue;
-                    else
-                        item.Cancel();
+                        if (result == MessageBoxResult.No)
+                            continue;
+                        else
+                            item.Cancel();
+                    }
+
+                    if (item.IsQueued) item.Dequeue();
+                    DownloadItemsList.Remove(item);
                 }
-
-                if (item.IsQueued) item.Dequeue();
-                DownloadItemsList.Remove(item);
+            }
+            finally
+            {
+                Monitor.Exit(_lock);
             }
         }
 
@@ -306,11 +331,19 @@ namespace AMDownloader
 
         void Add(object obj)
         {
-            var vm = new AddDownloadViewModel(this);
-            var win = new AddDownloadWindow();
-            win.DataContext = vm;
-            win.Owner = obj as Window;
-            win.ShowDialog();
+            Monitor.Enter(_lock);
+            try
+            {
+                var vm = new AddDownloadViewModel(this);
+                var win = new AddDownloadWindow();
+                win.DataContext = vm;
+                win.Owner = obj as Window;
+                win.ShowDialog();
+            }
+            finally
+            {
+                Monitor.Exit(_lock);
+            }
         }
 
         void Open(object obj)
@@ -376,14 +409,7 @@ namespace AMDownloader
 
         public bool StartQueue_CanExecute(object obj)
         {
-            if (obj == null) return false;
-
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
-            var itemsInQueue = from item in items where item.IsQueued where !item.IsBeingDownloaded select item;
-
-            if (!QueueProcessor.IsBusy && itemsInQueue.Count() > 0) return true;
-
-            return false;
+            return (!QueueProcessor.IsBusy && QueueProcessor.Count() > 0);
         }
 
         void StopQueue(object obj)
@@ -398,49 +424,59 @@ namespace AMDownloader
 
         void WindowClosing(object obj)
         {
-            XmlSerializer writer = new XmlSerializer(typeof(SerializableDownloaderObjectModel));
+            Monitor.Enter(_lock);
 
-            if (!Directory.Exists(ApplicationPaths.DownloadsHistory))
+            try
             {
-                Directory.CreateDirectory(ApplicationPaths.DownloadsHistory);
+                XmlSerializer writer = new XmlSerializer(typeof(SerializableDownloaderObjectModel));
+                int i = 0;
+
+                if (!Directory.Exists(ApplicationPaths.DownloadsHistory))
+                {
+                    Directory.CreateDirectory(ApplicationPaths.DownloadsHistory);
+                }
+
+                // Clear existing history
+                foreach (var file in Directory.GetFiles(ApplicationPaths.DownloadsHistory))
+                {
+                    try
+                    {
+                        File.Delete(file);
+                    }
+                    catch
+                    {
+                        continue;
+                    }
+                }
+
+                foreach (var item in DownloadItemsList)
+                {
+                    if (item.IsBeingDownloaded)
+                    {
+                        item.Pause();
+                    }
+
+                    if (item.Status == DownloadStatus.Finished && Settings.Default.ClearFinishedOnExit)
+                    {
+                        continue;
+                    }
+
+                    StreamWriter streamWriter = new StreamWriter(Path.Combine(ApplicationPaths.DownloadsHistory, (++i).ToString() + ".xml"));
+
+                    var sItem = new SerializableDownloaderObjectModel();
+
+                    sItem.Url = item.Url;
+                    sItem.Destination = item.Destination;
+                    sItem.IsQueued = item.IsQueued;
+                    sItem.DateCreated = item.DateCreated;
+
+                    writer.Serialize(streamWriter, sItem);
+                    streamWriter.Close();
+                }
             }
-
-            // Clear existing history
-            foreach (var file in Directory.GetFiles(ApplicationPaths.DownloadsHistory))
+            finally
             {
-                try
-                {
-                    File.Delete(file);
-                }
-                catch
-                {
-                    continue;
-                }
-            }
-
-            foreach (var item in DownloadItemsList)
-            {
-                if (item.IsBeingDownloaded)
-                {
-                    item.Pause();
-                }
-
-                if (item.Status == DownloadStatus.Finished && Settings.Default.ClearFinishedOnExit)
-                {
-                    continue;
-                }
-
-                StreamWriter streamWriter = new StreamWriter(Path.Combine(ApplicationPaths.DownloadsHistory, item.Name + ".xml"));
-
-                var sItem = new SerializableDownloaderObjectModel();
-
-                sItem.Url = item.Url;
-                sItem.Destination = item.Destination;
-                sItem.IsQueued = item.IsQueued;
-                sItem.DateCreated = item.DateCreated;
-
-                writer.Serialize(streamWriter, sItem);
-                streamWriter.Close();
+                Monitor.Exit(_lock);
             }
         }
 
@@ -504,24 +540,33 @@ namespace AMDownloader
         {
             if (obj == null) return;
 
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
-            var itemsDeletable = from item in items where !item.IsBeingDownloaded where File.Exists(item.Destination) select item;
+            Monitor.Enter(_lock);
 
-            foreach (var item in itemsDeletable)
+            try
             {
-                if (item.IsBeingDownloaded) continue; // prevent race condition
+                var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
+                var itemsDeletable = from item in items where !item.IsBeingDownloaded where File.Exists(item.Destination) select item;
 
-                try
+                foreach (var item in itemsDeletable)
                 {
-                    FileSystem.DeleteFile(item.Destination, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
-                    DownloadItemsList.Remove(item);
+                    if (item.IsBeingDownloaded) continue; // prevent race condition
+
+                    try
+                    {
+                        FileSystem.DeleteFile(item.Destination, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
+                        DownloadItemsList.Remove(item);
+                    }
+                    catch (Exception e)
+                    {
+                        MessageBoxResult r = MessageBox.Show(e.Message, "Delete", MessageBoxButton.OKCancel, MessageBoxImage.Error);
+                        if (r == MessageBoxResult.Cancel) break;
+                        continue;
+                    }
                 }
-                catch (Exception e)
-                {
-                    MessageBoxResult r = MessageBox.Show(e.Message, "Delete", MessageBoxButton.OKCancel, MessageBoxImage.Error);
-                    if (r == MessageBoxResult.Cancel) break;
-                    continue;
-                }
+            }
+            finally
+            {
+                Monitor.Exit(_lock);
             }
         }
 
@@ -549,6 +594,25 @@ namespace AMDownloader
             return true;
         }
 
+        void ClearFinishedDownloads(object obj)
+        {
+            Monitor.Enter(_lock);
+            try
+            {
+                var itemsFinished = (from item in DownloadItemsList where item.Status == DownloadStatus.Finished select item).ToArray<DownloaderObjectModel>();
+
+                foreach (var item in itemsFinished)
+                {
+                    DownloadItemsList.Remove(item);
+                }
+            }
+            finally
+            {
+                Monitor.Exit(_lock);
+                RefreshCollection();
+            }
+        }
+
         protected void AnnouncePropertyChanged(string prop)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
@@ -556,73 +620,93 @@ namespace AMDownloader
 
         public void OnDownloadPropertyChange(object sender, PropertyChangedEventArgs e)
         {
-            string statusSpeed;
-            string statusDownloading;
-            string statusQueued;
 
-            int countDownloading = 0;
-            var downloadingItems = from item in DownloadItemsList where item.IsBeingDownloaded select item;
-            var itemsinQueue = from item in DownloadItemsList where item.IsQueued where !item.IsBeingDownloaded select item;
+            Monitor.Enter(_lock);
 
-            long totalspeed = 0;
-
-            if (downloadingItems != null)
+            try
             {
-                countDownloading = downloadingItems.Count();
-                foreach (var item in downloadingItems)
-                    totalspeed += item.Speed ?? 0;
+                IEnumerable<long> T_speed = from item in DownloadItemsList where item.IsBeingDownloaded select item.Speed ?? 0;
+
+                string statusSpeed;
+                long totalspeed = 0;
+
+                foreach (long speed in T_speed)
+                {
+                    totalspeed += speed;
+                }
+
+                if (totalspeed == 0)
+                {
+                    statusSpeed = string.Empty;
+                }
+                else
+                {
+                    statusSpeed = PrettifySpeed(totalspeed);
+                }
+
+                if (this.StatusSpeed != statusSpeed)
+                {
+                    this.StatusSpeed = statusSpeed;
+                    AnnouncePropertyChanged(nameof(this.StatusSpeed));
+                }
             }
-
-            if (totalspeed > 0)
+            catch (Exception ex)
             {
-                statusSpeed = Common.PrettySpeed(totalspeed);
+                Debug.WriteLine(ex.Message);
             }
-            else
+            finally
             {
-                statusSpeed = string.Empty;
-            }
-
-            if (this.StatusSpeed != statusSpeed)
-            {
-                this.StatusSpeed = statusSpeed;
-                AnnouncePropertyChanged(nameof(this.StatusSpeed));
-            }
-
-
-            if (countDownloading > 0)
-            {
-                statusDownloading = countDownloading + " item(s) downloading";
-            }
-            else
-            {
-                statusDownloading = "Ready";
-            }
-
-            if (itemsinQueue != null && itemsinQueue.Count() > 0)
-            {
-                statusQueued = itemsinQueue.Count() + " item(s) queued";
-            }
-            else
-            {
-                statusQueued = string.Empty;
-            }
-
-            if (this.StatusQueued != statusQueued)
-            {
-                this.StatusQueued = statusQueued;
-                AnnouncePropertyChanged(nameof(this.StatusQueued));
-            }
-
-            if (this.StatusDownloading != statusDownloading)
-            {
-                this.StatusDownloading = statusDownloading;
-                AnnouncePropertyChanged(nameof(this.StatusDownloading));
+                Monitor.Exit(_lock);
             }
         }
 
         internal void RefreshCollection()
         {
             Application.Current.Dispatcher.Invoke(() => _collectionView.Refresh());
+
+            Monitor.Enter(_lock);
+            try
+            {
+                int numDownloading = 0;
+                int numQueued = 0;
+
+                numDownloading = (from item in DownloadItemsList where item.IsBeingDownloaded select item).Count();
+                numQueued = (from item in DownloadItemsList where item.IsQueued select item).Count();
+
+                string statusDownloading;
+                string statusQueued;
+
+                if (numDownloading > 0)
+                {
+                    statusDownloading = numDownloading + " item(s) downloading";
+                }
+                else
+                {
+                    statusDownloading = "Ready";
+                }
+                if (numQueued > 0)
+                {
+                    statusQueued = numQueued + " item(s) queued";
+                }
+                else
+                {
+                    statusQueued = string.Empty;
+                }
+                if (this.StatusDownloading != statusDownloading)
+                {
+                    this.StatusDownloading = statusDownloading;
+                    AnnouncePropertyChanged(nameof(this.StatusDownloading));
+                }
+                if (this.StatusQueued != statusQueued)
+                {
+                    this.StatusQueued = statusQueued;
+                    AnnouncePropertyChanged(nameof(this.StatusQueued));
+                }
+            }
+            finally
+            {
+                Monitor.Exit(_lock);
+            }
         }
     }
 }

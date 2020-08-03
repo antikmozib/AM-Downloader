@@ -29,5 +29,10 @@ namespace AMDownloader
         {
             this.Close();
         }
+
+        private void btnReset_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
     }
 }

@@ -20,6 +20,9 @@
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File" TabIndex="9">
+                <MenuItem
+                    Command="{Binding ClearFinishedDownloadsCommand}"
+                    Header="Clear finished downloads"/>
                 <MenuItem 
                     Header="_Options"
                     CommandParameter="{Binding RelativeSource={RelativeSource AncestorType={x:Type Window}}}"

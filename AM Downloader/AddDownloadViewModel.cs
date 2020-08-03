@@ -3,10 +3,10 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows;
 using System.ComponentModel;
 using System.Threading;
 using System.Windows.Input;
+using System.Windows;
 using AMDownloader.Properties;
 using static AMDownloader.Common;
 
@@ -48,18 +48,25 @@ namespace AMDownloader
         {
             _parentViewModel = parentViewModel;
 
-            AddCommand = new RelayCommand(Add);
-            PreviewCommand = new RelayCommand(Preview);
+            AddCommand = new RelayCommand(Add, Add_CanExecute);
+            PreviewCommand = new RelayCommand(Preview, Add_CanExecute);
 
             _clipboardService = new ClipboardObserver();
 
-            this.SaveToFolder = ApplicationPaths.DownloadsFolder;
+            if (Directory.Exists(Settings.Default.LastSavedLocation))
+            {
+                this.SaveToFolder = Settings.Default.LastSavedLocation;
+            }
+            else
+            {
+                this.SaveToFolder = ApplicationPaths.DownloadsFolder;
+            }
             this.AddToQueue = true;
             this.StartDownload = false;
             this.Urls = string.Empty;
 
             var clipText = _clipboardService.GetText();
-            if (clipText.Contains("http")) this.Urls += clipText;
+            if (clipText.Contains("http")) this.Urls += clipText.Trim();
         }
 
         public void Preview(object obj)
@@ -67,7 +74,7 @@ namespace AMDownloader
             string[] urls = ListifyUrls().ToArray();
             string output = string.Empty;
 
-            if (urls.Length==0) return;
+            if (urls.Length == 0) return;
 
             if (urls.Length > 7)
             {
@@ -75,16 +82,27 @@ namespace AMDownloader
                 {
                     output += urls[i] + "\n\n";
                 }
+                output += "... " + (urls.Length - 6).ToString() + " more files ...\n\n";
                 for (int i = urls.Length - 3; i < urls.Length; i++)
                 {
                     output += urls[i] + "\n\n";
                 }
             }
-            else {
-                output = urls.ToString();
+            else
+            {
+                foreach (var url in urls)
+                {
+                    output += url + "\n\n";
+                }
             }
 
             MessageBox.Show(output, "Preview", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        bool Add_CanExecute(object obj)
+        {
+            if (this.Urls.Trim().Length == 0) return false;
+            return true;
         }
 
         public void Add(object item)
@@ -106,18 +124,29 @@ namespace AMDownloader
         private void AddItemToList(string url, int counter)
         {
             var fileName = GetValidFilename(SaveToFolder + Path.GetFileName(url));
-            var checkIfUrlExists = from di in _parentViewModel.DownloadItemsList where di.Url == url select di;
+            var checkifUrlExists = from di in _parentViewModel.DownloadItemsList where di.Url == url select di;
             var checkIfDestinationExists = from di in _parentViewModel.DownloadItemsList where di.Destination == fileName select di;
+            var sameItems = checkIfDestinationExists.Intersect(checkifUrlExists);
 
-            if (checkIfUrlExists.Count() > 0 || checkIfDestinationExists.Count() > 0) return;
+            if (sameItems.Count() > 0) return;
 
             var item = new DownloaderObjectModel(ref _parentViewModel.Client, url, fileName, AddToQueue, _parentViewModel.OnDownloadPropertyChange, _parentViewModel.RefreshCollection);
 
             if (AddToQueue) _parentViewModel.QueueProcessor.Add(item);
 
             // Do not start more than 5 downloads at the same time
-            if (!AddToQueue && StartDownload && counter < 5)
-                Task.Run(async () => await item.StartAsync(Settings.Default.MaxConnectionsPerDownload));
+            if (!AddToQueue && StartDownload)
+            {
+                if (counter < 5)
+                {
+                    Task.Run(async () => await item.StartAsync(Settings.Default.MaxConnectionsPerDownload));
+                }
+                else
+                {
+                    item.Enqueue();
+                    _parentViewModel.QueueProcessor.Add(item);
+                }
+            }
 
             _parentViewModel.DownloadItemsList.Add(item);
         }
@@ -171,7 +200,7 @@ namespace AMDownloader
 
                 if ((clip.Contains("http") || clip.Contains("ftp")) && !this.Urls.Contains(clip))
                 {
-                    this.Urls += clip + '\n';
+                    this.Urls += clip.Trim() + '\n';
                     AnnouncePropertyChanged(nameof(this.Urls));
                 }
             }

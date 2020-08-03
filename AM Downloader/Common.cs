@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Reflection;
 
 namespace AMDownloader
 {
@@ -12,12 +13,12 @@ namespace AMDownloader
 
         public static class ApplicationPaths
         {
-            public static string DownloadsHistory { get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AMDownloader", "history"); } }
-            public static string SavedLocationsHistory { get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AMDownloader", "downloadpaths"); } }
+            public static string DownloadsHistory { get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Assembly.GetExecutingAssembly().GetName().Name, "history"); } }
+            public static string SavedLocationsHistory { get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Assembly.GetExecutingAssembly().GetName().Name, "downloadpaths"); } }
             public static string DownloadsFolder { get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads"); } }
         }
 
-        public static string PrettyNum(long? num)
+        public static string PrettifySize(long? num)
         {
             if (num == null)
             {
@@ -63,7 +64,7 @@ namespace AMDownloader
             return result;
         }
 
-        public static string PrettySpeed(long? speed)
+        public static string PrettifySpeed(long? speed)
         {
             if (speed > 1024)
             {

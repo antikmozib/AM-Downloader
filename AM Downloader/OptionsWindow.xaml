@@ -7,7 +7,7 @@
         xmlns:properties="clr-namespace:AMDownloader.Properties"
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         mc:Ignorable="d"
-        Title="Options" WindowStartupLocation="CenterOwner" WindowStyle="ToolWindow" ShowInTaskbar="False" SizeToContent="WidthAndHeight" ResizeMode="NoResize">
+        Title="Options" WindowStartupLocation="CenterOwner" WindowStyle="ToolWindow" ShowInTaskbar="False" SizeToContent="WidthAndHeight" ResizeMode="NoResize" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
@@ -15,24 +15,31 @@
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
         <StackPanel>
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Label Content="Max _parallel downloads*:" TabIndex="0"/>
-                <xctk:IntegerUpDown Value="{Binding Source={x:Static properties:Settings.Default}, Path=MaxParallelDownloads}" Width="50" Minimum="1" Maximum="5" IsTabStop="True" AllowTextInput="False" TabIndex="1"/>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Label Content="Max parallel _connections per download:" TabIndex="2"/>
-                <xctk:IntegerUpDown Value="{Binding Source={x:Static properties:Settings.Default}, Path=MaxConnectionsPerDownload}" Width="50" Minimum="1" Maximum="5" AllowTextInput="False" IsTabStop="True" TabIndex="3"/>
-            </StackPanel>
+            <DockPanel>
+                <Label Content="Max _parallel downloads*:"/>
+                <TextBox VerticalAlignment="Center" HorizontalContentAlignment="Right" DockPanel.Dock="Right" Text="{Binding Source={x:Static properties:Settings.Default}, Path=MaxParallelDownloads}" Width="50" IsTabStop="True"/>
+                <Separator DockPanel.Dock="Right" Opacity="0"/>
+            </DockPanel>
+            <Separator Margin="0 5 0 5"/>
+            <DockPanel>
+                <Label Content="Max parallel _connections per download:"/>
+                <TextBox VerticalAlignment="Center" HorizontalContentAlignment="Right" DockPanel.Dock="Right" Text="{Binding Source={x:Static properties:Settings.Default}, Path=MaxConnectionsPerDownload}" Width="50" IsTabStop="True"/>
+                <Separator DockPanel.Dock="Right" Opacity="0"/>
+            </DockPanel>
+            <Separator Margin="0 5 0 5"/>
             <StackPanel>
                 <CheckBox Content="Clear finished downloads on exit" IsChecked="{Binding Source={x:Static properties:Settings.Default}, Path=ClearFinishedOnExit}"/>
-            </StackPanel>
+                <Separator Margin="0 5 0 5"/>
+                <CheckBox Content="Remember last save location" IsChecked="{Binding Source={x:Static properties:Settings.Default}, Path=RememberLastSavedLocation}"/>
+            </StackPanel>            
         </StackPanel>
-        <StackPanel Grid.Row="1" Margin="0 10 0 0" >
-            <Label Content="*Requires application restart" />
+        <StackPanel Margin="0 20 0 5" Grid.Row="1">
+            <TextBlock Text="*Requires application restart" />
         </StackPanel>
-        <StackPanel Margin="0 10 0 0"  HorizontalAlignment="Right" Orientation="Horizontal" Height="25" Grid.Row="2">
-            <Button x:Name="btnOK" Content="_OK" Width="80" Margin="0 0 5 0" IsDefault="True" Click="btnOK_Click" Command="{Binding SaveSettingsCommand}" TabIndex="4"/>
-            <Button Content="_Cancel" Width="80" IsCancel="True" TabIndex="5"/>
+        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Height="25" Grid.Row="2">
+            <Button x:Name="btnOK" Content="_OK" Width="80" Margin="0 0 5 0" IsDefault="True" Click="btnOK_Click" Command="{Binding SaveSettingsCommand}"/>
+            <Button Content="_Cancel" Width="80" Margin="0 0 5 0" IsCancel="True"/>
+            <Button x:Name="btnReset" Content="_Reset" Width="80" Command="{Binding ResetSettingsCommand}" Click="btnReset_Click"/>
         </StackPanel>
     </Grid>
 </Window>

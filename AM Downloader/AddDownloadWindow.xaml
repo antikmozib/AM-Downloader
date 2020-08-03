@@ -12,7 +12,7 @@
         MinHeight="250"
         Width="650"
         Height="250"
-        WindowStyle="ToolWindow" Closing="Window_Closing">
+        WindowStyle="ToolWindow" Closing="Window_Closing" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
     <Grid 
         Margin="10">
         <Grid.RowDefinitions>
@@ -25,9 +25,9 @@
             <RowDefinition Height="25"/>
         </Grid.RowDefinitions>
         <DockPanel>
-            <Label 
+            <TextBlock 
                 VerticalAlignment="Bottom"
-                Content="Enter URL or pattern to add. You can enter multiple URLs on separate lines."/>
+                Text="Enter URL or pattern to add. You can enter multiple URLs on separate lines."/>
             <CheckBox 
                 DockPanel.Dock="Right"
                 x:Name="cbMonitorClipboard" 
@@ -41,7 +41,7 @@
             Padding="2"
             x:Name="txtUrl" 
             Grid.Row="2" 
-            Text="{Binding Path=Urls}" 
+            Text="{Binding Path=Urls, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
             Width="auto" 
             Height="auto"
             TabIndex="0" 
@@ -52,9 +52,11 @@
         <DockPanel
             Grid.Row="4"
             HorizontalAlignment="Stretch">
-            <Label 
+            <TextBlock 
+                Margin="0 0 5 0"
+                VerticalAlignment="Center"
                 DockPanel.Dock="Left" 
-                Content="Save to:"/>
+                Text="Save to:"/>
             <Button 
                 x:Name="btnBrowse" 
                 DockPanel.Dock="Right" 
