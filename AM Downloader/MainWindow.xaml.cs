@@ -1,7 +1,11 @@
-﻿using System.Linq;
+﻿using AMDownloader.Properties;
+using System;
+using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Data;
 
 namespace AMDownloader
 {
@@ -36,8 +40,10 @@ namespace AMDownloader
             MessageBox.Show(this, name + "\nVersion " + version + "\n\n" + description + "\n\n" + copyright, "About", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
-        private async void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            Settings.Default.Save();
+
             var items = from item in primaryViewModel.DownloadItemsList where item.IsBeingDownloaded select item;
 
             this.Hide();
@@ -45,8 +51,7 @@ namespace AMDownloader
 
             if (items.Count() > 0)
             {
-                Parallel.ForEach(items, item => item.Pause());
-                await Task.Delay(5000);
+                Parallel.ForEach(items, async (item) => await item.PauseAsync());
             }
 
             Application.Current.Shutdown();

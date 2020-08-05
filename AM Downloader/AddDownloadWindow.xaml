@@ -1,108 +1,47 @@
-﻿<Window x:Class="AMDownloader.AddDownloadWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d"
+﻿<Window x:Class="AMDownloader.AddDownloadWindow" 
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+        xmlns:properties="clr-namespace:AMDownloader.Properties" 
+        mc:Ignorable="d" 
         Title="Add" 
         WindowStartupLocation="CenterOwner" 
         ShowInTaskbar="False" 
-        ResizeMode="CanResizeWithGrip"
-        MinWidth="650"
-        MinHeight="250"
-        Width="650"
-        Height="250"
-        WindowStyle="ToolWindow" Closing="Window_Closing" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
-    <Grid 
-        Margin="10">
+        ResizeMode="CanResizeWithGrip" 
+        Height="{Binding Source={x:Static properties:Settings.Default}, Path=AddWindowHeight, Mode=TwoWay}" 
+        Width="{Binding Source={x:Static properties:Settings.Default}, Path=AddWindowWidth, Mode=TwoWay}" 
+        MinWidth="650" 
+        MinHeight="250" 
+        WindowStyle="ToolWindow" 
+        Closing="Window_Closing" 
+        Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
+    <Grid Margin="10">
         <Grid.RowDefinitions>
-            <RowDefinition Height="auto"/>
-            <RowDefinition Height="10"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="10"/>
-            <RowDefinition Height="25"/>
-            <RowDefinition Height="10"/>
-            <RowDefinition Height="25"/>
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="10" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="10" />
+            <RowDefinition Height="25" />
+            <RowDefinition Height="10" />
+            <RowDefinition Height="25" />
         </Grid.RowDefinitions>
         <DockPanel>
-            <TextBlock 
-                VerticalAlignment="Bottom"
-                Text="Enter URL or pattern to add. You can enter multiple URLs on separate lines."/>
-            <CheckBox 
-                DockPanel.Dock="Right"
-                x:Name="cbMonitorClipboard" 
-                Content="Monitor clipboard" 
-                IsChecked="{Binding Path=MonitorClipboard, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
-                VerticalAlignment="Center"
-                HorizontalAlignment="Right"
-                />
+            <TextBlock VerticalAlignment="Bottom" Text="Enter URL or pattern to add. You can enter multiple URLs on separate lines." />
+            <CheckBox DockPanel.Dock="Right" x:Name="cbMonitorClipboard" Content="Monitor clipboard" IsChecked="{Binding Path=MonitorClipboard, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" VerticalAlignment="Center" HorizontalAlignment="Right" />
         </DockPanel>
-        <TextBox 
-            Padding="2"
-            x:Name="txtUrl" 
-            Grid.Row="2" 
-            Text="{Binding Path=Urls, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-            Width="auto" 
-            Height="auto"
-            TabIndex="0" 
-            ScrollViewer.CanContentScroll="True" 
-            HorizontalScrollBarVisibility="Auto" 
-            VerticalScrollBarVisibility="Auto" 
-            AcceptsReturn="True"/>
-        <DockPanel
-            Grid.Row="4"
-            HorizontalAlignment="Stretch">
-            <TextBlock 
-                Margin="0 0 5 0"
-                VerticalAlignment="Center"
-                DockPanel.Dock="Left" 
-                Text="Save to:"/>
-            <Button 
-                x:Name="btnBrowse" 
-                DockPanel.Dock="Right" 
-                Content="Browse" 
-                Width="80" 
-                Click="btnBrowse_Click"/>
-            <ComboBox
-                x:Name="cboDestination"
-                Margin="0 0 5 0"
-                Text="{Binding Path=SaveToFolder, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                Width="auto"
-                HorizontalAlignment="Stretch"
-                VerticalContentAlignment="Center" IsEditable="True" IsReadOnly="True"/>
+        <TextBox Padding="2" x:Name="txtUrl" Grid.Row="2" Text="{Binding Path=Urls, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="auto" Height="auto" TabIndex="0" ScrollViewer.CanContentScroll="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" AcceptsReturn="True" />
+        <DockPanel Grid.Row="4" HorizontalAlignment="Stretch">
+            <TextBlock Margin="0 0 5 0" VerticalAlignment="Center" DockPanel.Dock="Left" Text="Save to:" />
+            <Button x:Name="btnBrowse" DockPanel.Dock="Right" Content="Browse" Width="80" Click="btnBrowse_Click" />
+            <ComboBox x:Name="cboDestination" Margin="0 0 5 0" Text="{Binding Path=SaveToFolder, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="auto" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" IsEditable="True" IsReadOnly="True" />
         </DockPanel>
         <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Right">
-            <CheckBox 
-                x:Name="cbAddToQueue" 
-                Content="Add to queue" 
-                IsChecked="{Binding Path=AddToQueue, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
-                VerticalAlignment="Center"
-                Margin="0 0 10 0"
-                />
-            <CheckBox 
-                x:Name="cbStartDownloadingImmediately" 
-                Content="Start downloading" 
-                IsChecked="{Binding Path=StartDownload, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
-                VerticalAlignment="Center"
-                Margin="0 0 20 0"/>
-            <Button x:Name="btnAdd" 
-                Margin="0 0 5 0"
-                Content="Add" 
-                Width="80" 
-                Command="{Binding AddCommand}"
-                IsDefault="True" 
-                TabIndex="1" Click="btnAdd_Click"/>
-            <Button x:Name="btnCancel"
-                Margin="0 0 5 0"
-                Content="Cancel" 
-                Width="80" 
-                IsCancel="True" 
-                TabIndex="2" Click="btnCancel_Click"/>
-            <Button
-                Command="{Binding PreviewCommand}"
-                Content="Preview" 
-                Width="80" 
-                TabIndex="3"/>
+            <CheckBox x:Name="cbAddToQueue" Content="Add to queue" IsChecked="{Binding Path=AddToQueue, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" VerticalAlignment="Center" Margin="0 0 10 0" />
+            <CheckBox x:Name="cbStartDownloadingImmediately" Content="Start downloading" IsChecked="{Binding Path=StartDownload, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" VerticalAlignment="Center" Margin="0 0 20 0" />
+            <Button x:Name="btnAdd" Margin="0 0 5 0" Content="Add" Width="80" Command="{Binding AddCommand}" IsDefault="True" TabIndex="1" Click="btnAdd_Click" />
+            <Button x:Name="btnCancel" Margin="0 0 5 0" Content="Cancel" Width="80" IsCancel="True" TabIndex="2" Click="btnCancel_Click" />
+            <Button Command="{Binding PreviewCommand}" Content="Preview" Width="80" TabIndex="3" />
         </StackPanel>
     </Grid>
 </Window>

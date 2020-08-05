@@ -107,7 +107,7 @@ namespace AMDownloader
 
         public void Add(object item)
         {
-            if (Urls == null || SaveToFolder == null || !Directory.Exists(SaveToFolder)) return;
+            if (Urls == null || SaveToFolder == null) return;
 
             if (SaveToFolder.LastIndexOf(Path.DirectorySeparatorChar) != SaveToFolder.Length - 1)
                 SaveToFolder = SaveToFolder + Path.DirectorySeparatorChar;
@@ -130,21 +130,26 @@ namespace AMDownloader
 
             if (sameItems.Count() > 0) return;
 
-            var item = new DownloaderObjectModel(ref _parentViewModel.Client, url, fileName, AddToQueue, _parentViewModel.OnDownloadPropertyChange, _parentViewModel.RefreshCollection);
+            var item = new DownloaderObjectModel(
+                ref _parentViewModel.Client,
+                url,
+                fileName,
+                AddToQueue,
+                _parentViewModel.Item_DownloadStarted,
+                _parentViewModel.Item_DownloadFinished,
+                _parentViewModel.Item_Enqueued,
+                _parentViewModel.Item_Dequeued,
+                _parentViewModel.OnDownloadPropertyChange,
+                _parentViewModel.RefreshCollection);
 
             if (AddToQueue) _parentViewModel.QueueProcessor.Add(item);
 
             // Do not start more than 5 downloads at the same time
             if (!AddToQueue && StartDownload)
             {
-                if (counter < 5)
+                if (counter < Settings.Default.MaxParallelDownloads)
                 {
                     Task.Run(async () => await item.StartAsync(Settings.Default.MaxConnectionsPerDownload));
-                }
-                else
-                {
-                    item.Enqueue();
-                    _parentViewModel.QueueProcessor.Add(item);
                 }
             }
 
@@ -194,15 +199,13 @@ namespace AMDownloader
 
             while (!_ctsClipboard.Token.IsCancellationRequested)
             {
-                await Task.Delay(1000);
-
                 string clip = _clipboardService.GetText();
-
                 if ((clip.Contains("http") || clip.Contains("ftp")) && !this.Urls.Contains(clip))
                 {
                     this.Urls += clip.Trim() + '\n';
                     AnnouncePropertyChanged(nameof(this.Urls));
                 }
+                await Task.Delay(1000);
             }
 
             _ctsClipboard = null;

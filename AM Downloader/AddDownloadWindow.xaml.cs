@@ -29,7 +29,9 @@ namespace AMDownloader
                     try
                     {
                         var item = (SerializableDownloadPathHistory)writer.Deserialize(streamReader);
-                        if (Directory.Exists(item.path) && !cboDestination.Items.Contains(item.path))
+                        if (item.path.Trim().Length == 0) continue;
+
+                        if (!cboDestination.Items.Contains(item.path))
                         {
                             cboDestination.Items.Add(item.path);
                         }
@@ -47,9 +49,18 @@ namespace AMDownloader
             if (!cboDestination.Items.Contains(ApplicationPaths.DownloadsFolder))
                 cboDestination.Items.Add(ApplicationPaths.DownloadsFolder);
 
-            if (Directory.Exists(Settings.Default.LastSavedLocation) && !cboDestination.Items.Contains(Settings.Default.LastSavedLocation))
+            if (!cboDestination.Items.Contains(Settings.Default.LastSavedLocation))
             {
                 cboDestination.Items.Add(Settings.Default.LastSavedLocation);
+            }
+
+            if (Settings.Default.LastSavedLocation.Trim().Length > 0)
+            {
+                cboDestination.Text = Settings.Default.LastSavedLocation;
+            }
+            else
+            {
+                cboDestination.Text = ApplicationPaths.DownloadsFolder;
             }
 
             txtUrl.Focus();
@@ -63,6 +74,15 @@ namespace AMDownloader
         private void btnBrowse_Click(object sender, RoutedEventArgs e)
         {
             System.Windows.Forms.FolderBrowserDialog dlg = new System.Windows.Forms.FolderBrowserDialog();
+
+            if (Directory.Exists(cboDestination.Text))
+            {
+                dlg.SelectedPath = cboDestination.Text;
+            }
+            else
+            {
+                dlg.SelectedPath = ApplicationPaths.DownloadsFolder;
+            }
 
             if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
@@ -107,8 +127,9 @@ namespace AMDownloader
             if (Settings.Default.RememberLastSavedLocation)
             {
                 Settings.Default.LastSavedLocation = cboDestination.Text;
-                Settings.Default.Save();
             }
+
+            Settings.Default.Save();
         }
     }
 }

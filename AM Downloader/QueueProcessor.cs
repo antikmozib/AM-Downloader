@@ -20,7 +20,7 @@ namespace AMDownloader
     class QueueProcessor
     {
         #region Fields
-        private const int DEFAULT_MAX_PARALLEL_DOWNLOADS = 2;
+        private const int DEFAULT_MAX_PARALLEL_DOWNLOADS = 5;
         private readonly SemaphoreSlim _semaphore;
         private BlockingCollection<IQueueable> _queueList;
         private CancellationTokenSource _ctsCancel;
@@ -81,37 +81,6 @@ namespace AMDownloader
             _ctsCancel = null;
             _ctCancel = default;
         }
-
-        private void RecreateQueue(params IQueueable[] itemsOnTop)
-        {
-            _ctsCancel?.Cancel();
-
-            var tempList = new BlockingCollection<IQueueable>();
-
-            foreach (var item in itemsOnTop)
-                tempList.Add(item);
-
-            while (_queueList.Count > 0)
-            {
-                IQueueable item;
-
-                if (_queueList.TryTake(out item))
-                {
-                    if (itemsOnTop.Contains(item))
-                        continue;
-                    else
-                        tempList.Add(item);
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            var disposeList = _queueList;
-            _queueList = tempList;
-            disposeList.Dispose();
-        }
         #endregion // Private methods
 
         #region Public methods
@@ -131,10 +100,9 @@ namespace AMDownloader
         }
 
         // Consumer
-        public async Task StartAsync(int numStreams = 5, params IQueueable[] firstItems)
+        public async Task StartAsync(int numStreams = 5)
         {
             if (_ctsCancel != null) return;
-            if (firstItems != null) RecreateQueue(firstItems);
 
             await ProcessQueueAsync(numStreams);
         }

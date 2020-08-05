@@ -1,220 +1,123 @@
-﻿<Window
-    x:Class="AMDownloader.MainWindow"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
-    mc:Ignorable="d" 
-    Title="AM Downloader"
-    Height="450" 
-    MinHeight="270"
-    Width="1000" 
-    MinWidth="600"
-    WindowStartupLocation="CenterScreen" Closing="Window_Closing" Icon="/app.ico">
+﻿<Window x:Class="AMDownloader.MainWindow" 
+        xmlns:local="clr-namespace:AMDownloader" 
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+        xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity" 
+        xmlns:properties="clr-namespace:AMDownloader.Properties" 
+        mc:Ignorable="d"         
+        Title="AM Downloader" 
+        Height="{Binding Source={x:Static properties:Settings.Default}, Path=MainWindowHeight, Mode=TwoWay}" 
+        MinHeight="270" 
+        Width="{Binding Source={x:Static properties:Settings.Default}, Path=MainWindowWidth, Mode=TwoWay}" 
+        MinWidth="600" 
+        WindowStartupLocation="CenterScreen" 
+        Closing="Window_Closing" 
+        Icon="/app.ico">
+    <Window.Resources>
+        <local:ProgressBarVisibilityConverter x:Key="ProgressBarVisbilityConverter" />
+    </Window.Resources>
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Closing">
             <i:InvokeCommandAction Command="{Binding WindowClosingCommand, Mode=OneTime}" />
         </i:EventTrigger>
-    </i:Interaction.Triggers>    
+    </i:Interaction.Triggers>
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File" TabIndex="9">
-                <MenuItem
-                    Command="{Binding ClearFinishedDownloadsCommand}"
-                    Header="Clear finished downloads"/>
-                <MenuItem 
-                    Header="_Options"
-                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
-                    Command="{Binding OptionsCommand}"/>
-                <Separator/>
+                <MenuItem Command="{Binding ClearFinishedDownloadsCommand}" Header="Clear finished downloads" />
+                <MenuItem Header="_Options" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType={x:Type Window}}}" Command="{Binding OptionsCommand}" />
+                <Separator />
                 <MenuItem x:Name="menuExit" Header="E_xit" Click="menuExit_Click" />
             </MenuItem>
             <MenuItem Header="_Help" TabIndex="10">
                 <MenuItem x:Name="menuAbout" Header="_About" Click="menuAbout_Click" />
             </MenuItem>
-        </Menu>        
+        </Menu>
         <ToolBarTray DockPanel.Dock="Top">
             <ToolBar>
-                <Button 
-                    Padding="10"
-                    Content="&#xF067; Add"
-                    FontFamily="{StaticResource FontAwesome}"
-                    x:Name="btnAdd"
-                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
-                    Command="{Binding AddCommand}" TabIndex="2"  />
-                <Button
-                    CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
-                    Command="{Binding RemoveFromListCommand}"
-                    Padding="10" x:Name="btnRemove"
-                    Content="&#xF068; Remove"
-                    FontFamily="{StaticResource FontAwesome}" TabIndex="3" />
+                <Button Padding="10" Content="&#xF067; Add" FontFamily="{StaticResource FontAwesome}" x:Name="btnAdd" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType={x:Type Window}}}" Command="{Binding AddCommand}" TabIndex="2" />
+                <Button CommandParameter="{Binding SelectedItems, ElementName=lvDownload}" Command="{Binding RemoveFromListCommand}" Padding="10" x:Name="btnRemove" Content="&#xF068; Remove" FontFamily="{StaticResource FontAwesome}" TabIndex="3" />
                 <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
-                <Button
-                    Padding="10"
-                    Content="&#xF04B; Start"
-                    FontFamily="{StaticResource FontAwesome}"
-                    x:Name="btnStart"
-                    CommandParameter="{Binding Path=SelectedItems, ElementName=lvDownload}"
-                    Command="{Binding StartCommand}" TabIndex="4"  />
-                <Button
-                    Padding="10"
-                    Content="&#xF04C; Pause"
-                    FontFamily="{StaticResource FontAwesome}"
-                    x:Name="btnPause"
-                    CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
-                    Command="{Binding PauseCommand}" TabIndex="5" />
-                <Button
-                    Padding="10"
-                    Content="&#xF00D; Cancel"
-                    FontFamily="{StaticResource FontAwesome}"
-                    x:Name="btnCancel"
-                    CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
-                    Command="{Binding CancelCommand}" TabIndex="6"  />
+                <Button Padding="10" Content="&#xF04B; Start" FontFamily="{StaticResource FontAwesome}" x:Name="btnStart" CommandParameter="{Binding Path=SelectedItems, ElementName=lvDownload}" Command="{Binding StartCommand}" TabIndex="4" />
+                <Button Padding="10" Content="&#xF04C; Pause" FontFamily="{StaticResource FontAwesome}" x:Name="btnPause" CommandParameter="{Binding SelectedItems, ElementName=lvDownload}" Command="{Binding PauseCommand}" TabIndex="5" />
+                <Button Padding="10" Content="&#xF00D; Cancel" FontFamily="{StaticResource FontAwesome}" x:Name="btnCancel" CommandParameter="{Binding SelectedItems, ElementName=lvDownload}" Command="{Binding CancelCommand}" TabIndex="6" />
                 <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
-                <Button
-                    Padding="10"
-                    Content="&#xF04B; Start Queue"
-                    FontFamily="{StaticResource FontAwesome}"
-                    x:Name="btnStartQueue"
-                    Command="{Binding StartQueueCommand}" CommandParameter="{Binding SelectedItems, ElementName=lvDownload}" TabIndex="7" />
-                <Button
-                    Padding="10"
-                    Content="&#xF04D; Stop Queue"
-                    FontFamily="{StaticResource FontAwesome}"
-                    x:Name="btnCancelQueue"
-                    Command="{Binding StopQueueCommand}" TabIndex="8" />
+                <Button Padding="10" Content="&#xF04B; Start Queue" FontFamily="{StaticResource FontAwesome}" x:Name="btnStartQueue" Command="{Binding StartQueueCommand}" CommandParameter="{Binding SelectedItems, ElementName=lvDownload}" TabIndex="7" />
+                <Button Padding="10" Content="&#xF04D; Stop Queue" FontFamily="{StaticResource FontAwesome}" x:Name="btnCancelQueue" Command="{Binding StopQueueCommand}" TabIndex="8" />
             </ToolBar>
         </ToolBarTray>
         <DockPanel DockPanel.Dock="Bottom">
             <StatusBar>
-                <StatusBarItem Margin="5 3 15 5" DockPanel.Dock="Left">
-                    <TextBlock Text="{Binding StatusDownloading}"/>
-                </StatusBarItem>
-                <StatusBarItem Margin="0 3 0 5" DockPanel.Dock="Left">
-                    <TextBlock Text="{Binding StatusQueued}"/>
+                <StatusBarItem Margin="5 3 15 5">
+                    <TextBlock>
+                        <TextBlock.Text>
+                            <MultiBinding StringFormat="{}{0} item(s) downloading&#x09;{1} item(s) queued">
+                                <Binding Path="DownloadingCount" />
+                                <Binding Path="QueuedCount" />
+                            </MultiBinding>
+                        </TextBlock.Text>
+                    </TextBlock>
                 </StatusBarItem>
                 <StatusBarItem Margin="0 3 5 5" DockPanel.Dock="Right" HorizontalAlignment="Right">
-                    <TextBlock Text="{Binding StatusSpeed}" FontWeight="Bold"/>
+                    <TextBlock Text="{Binding TotalSpeed}" FontWeight="Bold" />
                 </StatusBarItem>
             </StatusBar>
         </DockPanel>
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="150"/>
-                <ColumnDefinition Width="auto"/>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="150" />
+                <ColumnDefinition Width="auto" />
+                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <TreeView x:Name="tvCategories" TabIndex="0">
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="SelectedItemChanged">
-                        <i:InvokeCommandAction Command="{Binding CategoryChangedCommand}" CommandParameter="{Binding ElementName=tvCategories, Path=SelectedItem}"/>
+                        <i:InvokeCommandAction Command="{Binding CategoryChangedCommand}" CommandParameter="{Binding ElementName=tvCategories, Path=SelectedItem}" />
                     </i:EventTrigger>
                 </i:Interaction.Triggers>
-                <TreeView.Resources>                   
+                <TreeView.Resources>
                     <ControlTemplate TargetType="TreeViewItem" x:Key="QueuedTemplate">
-                        <StackPanel
-                            Height="25"
-                            Orientation="Horizontal" 
-                            Background="{TemplateBinding Background}">
-                            <Ellipse
-                                Margin="5 0 5 0"
-                                Width="12"
-                                Height="12"
-                                Fill="SandyBrown"/>
-                            <TextBlock
-                                VerticalAlignment="Center" 
-                                Text="{Binding}"/>
+                        <StackPanel Height="25" Orientation="Horizontal" Background="{TemplateBinding Background}">
+                            <Ellipse Margin="5 0 5 0" Width="12" Height="12" Fill="SandyBrown" />
+                            <TextBlock VerticalAlignment="Center" Text="{Binding}" />
                         </StackPanel>
                     </ControlTemplate>
                     <ControlTemplate TargetType="TreeViewItem" x:Key="DownloadTemplate">
-                        <StackPanel
-                            Height="25"
-                            Background="{TemplateBinding Background}"                            
-                            Orientation="Horizontal">
-                            <Ellipse
-                                Margin="5 0 5 0"
-                                Width="12"
-                                Height="12"
-                                Fill="LimeGreen"/>
-                            <TextBlock
-                                VerticalAlignment="Center"
-                                Text="{Binding}"/>
+                        <StackPanel Height="25" Background="{TemplateBinding Background}" Orientation="Horizontal">
+                            <Ellipse Margin="5 0 5 0" Width="12" Height="12" Fill="LimeGreen" />
+                            <TextBlock VerticalAlignment="Center" Text="{Binding}" />
                         </StackPanel>
                     </ControlTemplate>
                     <ControlTemplate TargetType="TreeViewItem" x:Key="AllTemplate">
-                        <StackPanel
-                            Height="25"
-                            Background="{TemplateBinding Background}"
-                            Orientation="Horizontal">
-                            <Ellipse
-                                Margin="5 0 5 0"
-                                Width="12"
-                                Height="12"
-                                Fill="DarkSlateBlue"/>
-                            <TextBlock
-                                VerticalAlignment="Center"
-                                Text="{Binding}"/>
+                        <StackPanel Height="25" Background="{TemplateBinding Background}" Orientation="Horizontal">
+                            <Ellipse Margin="5 0 5 0" Width="12" Height="12" Fill="DarkSlateBlue" />
+                            <TextBlock VerticalAlignment="Center" Text="{Binding}" />
                         </StackPanel>
                     </ControlTemplate>
                     <ControlTemplate TargetType="TreeViewItem" x:Key="ReadyTemplate">
-                        <StackPanel
-                            Height="25"
-                            Background="{TemplateBinding Background}"
-                            Orientation="Horizontal">
-                            <Ellipse
-                                Margin="5 0 5 0"
-                                Width="12"
-                                Height="12"
-                                Fill="LightSeaGreen"/>
-                            <TextBlock
-                                VerticalAlignment="Center" 
-                                Text="{Binding}"/>
+                        <StackPanel Height="25" Background="{TemplateBinding Background}" Orientation="Horizontal">
+                            <Ellipse Margin="5 0 5 0" Width="12" Height="12" Fill="LightSeaGreen" />
+                            <TextBlock VerticalAlignment="Center" Text="{Binding}" />
                         </StackPanel>
                     </ControlTemplate>
                     <ControlTemplate TargetType="TreeViewItem" x:Key="PausedTemplate">
-                        <StackPanel 
-                            Height="25"
-                            Background="{TemplateBinding Background}"                            
-                            Orientation="Horizontal">
-                            <Ellipse
-                                Margin="5 0 5 0"
-                                Width="12"
-                                Height="12"
-                                Fill="Gold"/>
-                            <TextBlock
-                                VerticalAlignment="Center"
-                                Text="{Binding}"/>
+                        <StackPanel Height="25" Background="{TemplateBinding Background}" Orientation="Horizontal">
+                            <Ellipse Margin="5 0 5 0" Width="12" Height="12" Fill="Gold" />
+                            <TextBlock VerticalAlignment="Center" Text="{Binding}" />
                         </StackPanel>
                     </ControlTemplate>
                     <ControlTemplate TargetType="TreeViewItem" x:Key="ErrorTemplate">
-                        <StackPanel
-                            Height="25"
-                            Background="{TemplateBinding Background}"
-                            Orientation="Horizontal">
-                            <Ellipse
-                                Margin="5 0 5 0"
-                                Width="12"
-                                Height="12"
-                                Fill="Red"/>
-                            <TextBlock
-                                VerticalAlignment="Center"
-                                Text="{Binding}"/>
+                        <StackPanel Height="25" Background="{TemplateBinding Background}" Orientation="Horizontal">
+                            <Ellipse Margin="5 0 5 0" Width="12" Height="12" Fill="Red" />
+                            <TextBlock VerticalAlignment="Center" Text="{Binding}" />
                         </StackPanel>
                     </ControlTemplate>
                     <ControlTemplate TargetType="TreeViewItem" x:Key="FinishedTemplate">
-                        <StackPanel
-                            Height="25"
-                            Background="{TemplateBinding Background}"
-                            Orientation="Horizontal">
-                            <Ellipse
-                                Margin="5 0 5 0"
-                                Width="12"
-                                Height="12"
-                                Fill="LightSlateGray"/>
-                            <TextBlock
-                                VerticalAlignment="Center"
-                                Text="{Binding}"/>
+                        <StackPanel Height="25" Background="{TemplateBinding Background}" Orientation="Horizontal">
+                            <Ellipse Margin="5 0 5 0" Width="12" Height="12" Fill="LightSlateGray" />
+                            <TextBlock VerticalAlignment="Center" Text="{Binding}" />
                         </StackPanel>
                     </ControlTemplate>
                 </TreeView.Resources>
@@ -222,61 +125,57 @@
                     <Style TargetType="{x:Type TreeViewItem}">
                         <Style.Triggers>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="PowderBlue"/>
-                                <Setter Property="FontWeight" Value="Bold"/>
+                                <Setter Property="Background" Value="PowderBlue" />
+                                <Setter Property="FontWeight" Value="Bold" />
                             </Trigger>
                             <DataTrigger Binding="{Binding}" Value="Downloading">
-                                <Setter Property="Template" Value="{StaticResource DownloadTemplate}"/>
+                                <Setter Property="Template" Value="{StaticResource DownloadTemplate}" />
                             </DataTrigger>
                             <DataTrigger Binding="{Binding}" Value="Queued">
-                                <Setter Property="Template" Value="{StaticResource QueuedTemplate}"/>
+                                <Setter Property="Template" Value="{StaticResource QueuedTemplate}" />
                             </DataTrigger>
                             <DataTrigger Binding="{Binding}" Value="All">
-                                <Setter Property="Template" Value="{StaticResource AllTemplate}"/>
-                                <Setter Property="IsSelected" Value="True"/>
+                                <Setter Property="Template" Value="{StaticResource AllTemplate}" />
+                                <Setter Property="IsSelected" Value="True" />
                             </DataTrigger>
                             <DataTrigger Binding="{Binding}" Value="Ready">
-                                <Setter Property="Template" Value="{StaticResource ReadyTemplate}"/>
+                                <Setter Property="Template" Value="{StaticResource ReadyTemplate}" />
                             </DataTrigger>
                             <DataTrigger Binding="{Binding}" Value="Paused">
-                                <Setter Property="Template" Value="{StaticResource PausedTemplate}"/>
+                                <Setter Property="Template" Value="{StaticResource PausedTemplate}" />
                             </DataTrigger>
                             <DataTrigger Binding="{Binding}" Value="Error">
-                                <Setter Property="Template" Value="{StaticResource ErrorTemplate}"/>
+                                <Setter Property="Template" Value="{StaticResource ErrorTemplate}" />
                             </DataTrigger>
                             <DataTrigger Binding="{Binding}" Value="Finished">
-                                <Setter Property="Template" Value="{StaticResource FinishedTemplate}"/>
+                                <Setter Property="Template" Value="{StaticResource FinishedTemplate}" />
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
-                </TreeView.ItemContainerStyle>                
+                </TreeView.ItemContainerStyle>
             </TreeView>
-            <GridSplitter Grid.Column="1" Width="3" HorizontalAlignment="Stretch"/>
-            <ListView
-                x:Name="lvDownload" TabIndex="1" Grid.Column="2">
+            <GridSplitter Grid.Column="1" Width="3" HorizontalAlignment="Stretch" />
+            <ListView x:Name="lvDownload" TabIndex="1" Grid.Column="2">
                 <ListView.ContextMenu>
                     <ContextMenu>
-                        <MenuItem Header="Open" Command="{Binding OpenCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                        <MenuItem Header="Open containing folder" Command="{Binding OpenContainingFolderCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                        <MenuItem Header="Copy link to clipboard" Command="{Binding CopyLinkToClipboardCommand}" CommandParameter="{Binding PlacementTarget.SelectedItem, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                        <Separator/>
-                        <MenuItem Header="Start" Command="{Binding StartCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                        <MenuItem Header="Pause" Command="{Binding PauseCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                        <MenuItem Header="Cancel" Command="{Binding CancelCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                        <Separator/>
-                        <MenuItem Header="Enqueue" Command="{Binding EnqueueCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                        <MenuItem Header="Dequeue" Command="{Binding DequeueCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                        <Separator/>
-                        <MenuItem Header="Remove from list" Command="{Binding RemoveFromListCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                        <MenuItem Header="Delete file" Command="{Binding DeleteFileCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                        <MenuItem Header="Open" Command="{Binding OpenCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                        <MenuItem Header="Open containing folder" Command="{Binding OpenContainingFolderCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                        <MenuItem Header="Copy link to clipboard" Command="{Binding CopyLinkToClipboardCommand}" CommandParameter="{Binding PlacementTarget.SelectedItem, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                        <Separator />
+                        <MenuItem Header="Start" Command="{Binding StartCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                        <MenuItem Header="Pause" Command="{Binding PauseCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                        <MenuItem Header="Cancel" Command="{Binding CancelCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                        <Separator />
+                        <MenuItem Header="Enqueue" Command="{Binding EnqueueCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                        <MenuItem Header="Dequeue" Command="{Binding DequeueCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                        <Separator />
+                        <MenuItem Header="Remove from list" Command="{Binding RemoveFromListCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                        <MenuItem Header="Delete file" Command="{Binding DeleteFileCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
                     </ContextMenu>
                 </ListView.ContextMenu>
                 <ListView.Resources>
                     <DataTemplate x:Key="Templ">
-                        <TextBlock
-                            HorizontalAlignment="Left" 
-                            Text="{Binding}" 
-                            Padding="5"/>
+                        <TextBlock HorizontalAlignment="Left" Text="{Binding}" Padding="5" />
                     </DataTemplate>
                     <Style x:Key="LeftAligned" TargetType="{x:Type GridViewColumnHeader}">
                         <Setter Property="HorizontalContentAlignment" Value="Left" />
@@ -295,115 +194,53 @@
                 </ListView.ItemContainerStyle>
                 <ListView.View>
                     <GridView>
-                        <GridViewColumn
-                            HeaderTemplate="{StaticResource Templ}"
-                            HeaderContainerStyle="{StaticResource LeftAligned}"
-                            Header="Name"
-                            DisplayMemberBinding="{Binding Name}"
-                            Width="250"/>
-                        <GridViewColumn
-                            HeaderTemplate="{StaticResource Templ}"
-                            HeaderContainerStyle="{StaticResource RightAligned}"
-                            Header="Status"
-                            Width="100">
+                        <GridViewColumn HeaderTemplate="{StaticResource Templ}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="Name" DisplayMemberBinding="{Binding Name}" Width="250" />
+                        <GridViewColumn HeaderTemplate="{StaticResource Templ}" HeaderContainerStyle="{StaticResource RightAligned}" Header="Status" Width="100">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <TextBlock
-                                            Text="{Binding Status}"
-                                            HorizontalAlignment="Right" />
+                                        <TextBlock Text="{Binding Status}" HorizontalAlignment="Right" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn
-                            HeaderTemplate="{StaticResource Templ}"  
-                            HeaderContainerStyle="{StaticResource MiddleAligned}" 
-                            Header="Progress" 
-                            Width="100">                            
+                        <GridViewColumn HeaderTemplate="{StaticResource Templ}" HeaderContainerStyle="{StaticResource MiddleAligned}" Header="Progress" Width="100">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <ProgressBar
-                                            x:Name="pbProgress"
-                                            VerticalAlignment="Stretch"
-                                            HorizontalAlignment="Stretch"
-                                            Minimum="0"
-                                            Maximum="100"
-                                            Value="{Binding Progress, Mode=OneWay}" />
-                                        <TextBlock
-                                            Text="{Binding Value, ElementName=pbProgress, StringFormat=\{0:0\}%}" 
-                                            HorizontalAlignment="Center"
-                                            VerticalAlignment="Center" />
+                                        <ProgressBar x:Name="pbProgress" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Minimum="0" Maximum="100" Value="{Binding Progress, Mode=OneWay}" />
+                                        <TextBlock Text="{Binding Value, ElementName=pbProgress, StringFormat=\{0:0\}%}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn
-                            HeaderTemplate="{StaticResource Templ}"
-                            HeaderContainerStyle="{StaticResource RightAligned}"
-                            Header="Downloaded"
-                            Width="100">
+                        <GridViewColumn HeaderTemplate="{StaticResource Templ}" HeaderContainerStyle="{StaticResource RightAligned}" Header="Downloaded" Width="100">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <TextBlock
-                                            Text="{Binding PrettyDownloadedSoFar}"
-                                            HorizontalAlignment="Right" />
+                                        <TextBlock Text="{Binding PrettyDownloadedSoFar}" HorizontalAlignment="Right" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn 
-                            HeaderTemplate="{StaticResource Templ}" 
-                            HeaderContainerStyle="{StaticResource LeftAligned}" 
-                            Header="Size" 
-                            DisplayMemberBinding="{Binding PrettyTotalSize}" 
-                            Width="75" />
-                        <GridViewColumn 
-                            HeaderTemplate="{StaticResource Templ}" 
-                            HeaderContainerStyle="{StaticResource RightAligned}" 
-                            Header="Speed" 
-                            Width="75">
+                        <GridViewColumn HeaderTemplate="{StaticResource Templ}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="Size" DisplayMemberBinding="{Binding PrettyTotalSize}" Width="75" />
+                        <GridViewColumn HeaderTemplate="{StaticResource Templ}" HeaderContainerStyle="{StaticResource RightAligned}" Header="Speed" Width="75">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <TextBlock 
-                                            Text="{Binding PrettySpeed}" 
-                                            HorizontalAlignment="Right" />
+                                        <TextBlock Text="{Binding PrettySpeed}" HorizontalAlignment="Right" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn 
-                            HeaderTemplate="{StaticResource Templ}" 
-                            HeaderContainerStyle="{StaticResource LeftAligned}" 
-                            Header="Connections"
-                            Width="100"
-                            DisplayMemberBinding="{Binding NumberOfActiveStreams}"/>
-                        <GridViewColumn 
-                            HeaderTemplate="{StaticResource Templ}" 
-                            HeaderContainerStyle="{StaticResource LeftAligned}" 
-                            Header="Location" 
-                            DisplayMemberBinding="{Binding PrettyDestination}"
-                            Width="250" />
-                        <GridViewColumn 
-                            HeaderTemplate="{StaticResource Templ}" 
-                            HeaderContainerStyle="{StaticResource LeftAligned}" 
-                            Header="URL" 
-                            DisplayMemberBinding="{Binding Url}"
-                            Width="400" />
-                        <GridViewColumn 
-                            HeaderTemplate="{StaticResource Templ}" 
-                            HeaderContainerStyle="{StaticResource RightAligned}" 
-                            Header="Created" 
-                            Width="150">
+                        <GridViewColumn HeaderTemplate="{StaticResource Templ}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="Connections" Width="100" DisplayMemberBinding="{Binding NumberOfActiveStreams}" />
+                        <GridViewColumn HeaderTemplate="{StaticResource Templ}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="Location" DisplayMemberBinding="{Binding PrettyDestination}" Width="250" />
+                        <GridViewColumn HeaderTemplate="{StaticResource Templ}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="URL" DisplayMemberBinding="{Binding Url}" Width="400" />
+                        <GridViewColumn HeaderTemplate="{StaticResource Templ}" HeaderContainerStyle="{StaticResource RightAligned}" Header="Created" Width="150">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <TextBlock 
-                                            Text="{Binding PrettyDateCreated}" 
-                                            HorizontalAlignment="Right" />
+                                        <TextBlock Text="{Binding PrettyDateCreated}" HorizontalAlignment="Right" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>

@@ -1,45 +1,46 @@
-﻿<Window x:Class="AMDownloader.OptionsWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"        
-        xmlns:local="clr-namespace:AMDownloader"
-        xmlns:properties="clr-namespace:AMDownloader.Properties"
-        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
-        mc:Ignorable="d"
-        Title="Options" WindowStartupLocation="CenterOwner" WindowStyle="ToolWindow" ShowInTaskbar="False" SizeToContent="WidthAndHeight" ResizeMode="NoResize" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
+﻿<Window x:Class="AMDownloader.OptionsWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:local="clr-namespace:AMDownloader" xmlns:properties="clr-namespace:AMDownloader.Properties" xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit" mc:Ignorable="d" Title="Options" WindowStartupLocation="CenterOwner" WindowStyle="ToolWindow" ShowInTaskbar="False" SizeToContent="WidthAndHeight" ResizeMode="NoResize" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
     <Grid Margin="10">
         <Grid.RowDefinitions>
-            <RowDefinition Height="auto"/>
-            <RowDefinition Height="auto"/>
-            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
         <StackPanel>
             <DockPanel>
-                <Label Content="Max _parallel downloads (1-10)*:"/>
-                <TextBox VerticalAlignment="Center" HorizontalContentAlignment="Right" DockPanel.Dock="Right" Text="{Binding Source={x:Static properties:Settings.Default}, Path=MaxParallelDownloads}" Width="50" IsTabStop="True"/>
-                <Separator DockPanel.Dock="Right" Opacity="0"/>
+                <TextBlock Text="Max parallel downloads (1-10)*:" />
+                <TextBox VerticalAlignment="Center" HorizontalContentAlignment="Right" DockPanel.Dock="Right" Text="{Binding Source={x:Static properties:Settings.Default}, Path=MaxParallelDownloads}" Width="50" IsTabStop="True" />
+                <Separator DockPanel.Dock="Right" Opacity="0" />
             </DockPanel>
-            <Separator Margin="0 5 0 5"/>
+            <Separator Margin="0 5 0 5" />
             <DockPanel>
-                <Label Content="Max parallel _connections per download (1-5):"/>
-                <TextBox VerticalAlignment="Center" HorizontalContentAlignment="Right" DockPanel.Dock="Right" Text="{Binding Source={x:Static properties:Settings.Default}, Path=MaxConnectionsPerDownload}" Width="50" IsTabStop="True"/>
-                <Separator DockPanel.Dock="Right" Opacity="0"/>
+                <TextBlock Text="Max parallel connections per download (1-5):" />
+                <TextBox VerticalAlignment="Center" HorizontalContentAlignment="Right" DockPanel.Dock="Right" Text="{Binding Source={x:Static properties:Settings.Default}, Path=MaxConnectionsPerDownload}" Width="50" IsTabStop="True" />
+                <Separator DockPanel.Dock="Right" Opacity="0" />
             </DockPanel>
-            <Separator Margin="0 5 0 5"/>
+            <Separator Margin="0 5 0 5" />
+            <DockPanel>
+                <TextBlock>
+                        Max speed per download (KB/s):
+                        <LineBreak />
+                        (Enter 0 to turn off limiter)
+                </TextBlock>
+                <TextBox VerticalAlignment="Center" HorizontalContentAlignment="Right" DockPanel.Dock="Right" Text="{Binding Source={x:Static properties:Settings.Default}, Path=MaxDownloadSpeed}" Width="50" IsTabStop="True" />
+                <Separator DockPanel.Dock="Right" Opacity="0" />
+            </DockPanel>
+            <Separator Margin="0 5 0 5" />
             <StackPanel>
-                <CheckBox Content="Clear finished downloads on exit" IsChecked="{Binding Source={x:Static properties:Settings.Default}, Path=ClearFinishedOnExit}"/>
-                <Separator Margin="0 5 0 5"/>
-                <CheckBox Content="Remember last download location" IsChecked="{Binding Source={x:Static properties:Settings.Default}, Path=RememberLastSavedLocation}"/>
-            </StackPanel>            
+                <CheckBox Content="Clear finished downloads on exit" IsChecked="{Binding Source={x:Static properties:Settings.Default}, Path=ClearFinishedOnExit}" />
+                <Separator Margin="0 5 0 5" />
+                <CheckBox Content="Remember last download location" IsChecked="{Binding Source={x:Static properties:Settings.Default}, Path=RememberLastSavedLocation}" />
+            </StackPanel>
         </StackPanel>
         <StackPanel Margin="0 20 0 5" Grid.Row="1">
             <TextBlock Text="*Requires application restart" />
         </StackPanel>
         <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Height="25" Grid.Row="2">
-            <Button x:Name="btnOK" Content="_OK" Width="80" Margin="0 0 5 0" IsDefault="True" Click="btnOK_Click" Command="{Binding SaveSettingsCommand}"/>
-            <Button Content="_Cancel" Width="80" Margin="0 0 5 0" IsCancel="True"/>
-            <Button x:Name="btnReset" Content="_Reset" Width="80" Command="{Binding ResetSettingsCommand}" Click="btnReset_Click"/>
+            <Button x:Name="btnOK" Content="_OK" Width="80" Margin="0 0 5 0" IsDefault="True" Click="btnOK_Click" Command="{Binding SaveSettingsCommand}" />
+            <Button Content="_Cancel" Width="80" Margin="0 0 5 0" IsCancel="True" />
+            <Button x:Name="btnReset" Content="_Reset" Width="80" Command="{Binding ResetSettingsCommand}" Click="btnReset_Click" />
         </StackPanel>
     </Grid>
 </Window>
