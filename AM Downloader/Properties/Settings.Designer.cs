@@ -25,7 +25,7 @@ namespace AMDownloader.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("3")]
+        [global::System.Configuration.DefaultSettingValueAttribute("5")]
         public int MaxParallelDownloads {
             get {
                 return ((int)(this["MaxParallelDownloads"]));
@@ -37,7 +37,7 @@ namespace AMDownloader.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("2")]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
         public int MaxConnectionsPerDownload {
             get {
                 return ((int)(this["MaxConnectionsPerDownload"]));

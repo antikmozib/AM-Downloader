@@ -20,37 +20,6 @@ namespace AMDownloader
             public static string DownloadsFolder { get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads"); } }
         }
 
-        public static string PrettifySize(long? num)
-        {
-            if (num == null)
-            {
-                return string.Empty;
-            }
-
-            double result = 0;
-            double.TryParse(num.ToString(), out result);
-
-            if (result > GIGABYTE)
-            {
-                result = Math.Round(result / GIGABYTE, 3);
-                return result.ToString("#0.000") + " GB";
-            }
-            else if (result > MEGABYTE)
-            {
-                result = Math.Round(result / MEGABYTE, 2);
-                return result.ToString("#0.00") + " MB";
-            }
-            else if (result > KILOBYTE)
-            {
-                result = Math.Round(result / KILOBYTE, 0);
-                return result.ToString() + " KB";
-            }
-            else
-            {
-                return result.ToString() + " B";
-            }
-        }
-
         public static string GetValidFilename(string defaultFilename)
         {
             string path = Path.GetDirectoryName(defaultFilename);
@@ -64,25 +33,6 @@ namespace AMDownloader
             };
 
             return result;
-        }
-
-        public static string PrettifySpeed(long? speed)
-        {
-            if (speed > 1024)
-            {
-                return ((double)speed / 1024).ToString("#0.00") + " MB/s";
-            }
-            else
-            {
-                if (speed == null)
-                {
-                    return string.Empty;
-                }
-                else
-                {
-                    return speed.ToString() + " KB/s";
-                }
-            }
         }
     }
 }

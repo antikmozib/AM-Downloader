@@ -21,7 +21,6 @@ namespace AMDownloader
         private const int DEFAULT_NUM_STREAMS = 1;
         private CancellationTokenSource _ctsPaused, _ctsCanceled;
         private CancellationToken _ctPause, _ctCancel;
-        private readonly IProgress<int> _progressReporter;
         private HttpClient _httpClient;
         private TaskCompletionSource<DownloadStatus> _taskCompletion;
         private readonly RefreshCollectionDelegate _refreshCollectionDel;
@@ -31,9 +30,10 @@ namespace AMDownloader
         #region Events
         public event PropertyChangedEventHandler PropertyChanged;
         public event EventHandler DownloadStarted;
+        public event EventHandler DownloadStopped;
+        public event EventHandler DownloadEnqueued;
+        public event EventHandler DownloadDequeued;
         public event EventHandler DownloadFinished;
-        public event EventHandler ItemEnqueued;
-        public event EventHandler ItemDequeued;
         protected virtual void OnEventOccurrence(EventHandler handler)
         {
             handler?.Invoke(this, null);
@@ -58,9 +58,6 @@ namespace AMDownloader
         public bool SupportsResume { get; private set; }
         public long? Speed { get; private set; } // nullable
         public DateTime DateCreated { get; private set; }
-        public string PrettySpeed { get { return PrettifySpeed(this.Speed); } }
-        public string PrettyTotalSize { get { return PrettifySize(this.TotalBytesToDownload); } }
-        public string PrettyDownloadedSoFar { get { return PrettifySize(this.TotalBytesCompleted); } }
         public string PrettyDestination
         {
             get { return new FileInfo(this.Destination).Directory.Name + " (" + this.Destination.Substring(0, this.Destination.Length - this.Name.Length - 1) + ")"; }
@@ -77,28 +74,23 @@ namespace AMDownloader
             string destination,
             bool enqueue,
             EventHandler downloadStartedEventHandler,
+            EventHandler downloadStoppedEventHandler,
+            EventHandler downloadEnqueuedEventHandler,
+            EventHandler downloadDequeuedEventHandler,
             EventHandler downloadFinishedEventHandler,
-            EventHandler itemEnqueuedEventHandler,
-            EventHandler itemDequeuedEventHandler,
             PropertyChangedEventHandler propertyChangedEventHandler,
             RefreshCollectionDelegate refreshCollectionDelegate)
         {
             _httpClient = httpClient;
-            PropertyChanged += propertyChangedEventHandler;
-            DownloadStarted += downloadStartedEventHandler;
-            DownloadFinished += downloadFinishedEventHandler;
-            ItemEnqueued += itemEnqueuedEventHandler;
-            ItemDequeued += itemDequeuedEventHandler;
-
             _refreshCollectionDel = refreshCollectionDelegate;
             _semaphore = new SemaphoreSlim(1);
 
-            // capture sync context
-            _progressReporter = new Progress<int>((value) =>
-            {
-                this.Progress = value;
-                AnnouncePropertyChanged(nameof(this.Progress));
-            });
+            PropertyChanged += propertyChangedEventHandler;
+            DownloadStarted += downloadStartedEventHandler;
+            DownloadStopped += downloadStoppedEventHandler;
+            DownloadEnqueued += downloadEnqueuedEventHandler;
+            DownloadDequeued += downloadDequeuedEventHandler;
+            DownloadFinished += downloadFinishedEventHandler;
 
             this.Name = Path.GetFileName(destination);
             this.Url = url;
@@ -129,7 +121,7 @@ namespace AMDownloader
                 if (File.Exists(this.Destination) && this.Status != DownloadStatus.Error)
                 {
                     this.TotalBytesCompleted = new FileInfo(this.Destination).Length;
-                    AnnouncePropertyChanged(nameof(this.PrettyDownloadedSoFar));
+                    AnnouncePropertyChanged(nameof(this.TotalBytesCompleted));
 
                     if (!this.IsBeingDownloaded)
                     {
@@ -147,6 +139,7 @@ namespace AMDownloader
                         }
                         AnnouncePropertyChanged(nameof(this.Progress));
                         AnnouncePropertyChanged(nameof(this.Status));
+                        if (this.Status == DownloadStatus.Finished) OnEventOccurrence(DownloadFinished);
                     }
                 }
             });
@@ -176,7 +169,6 @@ namespace AMDownloader
                         this.SupportsResume = false;
                     }
                     AnnouncePropertyChanged(nameof(this.TotalBytesToDownload));
-                    AnnouncePropertyChanged(nameof(this.PrettyTotalSize));
                 }
             }
             catch
@@ -244,10 +236,9 @@ namespace AMDownloader
                 if (this.SupportsResume && (this.TotalBytesCompleted >= nextProgressReportAt || this.TotalBytesCompleted > this.TotalBytesToDownload - progressReportingFrequency))
                 {
                     double progress = (double)this.TotalBytesCompleted / (double)this.TotalBytesToDownload * 100;
-                    //_progressReporter.Report((int)progress);
                     this.Progress = (int)progress;
                     AnnouncePropertyChanged(nameof(this.Progress));
-                    AnnouncePropertyChanged(nameof(this.PrettyDownloadedSoFar));
+                    AnnouncePropertyChanged(nameof(this.TotalBytesCompleted));
                     nextProgressReportAt += progressReportingFrequency;
                 }
                 semaphoreProgress.Release();
@@ -275,7 +266,7 @@ namespace AMDownloader
             {
                 // Set up the requests
                 long startPos = 0;
-                if (bytesDownloadedPreviously > 0) startPos = bytesDownloadedPreviously + 1;
+                if (bytesDownloadedPreviously > 0) startPos = bytesDownloadedPreviously;
 
                 for (int i = 0; i < numStreams; i++)
                 {
@@ -299,7 +290,7 @@ namespace AMDownloader
 
             if (this.SupportsResume)
             {
-                /*if (this.TotalBytesToDownload <= KILOBYTE)
+                if (this.TotalBytesToDownload <= KILOBYTE)
                 {
                     progressReportingFrequency = (this.TotalBytesToDownload ?? 0) / 1;
                 }
@@ -310,10 +301,9 @@ namespace AMDownloader
                 else
                 {
                     progressReportingFrequency = (this.TotalBytesToDownload ?? 0) / 100;
-                }*/
-                progressReportingFrequency = (this.TotalBytesToDownload??0) / 100;
-                if (progressReportingFrequency < bufferLength) progressReportingFrequency = bufferLength;
+                }
 
+                if (progressReportingFrequency < bufferLength) progressReportingFrequency = bufferLength;
                 nextProgressReportAt = progressReportingFrequency;
             }
 
@@ -478,8 +468,8 @@ namespace AMDownloader
                 }
             }
 
-            AnnouncePropertyChanged(nameof(this.PrettyDownloadedSoFar));
-            AnnouncePropertyChanged(nameof(this.PrettyTotalSize));
+            AnnouncePropertyChanged(nameof(this.TotalBytesCompleted));
+            AnnouncePropertyChanged(nameof(this.TotalBytesToDownload));
 
             _ctsCanceled = null;
             _ctsPaused = null;
@@ -505,7 +495,6 @@ namespace AMDownloader
                         double speed = (this.BytesDownloadedThisSession / 1024) / (sw.ElapsedMilliseconds / 1000);
                         this.Speed = (long)speed;
                         AnnouncePropertyChanged(nameof(this.Speed));
-                        AnnouncePropertyChanged(nameof(this.PrettySpeed));
                     }
                     await Task.Delay(1000);
                 }
@@ -514,7 +503,6 @@ namespace AMDownloader
                 sw.Stop();
                 this.Speed = null;
                 AnnouncePropertyChanged(nameof(this.Speed));
-                AnnouncePropertyChanged(nameof(this.PrettySpeed));
             });
         }
 
@@ -562,7 +550,7 @@ namespace AMDownloader
             this.Status = DownloadStatus.Queued;
             AnnouncePropertyChanged(nameof(this.Status));
             AnnouncePropertyChanged(nameof(this.IsQueued));
-            OnEventOccurrence(ItemEnqueued);
+            OnEventOccurrence(DownloadEnqueued);
         }
 
         public void Dequeue()
@@ -571,7 +559,7 @@ namespace AMDownloader
             {
                 this.IsQueued = false;
                 AnnouncePropertyChanged(nameof(this.IsQueued));
-                OnEventOccurrence(ItemDequeued);
+                OnEventOccurrence(DownloadDequeued);
 
                 if (this.Status == DownloadStatus.Queued)
                 {
@@ -646,7 +634,7 @@ namespace AMDownloader
             this.TotalBytesCompleted = bytesAlreadyDownloaded;
             this.Status = DownloadStatus.Downloading;
             AnnouncePropertyChanged(nameof(this.Status));
-            AnnouncePropertyChanged(nameof(this.PrettyDownloadedSoFar));
+            AnnouncePropertyChanged(nameof(this.TotalBytesCompleted));
             OnEventOccurrence(DownloadStarted);
 
             await _taskCompletion.Task;
@@ -673,8 +661,8 @@ namespace AMDownloader
 
             this.Status = _taskCompletion.Task.Result;
             AnnouncePropertyChanged(nameof(this.Status));
-            OnEventOccurrence(DownloadFinished);
-
+            OnEventOccurrence(DownloadStopped);
+            if (this.Status == DownloadStatus.Finished) OnEventOccurrence(DownloadFinished);
             if (_refreshCollectionDel != null) _refreshCollectionDel.Invoke();
         }
 
@@ -737,10 +725,10 @@ namespace AMDownloader
                         try
                         {
                             File.Delete(this.Destination);
-                            _progressReporter.Report(0);
+                            this.Progress = 0;
                             this.TotalBytesCompleted = 0;
                             AnnouncePropertyChanged(nameof(this.TotalBytesCompleted));
-                            AnnouncePropertyChanged(nameof(this.PrettyDownloadedSoFar));
+                            AnnouncePropertyChanged(nameof(this.Progress));
                         }
                         catch (IOException)
                         {

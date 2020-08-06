@@ -17,6 +17,13 @@ namespace AMDownloader
         {
             InitializeComponent();
 
+            if (Settings.Default.LastSavedLocation.Trim().Length == 0)
+            {
+                Settings.Default.LastSavedLocation = ApplicationPaths.DownloadsFolder;
+            }
+            cboDestination.Items.Add(Settings.Default.LastSavedLocation);
+            cboDestination.Text = Settings.Default.LastSavedLocation;
+
             if (Directory.Exists(ApplicationPaths.SavedLocationsHistory))
             {
                 XmlSerializer writer = new XmlSerializer(typeof(SerializableDownloadPathHistory));
@@ -46,23 +53,6 @@ namespace AMDownloader
                 }
             }
 
-            if (!cboDestination.Items.Contains(ApplicationPaths.DownloadsFolder))
-                cboDestination.Items.Add(ApplicationPaths.DownloadsFolder);
-
-            if (!cboDestination.Items.Contains(Settings.Default.LastSavedLocation))
-            {
-                cboDestination.Items.Add(Settings.Default.LastSavedLocation);
-            }
-
-            if (Settings.Default.LastSavedLocation.Trim().Length > 0)
-            {
-                cboDestination.Text = Settings.Default.LastSavedLocation;
-            }
-            else
-            {
-                cboDestination.Text = ApplicationPaths.DownloadsFolder;
-            }
-
             txtUrl.Focus();
         }
 
@@ -86,8 +76,9 @@ namespace AMDownloader
 
             if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                cboDestination.Items.Add(dlg.SelectedPath);
-                cboDestination.SelectedIndex = cboDestination.Items.Count - 1;
+                if (!cboDestination.Items.Contains(dlg.SelectedPath))
+                    cboDestination.Items.Add(dlg.SelectedPath);
+                cboDestination.Text = dlg.SelectedPath;
             }
         }
 
@@ -115,10 +106,14 @@ namespace AMDownloader
 
             foreach (var item in cboDestination.Items)
             {
+                var path = item.ToString();
+
+                if (path.Trim().Length == 0) continue;
+
                 var model = new SerializableDownloadPathHistory();
                 var streamWriter = new StreamWriter(Path.Combine(ApplicationPaths.SavedLocationsHistory, ++i + ".xml"));
 
-                model.path = item.ToString();
+                model.path = path;
 
                 writer.Serialize(streamWriter, model);
                 streamWriter.Close();

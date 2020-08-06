@@ -22,19 +22,19 @@ namespace AMDownloader
 {
     class DownloaderViewModel : INotifyPropertyChanged
     {
-        private const int PROPERTY_CHANGE_SPEED = 100; // 1 property update per this time (ms)
         private readonly ICollectionView _collectionView;
         private ClipboardObserver _clipboardService;
         private object _lockDownloadItemsList;
         private object _lockDownloadingCount;
         private object _lockQueuedCount;
-        private SemaphoreSlim _semaphorePropertyChanged;
+        private object _lockFinishedCount;
         private SemaphoreSlim _semaphoreCollectionRefresh;
 
         public string Status { get; private set; }
         public string TotalSpeed { get; private set; }
         public int DownloadingCount { get; private set; }
         public int QueuedCount { get; private set; }
+        public int FinishedCount { get; private set; }
 
         public HttpClient Client;
         public ObservableCollection<DownloaderObjectModel> DownloadItemsList;
@@ -76,12 +76,13 @@ namespace AMDownloader
             _collectionView = CollectionViewSource.GetDefaultView(DownloadItemsList);
             _clipboardService = new ClipboardObserver();
             _lockDownloadItemsList = DownloadItemsList;
-            _lockQueuedCount = QueuedCount;
-            _lockDownloadingCount = DownloadingCount;
-            _semaphorePropertyChanged = new SemaphoreSlim(1);
+            _lockQueuedCount = this.QueuedCount;
+            _lockDownloadingCount = this.DownloadingCount;
+            _lockFinishedCount = this.FinishedCount;
             _semaphoreCollectionRefresh = new SemaphoreSlim(1);
-            QueuedCount = 0;
-            DownloadingCount = 0;
+            this.QueuedCount = 0;
+            this.DownloadingCount = 0;
+            this.FinishedCount = 0;
 
             AddCommand = new RelayCommand(Add);
             StartCommand = new RelayCommand(Start, Start_CanExecute);
@@ -128,10 +129,11 @@ namespace AMDownloader
                                     sItem.Url,
                                     sItem.Destination,
                                     sItem.IsQueued,
-                                    Item_DownloadStarted,
-                                    Item_DownloadFinished,
-                                    Item_Enqueued,
-                                    Item_Dequeued,
+                                    Download_Started,
+                                    Download_Stopped,
+                                    Download_Enqueued,
+                                    Download_Dequeued,
+                                    Download_Finished,
                                     OnDownloadPropertyChange,
                                     RefreshCollection);
 
@@ -637,72 +639,7 @@ namespace AMDownloader
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
         }
 
-        public void OnDownloadPropertyChange(object sender, PropertyChangedEventArgs e)
-        {
-            /* Task.Run(async () =>
-               {
-                   await _semaphorePropertyChanged.WaitAsync();
-
-                   Stopwatch sw = new Stopwatch();
-                   sw.Start();
-
-                   string totalspeed = string.Empty;
-                   long t_speed = 0;
-                   IEnumerable<long> T_speed = null;
-                   int countDownloading = 0;
-                   int countQueued = 0;
-                   int countFinished = 0;
-                   string status = "Ready";
-
-                   //Monitor.Enter(_lock);
-
-                   try
-                   {
-                       //copy = DownloadItemsList.ToList<DownloaderObjectModel>();
-                   }
-                   catch
-                   {
-                       _semaphorePropertyChanged.Release();
-                       return;
-                   }
-                   finally
-                   {
-                       //Monitor.Exit(_lock);
-                   }
-
-                   T_speed = from item in DownloadItemsList where item.IsBeingDownloaded select item.Speed ?? 0;
-                   countDownloading = (from item in DownloadItemsList where item.IsBeingDownloaded select item).Count();
-                   countQueued = (from item in DownloadItemsList where item.IsQueued select item).Count();
-                   countFinished = (from item in DownloadItemsList where item.IsCompleted select item).Count();
-
-                   if (T_speed?.Count() > 0)
-                   {
-                       foreach (long speed in T_speed) t_speed += speed;
-                       if (t_speed > 0) totalspeed = PrettifySpeed(t_speed);
-                   }
-
-                   if (countDownloading > 0) status = countDownloading + " item(s) downloading";
-                   if (countQueued > 0) status += "\t" + countQueued + " item(s) queued";
-                   if (countFinished > 0) status += "\t" + countFinished + " item(s) finished";
-
-                   if (this.Status != status)
-                   {
-                       this.Status = status;
-                       AnnouncePropertyChanged(nameof(this.Status));
-                   }
-
-                   if (this.TotalSpeed != totalspeed)
-                   {
-                       this.TotalSpeed = totalspeed;
-                       AnnouncePropertyChanged(nameof(this.TotalSpeed));
-                   }
-
-                   sw.Stop();
-                   //if (sw.ElapsedMilliseconds < PROPERTY_CHANGE_SPEED) await Task.Delay(PROPERTY_CHANGE_SPEED - (int)sw.ElapsedMilliseconds);
-
-                   _semaphorePropertyChanged.Release();
-               }); */
-        }
+        public void OnDownloadPropertyChange(object sender, PropertyChangedEventArgs e) { }
 
         internal void RefreshCollection()
         {
@@ -723,66 +660,80 @@ namespace AMDownloader
                 finally
                 {
                     sw.Stop();
-                    if (sw.ElapsedMilliseconds < 1000) await Task.Delay(1000 - (int)sw.ElapsedMilliseconds);
+                    if (sw.ElapsedMilliseconds < 900) await Task.Delay(1000 - (int)sw.ElapsedMilliseconds);
                     _semaphoreCollectionRefresh.Release();
                 }
             });
         }
 
-        public void Item_DownloadStarted(object sender, EventArgs e)
+        public void Download_Started(object sender, EventArgs e)
         {
             Monitor.Enter(_lockDownloadingCount);
             try
             {
                 this.DownloadingCount++;
-                AnnouncePropertyChanged(nameof(this.DownloadingCount));
             }
             finally
             {
                 Monitor.Exit(_lockDownloadingCount);
             }
+            AnnouncePropertyChanged(nameof(this.DownloadingCount));
         }
 
-        public void Item_DownloadFinished(object sender, EventArgs e)
+        public void Download_Stopped(object sender, EventArgs e)
         {
             Monitor.Enter(_lockDownloadingCount);
             try
             {
                 this.DownloadingCount--;
-                AnnouncePropertyChanged(nameof(this.DownloadingCount));
             }
             finally
             {
                 Monitor.Exit(_lockDownloadingCount);
             }
+            AnnouncePropertyChanged(nameof(this.DownloadingCount));
         }
 
-        public void Item_Enqueued(object sender, EventArgs e)
+        public void Download_Enqueued(object sender, EventArgs e)
         {
             Monitor.Enter(_lockQueuedCount);
             try
             {
                 this.QueuedCount++;
-                AnnouncePropertyChanged(nameof(this.QueuedCount));
             }
             finally
             {
                 Monitor.Exit(_lockQueuedCount);
             }
+            AnnouncePropertyChanged(nameof(this.QueuedCount));
         }
 
-        public void Item_Dequeued(object sender, EventArgs e)
+        public void Download_Dequeued(object sender, EventArgs e)
         {
             Monitor.Enter(_lockQueuedCount);
             try
             {
                 this.QueuedCount--;
-                AnnouncePropertyChanged(nameof(this.QueuedCount));
             }
             finally
             {
                 Monitor.Exit(_lockQueuedCount);
             }
+            AnnouncePropertyChanged(nameof(this.QueuedCount));
+        }
+
+        public void Download_Finished(object sender, EventArgs e)
+        {
+            Monitor.Enter(_lockFinishedCount);
+            try
+            {
+                this.FinishedCount++;
+            }
+            finally
+            {
+                Monitor.Exit(_lockFinishedCount);
+            }
+            AnnouncePropertyChanged(nameof(this.FinishedCount));
         }
     }
 }

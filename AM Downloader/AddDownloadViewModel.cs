@@ -9,6 +9,8 @@ using System.Windows.Input;
 using System.Windows;
 using AMDownloader.Properties;
 using static AMDownloader.Common;
+using System.Diagnostics;
+using System.Windows.Xps;
 
 namespace AMDownloader
 {
@@ -66,7 +68,7 @@ namespace AMDownloader
             this.Urls = string.Empty;
 
             var clipText = _clipboardService.GetText();
-            if (clipText.Contains("http")) this.Urls += clipText.Trim();
+            if (clipText.Contains("http") || clipText.Contains("ftp")) this.Urls += clipText.Trim() + "\n";
         }
 
         public void Preview(object obj)
@@ -135,16 +137,17 @@ namespace AMDownloader
                 url,
                 fileName,
                 AddToQueue,
-                _parentViewModel.Item_DownloadStarted,
-                _parentViewModel.Item_DownloadFinished,
-                _parentViewModel.Item_Enqueued,
-                _parentViewModel.Item_Dequeued,
+                _parentViewModel.Download_Started,
+                _parentViewModel.Download_Stopped,
+                _parentViewModel.Download_Enqueued,
+                _parentViewModel.Download_Dequeued,
+                _parentViewModel.Download_Finished,
                 _parentViewModel.OnDownloadPropertyChange,
                 _parentViewModel.RefreshCollection);
 
             if (AddToQueue) _parentViewModel.QueueProcessor.Add(item);
 
-            // Do not start more than 5 downloads at the same time
+            // Do not start more than MaxParallelDownloads at the same time
             if (!AddToQueue && StartDownload)
             {
                 if (counter < Settings.Default.MaxParallelDownloads)
@@ -199,12 +202,17 @@ namespace AMDownloader
 
             while (!_ctsClipboard.Token.IsCancellationRequested)
             {
-                string clip = _clipboardService.GetText();
-                if ((clip.Contains("http") || clip.Contains("ftp")) && !this.Urls.Contains(clip))
+                List<string> source = Regex.Replace(_clipboardService.GetText(), @"\t|\r", "").Split('\n').ToList();
+                List<string> dest =Regex.Replace(this.Urls,@"\r|\t","").Split('\n').ToList();
+                foreach (var url in source)
                 {
-                    this.Urls += clip.Trim() + '\n';
-                    AnnouncePropertyChanged(nameof(this.Urls));
+                    var f_url = Regex.Replace(url, @"\n", "");
+                    if ((f_url.Contains("http") || f_url.Contains("ftp")) && !dest.Contains(f_url))
+                    {
+                        this.Urls += f_url + '\n';
+                    }
                 }
+                AnnouncePropertyChanged(nameof(this.Urls));
                 await Task.Delay(1000);
             }
 
@@ -214,6 +222,12 @@ namespace AMDownloader
         protected void AnnouncePropertyChanged(string prop)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
+        }
+
+        private bool UrlExists(string url)
+        {
+            List<string> list = this.Urls.Split('\n').ToList<string>();
+            return list.Contains(url);
         }
     }
 }

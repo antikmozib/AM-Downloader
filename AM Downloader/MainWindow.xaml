@@ -1,22 +1,8 @@
-﻿<Window x:Class="AMDownloader.MainWindow" 
-        xmlns:local="clr-namespace:AMDownloader" 
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-        xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity" 
-        xmlns:properties="clr-namespace:AMDownloader.Properties" 
-        mc:Ignorable="d"         
-        Title="AM Downloader" 
-        Height="{Binding Source={x:Static properties:Settings.Default}, Path=MainWindowHeight, Mode=TwoWay}" 
-        MinHeight="270" 
-        Width="{Binding Source={x:Static properties:Settings.Default}, Path=MainWindowWidth, Mode=TwoWay}" 
-        MinWidth="600" 
-        WindowStartupLocation="CenterScreen" 
-        Closing="Window_Closing" 
-        Icon="/app.ico">
+﻿<Window x:Class="AMDownloader.MainWindow" xmlns:local="clr-namespace:AMDownloader" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity" xmlns:properties="clr-namespace:AMDownloader.Properties" mc:Ignorable="d" Title="AM Downloader" Height="{Binding Source={x:Static properties:Settings.Default}, Path=MainWindowHeight, Mode=TwoWay}" MinHeight="270" Width="{Binding Source={x:Static properties:Settings.Default}, Path=MainWindowWidth, Mode=TwoWay}" MinWidth="600" WindowStartupLocation="CenterScreen" Closing="Window_Closing" Icon="/app.ico">
     <Window.Resources>
         <local:ProgressBarVisibilityConverter x:Key="ProgressBarVisbilityConverter" />
+        <local:DownloaderSizeConverter x:Key="DownloaderSizeConverter" />
+        <local:DownloaderSpeedConverter x:Key="DownloaderSpeedConverter" />
     </Window.Resources>
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Closing">
@@ -53,9 +39,10 @@
                 <StatusBarItem Margin="5 3 15 5">
                     <TextBlock>
                         <TextBlock.Text>
-                            <MultiBinding StringFormat="{}{0} item(s) downloading&#x09;{1} item(s) queued">
+                            <MultiBinding StringFormat="{}{0} item(s) downloading&#x09;{1} item(s) queued&#x09;{2} item(s) finished">
                                 <Binding Path="DownloadingCount" />
                                 <Binding Path="QueuedCount" />
+                                <Binding Path="FinishedCount" />
                             </MultiBinding>
                         </TextBlock.Text>
                     </TextBlock>
@@ -174,7 +161,7 @@
                     </ContextMenu>
                 </ListView.ContextMenu>
                 <ListView.Resources>
-                    <DataTemplate x:Key="Templ">
+                    <DataTemplate x:Key="HeaderTemplate">
                         <TextBlock HorizontalAlignment="Left" Text="{Binding}" Padding="5" />
                     </DataTemplate>
                     <Style x:Key="LeftAligned" TargetType="{x:Type GridViewColumnHeader}">
@@ -194,8 +181,8 @@
                 </ListView.ItemContainerStyle>
                 <ListView.View>
                     <GridView>
-                        <GridViewColumn HeaderTemplate="{StaticResource Templ}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="Name" DisplayMemberBinding="{Binding Name}" Width="250" />
-                        <GridViewColumn HeaderTemplate="{StaticResource Templ}" HeaderContainerStyle="{StaticResource RightAligned}" Header="Status" Width="100">
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="Name" DisplayMemberBinding="{Binding Name}" Width="250" />
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource RightAligned}" Header="Status" Width="100">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
@@ -204,7 +191,7 @@
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn HeaderTemplate="{StaticResource Templ}" HeaderContainerStyle="{StaticResource MiddleAligned}" Header="Progress" Width="100">
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource MiddleAligned}" Header="Progress" Width="100">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
@@ -214,29 +201,29 @@
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn HeaderTemplate="{StaticResource Templ}" HeaderContainerStyle="{StaticResource RightAligned}" Header="Downloaded" Width="100">
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource RightAligned}" Header="Downloaded" Width="100">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <TextBlock Text="{Binding PrettyDownloadedSoFar}" HorizontalAlignment="Right" />
+                                        <TextBlock Text="{Binding TotalBytesCompleted, Converter={StaticResource DownloaderSizeConverter}}" HorizontalAlignment="Right" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn HeaderTemplate="{StaticResource Templ}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="Size" DisplayMemberBinding="{Binding PrettyTotalSize}" Width="75" />
-                        <GridViewColumn HeaderTemplate="{StaticResource Templ}" HeaderContainerStyle="{StaticResource RightAligned}" Header="Speed" Width="75">
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="Size" DisplayMemberBinding="{Binding TotalBytesToDownload, Converter={StaticResource DownloaderSizeConverter}}" Width="75" />
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource RightAligned}" Header="Speed" Width="75">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <TextBlock Text="{Binding PrettySpeed}" HorizontalAlignment="Right" />
+                                        <TextBlock Text="{Binding Speed, Converter={StaticResource DownloaderSpeedConverter}}" HorizontalAlignment="Right" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn HeaderTemplate="{StaticResource Templ}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="Connections" Width="100" DisplayMemberBinding="{Binding NumberOfActiveStreams}" />
-                        <GridViewColumn HeaderTemplate="{StaticResource Templ}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="Location" DisplayMemberBinding="{Binding PrettyDestination}" Width="250" />
-                        <GridViewColumn HeaderTemplate="{StaticResource Templ}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="URL" DisplayMemberBinding="{Binding Url}" Width="400" />
-                        <GridViewColumn HeaderTemplate="{StaticResource Templ}" HeaderContainerStyle="{StaticResource RightAligned}" Header="Created" Width="150">
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="Connections" Width="100" DisplayMemberBinding="{Binding NumberOfActiveStreams}" />
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="Location" DisplayMemberBinding="{Binding PrettyDestination}" Width="250" />
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="URL" DisplayMemberBinding="{Binding Url}" Width="400" />
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource RightAligned}" Header="Created" Width="150">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
