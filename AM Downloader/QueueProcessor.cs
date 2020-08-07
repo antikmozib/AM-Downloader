@@ -59,16 +59,14 @@ namespace AMDownloader
                 Task t = Task.Run(async () =>
                 {
                     _semaphore.Wait();
-                    if (!_ctCancel.IsCancellationRequested && item.IsQueued)
-                    {
-                        await item.StartAsync(numStreams);
-                    }
+                    if (!_ctCancel.IsCancellationRequested && item.IsQueued) await item.StartAsync(numStreams);
                     _semaphore.Release();
                 });
                 tasks.Add(t);
             }
 
             await Task.WhenAll(tasks.ToArray());
+
             foreach (var item in _itemsProcessing)
             {
                 if (!item.IsCompleted && !this.Contains(item))
@@ -88,19 +86,11 @@ namespace AMDownloader
         public void Add(IQueueable item)
         {
             if (_queueList.Contains(item)) return;
-
-            try
-            {
-                _queueList.TryAdd(item);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-            }
+            _queueList.TryAdd(item);
         }
 
         // Consumer
-        public async Task StartAsync(int numStreams = 5)
+        public async Task StartAsync(int numStreams)
         {
             if (_ctsCancel != null) return;
 

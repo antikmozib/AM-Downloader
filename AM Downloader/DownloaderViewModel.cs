@@ -3,7 +3,6 @@ using System.IO;
 using System.Linq;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Net.Http;
 using System.Threading;
@@ -22,6 +21,8 @@ namespace AMDownloader
 {
     class DownloaderViewModel : INotifyPropertyChanged
     {
+        #region Fields
+        private const int COLLECTION_REFRESH_INTERVAL = 250;
         private readonly ICollectionView _collectionView;
         private ClipboardObserver _clipboardService;
         private object _lockDownloadItemsList;
@@ -29,19 +30,26 @@ namespace AMDownloader
         private object _lockQueuedCount;
         private object _lockFinishedCount;
         private SemaphoreSlim _semaphoreCollectionRefresh;
+        #endregion // Fields
 
+        #region Properties
         public string Status { get; private set; }
         public string TotalSpeed { get; private set; }
         public int DownloadingCount { get; private set; }
         public int QueuedCount { get; private set; }
         public int FinishedCount { get; private set; }
-
         public HttpClient Client;
         public ObservableCollection<DownloaderObjectModel> DownloadItemsList;
         public ObservableCollection<Categories> CategoriesList;
         public QueueProcessor QueueProcessor;
         public event PropertyChangedEventHandler PropertyChanged;
+        public enum Categories
+        {
+            All, Ready, Queued, Downloading, Paused, Finished, Error
+        }
+        #endregion // Properties
 
+        #region Commands
         public ICommand AddCommand { get; private set; }
         public ICommand StartCommand { get; private set; }
         public ICommand RemoveFromListCommand { private get; set; }
@@ -59,17 +67,13 @@ namespace AMDownloader
         public ICommand DeleteFileCommand { get; private set; }
         public ICommand CopyLinkToClipboardCommand { get; private set; }
         public ICommand ClearFinishedDownloadsCommand { get; private set; }
+        #endregion // Commands
 
-        public enum Categories
-        {
-            All, Ready, Queued, Downloading, Paused, Finished, Error
-        }
-
+        #region Constructors
         public DownloaderViewModel()
         {
             Client = new HttpClient();
             Client.Timeout = new TimeSpan(0, 0, 0, 15, 0);
-
             DownloadItemsList = new ObservableCollection<DownloaderObjectModel>();
             CategoriesList = new ObservableCollection<Categories>();
             QueueProcessor = new QueueProcessor(Settings.Default.MaxParallelDownloads);
@@ -134,7 +138,7 @@ namespace AMDownloader
                                     Download_Enqueued,
                                     Download_Dequeued,
                                     Download_Finished,
-                                    OnDownloadPropertyChange,
+                                    Download_PropertyChanged,
                                     RefreshCollection);
 
                                 DownloadItemsList.Add(item);
@@ -144,10 +148,7 @@ namespace AMDownloader
                                     QueueProcessor.Add(item);
                                 }
                             }
-                            catch (Exception ex)
-                            {
-                                Debug.WriteLine(ex.Message);
-                            }
+                            catch { }
                         }
                     }
                 }
@@ -158,8 +159,10 @@ namespace AMDownloader
                 }
             }
         }
+        #endregion // Constructors
 
-        void CategoryChanged(object obj)
+        #region Private methods
+        internal void CategoryChanged(object obj)
         {
             if (obj == null) return;
 
@@ -221,7 +224,7 @@ namespace AMDownloader
             }
         }
 
-        void Start(object obj)
+        internal void Start(object obj)
         {
             if (obj == null) return;
 
@@ -237,7 +240,7 @@ namespace AMDownloader
             }
         }
 
-        public bool Start_CanExecute(object obj)
+        internal bool Start_CanExecute(object obj)
         {
             if (obj == null) return false;
 
@@ -259,7 +262,7 @@ namespace AMDownloader
             return false;
         }
 
-        void Pause(object obj)
+        internal void Pause(object obj)
         {
             if (obj == null) return;
 
@@ -269,7 +272,7 @@ namespace AMDownloader
                 item.Pause();
         }
 
-        public bool Pause_CanExecute(object obj)
+        internal bool Pause_CanExecute(object obj)
         {
             if (obj == null) return false;
 
@@ -282,7 +285,7 @@ namespace AMDownloader
             return false;
         }
 
-        void Cancel(object obj)
+        internal void Cancel(object obj)
         {
             if (obj == null) return;
 
@@ -292,7 +295,7 @@ namespace AMDownloader
                 item.Cancel();
         }
 
-        public bool Cancel_CanExecute(object obj)
+        internal bool Cancel_CanExecute(object obj)
         {
             if (obj == null) return false;
 
@@ -313,7 +316,7 @@ namespace AMDownloader
             return false;
         }
 
-        void RemoveFromList(object obj)
+        internal void RemoveFromList(object obj)
         {
             if (obj == null) return;
 
@@ -328,15 +331,28 @@ namespace AMDownloader
                     if (item.IsBeingDownloaded) item.Cancel();
                     if (item.IsQueued) item.Dequeue();
                     DownloadItemsList.Remove(item);
+                    if (item.Status == DownloadStatus.Finished)
+                    {
+                        Monitor.Enter(_lockFinishedCount);
+                        try
+                        {
+                            this.FinishedCount--;
+                        }
+                        finally
+                        {
+                            Monitor.Exit(_lockFinishedCount);
+                        }
+                    }
                 }
             }
             finally
             {
                 Monitor.Exit(_lockDownloadItemsList);
+                AnnouncePropertyChanged(nameof(this.FinishedCount));
             }
         }
 
-        public bool RemoveFromList_CanExecute(object obj)
+        internal bool RemoveFromList_CanExecute(object obj)
         {
             if (obj == null) return false;
 
@@ -346,7 +362,7 @@ namespace AMDownloader
             return true;
         }
 
-        void Add(object obj)
+        internal void Add(object obj)
         {
             Monitor.Enter(_lockDownloadItemsList);
             try
@@ -363,7 +379,7 @@ namespace AMDownloader
             }
         }
 
-        void Open(object obj)
+        internal void Open(object obj)
         {
             if (obj == null) return;
 
@@ -384,7 +400,7 @@ namespace AMDownloader
                 Process.Start("explorer.exe", "\"" + item.Destination + "\"");
         }
 
-        public bool Open_CanExecute(object obj)
+        internal bool Open_CanExecute(object obj)
         {
             if (obj == null) return false;
 
@@ -396,7 +412,7 @@ namespace AMDownloader
             return false;
         }
 
-        void OpenContainingFolder(object obj)
+        internal void OpenContainingFolder(object obj)
         {
             if (obj == null) return;
 
@@ -407,7 +423,7 @@ namespace AMDownloader
                 Process.Start("explorer.exe", "/select, \"\"" + item.Destination + "\"\"");
         }
 
-        bool OpenContainingFolder_CanExecute(object obj)
+        internal bool OpenContainingFolder_CanExecute(object obj)
         {
             if (obj == null) return false;
 
@@ -419,27 +435,27 @@ namespace AMDownloader
             return false;
         }
 
-        void StartQueue(object obj)
+        internal void StartQueue(object obj)
         {
             Task.Run(async () => await QueueProcessor.StartAsync(Settings.Default.MaxConnectionsPerDownload));
         }
 
-        public bool StartQueue_CanExecute(object obj)
+        internal bool StartQueue_CanExecute(object obj)
         {
             return (!QueueProcessor.IsBusy && QueueProcessor.Count() > 0);
         }
 
-        void StopQueue(object obj)
+        internal void StopQueue(object obj)
         {
             QueueProcessor.Stop();
         }
 
-        public bool StopQueue_CanExecute(object obj)
+        internal bool StopQueue_CanExecute(object obj)
         {
             return (obj != null || QueueProcessor.IsBusy);
         }
 
-        void WindowClosing(object obj)
+        internal void WindowClosing(object obj)
         {
             Monitor.Enter(_lockDownloadItemsList);
 
@@ -497,14 +513,14 @@ namespace AMDownloader
             }
         }
 
-        void ShowOptions(object obj)
+        internal void ShowOptions(object obj)
         {
             var win = new OptionsWindow();
             win.Owner = obj as Window;
             win.ShowDialog();
         }
 
-        void Enqueue(object obj)
+        internal void Enqueue(object obj)
         {
             if (obj == null) return;
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
@@ -522,7 +538,7 @@ namespace AMDownloader
             }
         }
 
-        bool Enqueue_CanExecute(object obj)
+        internal bool Enqueue_CanExecute(object obj)
         {
             if (obj == null) return false;
 
@@ -531,7 +547,7 @@ namespace AMDownloader
             return (from item in items where item.IsQueued == false where item.Status == DownloadStatus.Ready select item).Count<DownloaderObjectModel>() > 0;
         }
 
-        void Dequeue(object obj)
+        internal void Dequeue(object obj)
         {
             if (obj == null) return;
 
@@ -541,7 +557,7 @@ namespace AMDownloader
                 item.Dequeue();
         }
 
-        bool Dequeue_CanExecute(object obj)
+        internal bool Dequeue_CanExecute(object obj)
         {
             if (obj == null) return false;
 
@@ -553,7 +569,7 @@ namespace AMDownloader
             return false;
         }
 
-        void DeleteFile(object obj)
+        internal void DeleteFile(object obj)
         {
             if (obj == null) return;
 
@@ -569,10 +585,21 @@ namespace AMDownloader
                     try
                     {
                         FileSystem.DeleteFile(item.Destination, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
+                        if (item.Status == DownloadStatus.Finished)
+                        {
+                            Monitor.Enter(_lockFinishedCount);
+                            try
+                            {
+                                this.FinishedCount--;
+                            }
+                            finally
+                            {
+                                Monitor.Exit(_lockFinishedCount);
+                            }
+                        }
                     }
-                    catch (Exception ex)
+                    catch
                     {
-                        Debug.WriteLine(ex.Message);
                         continue;
                     }
                     finally
@@ -580,18 +607,17 @@ namespace AMDownloader
                         DownloadItemsList.Remove(item);
                     }
                 }
+
             }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-            }
+            catch { }
             finally
             {
                 Monitor.Exit(_lockDownloadItemsList);
+                AnnouncePropertyChanged(nameof(this.FinishedCount));
             }
         }
 
-        bool DeleteFile_CanExecute(object obj)
+        internal bool DeleteFile_CanExecute(object obj)
         {
             if (obj == null) return false;
 
@@ -602,20 +628,20 @@ namespace AMDownloader
             return false;
         }
 
-        void CopyLinkToClipboard(object obj)
+        internal void CopyLinkToClipboard(object obj)
         {
             if (obj == null) return;
             var item = obj as DownloaderObjectModel;
             _clipboardService.SetText(item.Url);
         }
 
-        bool CopyLinkToClipboard_CanExecute(object obj)
+        internal bool CopyLinkToClipboard_CanExecute(object obj)
         {
             if (obj == null) return false;
             return true;
         }
 
-        void ClearFinishedDownloads(object obj)
+        internal void ClearFinishedDownloads(object obj)
         {
             Monitor.Enter(_lockDownloadItemsList);
             try
@@ -625,12 +651,23 @@ namespace AMDownloader
                 foreach (var item in itemsFinished)
                 {
                     DownloadItemsList.Remove(item);
+
+                    Monitor.Enter(_lockFinishedCount);
+                    try
+                    {
+                        this.FinishedCount--;
+                    }
+                    finally
+                    {
+                        Monitor.Exit(_lockFinishedCount);
+                    }
                 }
             }
             finally
             {
                 Monitor.Exit(_lockDownloadItemsList);
                 RefreshCollection();
+                AnnouncePropertyChanged(nameof(this.FinishedCount));
             }
         }
 
@@ -639,34 +676,34 @@ namespace AMDownloader
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
         }
 
-        public void OnDownloadPropertyChange(object sender, PropertyChangedEventArgs e) { }
-
         internal void RefreshCollection()
         {
             Task.Run(async () =>
             {
-                await _semaphoreCollectionRefresh.WaitAsync();
-                Stopwatch sw = new Stopwatch();
-                sw.Start();
+                if (_semaphoreCollectionRefresh.CurrentCount == 0) return;
 
-                try
+                await _semaphoreCollectionRefresh.WaitAsync();
+
+                Stopwatch sw = new Stopwatch(); 
+                Application.Current?.Dispatcher?.Invoke(() =>
                 {
-                    Application.Current?.Dispatcher?.Invoke(() =>
-                    {
-                        _collectionView?.Refresh();
-                    });
-                }
-                catch { }
-                finally
-                {
-                    sw.Stop();
-                    if (sw.ElapsedMilliseconds < 900) await Task.Delay(1000 - (int)sw.ElapsedMilliseconds);
-                    _semaphoreCollectionRefresh.Release();
-                }
+                     sw.Start();
+                     _collectionView?.Refresh();
+                     sw.Stop();
+                });
+                if (sw.ElapsedMilliseconds < COLLECTION_REFRESH_INTERVAL)
+                    await Task.Delay(COLLECTION_REFRESH_INTERVAL - (int)sw.ElapsedMilliseconds);
+
+                _semaphoreCollectionRefresh.Release();
             });
         }
 
-        public void Download_Started(object sender, EventArgs e)
+        internal void Download_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+
+        }
+
+        internal void Download_Started(object sender, EventArgs e)
         {
             Monitor.Enter(_lockDownloadingCount);
             try
@@ -680,7 +717,7 @@ namespace AMDownloader
             AnnouncePropertyChanged(nameof(this.DownloadingCount));
         }
 
-        public void Download_Stopped(object sender, EventArgs e)
+        internal void Download_Stopped(object sender, EventArgs e)
         {
             Monitor.Enter(_lockDownloadingCount);
             try
@@ -694,7 +731,7 @@ namespace AMDownloader
             AnnouncePropertyChanged(nameof(this.DownloadingCount));
         }
 
-        public void Download_Enqueued(object sender, EventArgs e)
+        internal void Download_Enqueued(object sender, EventArgs e)
         {
             Monitor.Enter(_lockQueuedCount);
             try
@@ -708,7 +745,7 @@ namespace AMDownloader
             AnnouncePropertyChanged(nameof(this.QueuedCount));
         }
 
-        public void Download_Dequeued(object sender, EventArgs e)
+        internal void Download_Dequeued(object sender, EventArgs e)
         {
             Monitor.Enter(_lockQueuedCount);
             try
@@ -722,7 +759,7 @@ namespace AMDownloader
             AnnouncePropertyChanged(nameof(this.QueuedCount));
         }
 
-        public void Download_Finished(object sender, EventArgs e)
+        internal void Download_Finished(object sender, EventArgs e)
         {
             Monitor.Enter(_lockFinishedCount);
             try
@@ -735,5 +772,6 @@ namespace AMDownloader
             }
             AnnouncePropertyChanged(nameof(this.FinishedCount));
         }
+        #endregion // Private methods
     }
 }

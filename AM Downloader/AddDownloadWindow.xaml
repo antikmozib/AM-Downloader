@@ -30,7 +30,7 @@
             <TextBlock VerticalAlignment="Bottom" Text="Enter URL or pattern to add. You can enter multiple URLs on separate lines." />
             <CheckBox DockPanel.Dock="Right" x:Name="cbMonitorClipboard" Content="Monitor clipboard" IsChecked="{Binding Path=MonitorClipboard, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" VerticalAlignment="Center" HorizontalAlignment="Right" />
         </DockPanel>
-        <TextBox Padding="2" x:Name="txtUrl" Grid.Row="2" Text="{Binding Path=Urls, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="auto" Height="auto" TabIndex="0" ScrollViewer.CanContentScroll="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" AcceptsReturn="True" />
+        <TextBox Padding="2" x:Name="txtUrl" Grid.Row="2" Text="{Binding Path=Urls, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="auto" Height="auto" TabIndex="0" ScrollViewer.CanContentScroll="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" AcceptsReturn="True" PreviewMouseWheel="txtUrl_PreviewMouseWheel" />
         <DockPanel Grid.Row="4" HorizontalAlignment="Stretch">
             <TextBlock Margin="0 0 5 0" VerticalAlignment="Center" DockPanel.Dock="Left" Text="Save to:" />
             <Button x:Name="btnBrowse" DockPanel.Dock="Right" Content="Browse" Width="80" Click="btnBrowse_Click" />

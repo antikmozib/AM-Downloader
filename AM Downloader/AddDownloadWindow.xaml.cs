@@ -4,6 +4,7 @@ using System.Xml.Serialization;
 using static AMDownloader.SerializableModels;
 using static AMDownloader.Common;
 using AMDownloader.Properties;
+using System.Windows.Input;
 
 namespace AMDownloader
 {
@@ -125,6 +126,23 @@ namespace AMDownloader
             }
 
             Settings.Default.Save();
+        }
+
+        private void txtUrl_PreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
+        {
+            if (Keyboard.Modifiers != ModifierKeys.Control)
+            {
+                return;
+            }
+            e.Handled = true;
+            if (e.Delta > 0)
+            {
+                ++txtUrl.FontSize;
+            }
+            else
+            {
+                --txtUrl.FontSize;
+            }
         }
     }
 }

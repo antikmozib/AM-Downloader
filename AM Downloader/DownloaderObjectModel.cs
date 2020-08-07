@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
@@ -15,16 +16,32 @@ namespace AMDownloader
 {
     public delegate void RefreshCollectionDelegate();
 
+    class InvalidUrlException : Exception
+    {
+        public InvalidUrlException()
+        {
+        }
+        public InvalidUrlException(string message)
+            : base(message)
+        {
+        }
+        public InvalidUrlException(string message, Exception inner)
+            : base(message, inner)
+        {
+        }
+    }
+
     class DownloaderObjectModel : INotifyPropertyChanged, IQueueable
     {
         #region Fields
+        private const int BUFFER_LENGTH = 256;
         private const int DEFAULT_NUM_STREAMS = 1;
+        private const string PART_EXTENSION = ".AMDownload";
         private CancellationTokenSource _ctsPaused, _ctsCanceled;
         private CancellationToken _ctPause, _ctCancel;
         private HttpClient _httpClient;
         private TaskCompletionSource<DownloadStatus> _taskCompletion;
         private readonly RefreshCollectionDelegate _refreshCollectionDel;
-        private readonly SemaphoreSlim _semaphore;
         #endregion // Fields
 
         #region Events
@@ -46,7 +63,7 @@ namespace AMDownloader
             Ready, Queued, Downloading, Paused, Pausing, Finished, Error, Cancelling, Connecting, Merging
         }
         public bool IsQueued { get; private set; }
-        public bool IsBeingDownloaded { get { return (_ctsPaused != null); } }
+        public bool IsBeingDownloaded => _ctsPaused != null;
         public string Name { get; private set; }
         public string Url { get; private set; }
         public string Destination { get; private set; }
@@ -83,7 +100,6 @@ namespace AMDownloader
         {
             _httpClient = httpClient;
             _refreshCollectionDel = refreshCollectionDelegate;
-            _semaphore = new SemaphoreSlim(1);
 
             PropertyChanged += propertyChangedEventHandler;
             DownloadStarted += downloadStartedEventHandler;
@@ -115,7 +131,7 @@ namespace AMDownloader
                     this.TotalBytesToDownload = null;
                     this.Status = DownloadStatus.Error;
                 }
-                AnnouncePropertyChanged(nameof(this.Status));
+                //AnnouncePropertyChanged(nameof(this.Status));
             }).ContinueWith(t =>
             {
                 if (File.Exists(this.Destination) && this.Status != DownloadStatus.Error)
@@ -151,7 +167,7 @@ namespace AMDownloader
         {
             if (!await this.IsValidUrlAsync())
             {
-                throw new Exception();
+                throw new InvalidUrlException("The requested url was not found: " + this.Url);
             }
 
             try
@@ -171,9 +187,9 @@ namespace AMDownloader
                     AnnouncePropertyChanged(nameof(this.TotalBytesToDownload));
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                throw new Exception();
+                throw ex;
             }
         }
 
@@ -188,7 +204,7 @@ namespace AMDownloader
                     {
                         using (var sourceStream = new FileStream(file.FullName, FileMode.Open))
                         {
-                            byte[] buffer = new byte[1024];
+                            byte[] buffer = new byte[BUFFER_LENGTH];
 
                             while (true)
                             {
@@ -208,7 +224,6 @@ namespace AMDownloader
                         file.Delete();
                     }
                 }
-
             }
             catch (Exception ex)
             {
@@ -218,13 +233,11 @@ namespace AMDownloader
 
         private async Task<DownloadStatus> ProcessStreamsAsync(int numStreams, long bytesDownloadedPreviously = 0)
         {
-            const int bufferLength = (int)Common.KILOBYTE;
             var status = DownloadStatus.Error;
             List<HttpRequestMessage> requests = new List<HttpRequestMessage>();
             List<Task> tasks = new List<Task>();
-            long progressReportingFrequency = bufferLength;
-            long nextProgressReportAt = bufferLength;
-            object _lock = new object();
+            long progressReportingFrequency = BUFFER_LENGTH;
+            long nextProgressReportAt = BUFFER_LENGTH;
             SemaphoreSlim semaphoreProgress = new SemaphoreSlim(1);
 
             IProgress<int> streamProgress = new Progress<int>(async (value) =>
@@ -303,22 +316,15 @@ namespace AMDownloader
                     progressReportingFrequency = (this.TotalBytesToDownload ?? 0) / 100;
                 }
 
-                if (progressReportingFrequency < bufferLength) progressReportingFrequency = bufferLength;
+                if (progressReportingFrequency < BUFFER_LENGTH) progressReportingFrequency = BUFFER_LENGTH;
                 nextProgressReportAt = progressReportingFrequency;
             }
-
-            this.NumberOfActiveStreams = 0;
-            AnnouncePropertyChanged(nameof(this.NumberOfActiveStreams));
 
             // Set up the tasks to process the requests
             foreach (var request in requests)
             {
                 Task t = Task.Run(async () =>
                 {
-                    var sw = new Stopwatch();
-
-                    this.NumberOfActiveStreams += 1;
-                    AnnouncePropertyChanged(nameof(this.NumberOfActiveStreams));
                     try
                     {
                         if (!Directory.Exists(Path.GetDirectoryName(this.Destination)))
@@ -334,23 +340,23 @@ namespace AMDownloader
                         }
                         else
                         {
-                            destinationStream = new FileStream(this.Destination + ".part" + requests.IndexOf(request), FileMode.Append);
+                            destinationStream = new FileStream(this.Destination + ".part" + requests.IndexOf(request) + PART_EXTENSION, FileMode.Append);
                         }
 
                         using (var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
                         using (var sourceStream = await response.Content.ReadAsStreamAsync())
                         using (var binaryWriter = new BinaryWriter(destinationStream))
                         {
-                            byte[] buffer = new byte[bufferLength];
-                            int t_bytes = 0;
+                            byte[] buffer = new byte[BUFFER_LENGTH];
+                            int s_bytesReceived = 0;
                             int read;
-
+                            var stopWatch = new Stopwatch();
                             while (true)
                             {
                                 if (linkedToken.IsCancellationRequested)
                                     break;
 
-                                sw.Start();
+                                stopWatch.Start();
 
                                 if ((read = await sourceStream.ReadAsync(buffer, 0, buffer.Length)) == 0)
                                 {
@@ -362,26 +368,24 @@ namespace AMDownloader
                                     byte[] data = new byte[read];
                                     buffer.ToList().CopyTo(0, data, 0, read);
                                     binaryWriter.Write(data, 0, data.Length);
-                                    t_bytes += read;
+                                    s_bytesReceived += read;
                                     streamProgress.Report(data.Length);
                                 }
 
-                                if (sw.ElapsedMilliseconds > 0 && Settings.Default.MaxDownloadSpeed > 0)
+                                stopWatch.Stop();
+
+                                if (Settings.Default.MaxDownloadSpeed > 0 && stopWatch.ElapsedMilliseconds > 0)
                                 {
-                                    sw.Stop();
+                                    int s_bytesExpected = (int)((double)(Settings.Default.MaxDownloadSpeed * 1024) / 1000 * stopWatch.ElapsedMilliseconds);
+                                    if (s_bytesReceived > s_bytesExpected)
                                     {
-                                        long e_bytes = (long)(double)(Settings.Default.MaxDownloadSpeed * KILOBYTE / 1000 * sw.ElapsedMilliseconds);
-                                        if (read > e_bytes)
-                                        {
-                                            double delay = (double)sw.ElapsedMilliseconds / e_bytes * (read - e_bytes);
-                                            if (delay > 0)
-                                            {
-                                                await Task.Delay((int)delay * 1000);
-                                            }
-                                        }
+                                        long expectedMilliseconds = (long)(1000 / (double)(Settings.Default.MaxDownloadSpeed * 1024) * s_bytesReceived);
+                                        long delay = expectedMilliseconds - stopWatch.ElapsedMilliseconds;
+                                        if (delay > 0) await Task.Delay((int)delay);
+                                        s_bytesReceived = 0;
+                                        stopWatch.Reset();
                                     }
                                 }
-                                sw.Reset();
                             }
                         }
                     }
@@ -389,11 +393,10 @@ namespace AMDownloader
                     {
                         throw ex;
                     }
-                    finally
-                    {
-                        this.NumberOfActiveStreams -= 1;
-                        AnnouncePropertyChanged(nameof(this.NumberOfActiveStreams));
-                    }
+                }).ContinueWith((t) =>
+                {
+                    this.NumberOfActiveStreams--;
+                    AnnouncePropertyChanged(nameof(this.NumberOfActiveStreams));
                 });
 
                 tasks.Add(t);
@@ -403,6 +406,9 @@ namespace AMDownloader
 
             try
             {
+                this.NumberOfActiveStreams = requests.Count;
+                AnnouncePropertyChanged(nameof(this.NumberOfActiveStreams));
+
                 // Run the tasks
                 await Task.WhenAll(tasks);
 
@@ -418,15 +424,14 @@ namespace AMDownloader
                     FileInfo[] files = new FileInfo[requests.Count];
                     for (int i = 0; i < files.Length; i++)
                     {
-                        files[i] = new FileInfo(this.Destination + ".part" + i);
+                        files[i] = new FileInfo(this.Destination + ".part" + i + PART_EXTENSION);
                     }
                     await MergeFilesAsync(files);
                 }
             }
-            catch (Exception ex)
+            catch
             {
                 status = DownloadStatus.Error;
-                Debug.WriteLine(ex.Message);
             }
 
             // if final size was unknown, update it
@@ -482,25 +487,25 @@ namespace AMDownloader
 
         private void StartMeasuringSpeed()
         {
-            Stopwatch sw = new Stopwatch();
-
-            sw.Start();
-
             Task.Run(async () =>
             {
-                while (this.Status == DownloadStatus.Downloading)
+                long fromBytes = 0;
+                long toBytes = 0;
+                long bytesCaptured = 0;
+                while (this.IsBeingDownloaded)
                 {
-                    if (sw.ElapsedMilliseconds >= 1000 && this.BytesDownloadedThisSession > 0)
+                    fromBytes = this.TotalBytesCompleted;
+                    await Task.Delay(1000);
+                    toBytes = this.TotalBytesCompleted;
+                    bytesCaptured = toBytes - fromBytes;
+                    if (bytesCaptured >= 0)
                     {
-                        double speed = (this.BytesDownloadedThisSession / 1024) / (sw.ElapsedMilliseconds / 1000);
-                        this.Speed = (long)speed;
+                        this.Speed = bytesCaptured;
                         AnnouncePropertyChanged(nameof(this.Speed));
                     }
-                    await Task.Delay(1000);
                 }
             }).ContinueWith((t) =>
             {
-                sw.Stop();
                 this.Speed = null;
                 AnnouncePropertyChanged(nameof(this.Speed));
             });
@@ -508,9 +513,7 @@ namespace AMDownloader
 
         protected void AnnouncePropertyChanged(string prop)
         {
-            _semaphore.Wait();
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
-            _semaphore.Release();
         }
 
         private bool IsDownloadComplete()
@@ -531,13 +534,17 @@ namespace AMDownloader
                 using var request = new HttpRequestMessage(HttpMethod.Head, this.Url);
                 using (HttpResponseMessage response = await this._httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
                 {
-                    return true;
+                    if (response.StatusCode == HttpStatusCode.OK)
+                    {
+                        return true;
+                    }
                 }
             }
             catch
             {
                 return false;
             }
+            return false;
         }
         #endregion // Private methods
 
@@ -678,16 +685,7 @@ namespace AMDownloader
             {
                 // Download in progress; request cancellation
                 _ctsPaused.Cancel();
-
-                /*this.Status = DownloadStatus.Pausing;
-                AnnouncePropertyChanged(nameof(this.Status));*/
             }
-            /*else if (_taskCompletion.Task.Result == DownloadStatus.Paused)
-            {
-                // Download paused; update status
-                this.Status = DownloadStatus.Paused;
-                AnnouncePropertyChanged(nameof(this.Status));
-            }*/
         }
 
         public async Task PauseAsync()

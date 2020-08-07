@@ -3,6 +3,10 @@
         <local:ProgressBarVisibilityConverter x:Key="ProgressBarVisbilityConverter" />
         <local:DownloaderSizeConverter x:Key="DownloaderSizeConverter" />
         <local:DownloaderSpeedConverter x:Key="DownloaderSpeedConverter" />
+        <local:DownloadingCountConverter x:Key="DownloadingCountConverter" />
+        <local:QueuedCountConverter x:Key="QueuedCountConverter" />
+        <local:FinishedCountConverter x:Key="FinishedCountConverter" />
+        <local:StatusBarItemVisibilityConverter x:Key="StatusBarItemVisibilityConverter"/>
     </Window.Resources>
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Closing">
@@ -35,19 +39,21 @@
             </ToolBar>
         </ToolBarTray>
         <DockPanel DockPanel.Dock="Bottom">
-            <StatusBar>
-                <StatusBarItem Margin="5 3 15 5">
-                    <TextBlock>
-                        <TextBlock.Text>
-                            <MultiBinding StringFormat="{}{0} item(s) downloading&#x09;{1} item(s) queued&#x09;{2} item(s) finished">
-                                <Binding Path="DownloadingCount" />
-                                <Binding Path="QueuedCount" />
-                                <Binding Path="FinishedCount" />
-                            </MultiBinding>
-                        </TextBlock.Text>
-                    </TextBlock>
+            <StatusBar Padding="5">
+                <StatusBarItem Visibility="{Binding Path=Text, ElementName=tbDownloadingCount, Converter={StaticResource StatusBarItemVisibilityConverter}}">
+                    <TextBlock 
+                        x:Name="tbDownloadingCount"
+                        Text="{Binding DownloadingCount, Converter={StaticResource DownloadingCountConverter}}"/>
                 </StatusBarItem>
-                <StatusBarItem Margin="0 3 5 5" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                <StatusBarItem Visibility="{Binding Path=Text, ElementName=tbQueuedCount, Converter={StaticResource StatusBarItemVisibilityConverter}}">
+                    <TextBlock 
+                        x:Name="tbQueuedCount"
+                        Text="{Binding QueuedCount, Converter={StaticResource QueuedCountConverter}}" />
+                </StatusBarItem>
+                <StatusBarItem>
+                    <TextBlock Text="{Binding FinishedCount, Converter={StaticResource FinishedCountConverter}}" />
+                </StatusBarItem>
+                <StatusBarItem DockPanel.Dock="Right" HorizontalAlignment="Right">
                     <TextBlock Text="{Binding TotalSpeed}" FontWeight="Bold" />
                 </StatusBarItem>
             </StatusBar>
@@ -146,8 +152,8 @@
                 <ListView.ContextMenu>
                     <ContextMenu>
                         <MenuItem Header="Open" Command="{Binding OpenCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
-                        <MenuItem Header="Open containing folder" Command="{Binding OpenContainingFolderCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
-                        <MenuItem Header="Copy link to clipboard" Command="{Binding CopyLinkToClipboardCommand}" CommandParameter="{Binding PlacementTarget.SelectedItem, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                        <MenuItem Header="Open folder" Command="{Binding OpenContainingFolderCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                        <MenuItem Header="Copy link" Command="{Binding CopyLinkToClipboardCommand}" CommandParameter="{Binding PlacementTarget.SelectedItem, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
                         <Separator />
                         <MenuItem Header="Start" Command="{Binding StartCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
                         <MenuItem Header="Pause" Command="{Binding PauseCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
@@ -181,12 +187,20 @@
                 </ListView.ItemContainerStyle>
                 <ListView.View>
                     <GridView>
-                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="Name" DisplayMemberBinding="{Binding Name}" Width="250" />
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="Name" Width="250">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                    </Grid>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource RightAligned}" Header="Status" Width="100">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <TextBlock Text="{Binding Status}" HorizontalAlignment="Right" />
+                                        <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding Status}" HorizontalAlignment="Right" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
@@ -205,29 +219,47 @@
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <TextBlock Text="{Binding TotalBytesCompleted, Converter={StaticResource DownloaderSizeConverter}}" HorizontalAlignment="Right" />
+                                        <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding TotalBytesCompleted, Converter={StaticResource DownloaderSizeConverter}}" HorizontalAlignment="Right" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="Size" DisplayMemberBinding="{Binding TotalBytesToDownload, Converter={StaticResource DownloaderSizeConverter}}" Width="75" />
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="Size" Width="75">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding TotalBytesToDownload, Converter={StaticResource DownloaderSizeConverter}}" />
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource RightAligned}" Header="Speed" Width="75">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <TextBlock Text="{Binding Speed, Converter={StaticResource DownloaderSpeedConverter}}" HorizontalAlignment="Right" />
+                                        <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding Speed, Converter={StaticResource DownloaderSpeedConverter}}" HorizontalAlignment="Right" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="Connections" Width="100" DisplayMemberBinding="{Binding NumberOfActiveStreams}" />
-                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="Location" DisplayMemberBinding="{Binding PrettyDestination}" Width="250" />
-                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="URL" DisplayMemberBinding="{Binding Url}" Width="400" />
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="Location" Width="250">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding PrettyDestination}" />
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="URL" Width="400">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding Url}" />
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource RightAligned}" Header="Created" Width="150">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <TextBlock Text="{Binding PrettyDateCreated}" HorizontalAlignment="Right" />
+                                        <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding PrettyDateCreated}" HorizontalAlignment="Right" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>

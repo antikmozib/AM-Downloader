@@ -9,8 +9,6 @@ using System.Windows.Input;
 using System.Windows;
 using AMDownloader.Properties;
 using static AMDownloader.Common;
-using System.Diagnostics;
-using System.Windows.Xps;
 
 namespace AMDownloader
 {
@@ -120,7 +118,7 @@ namespace AMDownloader
                 AddItemToList(url, counter++);
 
             if (AddToQueue && StartDownload)
-                Task.Run(async () => await _parentViewModel.QueueProcessor.StartAsync(Settings.Default.MaxParallelDownloads));
+                Task.Run(async () => await _parentViewModel.QueueProcessor.StartAsync(Settings.Default.MaxConnectionsPerDownload));
         }
 
         private void AddItemToList(string url, int counter)
@@ -142,9 +140,10 @@ namespace AMDownloader
                 _parentViewModel.Download_Enqueued,
                 _parentViewModel.Download_Dequeued,
                 _parentViewModel.Download_Finished,
-                _parentViewModel.OnDownloadPropertyChange,
+                _parentViewModel.Download_PropertyChanged,
                 _parentViewModel.RefreshCollection);
 
+            _parentViewModel.DownloadItemsList.Add(item);
             if (AddToQueue) _parentViewModel.QueueProcessor.Add(item);
 
             // Do not start more than MaxParallelDownloads at the same time
@@ -155,8 +154,6 @@ namespace AMDownloader
                     Task.Run(async () => await item.StartAsync(Settings.Default.MaxConnectionsPerDownload));
                 }
             }
-
-            _parentViewModel.DownloadItemsList.Add(item);
         }
 
         private List<string> ListifyUrls()
@@ -203,7 +200,7 @@ namespace AMDownloader
             while (!_ctsClipboard.Token.IsCancellationRequested)
             {
                 List<string> source = Regex.Replace(_clipboardService.GetText(), @"\t|\r", "").Split('\n').ToList();
-                List<string> dest =Regex.Replace(this.Urls,@"\r|\t","").Split('\n').ToList();
+                List<string> dest = Regex.Replace(this.Urls, @"\r|\t", "").Split('\n').ToList();
                 foreach (var url in source)
                 {
                     var f_url = Regex.Replace(url, @"\n", "");

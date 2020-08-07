@@ -41,10 +41,7 @@ namespace AMDownloader
                 {
                     Directory.Delete(Common.ApplicationPaths.DownloadsHistory, true);
                 }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine(ex.Message);
-                }
+                catch { }
             }
             if (Directory.Exists(Common.ApplicationPaths.SavedLocationsHistory))
             {
@@ -52,10 +49,7 @@ namespace AMDownloader
                 {
                     Directory.Delete(Common.ApplicationPaths.SavedLocationsHistory, true);
                 }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine(ex.Message);
-                }
+                catch { }
             }
         }
     }

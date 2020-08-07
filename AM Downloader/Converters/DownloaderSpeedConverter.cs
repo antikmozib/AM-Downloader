@@ -1,9 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Text;
-using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Data;
 
 namespace AMDownloader
@@ -16,9 +12,9 @@ namespace AMDownloader
 
             long? speed = (long)value;
 
-            if (speed > 1024)
+            if (speed > (0.9 * Common.MEGABYTE))
             {
-                return ((double)speed / 1024).ToString("#0.00") + " MB/s";
+                return ((double)speed / Common.MEGABYTE).ToString("#0.00") + " MB/s";
             }
             else
             {
@@ -28,7 +24,7 @@ namespace AMDownloader
                 }
                 else
                 {
-                    return speed.ToString() + " KB/s";
+                    return ((double)speed / Common.KILOBYTE).ToString("#0") + " KB/s";
                 }
             }
         }
