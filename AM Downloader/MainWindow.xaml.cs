@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
+using System.Windows.Input;
 
 namespace AMDownloader
 {
@@ -42,19 +43,10 @@ namespace AMDownloader
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            this.Title = "Saving data...";
+            this.Cursor = Cursors.Wait;
             Settings.Default.Save();
-
-            var items = from item in primaryViewModel.DownloadItemsList where item.IsBeingDownloaded select item;
-
-            this.Hide();
             e.Cancel = true;
-
-            if (items.Count() > 0)
-            {
-                Parallel.ForEach(items, async (item) => await item.PauseAsync());
-            }
-
-            Application.Current.Shutdown();
         }
     }
 }

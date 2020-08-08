@@ -11,7 +11,7 @@ namespace AMDownloader
     // Represents contracts that can be used by the QueueProcessor
     public interface IQueueable
     {
-        public Task StartAsync(int numStreams); // numStreams = max num of parallel streams per IQueueable
+        public Task StartAsync();
         public void Pause();
         public bool IsQueued { get; }
         public bool IsCompleted { get; }
@@ -20,12 +20,12 @@ namespace AMDownloader
     class QueueProcessor
     {
         #region Fields
-        private const int DEFAULT_MAX_PARALLEL_DOWNLOADS = 5;
         private readonly SemaphoreSlim _semaphore;
         private BlockingCollection<IQueueable> _queueList;
         private CancellationTokenSource _ctsCancel;
         private CancellationToken _ctCancel;
         private List<IQueueable> _itemsProcessing;
+        private readonly RefreshCollection _refreshCollectionDel;
         #endregion // Fields
 
         #region Properties
@@ -34,11 +34,12 @@ namespace AMDownloader
 
         #region Constructors
 
-        public QueueProcessor(int maxParallelDownloads = DEFAULT_MAX_PARALLEL_DOWNLOADS)
+        public QueueProcessor(int maxParallelDownloads, RefreshCollection refreshCollectionDelegate)
         {
             _queueList = new BlockingCollection<IQueueable>();
             _semaphore = new SemaphoreSlim(maxParallelDownloads);
             _itemsProcessing = new List<IQueueable>();
+            _refreshCollectionDel = refreshCollectionDelegate;
         }
         #endregion // Constructors
 
@@ -59,7 +60,7 @@ namespace AMDownloader
                 Task t = Task.Run(async () =>
                 {
                     _semaphore.Wait();
-                    if (!_ctCancel.IsCancellationRequested && item.IsQueued) await item.StartAsync(numStreams);
+                    if (!_ctCancel.IsCancellationRequested && item.IsQueued) await item.StartAsync();
                     _semaphore.Release();
                 });
                 tasks.Add(t);
@@ -83,18 +84,18 @@ namespace AMDownloader
 
         #region Public methods
         // Producer
-        public void Add(IQueueable item)
+        public bool Add(IQueueable item)
         {
-            if (_queueList.Contains(item)) return;
-            _queueList.TryAdd(item);
+            if (_queueList.Contains(item)) return true;
+            return _queueList.TryAdd(item);
         }
 
         // Consumer
         public async Task StartAsync(int numStreams)
         {
             if (_ctsCancel != null) return;
-
             await ProcessQueueAsync(numStreams);
+            _refreshCollectionDel?.Invoke();
         }
 
         public void Stop()

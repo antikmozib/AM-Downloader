@@ -12,7 +12,7 @@ namespace AMDownloader
 
             long? speed = (long)value;
 
-            if (speed > (0.9 * Common.MEGABYTE))
+            if (speed > 1000000)
             {
                 return ((double)speed / Common.MEGABYTE).ToString("#0.00") + " MB/s";
             }

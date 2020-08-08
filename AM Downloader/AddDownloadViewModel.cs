@@ -1,10 +1,10 @@
-﻿using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
-using System.Threading;
 using System.Windows.Input;
 using System.Windows;
 using AMDownloader.Properties;
@@ -53,7 +53,7 @@ namespace AMDownloader
 
             _clipboardService = new ClipboardObserver();
 
-            if (Directory.Exists(Settings.Default.LastSavedLocation))
+            if (Settings.Default.LastSavedLocation.Trim().Length > 0)
             {
                 this.SaveToFolder = Settings.Default.LastSavedLocation;
             }
@@ -112,48 +112,7 @@ namespace AMDownloader
             if (SaveToFolder.LastIndexOf(Path.DirectorySeparatorChar) != SaveToFolder.Length - 1)
                 SaveToFolder = SaveToFolder + Path.DirectorySeparatorChar;
 
-            int counter = 0;
-
-            foreach (var url in ListifyUrls())
-                AddItemToList(url, counter++);
-
-            if (AddToQueue && StartDownload)
-                Task.Run(async () => await _parentViewModel.QueueProcessor.StartAsync(Settings.Default.MaxConnectionsPerDownload));
-        }
-
-        private void AddItemToList(string url, int counter)
-        {
-            var fileName = GetValidFilename(SaveToFolder + Path.GetFileName(url));
-            var checkifUrlExists = from di in _parentViewModel.DownloadItemsList where di.Url == url select di;
-            var checkIfDestinationExists = from di in _parentViewModel.DownloadItemsList where di.Destination == fileName select di;
-            var sameItems = checkIfDestinationExists.Intersect(checkifUrlExists);
-
-            if (sameItems.Count() > 0) return;
-
-            var item = new DownloaderObjectModel(
-                ref _parentViewModel.Client,
-                url,
-                fileName,
-                AddToQueue,
-                _parentViewModel.Download_Started,
-                _parentViewModel.Download_Stopped,
-                _parentViewModel.Download_Enqueued,
-                _parentViewModel.Download_Dequeued,
-                _parentViewModel.Download_Finished,
-                _parentViewModel.Download_PropertyChanged,
-                _parentViewModel.RefreshCollection);
-
-            _parentViewModel.DownloadItemsList.Add(item);
-            if (AddToQueue) _parentViewModel.QueueProcessor.Add(item);
-
-            // Do not start more than MaxParallelDownloads at the same time
-            if (!AddToQueue && StartDownload)
-            {
-                if (counter < Settings.Default.MaxParallelDownloads)
-                {
-                    Task.Run(async () => await item.StartAsync(Settings.Default.MaxConnectionsPerDownload));
-                }
-            }
+            Task.Run(async () => await _parentViewModel.AddItemsAsyncDelegate(SaveToFolder, AddToQueue, StartDownload, ListifyUrls().ToArray()));
         }
 
         private List<string> ListifyUrls()
@@ -207,8 +166,9 @@ namespace AMDownloader
                     if ((f_url.Contains("http") || f_url.Contains("ftp")) && !dest.Contains(f_url))
                     {
                         this.Urls += f_url + '\n';
+                        _clipboardService.Clear();
                     }
-                }
+                }                
                 AnnouncePropertyChanged(nameof(this.Urls));
                 await Task.Delay(1000);
             }

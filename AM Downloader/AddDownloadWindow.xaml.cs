@@ -17,14 +17,23 @@ namespace AMDownloader
         public AddDownloadWindow()
         {
             InitializeComponent();
-
-            if (Settings.Default.LastSavedLocation.Trim().Length == 0)
+            if (Settings.Default.RememberLastSavedLocation)
             {
-                Settings.Default.LastSavedLocation = ApplicationPaths.DownloadsFolder;
+                if (Settings.Default.LastSavedLocation.Trim().Length > 0)
+                {
+                    cboDestination.Items.Add(Settings.Default.LastSavedLocation);
+                    cboDestination.Text = Settings.Default.LastSavedLocation;
+                }
+                else
+                {
+                    cboDestination.Text = ApplicationPaths.DownloadsFolder;
+                }
             }
-            cboDestination.Items.Add(Settings.Default.LastSavedLocation);
-            cboDestination.Text = Settings.Default.LastSavedLocation;
-
+            else
+            {
+                cboDestination.Text = ApplicationPaths.DownloadsFolder;
+            }
+            if (!cboDestination.Items.Contains(ApplicationPaths.DownloadsFolder)) cboDestination.Items.Add(ApplicationPaths.DownloadsFolder);
             if (Directory.Exists(ApplicationPaths.SavedLocationsHistory))
             {
                 XmlSerializer writer = new XmlSerializer(typeof(SerializableDownloadPathHistory));
@@ -37,12 +46,8 @@ namespace AMDownloader
                     try
                     {
                         var item = (SerializableDownloadPathHistory)writer.Deserialize(streamReader);
-                        if (item.path.Trim().Length == 0) continue;
-
-                        if (!cboDestination.Items.Contains(item.path))
-                        {
-                            cboDestination.Items.Add(item.path);
-                        }
+                        if (item.path.Trim().Length == 0 || cboDestination.Items.Contains(item.path)) continue;
+                        cboDestination.Items.Add(item.path);
                     }
                     catch
                     {
@@ -53,7 +58,6 @@ namespace AMDownloader
                     streamReader.Close();
                 }
             }
-
             txtUrl.Focus();
         }
 
