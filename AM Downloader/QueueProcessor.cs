@@ -4,7 +4,6 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
-using System.Diagnostics;
 
 namespace AMDownloader
 {
@@ -29,7 +28,7 @@ namespace AMDownloader
         #endregion // Fields
 
         #region Properties
-        public bool IsBusy { get { return (_ctsCancel != null); } }
+        public bool IsBusy => _ctsCancel != null;
         #endregion // Properties
 
         #region Constructors
@@ -47,7 +46,6 @@ namespace AMDownloader
         private async Task ProcessQueueAsync(int numStreams)
         {
             var tasks = new List<Task>();
-
             _ctsCancel = new CancellationTokenSource();
             _ctCancel = _ctsCancel.Token;
 
@@ -59,8 +57,11 @@ namespace AMDownloader
                 _itemsProcessing.Add(item);
                 Task t = Task.Run(async () =>
                 {
-                    _semaphore.Wait();
-                    if (!_ctCancel.IsCancellationRequested && item.IsQueued) await item.StartAsync();
+                    await _semaphore.WaitAsync();
+                    if (item.IsQueued && !_ctCancel.IsCancellationRequested)
+                    {
+                        await item.StartAsync();
+                    }
                     _semaphore.Release();
                 });
                 tasks.Add(t);
@@ -111,7 +112,7 @@ namespace AMDownloader
         #region Public functions
         public bool Contains(IQueueable value)
         {
-            return (_queueList.Contains(value));
+            return _queueList.Contains(value);
         }
         public int Count()
         {

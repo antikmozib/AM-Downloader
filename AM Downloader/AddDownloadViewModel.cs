@@ -168,23 +168,17 @@ namespace AMDownloader
                         this.Urls += f_url + '\n';
                         _clipboardService.Clear();
                     }
-                }                
-                AnnouncePropertyChanged(nameof(this.Urls));
+                }
+                RaisePropertyChanged(nameof(this.Urls));
                 await Task.Delay(1000);
             }
 
             _ctsClipboard = null;
         }
 
-        protected void AnnouncePropertyChanged(string prop)
+        protected void RaisePropertyChanged(string prop)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
-        }
-
-        private bool UrlExists(string url)
-        {
-            List<string> list = this.Urls.Split('\n').ToList<string>();
-            return list.Contains(url);
         }
     }
 }

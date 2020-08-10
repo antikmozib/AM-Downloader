@@ -1,10 +1,10 @@
 ﻿using System.IO;
 using System.Windows;
+using System.Windows.Input;
 using System.Xml.Serialization;
+using AMDownloader.Properties;
 using static AMDownloader.SerializableModels;
 using static AMDownloader.Common;
-using AMDownloader.Properties;
-using System.Windows.Input;
 
 namespace AMDownloader
 {
@@ -34,28 +34,26 @@ namespace AMDownloader
                 cboDestination.Text = ApplicationPaths.DownloadsFolder;
             }
             if (!cboDestination.Items.Contains(ApplicationPaths.DownloadsFolder)) cboDestination.Items.Add(ApplicationPaths.DownloadsFolder);
+
             if (Directory.Exists(ApplicationPaths.SavedLocationsHistory))
             {
-                XmlSerializer writer = new XmlSerializer(typeof(SerializableDownloadPathHistory));
-                StreamReader streamReader;
-
-                foreach (var file in Directory.GetFiles(ApplicationPaths.SavedLocationsHistory))
+                XmlSerializer writer = new XmlSerializer(typeof(SerializableDownloadPathHistoryList));
+                StreamReader streamReader = new StreamReader(Path.Combine(ApplicationPaths.SavedLocationsHistory, "savedlocations.xml"));
+                SerializableDownloadPathHistoryList list;
+                try
                 {
-                    streamReader = new StreamReader(file);
-
-                    try
+                    list = (SerializableDownloadPathHistoryList)writer.Deserialize(streamReader);
+                    foreach (var item in list.Objects)
                     {
-                        var item = (SerializableDownloadPathHistory)writer.Deserialize(streamReader);
-                        if (item.path.Trim().Length == 0 || cboDestination.Items.Contains(item.path)) continue;
-                        cboDestination.Items.Add(item.path);
+                        if (item.path.Trim().Length > 0 && !cboDestination.Items.Contains(item.path))
+                        {
+                            cboDestination.Items.Add(item.path);
+                        }
                     }
-                    catch
-                    {
-                        streamReader.Close();
-                        continue;
-                    }
+                }
+                catch
+                {
 
-                    streamReader.Close();
                 }
             }
             txtUrl.Focus();
@@ -106,22 +104,27 @@ namespace AMDownloader
                 }
             }
 
-            XmlSerializer writer = new XmlSerializer(typeof(SerializableDownloadPathHistory));
-            int i = 0;
-
+            var list = new SerializableDownloadPathHistoryList();
             foreach (var item in cboDestination.Items)
             {
                 var path = item.ToString();
-
                 if (path.Trim().Length == 0) continue;
-
                 var model = new SerializableDownloadPathHistory();
-                var streamWriter = new StreamWriter(Path.Combine(ApplicationPaths.SavedLocationsHistory, ++i + ".xml"));
-
                 model.path = path;
+                list.Objects.Add(model);
+            }
 
-                writer.Serialize(streamWriter, model);
-                streamWriter.Close();
+            try
+            {
+                using (var streamWriter = new StreamWriter(Path.Combine(ApplicationPaths.SavedLocationsHistory, "savedlocations.xml")))
+                {
+                    XmlSerializer writer = new XmlSerializer(typeof(SerializableDownloadPathHistoryList));
+                    writer.Serialize(streamWriter, list);
+                }
+            }
+            catch (IOException)
+            {
+
             }
 
             if (Settings.Default.RememberLastSavedLocation)

@@ -12,7 +12,7 @@ namespace AMDownloader
             int.TryParse(value.ToString(), out i_value);
             if (i_value < 1)
             {
-                return string.Empty;
+                return "Ready\t";
             }
             else if (i_value == 1)
             {

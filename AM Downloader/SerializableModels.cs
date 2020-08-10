@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace AMDownloader
 {
@@ -14,11 +13,28 @@ namespace AMDownloader
             public bool IsQueued { get; set; }
             public DateTime DateCreated { get; set; }
         }
-
+        [Serializable]
+        public class SerializableDownloaderObjectModelList
+        {
+            public List<SerializableDownloaderObjectModel> Objects;
+            public SerializableDownloaderObjectModelList()
+            {
+                Objects = new List<SerializableDownloaderObjectModel>();
+            }
+        }
         [Serializable]
         public class SerializableDownloadPathHistory
         {
             public string path { get; set; }
+        }
+        [Serializable]
+        public class SerializableDownloadPathHistoryList
+        {
+            public List<SerializableDownloadPathHistory> Objects;
+            public SerializableDownloadPathHistoryList()
+            {
+                Objects = new List<SerializableDownloadPathHistory>();
+            }
         }
     }
 }

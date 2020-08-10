@@ -1,12 +1,8 @@
-﻿using AMDownloader.Properties;
-using System;
-using System.Globalization;
-using System.Linq;
+﻿using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Data;
 using System.Windows.Input;
+using AMDownloader.Properties;
 
 namespace AMDownloader
 {

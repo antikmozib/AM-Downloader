@@ -1,10 +1,6 @@
-﻿using AMDownloader.Properties;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Text;
+﻿using System.IO;
 using System.Windows.Input;
+using AMDownloader.Properties;
 
 namespace AMDownloader
 {
