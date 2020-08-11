@@ -61,8 +61,8 @@ namespace AMDownloader
             {
                 this.SaveToFolder = ApplicationPaths.DownloadsFolder;
             }
-            this.AddToQueue = true;
-            this.StartDownload = false;
+            this.AddToQueue = Settings.Default.AddItemsToQueue;
+            this.StartDownload = Settings.Default.StartDownloadingAddedItems;
             this.Urls = string.Empty;
 
             var clipText = _clipboardService.GetText();
@@ -111,6 +111,10 @@ namespace AMDownloader
 
             if (SaveToFolder.LastIndexOf(Path.DirectorySeparatorChar) != SaveToFolder.Length - 1)
                 SaveToFolder = SaveToFolder + Path.DirectorySeparatorChar;
+
+            Settings.Default.AddItemsToQueue = this.AddToQueue;
+            Settings.Default.StartDownloadingAddedItems = this.StartDownload;
+            Settings.Default.Save();
 
             Task.Run(async () => await _parentViewModel.AddItemsAsyncDelegate(SaveToFolder, AddToQueue, StartDownload, ListifyUrls().ToArray()));
         }

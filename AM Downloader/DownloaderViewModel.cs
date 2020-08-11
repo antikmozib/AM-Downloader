@@ -32,13 +32,16 @@ namespace AMDownloader
         private object _lockDownloadingCount;
         private object _lockQueuedCount;
         private object _lockFinishedCount;
+        private object _lockDownloadingItemsList;
         private SemaphoreSlim _semaphoreCollectionRefresh;
         private SemaphoreSlim _semaphoreDeletingFiles;
+        private SemaphoreSlim _semaphoreMeasuringSpeed;
+        private List<DownloaderObjectModel> _downloadingItems;
         #endregion // Fields
 
         #region Properties
         public ObservableCollection<DownloaderObjectModel> DownloadItemsList;
-        public string TotalSpeed { get; private set; }
+        public long? Speed { get; private set; }
         public int DownloadingCount { get; private set; }
         public int QueuedCount { get; private set; }
         public int FinishedCount { get; private set; }
@@ -81,14 +84,17 @@ namespace AMDownloader
             DownloadItemsList = new ObservableCollection<DownloaderObjectModel>();
             CategoriesList = new ObservableCollection<Categories>();
             QueueProcessor = new QueueProcessor(Settings.Default.MaxParallelDownloads, RefreshCollection);
+            _downloadingItems = new List<DownloaderObjectModel>();
             _collectionView = CollectionViewSource.GetDefaultView(DownloadItemsList);
             _clipboardService = new ClipboardObserver();
             _lockDownloadItemsList = DownloadItemsList;
             _lockQueuedCount = this.QueuedCount;
             _lockDownloadingCount = this.DownloadingCount;
             _lockFinishedCount = this.FinishedCount;
+            _lockDownloadingItemsList = _downloadingItems;
             _semaphoreCollectionRefresh = new SemaphoreSlim(1);
             _semaphoreDeletingFiles = new SemaphoreSlim(1);
+            _semaphoreMeasuringSpeed = new SemaphoreSlim(1);
             this.QueuedCount = 0;
             this.DownloadingCount = 0;
             this.FinishedCount = 0;
@@ -310,33 +316,27 @@ namespace AMDownloader
 
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
 
-            foreach (DownloaderObjectModel item in items)
+            Monitor.Enter(_lockDownloadItemsList);
+            Monitor.Enter(_lockFinishedCount);
+            try
             {
-                if (item.IsBeingDownloaded) item.Cancel();
-                if (item.IsQueued) item.Dequeue();
-                Monitor.Enter(_lockDownloadItemsList);
-                try
+                foreach (DownloaderObjectModel item in items)
                 {
                     DownloadItemsList.Remove(item);
-                }
-                finally
-                {
-                    Monitor.Exit(_lockDownloadItemsList);
-                }
-                if (item.Status == DownloadStatus.Finished)
-                {
-                    Monitor.Enter(_lockFinishedCount);
-                    try
+                    if (item.Status == DownloadStatus.Finished)
                     {
                         this.FinishedCount--;
                     }
-                    finally
-                    {
-                        Monitor.Exit(_lockFinishedCount);
-                    }
+                    if (item.IsBeingDownloaded) item.Cancel();
+                    if (item.IsQueued) item.Dequeue();
                 }
             }
-            RaisePropertyChanged(nameof(this.FinishedCount));
+            finally
+            {
+                Monitor.Exit(_lockDownloadItemsList);
+                Monitor.Exit(_lockFinishedCount);
+                RaisePropertyChanged(nameof(this.FinishedCount));
+            }
         }
 
         internal bool RemoveFromList_CanExecute(object obj)
@@ -378,7 +378,7 @@ namespace AMDownloader
                 MessageBoxResult r = MessageBox.Show(
                     "You have elected to open " + itemsFinished.Count() + " files. " +
                     "Opening too many files at the same file may cause system freezeups.\n\nDo you wish to proceed?",
-                    "Open", MessageBoxButton.YesNo, MessageBoxImage.Information);
+                    "Open", MessageBoxButton.YesNo, MessageBoxImage.Exclamation);
 
                 if (r == MessageBoxResult.No) return;
             }
@@ -652,27 +652,38 @@ namespace AMDownloader
         internal void Download_Started(object sender, EventArgs e)
         {
             Monitor.Enter(_lockDownloadingCount);
+            Monitor.Enter(_lockDownloadingItemsList);
             try
             {
                 this.DownloadingCount++;
+                _downloadingItems.Add(sender as DownloaderObjectModel);
             }
             finally
             {
                 Monitor.Exit(_lockDownloadingCount);
+                Monitor.Exit(_lockDownloadingItemsList);
             }
             RaisePropertyChanged(nameof(this.DownloadingCount));
+            StartMeasuringSpeed();
         }
 
         internal void Download_Stopped(object sender, EventArgs e)
         {
             Monitor.Enter(_lockDownloadingCount);
+            Monitor.Enter(_lockDownloadingItemsList);
             try
             {
                 this.DownloadingCount--;
+                var item = sender as DownloaderObjectModel;
+                if (_downloadingItems.Contains(item))
+                {
+                    _downloadingItems.Remove(item);
+                }
             }
             finally
             {
                 Monitor.Exit(_lockDownloadingCount);
+                Monitor.Exit(_lockDownloadingItemsList);
             }
             RaisePropertyChanged(nameof(this.DownloadingCount));
         }
@@ -791,6 +802,32 @@ namespace AMDownloader
                 Monitor.Exit(_lockDownloadItemsList);
             }
             RefreshCollection();
+        }
+        private void StartMeasuringSpeed()
+        {
+            if (_semaphoreMeasuringSpeed.CurrentCount == 0) return;
+
+            Task.Run(async () =>
+            {
+                await _semaphoreMeasuringSpeed.WaitAsync();
+                var stopWatch = new Stopwatch();
+                while (_downloadingItems.Count > 0)
+                {
+                    stopWatch.Start();
+                    this.Speed = 0;
+                    foreach (var item in _downloadingItems)
+                    {
+                        this.Speed += item.Speed;
+                    }
+                    await Task.Delay(1000);
+                    stopWatch.Stop();
+                    this.Speed = (long)((double)(this.Speed ?? 0) * ((double)stopWatch.ElapsedMilliseconds / (double)1000));
+                    RaisePropertyChanged(nameof(this.Speed));
+                }
+                this.Speed = null;
+                RaisePropertyChanged(nameof(this.Speed));
+                _semaphoreMeasuringSpeed.Release();
+            });
         }
         #endregion // Methods
     }

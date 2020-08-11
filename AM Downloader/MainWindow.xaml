@@ -6,9 +6,9 @@
         <local:DownloadingCountConverter x:Key="DownloadingCountConverter" />
         <local:QueuedCountConverter x:Key="QueuedCountConverter" />
         <local:FinishedCountConverter x:Key="FinishedCountConverter" />
-        <local:StatusBarItemVisibilityConverter x:Key="StatusBarItemVisibilityConverter"/>
-        <local:DownloaderDateConverter x:Key="DownloaderDateConverter"/>
-        <local:DownloaderDestinationConverter x:Key="DownloaderDestinationConverter"/>
+        <local:StatusBarItemVisibilityConverter x:Key="StatusBarItemVisibilityConverter" />
+        <local:DownloaderDateConverter x:Key="DownloaderDateConverter" />
+        <local:DownloaderDestinationConverter x:Key="DownloaderDestinationConverter" />
     </Window.Resources>
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Closing">
@@ -43,20 +43,16 @@
         <DockPanel DockPanel.Dock="Bottom">
             <StatusBar Padding="5">
                 <StatusBarItem Visibility="{Binding Path=Text, ElementName=tbDownloadingCount, Converter={StaticResource StatusBarItemVisibilityConverter}}">
-                    <TextBlock 
-                        x:Name="tbDownloadingCount"
-                        Text="{Binding DownloadingCount, Converter={StaticResource DownloadingCountConverter}}"/>
+                    <TextBlock x:Name="tbDownloadingCount" Text="{Binding DownloadingCount, Converter={StaticResource DownloadingCountConverter}}" />
                 </StatusBarItem>
                 <StatusBarItem Visibility="{Binding Path=Text, ElementName=tbQueuedCount, Converter={StaticResource StatusBarItemVisibilityConverter}}">
-                    <TextBlock 
-                        x:Name="tbQueuedCount"
-                        Text="{Binding QueuedCount, Converter={StaticResource QueuedCountConverter}}" />
+                    <TextBlock x:Name="tbQueuedCount" Text="{Binding QueuedCount, Converter={StaticResource QueuedCountConverter}}" />
                 </StatusBarItem>
                 <StatusBarItem>
                     <TextBlock Text="{Binding FinishedCount, Converter={StaticResource FinishedCountConverter}}" />
                 </StatusBarItem>
                 <StatusBarItem DockPanel.Dock="Right" HorizontalAlignment="Right">
-                    <TextBlock Text="{Binding TotalSpeed}" FontWeight="Bold" />
+                    <TextBlock Text="{Binding Speed, Converter={StaticResource DownloaderSpeedConverter}}" FontWeight="Bold" />
                 </StatusBarItem>
             </StatusBar>
         </DockPanel>

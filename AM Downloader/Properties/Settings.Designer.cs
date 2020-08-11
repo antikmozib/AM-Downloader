@@ -154,5 +154,29 @@ namespace AMDownloader.Properties {
                 this["AddWindowWidth"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool AddItemsToQueue {
+            get {
+                return ((bool)(this["AddItemsToQueue"]));
+            }
+            set {
+                this["AddItemsToQueue"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool StartDownloadingAddedItems {
+            get {
+                return ((bool)(this["StartDownloadingAddedItems"]));
+            }
+            set {
+                this["StartDownloadingAddedItems"] = value;
+            }
+        }
     }
 }

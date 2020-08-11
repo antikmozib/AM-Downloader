@@ -35,5 +35,11 @@
     <Setting Name="AddWindowWidth" Type="System.String" Scope="User">
       <Value Profile="(Default)">650</Value>
     </Setting>
+    <Setting Name="AddItemsToQueue" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="StartDownloadingAddedItems" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

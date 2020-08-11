@@ -181,40 +181,34 @@ namespace AMDownloader
 
         private async Task MergeFilesAsync(params FileInfo[] files)
         {
-            try
+            using (var destStream = new FileStream(this.Destination, FileMode.Append, FileAccess.Write))
+            using (var binaryWriter = new BinaryWriter(destStream))
             {
-                using (var destStream = new FileStream(this.Destination, FileMode.Append, FileAccess.Write))
-                using (var binaryWriter = new BinaryWriter(destStream))
+                foreach (var file in files)
                 {
-                    foreach (var file in files)
+                    using (var sourceStream = new FileStream(file.FullName, FileMode.Open))
                     {
-                        using (var sourceStream = new FileStream(file.FullName, FileMode.Open))
-                        {
-                            byte[] buffer = new byte[BUFFER_LENGTH];
+                        byte[] buffer = new byte[BUFFER_LENGTH];
 
-                            while (true)
+                        while (true)
+                        {
+                            int read = await sourceStream.ReadAsync(buffer, 0, buffer.Length);
+                            if (read > 0)
                             {
-                                int read = await sourceStream.ReadAsync(buffer, 0, buffer.Length);
-                                if (read > 0)
-                                {
-                                    byte[] data = new byte[read];
-                                    buffer.ToList().CopyTo(0, data, 0, read);
-                                    binaryWriter.Write(data, 0, data.Length);
-                                }
-                                else
-                                {
-                                    break;
-                                }
+                                byte[] data = new byte[read];
+                                buffer.ToList().CopyTo(0, data, 0, read);
+                                binaryWriter.Write(data, 0, data.Length);
+                            }
+                            else
+                            {
+                                break;
                             }
                         }
-                        file.Delete();
                     }
+                    file.Delete();
                 }
             }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
+
         }
 
         private async Task<DownloadStatus> ProcessStreamsAsync(long bytesDownloadedPreviously = 0)
@@ -312,28 +306,26 @@ namespace AMDownloader
             }
 
             // Set up the tasks to process the requests
+
             foreach (var request in requests)
             {
                 Task t = Task.Run(async () =>
                 {
+                    FileStream destinationStream = null;
                     try
                     {
                         if (!Directory.Exists(Path.GetDirectoryName(this.Destination)))
                         {
                             Directory.CreateDirectory(Path.GetDirectoryName(this.Destination));
                         }
-
-                        FileStream destinationStream;
-
-                        if (requests.Count == 1)
-                        {
-                            destinationStream = new FileStream(this.Destination, FileMode.Append);
-                        }
-                        else
+                        if (requests.Count > 1)
                         {
                             destinationStream = new FileStream(this.Destination + ".part" + requests.IndexOf(request) + PART_EXTENSION, FileMode.Append);
                         }
-
+                        else
+                        {
+                            destinationStream = new FileStream(this.Destination, FileMode.Append);
+                        }
                         using (var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
                         using (var sourceStream = await response.Content.ReadAsStreamAsync())
                         using (var binaryWriter = new BinaryWriter(destinationStream))
@@ -344,20 +336,10 @@ namespace AMDownloader
                             var stopWatch = new Stopwatch();
                             while (true)
                             {
-                                if (linkedToken.IsCancellationRequested)
-                                    break;
+                                linkedToken.ThrowIfCancellationRequested();
 
                                 stopWatch.Start();
-
-                                try
-                                {
-                                    read = await sourceStream.ReadAsync(buffer, 0, buffer.Length, linkedToken);
-                                }
-                                catch (OperationCanceledException)
-                                {
-                                    break;
-                                }
-
+                                read = await sourceStream.ReadAsync(buffer, 0, buffer.Length, linkedToken);
                                 if (read == 0)
                                 {
                                     // Stream complete
@@ -390,57 +372,49 @@ namespace AMDownloader
                             }
                         }
                     }
-                    catch (Exception ex)
+                    catch (OperationCanceledException)
                     {
-                        throw ex;
+                        return;
                     }
-                }).ContinueWith((t) =>
+                    finally
+                    {
+                        destinationStream?.Close();
+                    }
+                }).ContinueWith(t =>
                 {
                     this.NumberOfActiveStreams--;
                     RaisePropertyChanged(nameof(this.NumberOfActiveStreams));
                 });
-
                 tasks.Add(t);
             }
 
             StartMeasuringSpeed();
+            this.NumberOfActiveStreams = requests.Count;
+            RaisePropertyChanged(nameof(this.NumberOfActiveStreams));
 
-            try
+            // Run the tasks
+            await Task.WhenAll(tasks);
+
+            this.NumberOfActiveStreams = null;
+            RaisePropertyChanged(nameof(this.NumberOfActiveStreams));
+
+            // Merge the streams
+            if (requests.Count > 1)
             {
-                this.NumberOfActiveStreams = requests.Count;
-                RaisePropertyChanged(nameof(this.NumberOfActiveStreams));
-
-                // Run the tasks
-                await Task.WhenAll(tasks);
-
-                this.NumberOfActiveStreams = null;
-                RaisePropertyChanged(nameof(this.NumberOfActiveStreams));
-
-                // Merge the streams
-                if (requests.Count > 1)
+                this.Status = DownloadStatus.Merging;
+                RaisePropertyChanged(nameof(this.Status));
+                FileInfo[] files = new FileInfo[requests.Count];
+                for (int i = 0; i < files.Length; i++)
                 {
-                    this.Status = DownloadStatus.Merging;
-                    RaisePropertyChanged(nameof(this.Status));
-
-                    FileInfo[] files = new FileInfo[requests.Count];
-                    for (int i = 0; i < files.Length; i++)
-                    {
-                        files[i] = new FileInfo(this.Destination + ".part" + i + PART_EXTENSION);
-                    }
-                    await MergeFilesAsync(files);
+                    files[i] = new FileInfo(this.Destination + ".part" + i + PART_EXTENSION);
                 }
-            }
-            catch
-            {
-                status = DownloadStatus.Error;
+                await MergeFilesAsync(files);
             }
 
-            // if final size was unknown, update it
-            if (!this.SupportsResume)
-            {
-                this.TotalBytesToDownload = this.TotalBytesCompleted;
-            }
+            // Update final size
+            if (!this.SupportsResume) this.TotalBytesToDownload = this.TotalBytesCompleted;
 
+            // Operation complete; verify state
             if (linkedToken.IsCancellationRequested)
             {
                 if (_ctPause.IsCancellationRequested)
@@ -449,25 +423,21 @@ namespace AMDownloader
                 }
                 else if (_ctCancel.IsCancellationRequested)
                 {
+                    this.Progress = 0;
                     status = DownloadStatus.Ready;
                 }
             }
-            else
+            else if (this.IsCompleted)
             {
-                if (this.IsCompleted)
-                {
-                    status = DownloadStatus.Finished;
-                    if (this.Progress != 100)
-                    {
-                        RaisePropertyChanged(nameof(this.Progress));
-                        this.Progress = 100;
-                    }
-                    this.TotalBytesToDownload = this.TotalBytesCompleted;
-                }
+                this.Progress = 100;
+                status = DownloadStatus.Finished;
             }
 
+            this.Status = status;
+            RaisePropertyChanged(nameof(this.Status));
             RaisePropertyChanged(nameof(this.TotalBytesCompleted));
             RaisePropertyChanged(nameof(this.TotalBytesToDownload));
+            RaisePropertyChanged(nameof(this.Progress));
 
             _ctsCanceled = null;
             _ctsPaused = null;
@@ -485,7 +455,7 @@ namespace AMDownloader
             long bytesCaptured;
             Task.Run(async () =>
             {
-                while (this.IsBeingDownloaded)
+                while (this.IsBeingDownloaded && this.Status == DownloadStatus.Downloading)
                 {
                     fromBytes = this.TotalBytesCompleted;
                     await Task.Delay(1000);
@@ -598,6 +568,13 @@ namespace AMDownloader
                 if (this.IsCompleted)
                 {
                     // Don't start an already completed download
+                    if (this.IsQueued) this.Dequeue();
+                    this.Status = DownloadStatus.Finished;
+                    this.Progress = 100;
+                    this.TotalBytesCompleted = new FileInfo(this.Destination).Length;
+                    RaisePropertyChanged(nameof(this.Status));
+                    RaisePropertyChanged(nameof(this.TotalBytesCompleted));
+                    RaisePropertyChanged(nameof(this.Progress));
                     return;
                 }
                 else
