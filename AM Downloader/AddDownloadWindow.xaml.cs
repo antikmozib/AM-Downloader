@@ -124,7 +124,7 @@ namespace AMDownloader
             }
             catch (IOException)
             {
-
+                return;
             }
 
             if (Settings.Default.RememberLastSavedLocation)
@@ -142,14 +142,18 @@ namespace AMDownloader
                 return;
             }
             e.Handled = true;
+            var fontSize = txtUrl.FontSize;
             if (e.Delta > 0)
             {
-                ++txtUrl.FontSize;
+                ++fontSize;
             }
             else
             {
-                --txtUrl.FontSize;
+                --fontSize;
             }
+            if (fontSize < this.FontSize) fontSize = this.FontSize;
+            if (fontSize > (3 * this.FontSize)) fontSize = 3 * this.FontSize;
+            txtUrl.FontSize = fontSize;
         }
     }
 }

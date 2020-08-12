@@ -20,14 +20,14 @@
             <Separator Margin="0 5 0 5" Opacity="0.5" />
             <DockPanel>
                 <Label>Max speed per download (0 = Unlimited):</Label>
-                <Label DockPanel.Dock="Right" Content="KB/s"/>
+                <Label DockPanel.Dock="Right" Content="KB/s" />
                 <TextBox VerticalContentAlignment="Center" HorizontalContentAlignment="Center" DockPanel.Dock="Right" Text="{Binding Source={x:Static properties:Settings.Default}, Path=MaxDownloadSpeed}" Width="50" IsTabStop="True" />
                 <Separator DockPanel.Dock="Right" Opacity="0" />
             </DockPanel>
             <Separator Margin="0 5 0 5" Opacity="0.5" />
             <StackPanel>
                 <CheckBox VerticalContentAlignment="Center" IsChecked="{Binding Source={x:Static properties:Settings.Default}, Path=ClearFinishedOnExit}">
-                    <Label  Content="Clear finished downloads on exit" />
+                    <Label Content="Clear finished downloads on exit" />
                 </CheckBox>
                 <Separator Margin="0 5 0 5" Opacity="0.5" />
                 <CheckBox VerticalContentAlignment="Center" IsChecked="{Binding Source={x:Static properties:Settings.Default}, Path=RememberLastSavedLocation}">
@@ -36,9 +36,9 @@
             </StackPanel>
         </StackPanel>
         <StackPanel Margin="0 20 0 5" Grid.Row="1">
-            <TextBlock Text="*Requires application restart" />
+            <Label Content="*Requires application restart" />
         </StackPanel>
-        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Height="25" Grid.Row="2">
+        <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Height="25" Grid.Row="2">
             <Button x:Name="btnOK" Content="_OK" Width="80" Margin="0 0 5 0" IsDefault="True" Click="btnOK_Click" Command="{Binding SaveSettingsCommand}" />
             <Button Content="_Cancel" Width="80" Margin="0 0 5 0" IsCancel="True" />
             <Button x:Name="btnReset" Content="_Reset" Width="80" Command="{Binding ResetSettingsCommand}" Click="btnReset_Click" />

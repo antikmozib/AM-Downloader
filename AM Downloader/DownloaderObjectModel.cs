@@ -62,21 +62,22 @@ namespace AMDownloader
         {
             Ready, Queued, Downloading, Paused, Pausing, Finished, Error, Cancelling, Connecting, Merging
         }
-        public bool IsQueued { get; private set; }
+        public long? TotalBytesToDownload { get; private set; } // nullable
+        public long? Speed { get; private set; } // nullable
+        public int? NumberOfActiveStreams { get; private set; } // nullable    
         public bool IsBeingDownloaded => _ctsPaused != null;
         public bool IsCompleted => File.Exists(this.Destination) && new FileInfo(this.Destination).Length >= this.TotalBytesToDownload;
+        public bool IsQueued { get; private set; }
         public string Name { get; private set; }
         public string Url { get; private set; }
         public string Destination { get; private set; }
         public DownloadStatus Status { get; private set; }
         public int Progress { get; private set; }
         public long TotalBytesCompleted { get; private set; }
-        public long? TotalBytesToDownload { get; private set; } // nullable
         public long BytesDownloadedThisSession { get; private set; }
         public bool SupportsResume { get; private set; }
-        public long? Speed { get; private set; } // nullable
         public DateTime DateCreated { get; private set; }
-        public int? NumberOfActiveStreams { get; private set; } // nullable
+        public HttpStatusCode? StatusCode { get; private set; }
         #endregion // Properties
 
         #region Constructors
@@ -116,24 +117,27 @@ namespace AMDownloader
             this.SupportsResume = false;
             this.DateCreated = DateTime.Now;
             this.NumberOfActiveStreams = null;
+            this.StatusCode = null;
             if (enqueue) this.Enqueue();
 
             Task.Run(async () =>
             {
                 _determiningTotalBytes = true;
-                try
-                {
-                    this.TotalBytesToDownload = await TotalBytesToDownloadAsync();
-                    if (this.TotalBytesToDownload > 0) this.SupportsResume = true;
-                }
-                catch (InvalidUrlException)
+                this.StatusCode = await VerifyUrlAsync();
+
+                if (this.StatusCode != HttpStatusCode.OK)
                 {
                     // invalid url
                     this.Dequeue();
                     this.Status = DownloadStatus.Error;
                 }
+                else
+                {
+                    this.TotalBytesToDownload = await TotalBytesToDownloadAsync();
+                    if (this.TotalBytesToDownload > 0) this.SupportsResume = true;
+                }
 
-                if (File.Exists(this.Destination) && this.Status != DownloadStatus.Error)
+                if (File.Exists(this.Destination) && this.StatusCode == HttpStatusCode.OK)
                 {
                     this.TotalBytesCompleted = new FileInfo(this.Destination).Length;
                     if (!this.IsBeingDownloaded)
@@ -154,6 +158,7 @@ namespace AMDownloader
                     }
                 }
                 _determiningTotalBytes = false;
+                RaisePropertyChanged(nameof(this.StatusCode));
                 RaisePropertyChanged(nameof(this.TotalBytesToDownload));
                 RaisePropertyChanged(nameof(this.TotalBytesCompleted));
                 RaisePropertyChanged(nameof(this.Progress));
@@ -163,10 +168,23 @@ namespace AMDownloader
         #endregion // Constructors
 
         #region Private methods
+        private async Task<HttpStatusCode?> VerifyUrlAsync()
+        {
+            try
+            {
+                using var request = new HttpRequestMessage(HttpMethod.Head, this.Url);
+                using (HttpResponseMessage response = await this._httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
+                {
+                    return response.StatusCode;
+                }
+            }
+            catch
+            {
+                return null;
+            }
+        }
         private async Task<long?> TotalBytesToDownloadAsync()
         {
-            if (!await this.IsValidUrlAsync()) throw new InvalidUrlException(this.Url);
-
             try
             {
                 HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Head, this.Url);
@@ -189,7 +207,6 @@ namespace AMDownloader
                     using (var sourceStream = new FileStream(file.FullName, FileMode.Open))
                     {
                         byte[] buffer = new byte[BUFFER_LENGTH];
-
                         while (true)
                         {
                             int read = await sourceStream.ReadAsync(buffer, 0, buffer.Length);
@@ -208,7 +225,6 @@ namespace AMDownloader
                     file.Delete();
                 }
             }
-
         }
 
         private async Task<DownloadStatus> ProcessStreamsAsync(long bytesDownloadedPreviously = 0)
@@ -478,26 +494,6 @@ namespace AMDownloader
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
         }
-
-        private async Task<bool> IsValidUrlAsync()
-        {
-            try
-            {
-                using var request = new HttpRequestMessage(HttpMethod.Head, this.Url);
-                using (HttpResponseMessage response = await this._httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
-                {
-                    if (response.StatusCode == HttpStatusCode.OK)
-                    {
-                        return true;
-                    }
-                }
-            }
-            catch
-            {
-                return false;
-            }
-            return false;
-        }
         #endregion // Private methods
 
         #region Public methods
@@ -583,7 +579,7 @@ namespace AMDownloader
                     RaisePropertyChanged(nameof(this.Status));
 
                     // Ensure url is valid for all downloads
-                    if (!await IsValidUrlAsync())
+                    if (await VerifyUrlAsync() != HttpStatusCode.OK)
                     {
                         this.Status = DownloadStatus.Error;
                         RaisePropertyChanged(nameof(this.Status));
@@ -680,7 +676,6 @@ namespace AMDownloader
                 Task.Run(async () =>
                 {
                     int numRetries = 30;
-
                     while (File.Exists(this.Destination) && numRetries-- > 0)
                     {
                         // if deletion fails, retry 30 times with 1 sec interval

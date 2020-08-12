@@ -239,10 +239,10 @@
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="Connections" Width="100" DisplayMemberBinding="{Binding NumberOfActiveStreams}" />
-                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="Location" Width="250">
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource RightAligned}" Header="Location" Width="250">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding Destination, Converter={StaticResource DownloaderDestinationConverter}}" />
+                                    <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding Destination, Converter={StaticResource DownloaderDestinationConverter}}" HorizontalAlignment="Right" />
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
@@ -259,6 +259,13 @@
                                     <Grid>
                                         <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding DateCreated, Converter={StaticResource DownloaderDateConverter}}" HorizontalAlignment="Right" />
                                     </Grid>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="HTTP Status" Width="75">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding StatusCode}" />
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>

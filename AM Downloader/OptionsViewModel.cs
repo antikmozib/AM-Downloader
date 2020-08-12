@@ -3,7 +3,7 @@ using System.Windows.Input;
 using AMDownloader.Properties;
 
 namespace AMDownloader
-{
+{    
     class OptionsViewModel
     {
         public ICommand SaveSettingsCommand { get; private set; }
