@@ -4,20 +4,12 @@ using System.Windows.Data;
 
 namespace AMDownloader
 {
-    public class FinishedCountConverter : IValueConverter
+    public class DownloaderStatusConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            int i_value;
-            int.TryParse(value.ToString(), out i_value);
-            if (i_value < 1)
-            {
-                return string.Empty;
-            }
-            else
-            {
-                return i_value + " item(s) finished";
-            }
+            if (value == null) return string.Empty;
+            return value.ToString();
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

@@ -39,8 +39,9 @@ namespace AMDownloader
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            this.Title = "Saving data...";
             this.Cursor = Cursors.Wait;
+            this.Title = "Quitting, please wait...";
+            this.IsEnabled = false;
             Settings.Default.Save();
             e.Cancel = true;
         }

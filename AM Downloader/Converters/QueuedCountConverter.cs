@@ -14,13 +14,9 @@ namespace AMDownloader
             {
                 return string.Empty;
             }
-            else if (i_value == 1)
-            {
-                return i_value + " item queued\t";
-            }
             else
             {
-                return i_value + " items queued\t";
+                return i_value + " item(s) queued";
             }
         }
 

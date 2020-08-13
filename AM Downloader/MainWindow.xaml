@@ -3,12 +3,13 @@
         <local:ProgressBarVisibilityConverter x:Key="ProgressBarVisbilityConverter" />
         <local:DownloaderSizeConverter x:Key="DownloaderSizeConverter" />
         <local:DownloaderSpeedConverter x:Key="DownloaderSpeedConverter" />
-        <local:DownloadingCountConverter x:Key="DownloadingCountConverter" />
+        <local:DownloaderStatusConverter x:Key="DownloaderStatusConverter" />
         <local:QueuedCountConverter x:Key="QueuedCountConverter" />
         <local:FinishedCountConverter x:Key="FinishedCountConverter" />
         <local:StatusBarItemVisibilityConverter x:Key="StatusBarItemVisibilityConverter" />
         <local:DownloaderDateConverter x:Key="DownloaderDateConverter" />
         <local:DownloaderDestinationConverter x:Key="DownloaderDestinationConverter" />
+        <local:DownloaderTypeConverter x:Key="DownloaderTypeConverter" />        
     </Window.Resources>
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Closing">
@@ -42,17 +43,50 @@
         </ToolBarTray>
         <DockPanel DockPanel.Dock="Bottom">
             <StatusBar Padding="5">
-                <StatusBarItem Visibility="{Binding Path=Text, ElementName=tbDownloadingCount, Converter={StaticResource StatusBarItemVisibilityConverter}}">
-                    <TextBlock x:Name="tbDownloadingCount" Text="{Binding DownloadingCount, Converter={StaticResource DownloadingCountConverter}}" />
+                <StatusBar.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="auto"/>
+                                <ColumnDefinition Width="auto"/>
+                                <ColumnDefinition Width="auto"/>
+                                <ColumnDefinition Width="auto"/>
+                            </Grid.ColumnDefinitions>
+                        </Grid>
+                    </ItemsPanelTemplate>
+                </StatusBar.ItemsPanel>
+                <StatusBarItem 
+                    Visibility="{Binding Path=Text, ElementName=tbStatus, Converter={StaticResource StatusBarItemVisibilityConverter}}">
+                    <TextBlock TextTrimming="CharacterEllipsis" x:Name="tbStatus" Text="{Binding Status, Converter={StaticResource DownloaderStatusConverter}}" FontWeight="Bold" />
                 </StatusBarItem>
-                <StatusBarItem Visibility="{Binding Path=Text, ElementName=tbQueuedCount, Converter={StaticResource StatusBarItemVisibilityConverter}}">
+                <StatusBarItem 
+                    Margin="20 0 0 0" 
+                    Grid.Column="1" 
+                    Visibility="{Binding Path=Text, ElementName=tbQueuedCount, Converter={StaticResource StatusBarItemVisibilityConverter}}">
                     <TextBlock x:Name="tbQueuedCount" Text="{Binding QueuedCount, Converter={StaticResource QueuedCountConverter}}" />
                 </StatusBarItem>
-                <StatusBarItem>
-                    <TextBlock Text="{Binding FinishedCount, Converter={StaticResource FinishedCountConverter}}" />
+                <StatusBarItem 
+                    Margin="20 0 0 0" 
+                    Grid.Column="2" 
+                    Visibility="{Binding Path=Text, ElementName=tbFinishedCount, Converter={StaticResource StatusBarItemVisibilityConverter}}">
+                    <TextBlock x:Name="tbFinishedCount" Text="{Binding FinishedCount, Converter={StaticResource FinishedCountConverter}}" />
                 </StatusBarItem>
-                <StatusBarItem DockPanel.Dock="Right" HorizontalAlignment="Right">
-                    <TextBlock Text="{Binding Speed, Converter={StaticResource DownloaderSpeedConverter}}" FontWeight="Bold" />
+                <StatusBarItem 
+                    Margin="20 0 0 0" 
+                    Grid.Column="3"
+                    Visibility="{Binding Path=Text, ElementName=tbBytesDownloaded, Converter={StaticResource StatusBarItemVisibilityConverter}}">
+                    <TextBlock x:Name="tbBytesDownloaded" Text="{Binding BytesDownloaded, Converter={StaticResource DownloaderSizeConverter}}" ToolTip="Data transferred this session" />
+                </StatusBarItem>
+                <StatusBarItem 
+                    Margin="20 0 0 0" 
+                    Grid.Column="4"  
+                    Visibility="{Binding Path=Text, ElementName=tbSpeed, Converter={StaticResource StatusBarItemVisibilityConverter}}"
+                    HorizontalAlignment="Right">
+                    <TextBlock TextAlignment="Right" x:Name="tbSpeed"  Text="{Binding Speed, Converter={StaticResource DownloaderSpeedConverter}}" FontWeight="Bold" />
                 </StatusBarItem>
             </StatusBar>
         </DockPanel>
@@ -194,11 +228,20 @@
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource RightAligned}" Header="Status" Width="100">
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource RightAligned}" Header="Type" Width="120">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding Status}" HorizontalAlignment="Right" />
+                                        <TextBlock TextAlignment="Right" Text="{Binding Destination, Converter={StaticResource DownloaderTypeConverter}}" TextTrimming="CharacterEllipsis" />
+                                    </Grid>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="Status" Width="100">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding Status}"/>
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
