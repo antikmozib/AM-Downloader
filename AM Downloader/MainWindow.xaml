@@ -9,13 +9,19 @@
         <local:StatusBarItemVisibilityConverter x:Key="StatusBarItemVisibilityConverter" />
         <local:DownloaderDateConverter x:Key="DownloaderDateConverter" />
         <local:DownloaderDestinationConverter x:Key="DownloaderDestinationConverter" />
-        <local:DownloaderTypeConverter x:Key="DownloaderTypeConverter" />        
+        <local:DownloaderTypeConverter x:Key="DownloaderTypeConverter" />
+        <local:DownloaderIconConverter x:Key="DownloaderIconConverter"/>
+        <local:TaskBarProgressConverter x:Key="TaskBarProgressConverter"/>
+        <local:TaskBarProgressStateConverter x:Key="TaskBarProgressStateConverter"/>
     </Window.Resources>
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Closing">
             <i:InvokeCommandAction Command="{Binding WindowClosingCommand, Mode=OneTime}" />
         </i:EventTrigger>
     </i:Interaction.Triggers>
+    <Window.TaskbarItemInfo>
+        <TaskbarItemInfo ProgressState="{Binding Progress, Converter={StaticResource TaskBarProgressStateConverter}}" ProgressValue="{Binding Progress, Converter={StaticResource TaskBarProgressConverter}}"/>
+    </Window.TaskbarItemInfo>
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File" TabIndex="9">
@@ -55,35 +61,42 @@
                                 <ColumnDefinition Width="auto"/>
                                 <ColumnDefinition Width="auto"/>
                                 <ColumnDefinition Width="auto"/>
+                                <ColumnDefinition Width="auto"/>
                             </Grid.ColumnDefinitions>
                         </Grid>
                     </ItemsPanelTemplate>
                 </StatusBar.ItemsPanel>
                 <StatusBarItem 
                     Visibility="{Binding Path=Text, ElementName=tbStatus, Converter={StaticResource StatusBarItemVisibilityConverter}}">
-                    <TextBlock TextTrimming="CharacterEllipsis" x:Name="tbStatus" Text="{Binding Status, Converter={StaticResource DownloaderStatusConverter}}" FontWeight="Bold" />
+                    <TextBlock TextTrimming="CharacterEllipsis" x:Name="tbStatus" Text="{Binding Status, Converter={StaticResource DownloaderStatusConverter}}"/>
+                </StatusBarItem>
+                <StatusBarItem
+                    Margin="20 0 0 0" 
+                    Grid.Column="1"
+                    Visibility="{Binding Path=Value, ElementName=pbProgress, Converter={StaticResource ProgressBarVisbilityConverter}}">
+                    <ProgressBar x:Name="pbProgress" Value="{Binding Progress, Mode=OneWay}" Width="100" Height="16" Visibility="Visible"/>
                 </StatusBarItem>
                 <StatusBarItem 
                     Margin="20 0 0 0" 
-                    Grid.Column="1" 
+                    Grid.Column="2" 
                     Visibility="{Binding Path=Text, ElementName=tbQueuedCount, Converter={StaticResource StatusBarItemVisibilityConverter}}">
                     <TextBlock x:Name="tbQueuedCount" Text="{Binding QueuedCount, Converter={StaticResource QueuedCountConverter}}" />
                 </StatusBarItem>
                 <StatusBarItem 
                     Margin="20 0 0 0" 
-                    Grid.Column="2" 
+                    Grid.Column="3" 
                     Visibility="{Binding Path=Text, ElementName=tbFinishedCount, Converter={StaticResource StatusBarItemVisibilityConverter}}">
                     <TextBlock x:Name="tbFinishedCount" Text="{Binding FinishedCount, Converter={StaticResource FinishedCountConverter}}" />
                 </StatusBarItem>
                 <StatusBarItem 
                     Margin="20 0 0 0" 
-                    Grid.Column="3"
+                    Grid.Column="4"
                     Visibility="{Binding Path=Text, ElementName=tbBytesDownloaded, Converter={StaticResource StatusBarItemVisibilityConverter}}">
                     <TextBlock x:Name="tbBytesDownloaded" Text="{Binding BytesDownloaded, Converter={StaticResource DownloaderSizeConverter}}" ToolTip="Data transferred this session" />
                 </StatusBarItem>
                 <StatusBarItem 
                     Margin="20 0 0 0" 
-                    Grid.Column="4"  
+                    Grid.Column="5"  
                     Visibility="{Binding Path=Text, ElementName=tbSpeed, Converter={StaticResource StatusBarItemVisibilityConverter}}"
                     HorizontalAlignment="Right">
                     <TextBlock TextAlignment="Right" x:Name="tbSpeed"  Text="{Binding Speed, Converter={StaticResource DownloaderSpeedConverter}}" FontWeight="Bold" />
@@ -145,6 +158,12 @@
                             <TextBlock VerticalAlignment="Center" Text="{Binding}" />
                         </StackPanel>
                     </ControlTemplate>
+                    <ControlTemplate TargetType="TreeViewItem" x:Key="VerifyingTemplate">
+                        <StackPanel Height="25" Background="{TemplateBinding Background}" Orientation="Horizontal">
+                            <Ellipse Margin="5 0 5 0" Width="12" Height="12" Fill="Yellow" />
+                            <TextBlock VerticalAlignment="Center" Text="{Binding}" />
+                        </StackPanel>
+                    </ControlTemplate>
                 </TreeView.Resources>
                 <TreeView.ItemContainerStyle>
                     <Style TargetType="{x:Type TreeViewItem}">
@@ -169,11 +188,14 @@
                             <DataTrigger Binding="{Binding}" Value="Paused">
                                 <Setter Property="Template" Value="{StaticResource PausedTemplate}" />
                             </DataTrigger>
-                            <DataTrigger Binding="{Binding}" Value="Error">
+                            <DataTrigger Binding="{Binding}" Value="Errored">
                                 <Setter Property="Template" Value="{StaticResource ErrorTemplate}" />
                             </DataTrigger>
                             <DataTrigger Binding="{Binding}" Value="Finished">
                                 <Setter Property="Template" Value="{StaticResource FinishedTemplate}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding}" Value="Verifying">
+                                <Setter Property="Template" Value="{StaticResource VerifyingTemplate}" />
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
@@ -185,7 +207,7 @@
                     <ContextMenu>
                         <MenuItem Header="Open" Command="{Binding OpenCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
                         <MenuItem Header="Open folder" Command="{Binding OpenContainingFolderCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
-                        <MenuItem Header="Copy link" Command="{Binding CopyLinkToClipboardCommand}" CommandParameter="{Binding PlacementTarget.SelectedItem, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                        <MenuItem Header="Copy link" Command="{Binding CopyLinkToClipboardCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
                         <Separator />
                         <MenuItem Header="Start" Command="{Binding StartCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
                         <MenuItem Header="Pause" Command="{Binding PauseCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
@@ -223,7 +245,12 @@
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Image Source="{Binding Destination, Converter={StaticResource DownloaderIconConverter}}" Width="16" Height="16" Margin="0 0 3 0"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
@@ -281,7 +308,7 @@
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="Connections" Width="100" DisplayMemberBinding="{Binding NumberOfActiveStreams}" />
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="Connections" Width="80" DisplayMemberBinding="{Binding NumberOfActiveStreams}" />
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource RightAligned}" Header="Location" Width="250">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>

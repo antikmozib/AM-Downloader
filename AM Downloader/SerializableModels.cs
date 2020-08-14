@@ -11,6 +11,7 @@ namespace AMDownloader
             public string Url { get; set; }
             public string Destination { get; set; }
             public bool IsQueued { get; set; }
+            public bool WasCompleted { get; set; }
             public DateTime DateCreated { get; set; }
         }
         [Serializable]

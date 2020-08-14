@@ -1,17 +1,17 @@
 ﻿using System;
 using System.Globalization;
-using System.Windows;
 using System.Windows.Data;
 
 namespace AMDownloader
 {
-    public class ProgressBarVisibilityConverter : IValueConverter
+    class TaskBarProgressConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            int i_value = (int)((double)value);
-            if (i_value > 0 && i_value < 100) return Visibility.Visible;
-            return Visibility.Collapsed;
+            double d_progress;
+            int.TryParse(value.ToString(), out int i_progress);
+            d_progress =(double) i_progress / 100;
+            return d_progress;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
@@ -19,5 +19,4 @@ namespace AMDownloader
             throw new NotImplementedException();
         }
     }
-
 }

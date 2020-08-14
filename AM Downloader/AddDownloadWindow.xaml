@@ -8,9 +8,9 @@
             <RowDefinition Height="10" />
             <RowDefinition Height="*" />
             <RowDefinition Height="10" />
-            <RowDefinition Height="25" />
+            <RowDefinition Height="auto" />
             <RowDefinition Height="10" />
-            <RowDefinition Height="25" />
+            <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
         <DockPanel>
             <TextBlock VerticalAlignment="Bottom" Text="Enter URL or pattern to add. You can enter multiple URLs on separate lines." />
@@ -19,15 +19,15 @@
         <TextBox Padding="2" x:Name="txtUrl" Grid.Row="2" Text="{Binding Path=Urls, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="auto" Height="auto" TabIndex="0" ScrollViewer.CanContentScroll="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" AcceptsReturn="True" PreviewMouseWheel="txtUrl_PreviewMouseWheel" />
         <DockPanel Grid.Row="4" HorizontalAlignment="Stretch">
             <TextBlock Margin="0 0 5 0" VerticalAlignment="Center" DockPanel.Dock="Left" Text="Save to:" />
-            <Button x:Name="btnBrowse" DockPanel.Dock="Right" Content="Browse" Width="80" Click="btnBrowse_Click" />
-            <ComboBox x:Name="cboDestination" Margin="0 0 5 0" Width="auto" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" IsEditable="True" IsReadOnly="True" Text="{Binding Path=SaveToFolder, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+            <Button x:Name="btnBrowse" DockPanel.Dock="Right" Content="Browse" Click="btnBrowse_Click" />
+            <ComboBox x:Name="cboDestination" Margin="0 0 10 0" Width="auto" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" IsEditable="True" IsReadOnly="True" Text="{Binding Path=SaveToFolder, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
         </DockPanel>
         <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Right">
             <CheckBox x:Name="cbAddToQueue" Content="Add to queue" IsChecked="{Binding Path=AddToQueue, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" VerticalAlignment="Center" Margin="0 0 10 0" />
             <CheckBox x:Name="cbStartDownloadingImmediately" Content="Start downloading" IsChecked="{Binding Path=StartDownload, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" VerticalAlignment="Center" Margin="0 0 20 0" />
-            <Button x:Name="btnAdd" Margin="0 0 5 0" Content="Add" Width="80" Command="{Binding AddCommand}" IsDefault="True" TabIndex="1" Click="btnAdd_Click" />
-            <Button x:Name="btnCancel" Margin="0 0 5 0" Content="Cancel" Width="80" IsCancel="True" TabIndex="2" Click="btnCancel_Click" />
-            <Button Command="{Binding PreviewCommand}" Content="Preview" Width="80" TabIndex="3" />
+            <Button x:Name="btnAdd" Margin="0 0 10 0" Content="Add" Command="{Binding AddCommand}" IsDefault="True" TabIndex="1" Click="btnAdd_Click" />
+            <Button x:Name="btnCancel" Margin="0 0 10 0" Content="Cancel" IsCancel="True" TabIndex="2" Click="btnCancel_Click" />
+            <Button Command="{Binding PreviewCommand}" Content="Preview" TabIndex="3" />
         </StackPanel>
     </Grid>
 </Window>

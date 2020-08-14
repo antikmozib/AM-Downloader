@@ -5,5 +5,9 @@
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <FontFamily x:Key="FontAwesome">/Fonts/fontawesome-webfont.ttf#FontAwesome</FontFamily>
+        <Style TargetType="{x:Type Button}">
+            <Setter Property="Width" Value="90"/>
+            <Setter Property="Height" Value="25"/>
+        </Style>
     </Application.Resources>
 </Application>

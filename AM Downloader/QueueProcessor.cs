@@ -20,11 +20,11 @@ namespace AMDownloader
     {
         #region Fields
         private readonly SemaphoreSlim _semaphore;
-        private BlockingCollection<IQueueable> _queueList;
+        private readonly BlockingCollection<IQueueable> _queueList;
+        private readonly List<IQueueable> _itemsProcessing;
+        private readonly RefreshCollection _refreshCollectionDel;
         private CancellationTokenSource _ctsCancel;
         private CancellationToken _ctCancel;
-        private List<IQueueable> _itemsProcessing;
-        private readonly RefreshCollection _refreshCollectionDel;
         #endregion // Fields
 
         #region Properties

@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Input;
@@ -11,12 +12,12 @@ namespace AMDownloader
     /// </summary>
     public partial class MainWindow : Window
     {
-        private DownloaderViewModel primaryViewModel = new DownloaderViewModel();
+        private DownloaderViewModel primaryViewModel;
 
         public MainWindow()
         {
-            InitializeComponent();
-
+            InitializeComponent(); 
+            primaryViewModel = new DownloaderViewModel(this);
             DataContext = primaryViewModel;
             lvDownload.ItemsSource = primaryViewModel.DownloadItemsList;
             tvCategories.ItemsSource = primaryViewModel.CategoriesList;
