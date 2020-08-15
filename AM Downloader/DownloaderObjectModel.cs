@@ -48,8 +48,8 @@ namespace AMDownloader
 
         #region Events
         public event PropertyChangedEventHandler PropertyChanged;
-        public event EventHandler DownloadInitializing;
-        public event EventHandler DownloadInitialized;
+        public event EventHandler DownloadVerifying;
+        public event EventHandler DownloadVerified;
         public event EventHandler DownloadStarted;
         public event EventHandler DownloadStopped;
         public event EventHandler DownloadEnqueued;
@@ -110,8 +110,8 @@ namespace AMDownloader
             _isCompleted = completed;
 
             PropertyChanged += propertyChangedEventHandler;
-            DownloadInitializing += downloadInitializingEventHandler;
-            DownloadInitialized += downloadInitializedEventHandler;
+            DownloadVerifying += downloadInitializingEventHandler;
+            DownloadVerified += downloadInitializedEventHandler;
             DownloadStarted += downloadStartedEventHandler;
             DownloadStopped += downloadStoppedEventHandler;
             DownloadEnqueued += downloadEnqueuedEventHandler;
@@ -208,16 +208,15 @@ namespace AMDownloader
         {
             this.Status = DownloadStatus.Verifying;
             RaisePropertyChanged(nameof(this.Status));
-            RaiseEvent(DownloadInitializing);
-
+            RaiseEvent(DownloadVerifying);
             if (this.IsCompleted)
             {
-                // download complete
+                // finished download
                 SetFinished();
             }
             else
             {
-                this.StatusCode = await VerifyUrlValidityAsync(url);
+                this.StatusCode = await VerifyUrlAsync(url);
 
                 if (this.StatusCode != HttpStatusCode.OK)
                 {
@@ -227,17 +226,16 @@ namespace AMDownloader
                 else
                 {
                     // valid url
-                    this.TotalBytesToDownload = await VerifyTotalBytesToDownloadAsync(url);
+                    this.TotalBytesToDownload = await TotalBytesAsync(url);
                     RaisePropertyChanged(nameof(this.TotalBytesToDownload));
                     if (this.TotalBytesToDownload > 0)
                     {
                         this.SupportsResume = true;
                         RaisePropertyChanged(nameof(this.SupportsResume));
                     }
-
                     if (File.Exists(this.Destination) && this.SupportsResume)
                     {
-                        // download paused
+                        // paused download
                         this.TotalBytesCompleted = new FileInfo(this.Destination).Length;
                         SetPaused();
                     }
@@ -257,12 +255,11 @@ namespace AMDownloader
             }
 
             if (this.IsCompleted) RaiseEvent(DownloadFinished);
-            RaiseEvent(DownloadInitialized);
+            RaiseEvent(DownloadVerified);
             _refreshCollectionDel?.Invoke();
-            _semaphoreDownloading.Release();
         }
 
-        private async Task<HttpStatusCode?> VerifyUrlValidityAsync(string url)
+        private async Task<HttpStatusCode?> VerifyUrlAsync(string url)
         {
             try
             {
@@ -281,7 +278,7 @@ namespace AMDownloader
                 return null;
             }
         }
-        private async Task<long?> VerifyTotalBytesToDownloadAsync(string url)
+        private async Task<long?> TotalBytesAsync(string url)
         {
             try
             {
@@ -297,7 +294,7 @@ namespace AMDownloader
 
         private async Task MergeFilesAsync(int partCount, params FileInfo[] files)
         {
-
+            await Task.Delay(1000);
         }
 
         private async Task<DownloadStatus> ProcessStreamsAsync(long bytesDownloadedPreviously = 0)
@@ -648,7 +645,7 @@ namespace AMDownloader
                     RaisePropertyChanged(nameof(this.Status));
 
                     // Ensure url is valid for all downloads
-                    if (await VerifyUrlValidityAsync(this.Url) != HttpStatusCode.OK)
+                    if (await VerifyUrlAsync(this.Url) != HttpStatusCode.OK)
                     {
                         SetErrored();
                         return;

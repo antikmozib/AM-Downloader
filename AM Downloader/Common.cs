@@ -13,8 +13,9 @@ namespace AMDownloader
 
         public static class ApplicationPaths
         {
-            public static string DownloadsHistory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Assembly.GetExecutingAssembly().GetName().Name, "history");
-            public static string SavedLocationsHistory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Assembly.GetExecutingAssembly().GetName().Name, "downloadpaths");
+            public static string LocalAppData => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Assembly.GetExecutingAssembly().GetName().Name);
+            public static string DownloadsHistoryFile => Path.Combine(LocalAppData, "history.xml");
+            public static string SavedLocationsFile => Path.Combine(LocalAppData, "savedlocations.xml");
             public static string DownloadsFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
         }
 

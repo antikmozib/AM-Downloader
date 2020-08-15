@@ -31,19 +31,11 @@ namespace AMDownloader
         void ResetSettings(object obj)
         {
             Settings.Default.Reset();
-            if (Directory.Exists(Common.ApplicationPaths.DownloadsHistory))
+            if (Directory.Exists(Common.ApplicationPaths.LocalAppData))
             {
                 try
                 {
-                    Directory.Delete(Common.ApplicationPaths.DownloadsHistory, true);
-                }
-                catch { }
-            }
-            if (Directory.Exists(Common.ApplicationPaths.SavedLocationsHistory))
-            {
-                try
-                {
-                    Directory.Delete(Common.ApplicationPaths.SavedLocationsHistory, true);
+                    Directory.Delete(Common.ApplicationPaths.LocalAppData, true);
                 }
                 catch { }
             }
