@@ -48,8 +48,8 @@ namespace AMDownloader
         {
             _parentViewModel = parentViewModel;
 
-            AddCommand = new RelayCommand(Add, Add_CanExecute);
-            PreviewCommand = new RelayCommand(Preview, Add_CanExecute);
+            AddCommand = new RelayCommand<object>(Add, Add_CanExecute);
+            PreviewCommand = new RelayCommand<object>(Preview, Add_CanExecute);
 
             _clipboardService = new ClipboardObserver();
 

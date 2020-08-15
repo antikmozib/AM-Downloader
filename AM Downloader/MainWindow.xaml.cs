@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Windows;
 using System.Windows.Input;
 using AMDownloader.Properties;
@@ -13,11 +14,20 @@ namespace AMDownloader
     public partial class MainWindow : Window
     {
         private DownloaderViewModel primaryViewModel;
+        private static readonly string appGuid = "20d3be33-cd45-4c69-b038-e95bc434e09c";
+        private static readonly Mutex mutex = new Mutex(false, "Global\\" + appGuid);
 
         public MainWindow()
         {
-            InitializeComponent(); 
-            primaryViewModel = new DownloaderViewModel(this);
+            if (!mutex.WaitOne(0, false))
+            {
+                var name = Assembly.GetExecutingAssembly().GetName().Name;
+                MessageBox.Show("Another instance of " + name + " is already running.", name, MessageBoxButton.OK, MessageBoxImage.Error);
+                Application.Current.Shutdown();
+            }
+
+            InitializeComponent();
+            primaryViewModel = new DownloaderViewModel();
             DataContext = primaryViewModel;
             lvDownload.ItemsSource = primaryViewModel.DownloadItemsList;
             tvCategories.ItemsSource = primaryViewModel.CategoriesList;

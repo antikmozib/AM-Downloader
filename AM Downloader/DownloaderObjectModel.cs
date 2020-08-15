@@ -36,6 +36,7 @@ namespace AMDownloader
         #region Fields
         private const int BUFFER_LENGTH = 1024;
         private const string PART_EXTENSION = ".AMDownload";
+        private bool _isCompleted;
         private CancellationTokenSource _ctsPaused, _ctsCanceled;
         private CancellationToken _ctPause, _ctCancel;
         private HttpClient _httpClient;
@@ -43,7 +44,6 @@ namespace AMDownloader
         private readonly RefreshCollection _refreshCollectionDel;
         private readonly SemaphoreSlim _semaphoreDownloading;
         private IProgress<long> _reportBytes;
-        private bool _isCompleted;
         #endregion // Fields
 
         #region Events
@@ -82,6 +82,7 @@ namespace AMDownloader
         public long BytesDownloadedThisSession { get; private set; }
         public bool SupportsResume { get; private set; }
         public DateTime DateCreated { get; private set; }
+        public double? TimeRemaining { get; private set; }
         #endregion // Properties
 
         #region Constructors
@@ -90,7 +91,7 @@ namespace AMDownloader
             string url,
             string destination,
             bool enqueue,
-            bool isCompleted,
+            bool completed,
             EventHandler downloadInitializingEventHandler,
             EventHandler downloadInitializedEventHandler,
             EventHandler downloadStartedEventHandler,
@@ -106,7 +107,7 @@ namespace AMDownloader
             _refreshCollectionDel = refreshCollectionDelegate;
             _semaphoreDownloading = new SemaphoreSlim(1);
             _reportBytes = bytesReporter;
-            _isCompleted = isCompleted;
+            _isCompleted = completed;
 
             PropertyChanged += propertyChangedEventHandler;
             DownloadInitializing += downloadInitializingEventHandler;
@@ -130,15 +131,20 @@ namespace AMDownloader
             this.DateCreated = DateTime.Now;
             this.NumberOfActiveStreams = null;
             this.StatusCode = null;
+            this.TimeRemaining = null;
+            this.IsQueued = false;
+
             if (enqueue) this.Enqueue();
-            Task.Run(async () => await VerifyDownloadAsync(url));
+
+            _semaphoreDownloading.Wait();
+            Task.Run(async () => await VerifyDownloadAsync(url)).ContinueWith(t => _semaphoreDownloading.Release());
         }
         #endregion // Constructors
 
         #region Private methods
         private void SetFinished()
         {
-            if (this.IsQueued) this.Dequeue();
+            this.IsQueued = false;
             this.Status = DownloadStatus.Finished;
             this.Progress = 100;
             this.TotalBytesToDownload = new FileInfo(this.Destination).Length;
@@ -148,9 +154,10 @@ namespace AMDownloader
             RaisePropertyChanged(nameof(this.Status));
             RaisePropertyChanged(nameof(this.Progress));
         }
+
         private void SetErrored()
         {
-            if (this.IsQueued) this.Dequeue();
+            this.IsQueued = false;
             this.Status = DownloadStatus.Error;
             this.Progress = 0;
             this.TotalBytesCompleted = 0;
@@ -158,6 +165,7 @@ namespace AMDownloader
             RaisePropertyChanged(nameof(this.Status));
             RaisePropertyChanged(nameof(this.Progress));
         }
+
         private void SetPaused()
         {
             this.Progress = (int)((double)this.TotalBytesCompleted / (double)this.TotalBytesToDownload * 100);
@@ -165,13 +173,18 @@ namespace AMDownloader
             RaisePropertyChanged(nameof(this.Status));
             RaisePropertyChanged(nameof(this.Progress));
         }
+
         private void SetQueued()
         {
             this.IsQueued = true;
-            if (this.Status != DownloadStatus.Paused) this.Status = DownloadStatus.Queued;
-            RaisePropertyChanged(nameof(this.Status));
             RaisePropertyChanged(nameof(this.IsQueued));
+            if (this.Status != DownloadStatus.Paused)
+            {
+                this.Status = DownloadStatus.Queued;
+                RaisePropertyChanged(nameof(this.Status));
+            }
         }
+
         private void SetDequeued()
         {
             this.IsQueued = false;
@@ -179,10 +192,12 @@ namespace AMDownloader
             RaisePropertyChanged(nameof(this.Status));
             RaisePropertyChanged(nameof(this.IsQueued));
         }
+
         private void SetReady()
         {
             this.TotalBytesCompleted = 0;
             this.Progress = 0;
+            this.IsQueued = false;
             this.Status = DownloadStatus.Ready;
             RaisePropertyChanged(nameof(this.TotalBytesCompleted));
             RaisePropertyChanged(nameof(this.Status));
@@ -191,8 +206,6 @@ namespace AMDownloader
 
         private async Task VerifyDownloadAsync(string url)
         {
-            await _semaphoreDownloading.WaitAsync();
-
             this.Status = DownloadStatus.Verifying;
             RaisePropertyChanged(nameof(this.Status));
             RaiseEvent(DownloadInitializing);
@@ -215,7 +228,12 @@ namespace AMDownloader
                 {
                     // valid url
                     this.TotalBytesToDownload = await VerifyTotalBytesToDownloadAsync(url);
-                    if (this.TotalBytesToDownload > 0) this.SupportsResume = true;
+                    RaisePropertyChanged(nameof(this.TotalBytesToDownload));
+                    if (this.TotalBytesToDownload > 0)
+                    {
+                        this.SupportsResume = true;
+                        RaisePropertyChanged(nameof(this.SupportsResume));
+                    }
 
                     if (File.Exists(this.Destination) && this.SupportsResume)
                     {
@@ -279,41 +297,7 @@ namespace AMDownloader
 
         private async Task MergeFilesAsync(int partCount, params FileInfo[] files)
         {
-            // split original into 5
-            /*if (File.Exists(this.Destination))
-            {
-                var chunkSize = new FileInfo(this.Destination).Length / partCount;
-                var sourceStreams = new FileStream[partCount];
-                // var sourceWriters = new BinaryWriter[partCount];
-                var fs = new FileStream(this.Destination, FileMode.Open, FileAccess.Read);
-                var reader = new BinaryReader(fs);
-                for (int i = 0; i < partCount; i++)
-                {
-                    var data = new byte[chunkSize];
-                    sourceStreams[i] = File.Create(this.Destination + ".source" + i + PART_EXTENSION);
-                    reader.BaseStream.Seek(i * partCount, SeekOrigin.Begin);
-                    reader.Read(data, 0, data.Length);
-                    sourceStreams[i].Write(data);
-                    sourceStreams[i].Close();
-                }
-                reader.Close();
-                fs.Close();
-            }*/
 
-            using (var destStream = new FileStream(this.Destination, FileMode.OpenOrCreate, FileAccess.ReadWrite))
-            {
-                using (var binaryWriter = new BinaryWriter(destStream))
-                {
-                    for (int i = 0; i < partCount; i++)
-                    {
-                        using (var sourceStream = new FileStream(files[i].FullName, FileMode.Open))
-                        {
-                            await sourceStream.CopyToAsync(destStream, BUFFER_LENGTH);
-                        }
-                        files[i].Delete();
-                    }
-                }
-            }
         }
 
         private async Task<DownloadStatus> ProcessStreamsAsync(long bytesDownloadedPreviously = 0)
@@ -333,7 +317,6 @@ namespace AMDownloader
                 this.BytesDownloadedThisSession += value;
                 this.TotalBytesCompleted = this.BytesDownloadedThisSession + bytesDownloadedPreviously;
                 _reportBytes.Report(value);
-
                 if (this.SupportsResume && (this.TotalBytesCompleted >= nextProgressReportAt || this.TotalBytesCompleted > this.TotalBytesToDownload - progressReportingFrequency))
                 {
                     double progress = (double)this.TotalBytesCompleted / (double)this.TotalBytesToDownload * 100;
@@ -497,6 +480,7 @@ namespace AMDownloader
             }
 
             StartMeasuringSpeed();
+            StartMeasuringEta();
             this.NumberOfActiveStreams = requests.Count;
             RaisePropertyChanged(nameof(this.NumberOfActiveStreams));
 
@@ -579,6 +563,45 @@ namespace AMDownloader
             });
         }
 
+        private void StartMeasuringEta()
+        {
+            if (!this.SupportsResume)
+            {
+                this.TimeRemaining = null;
+                RaisePropertyChanged(nameof(this.TimeRemaining));
+            }
+            else
+            {
+                Task.Run(async () =>
+                {
+                    long bytesFrom = this.TotalBytesCompleted;
+                    long bytesTo;
+                    long bytesCaptured;
+                    Stopwatch stopWatch = new Stopwatch();
+
+                    while (this.IsBeingDownloaded)
+                    {
+                        stopWatch.Start();
+                        await Task.Delay(1000);
+                        bytesTo = this.TotalBytesCompleted;
+                        bytesCaptured = bytesTo - bytesFrom;
+                        stopWatch.Stop();
+
+                        double eta = ((this.TotalBytesToDownload ?? 0) - this.TotalBytesCompleted) * ((double)stopWatch.ElapsedMilliseconds / bytesCaptured);
+                        if (eta >= 0)
+                        {
+                            this.TimeRemaining = eta;
+                            RaisePropertyChanged(nameof(this.TimeRemaining));
+                        }
+                    }
+                }).ContinueWith(t =>
+                {
+                    this.TimeRemaining = null;
+                    RaisePropertyChanged(nameof(this.TimeRemaining));
+                });
+            }
+        }
+
         protected void RaisePropertyChanged(string prop)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
@@ -588,18 +611,18 @@ namespace AMDownloader
         #region Public methods
         public void Enqueue()
         {
-            if (this.IsQueued || this.Status != DownloadStatus.Ready) return;
+            if (this.IsQueued || this.IsBeingDownloaded) return;
             SetQueued();
             RaiseEvent(DownloadEnqueued);
+            _refreshCollectionDel?.Invoke();
         }
 
         public void Dequeue()
         {
-            if (this.IsQueued && !this.IsBeingDownloaded)
-            {
-                SetDequeued();
-                RaiseEvent(DownloadDequeued);
-            }
+            if (!this.IsQueued || this.IsBeingDownloaded) return;
+            SetDequeued();
+            RaiseEvent(DownloadDequeued);
+            _refreshCollectionDel?.Invoke();
         }
 
         public async Task StartAsync()
@@ -659,7 +682,6 @@ namespace AMDownloader
 
                 case (DownloadStatus.Ready): // a.k.a canceled
                     this.Cancel();
-                    this.Dequeue();
                     SetReady();
                     break;
 
@@ -674,7 +696,6 @@ namespace AMDownloader
 
                 default:
                     this.Cancel();
-                    this.Dequeue();
                     SetReady();
                     break;
             }
@@ -755,6 +776,14 @@ namespace AMDownloader
         {
             this.DateCreated = newDateCreated;
             RaisePropertyChanged(nameof(this.DateCreated));
+        }
+
+        public async Task ForceReCheckAsync()
+        {
+            if (this.IsBeingDownloaded) return;
+            await _semaphoreDownloading.WaitAsync();
+            await VerifyDownloadAsync(this.Url);
+            _semaphoreDownloading.Release();
         }
         #endregion // Public methods
     }

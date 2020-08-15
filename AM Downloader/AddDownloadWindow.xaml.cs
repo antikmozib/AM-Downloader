@@ -37,23 +37,24 @@ namespace AMDownloader
 
             if (Directory.Exists(ApplicationPaths.SavedLocationsHistory))
             {
-                XmlSerializer writer = new XmlSerializer(typeof(SerializableDownloadPathHistoryList));
-                StreamReader streamReader = new StreamReader(Path.Combine(ApplicationPaths.SavedLocationsHistory, "savedlocations.xml"));
-                SerializableDownloadPathHistoryList list;
                 try
                 {
-                    list = (SerializableDownloadPathHistoryList)writer.Deserialize(streamReader);
-                    foreach (var item in list.Objects)
+                    XmlSerializer writer = new XmlSerializer(typeof(SerializableDownloadPathHistoryList));
+                    using (StreamReader streamReader = new StreamReader(Path.Combine(ApplicationPaths.SavedLocationsHistory, "savedlocations.xml")))
                     {
-                        if (item.path.Trim().Length > 0 && !cboDestination.Items.Contains(item.path))
+                        SerializableDownloadPathHistoryList list;
+                        list = (SerializableDownloadPathHistoryList)writer.Deserialize(streamReader);
+                        foreach (var item in list.Objects)
                         {
-                            cboDestination.Items.Add(item.path);
+                            if (item.path.Trim().Length > 0 && !cboDestination.Items.Contains(item.path))
+                            {
+                                cboDestination.Items.Add(item.path);
+                            }
                         }
                     }
                 }
                 catch
                 {
-
                 }
             }
             txtUrl.Focus();

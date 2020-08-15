@@ -3,23 +3,23 @@ using System.Windows.Input;
 
 namespace AMDownloader
 {
-    public class RelayCommand : ICommand
+    public class RelayCommand<T> : ICommand
     {
         #region Fields
 
-        readonly Action<object> _execute;
-        readonly Predicate<object> _canExecute;
+        readonly Action<T> _execute;
+        readonly Predicate<T> _canExecute;
 
         #endregion // Fields
 
         #region Constructors
 
-        public RelayCommand(Action<object> execute)
+        public RelayCommand(Action<T> execute)
             : this(execute, null)
         {
         }
 
-        public RelayCommand(Action<object> execute, Predicate<object> canExecute)
+        public RelayCommand(Action<T> execute, Predicate<T> canExecute)
         {
             if (execute == null)
                 throw new ArgumentNullException("execute");
@@ -33,7 +33,7 @@ namespace AMDownloader
 
         public bool CanExecute(object parameter)
         {
-            return _canExecute == null ? true : _canExecute(parameter);
+            return _canExecute == null ? true : _canExecute((T)parameter);
         }
 
         public event EventHandler CanExecuteChanged
@@ -44,7 +44,7 @@ namespace AMDownloader
 
         public void Execute(object parameter)
         {
-            _execute(parameter);
+            _execute((T)parameter);
         }
 
         #endregion // ICommand Members

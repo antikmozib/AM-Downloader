@@ -6,13 +6,16 @@
         <local:DownloaderStatusConverter x:Key="DownloaderStatusConverter" />
         <local:QueuedCountConverter x:Key="QueuedCountConverter" />
         <local:FinishedCountConverter x:Key="FinishedCountConverter" />
+        <local:VerifyingCountConverter x:Key="VerifyingCountConverter" />
         <local:StatusBarItemVisibilityConverter x:Key="StatusBarItemVisibilityConverter" />
         <local:DownloaderDateConverter x:Key="DownloaderDateConverter" />
         <local:DownloaderDestinationConverter x:Key="DownloaderDestinationConverter" />
         <local:DownloaderTypeConverter x:Key="DownloaderTypeConverter" />
-        <local:DownloaderIconConverter x:Key="DownloaderIconConverter"/>
-        <local:TaskBarProgressConverter x:Key="TaskBarProgressConverter"/>
-        <local:TaskBarProgressStateConverter x:Key="TaskBarProgressStateConverter"/>
+        <local:DownloaderIconConverter x:Key="DownloaderIconConverter" />
+        <local:DownloaderEtaConverter x:Key="DownloaderEtaConverter" />
+        <local:TaskBarProgressConverter x:Key="TaskBarProgressConverter" />
+        <local:TaskBarProgressStateConverter x:Key="TaskBarProgressStateConverter" />
+        <local:TreeViewCountConverter x:Key="TreeViewCountConverter" />
     </Window.Resources>
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Closing">
@@ -20,7 +23,7 @@
         </i:EventTrigger>
     </i:Interaction.Triggers>
     <Window.TaskbarItemInfo>
-        <TaskbarItemInfo ProgressState="{Binding Progress, Converter={StaticResource TaskBarProgressStateConverter}}" ProgressValue="{Binding Progress, Converter={StaticResource TaskBarProgressConverter}}"/>
+        <TaskbarItemInfo ProgressState="{Binding Progress, Converter={StaticResource TaskBarProgressStateConverter}}" ProgressValue="{Binding Progress, Converter={StaticResource TaskBarProgressConverter}}" />
     </Window.TaskbarItemInfo>
     <DockPanel>
         <Menu DockPanel.Dock="Top">
@@ -53,53 +56,59 @@
                     <ItemsPanelTemplate>
                         <Grid>
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="auto" />
+                                <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="auto"/>
-                                <ColumnDefinition Width="auto"/>
-                                <ColumnDefinition Width="auto"/>
-                                <ColumnDefinition Width="auto"/>
-                                <ColumnDefinition Width="auto"/>
+                                <ColumnDefinition Width="auto" />
+                                <ColumnDefinition Width="auto" />
+                                <ColumnDefinition Width="auto" />
+                                <ColumnDefinition Width="auto" />
                             </Grid.ColumnDefinitions>
                         </Grid>
                     </ItemsPanelTemplate>
                 </StatusBar.ItemsPanel>
                 <StatusBarItem 
-                    Visibility="{Binding Path=Text, ElementName=tbStatus, Converter={StaticResource StatusBarItemVisibilityConverter}}">
-                    <TextBlock TextTrimming="CharacterEllipsis" x:Name="tbStatus" Text="{Binding Status, Converter={StaticResource DownloaderStatusConverter}}"/>
-                </StatusBarItem>
-                <StatusBarItem
-                    Margin="20 0 0 0" 
-                    Grid.Column="1"
                     Visibility="{Binding Path=Value, ElementName=pbProgress, Converter={StaticResource ProgressBarVisbilityConverter}}">
-                    <ProgressBar x:Name="pbProgress" Value="{Binding Progress, Mode=OneWay}" Width="100" Height="16" Visibility="Visible"/>
+                    <ProgressBar x:Name="pbProgress" Value="{Binding Progress, Mode=OneWay}" Width="100" Height="16" Visibility="Visible" />
+                </StatusBarItem>
+                <StatusBarItem 
+                    Grid.Column="1" 
+                    Visibility="{Binding Path=Text, ElementName=tbStatus, Converter={StaticResource StatusBarItemVisibilityConverter}}">
+                    <TextBlock TextTrimming="CharacterEllipsis" x:Name="tbStatus" Text="{Binding Status, Converter={StaticResource DownloaderStatusConverter}}" />
                 </StatusBarItem>
                 <StatusBarItem 
                     Margin="20 0 0 0" 
                     Grid.Column="2" 
+                    Visibility="{Binding Path=Text, ElementName=tbVerifyingCount, Converter={StaticResource StatusBarItemVisibilityConverter}}">
+                    <TextBlock x:Name="tbVerifyingCount" Text="{Binding VerifyingCount, Converter={StaticResource VerifyingCountConverter}}" />
+                </StatusBarItem>
+                <StatusBarItem 
+                    Margin="20 0 0 0" 
+                    Grid.Column="3" 
                     Visibility="{Binding Path=Text, ElementName=tbQueuedCount, Converter={StaticResource StatusBarItemVisibilityConverter}}">
                     <TextBlock x:Name="tbQueuedCount" Text="{Binding QueuedCount, Converter={StaticResource QueuedCountConverter}}" />
                 </StatusBarItem>
                 <StatusBarItem 
                     Margin="20 0 0 0" 
-                    Grid.Column="3" 
+                    Grid.Column="4" 
                     Visibility="{Binding Path=Text, ElementName=tbFinishedCount, Converter={StaticResource StatusBarItemVisibilityConverter}}">
                     <TextBlock x:Name="tbFinishedCount" Text="{Binding FinishedCount, Converter={StaticResource FinishedCountConverter}}" />
                 </StatusBarItem>
                 <StatusBarItem 
                     Margin="20 0 0 0" 
-                    Grid.Column="4"
+                    Grid.Column="5" 
                     Visibility="{Binding Path=Text, ElementName=tbBytesDownloaded, Converter={StaticResource StatusBarItemVisibilityConverter}}">
                     <TextBlock x:Name="tbBytesDownloaded" Text="{Binding BytesDownloaded, Converter={StaticResource DownloaderSizeConverter}}" ToolTip="Data transferred this session" />
                 </StatusBarItem>
                 <StatusBarItem 
                     Margin="20 0 0 0" 
-                    Grid.Column="5"  
-                    Visibility="{Binding Path=Text, ElementName=tbSpeed, Converter={StaticResource StatusBarItemVisibilityConverter}}"
+                    Grid.Column="6" 
+                    Visibility="{Binding Path=Text, ElementName=tbSpeed, Converter={StaticResource StatusBarItemVisibilityConverter}}" 
                     HorizontalAlignment="Right">
-                    <TextBlock TextAlignment="Right" x:Name="tbSpeed"  Text="{Binding Speed, Converter={StaticResource DownloaderSpeedConverter}}" FontWeight="Bold" />
+                    <TextBlock TextAlignment="Right" x:Name="tbSpeed" Text="{Binding Speed, Converter={StaticResource DownloaderSpeedConverter}}" FontWeight="Bold" />
                 </StatusBarItem>
             </StatusBar>
         </DockPanel>
@@ -117,56 +126,72 @@
                 </i:Interaction.Triggers>
                 <TreeView.Resources>
                     <ControlTemplate TargetType="TreeViewItem" x:Key="QueuedTemplate">
-                        <StackPanel Height="25" Orientation="Horizontal" Background="{TemplateBinding Background}">
-                            <Ellipse Margin="5 0 5 0" Width="12" Height="12" Fill="SandyBrown" />
+                        <DockPanel Background="{TemplateBinding Background}" Height="25">
+                            <Ellipse Width="12" Height="12" Fill="SandyBrown" />
                             <TextBlock VerticalAlignment="Center" Text="{Binding}" />
-                        </StackPanel>
+                            <TextBlock DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center" Opacity="0.6" Text="{Binding DataContext.QueuedCount, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource TreeViewCountConverter}}" />
+                        </DockPanel>
                     </ControlTemplate>
                     <ControlTemplate TargetType="TreeViewItem" x:Key="DownloadTemplate">
-                        <StackPanel Height="25" Background="{TemplateBinding Background}" Orientation="Horizontal">
-                            <Ellipse Margin="5 0 5 0" Width="12" Height="12" Fill="LimeGreen" />
+                        <DockPanel Height="25" Background="{TemplateBinding Background}">
+                            <Ellipse Width="12" Height="12" Fill="LimeGreen" />
                             <TextBlock VerticalAlignment="Center" Text="{Binding}" />
-                        </StackPanel>
+                            <TextBlock DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center" Opacity="0.6" Text="{Binding DataContext.DownloadingCount, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource TreeViewCountConverter}}" />
+                        </DockPanel>
                     </ControlTemplate>
                     <ControlTemplate TargetType="TreeViewItem" x:Key="AllTemplate">
-                        <StackPanel Height="25" Background="{TemplateBinding Background}" Orientation="Horizontal">
-                            <Ellipse Margin="5 0 5 0" Width="12" Height="12" Fill="DarkSlateBlue" />
+                        <DockPanel Height="25" Background="{TemplateBinding Background}">
+                            <Ellipse Width="12" Height="12" Fill="DarkSlateBlue" />
                             <TextBlock VerticalAlignment="Center" Text="{Binding}" />
-                        </StackPanel>
+                            <TextBlock DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center" Opacity="0.6" Text="{Binding DataContext.Count, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource TreeViewCountConverter}}" />
+                        </DockPanel>
                     </ControlTemplate>
                     <ControlTemplate TargetType="TreeViewItem" x:Key="ReadyTemplate">
-                        <StackPanel Height="25" Background="{TemplateBinding Background}" Orientation="Horizontal">
-                            <Ellipse Margin="5 0 5 0" Width="12" Height="12" Fill="LightSeaGreen" />
+                        <DockPanel Height="25" Background="{TemplateBinding Background}">
+                            <Ellipse Width="12" Height="12" Fill="LightSeaGreen" />
                             <TextBlock VerticalAlignment="Center" Text="{Binding}" />
-                        </StackPanel>
+                            <TextBlock DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center" Opacity="0.6" Text="{Binding DataContext.ReadyCount, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource TreeViewCountConverter}}" />
+                        </DockPanel>
                     </ControlTemplate>
                     <ControlTemplate TargetType="TreeViewItem" x:Key="PausedTemplate">
-                        <StackPanel Height="25" Background="{TemplateBinding Background}" Orientation="Horizontal">
-                            <Ellipse Margin="5 0 5 0" Width="12" Height="12" Fill="Gold" />
+                        <DockPanel Height="25" Background="{TemplateBinding Background}">
+                            <Ellipse Width="12" Height="12" Fill="Gold" />
                             <TextBlock VerticalAlignment="Center" Text="{Binding}" />
-                        </StackPanel>
+                            <TextBlock DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center" Opacity="0.6" Text="{Binding DataContext.PausedCount, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource TreeViewCountConverter}}" />
+                        </DockPanel>
                     </ControlTemplate>
                     <ControlTemplate TargetType="TreeViewItem" x:Key="ErrorTemplate">
-                        <StackPanel Height="25" Background="{TemplateBinding Background}" Orientation="Horizontal">
-                            <Ellipse Margin="5 0 5 0" Width="12" Height="12" Fill="Red" />
+                        <DockPanel Height="25" Background="{TemplateBinding Background}">
+                            <Ellipse Width="12" Height="12" Fill="Red" />
                             <TextBlock VerticalAlignment="Center" Text="{Binding}" />
-                        </StackPanel>
+                            <TextBlock DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center" Opacity="0.6" Text="{Binding DataContext.ErroredCount, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource TreeViewCountConverter}}" />
+                        </DockPanel>
                     </ControlTemplate>
                     <ControlTemplate TargetType="TreeViewItem" x:Key="FinishedTemplate">
-                        <StackPanel Height="25" Background="{TemplateBinding Background}" Orientation="Horizontal">
-                            <Ellipse Margin="5 0 5 0" Width="12" Height="12" Fill="LightSlateGray" />
+                        <DockPanel Height="25" Background="{TemplateBinding Background}">
+                            <Ellipse Width="12" Height="12" Fill="LightSlateGray" />
                             <TextBlock VerticalAlignment="Center" Text="{Binding}" />
-                        </StackPanel>
+                            <TextBlock DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center" Opacity="0.6" Text="{Binding DataContext.FinishedCount, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource TreeViewCountConverter}}" />
+                        </DockPanel>
                     </ControlTemplate>
                     <ControlTemplate TargetType="TreeViewItem" x:Key="VerifyingTemplate">
-                        <StackPanel Height="25" Background="{TemplateBinding Background}" Orientation="Horizontal">
-                            <Ellipse Margin="5 0 5 0" Width="12" Height="12" Fill="Yellow" />
+                        <DockPanel Height="25" Background="{TemplateBinding Background}">
+                            <Ellipse Width="12" Height="12" Fill="Yellow" />
                             <TextBlock VerticalAlignment="Center" Text="{Binding}" />
-                        </StackPanel>
+                            <TextBlock DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center" Opacity="0.6" Text="{Binding DataContext.VerifyingCount, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource TreeViewCountConverter}}" />
+                        </DockPanel>
                     </ControlTemplate>
                 </TreeView.Resources>
                 <TreeView.ItemContainerStyle>
                     <Style TargetType="{x:Type TreeViewItem}">
+                        <Style.Resources>
+                            <Style TargetType="{x:Type Ellipse}">
+                                <Setter Property="Margin" Value="5 0 0 0" />
+                            </Style>
+                            <Style TargetType="{x:Type TextBlock}">
+                                <Setter Property="Margin" Value="5 0 5 0" />
+                            </Style>
+                        </Style.Resources>
                         <Style.Triggers>
                             <Trigger Property="IsSelected" Value="True">
                                 <Setter Property="Background" Value="PowderBlue" />
@@ -216,6 +241,8 @@
                         <MenuItem Header="Enqueue" Command="{Binding EnqueueCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
                         <MenuItem Header="Dequeue" Command="{Binding DequeueCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
                         <Separator />
+                        <MenuItem Header="Recheck" Command="{Binding RecheckCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                        <Separator />
                         <MenuItem Header="Remove from list" Command="{Binding RemoveFromListCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
                         <MenuItem Header="Delete file" Command="{Binding DeleteFileCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
                     </ContextMenu>
@@ -246,10 +273,10 @@
                                 <DataTemplate>
                                     <Grid>
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="auto"/>
-                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="auto" />
+                                            <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
-                                        <Image Source="{Binding Destination, Converter={StaticResource DownloaderIconConverter}}" Width="16" Height="16" Margin="0 0 3 0"/>
+                                        <Image Source="{Binding Destination, Converter={StaticResource DownloaderIconConverter}}" Width="16" Height="16" Margin="0 0 3 0" />
                                         <TextBlock Grid.Column="1" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
                                     </Grid>
                                 </DataTemplate>
@@ -268,7 +295,7 @@
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding Status}"/>
+                                        <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding Status}" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
@@ -308,18 +335,31 @@
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="Connections" Width="80" DisplayMemberBinding="{Binding NumberOfActiveStreams}" />
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="ETA" Width="80">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding TimeRemaining, Converter={StaticResource DownloaderEtaConverter}}" />
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="Connections" Width="80">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding NumberOfActiveStreams}" />
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource RightAligned}" Header="Location" Width="250">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding Destination, Converter={StaticResource DownloaderDestinationConverter}}" HorizontalAlignment="Right" />
+                                    <TextBlock HorizontalAlignment="Right" TextTrimming="CharacterEllipsis" Text="{Binding Destination, Converter={StaticResource DownloaderDestinationConverter}}" />
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="URL" Width="400">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding Url}" />
+                                    <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding Url}"/>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
@@ -335,7 +375,7 @@
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="HTTP Status" Width="75">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding StatusCode}" />
+                                    <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding StatusCode}"/>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>

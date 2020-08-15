@@ -11,8 +11,8 @@ namespace AMDownloader
 
         public OptionsViewModel()
         {
-            SaveSettingsCommand = new RelayCommand(SaveSettings);
-            ResetSettingsCommand = new RelayCommand(ResetSettings);
+            SaveSettingsCommand = new RelayCommand<object>(SaveSettings);
+            ResetSettingsCommand = new RelayCommand<object>(ResetSettings);
         }
 
         void SaveSettings(object obj)
