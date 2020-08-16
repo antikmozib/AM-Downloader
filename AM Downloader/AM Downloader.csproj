@@ -15,6 +15,9 @@ https://github.com/antikmozib/am-downloader</Description>
   <ItemGroup>
     <None Remove="app.ico" />
     <None Remove="Fonts\fontawesome-webfont.ttf" />
+    <None Remove="Fonts\fontawesome.otf" />
+    <None Remove="Fonts\fontawesomeregular.otf" />
+    <None Remove="Fonts\fontawesomesolid.otf" />
   </ItemGroup>
 
   <ItemGroup>
@@ -24,7 +27,12 @@ https://github.com/antikmozib/am-downloader</Description>
 
   <ItemGroup>
     <Resource Include="app.ico" />
-    <Resource Include="Fonts\fontawesome-webfont.ttf" />
+    <Resource Include="Fonts\fontawesomeregular.otf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Fonts\fontawesomesolid.otf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
   <ItemGroup>

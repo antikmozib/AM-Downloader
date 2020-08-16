@@ -696,9 +696,8 @@ namespace AMDownloader
                     SetReady();
                     break;
             }
-
-            _refreshCollectionDel?.Invoke();
             _semaphoreDownloading.Release();
+            _refreshCollectionDel?.Invoke();
             RaiseEvent(DownloadStopped);
             if (_taskCompletion.Task.Result == DownloadStatus.Finished) RaiseEvent(DownloadFinished);
         }

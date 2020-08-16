@@ -25,15 +25,17 @@ namespace AMDownloader
     class DownloaderViewModel : INotifyPropertyChanged
     {
         #region Fields
-        private const int COLLECTION_REFRESH_INTERVAL = 250;
+        private const int COLLECTION_REFRESH_INTERVAL = 1000;
         private readonly ICollectionView _collectionView;
-        private ClipboardObserver _clipboardService;
-        private object _lockDownloadItemsList;
-        private object _lockBytesDownloaded;
-        private SemaphoreSlim _semaphoreMeasuringSpeed;
-        private SemaphoreSlim _semaphoreUpdatingList;
-        private SemaphoreSlim _semaphoreRefreshingView;
+        private readonly ClipboardObserver _clipboardService;
+        private readonly object _lockDownloadItemsList;
+        private readonly object _lockBytesDownloaded;
+        private readonly object _lockBytesTransferredOverLitetime;
+        private readonly SemaphoreSlim _semaphoreMeasuringSpeed;
+        private readonly SemaphoreSlim _semaphoreUpdatingList;
+        private readonly SemaphoreSlim _semaphoreRefreshingView;
         private CancellationTokenSource _ctsUpdatingList;
+        private CancellationTokenSource _ctsRefreshView;
         #endregion // Fields
 
         #region Properties
@@ -95,10 +97,12 @@ namespace AMDownloader
             _clipboardService = new ClipboardObserver();
             _lockDownloadItemsList = DownloadItemsList;
             _lockBytesDownloaded = this.BytesDownloaded;
+            _lockBytesTransferredOverLitetime = Settings.Default.BytesTransferredOverLifetime;
             _semaphoreMeasuringSpeed = new SemaphoreSlim(1);
             _semaphoreUpdatingList = new SemaphoreSlim(1);
             _semaphoreRefreshingView = new SemaphoreSlim(1);
             _ctsUpdatingList = null;
+            _ctsRefreshView = null;
             this.Count = 0;
             this.DownloadingCount = 0;
             this.ErroredCount = 0;
@@ -113,9 +117,11 @@ namespace AMDownloader
             this.ProgressReporter = new Progress<long>(value =>
             {
                 Monitor.Enter(_lockBytesDownloaded);
+                Monitor.Enter(_lockBytesTransferredOverLitetime);
                 try
                 {
                     this.BytesDownloaded += value;
+                    Settings.Default.BytesTransferredOverLifetime += (ulong)value;
                 }
                 finally
                 {
@@ -170,7 +176,7 @@ namespace AMDownloader
                             if (sourceObjects[i] == null) continue;
                             int progress = (int)((double)(i + 1) / total * 100);
                             this.Progress = progress;
-                            this.Status = "Restoring " + (i + 1) + " of " + total + " (" + progress + "%): " + sourceObjects[i].Url;
+                            this.Status = "Restoring " + (i + 1) + " of " + total + ": " + sourceObjects[i].Url;
                             RaisePropertyChanged(nameof(this.Progress));
                             RaisePropertyChanged(nameof(this.Status));
                             var item = new DownloaderObjectModel(ref Client, sourceObjects[i].Url, sourceObjects[i].Destination, sourceObjects[i].IsQueued, sourceObjects[i].WasCompleted, Download_Verifying, Download_Verified, Download_Started, Download_Stopped, Download_Enqueued, Download_Dequeued, Download_Finished, Download_PropertyChanged, RefreshCollection, ProgressReporter);
@@ -397,7 +403,7 @@ namespace AMDownloader
                             {
                                 int progress = (int)((double)(i + 1) / total * 100);
                                 this.Progress = progress;
-                                this.Status = "Removing " + (i + 1) + " of " + total + " (" + progress + "%): " + items[i].Name;
+                                this.Status = "Removing " + (i + 1) + " of " + total + ": " + items[i].Name;
                                 RaisePropertyChanged(nameof(this.Status));
                                 RaisePropertyChanged(nameof(this.Progress));
                                 await Task.Delay(100);
@@ -573,6 +579,7 @@ namespace AMDownloader
                 }
                 finally
                 {
+                    Settings.Default.Save();
                     Application.Current.Dispatcher.Invoke(() => Application.Current.Shutdown());
                 }
             });
@@ -645,13 +652,14 @@ namespace AMDownloader
                 {
                     int progress = (int)((double)(i + 1) / total * 100);
                     this.Progress = progress;
-                    this.Status = "Deleting " + (i + 1) + " of " + total + " (" + progress + "%): " + itemsDeletable[i].Name;
+                    this.Status = "Deleting " + (i + 1) + " of " + total + ": " + itemsDeletable[i].Name;
                     RaisePropertyChanged(nameof(this.Status));
                     RaisePropertyChanged(nameof(this.Progress));
                     try
                     {
                         FileSystem.DeleteFile(itemsDeletable[i].Destination, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
-                        itemsDeleted.TryAdd(itemsDeletable[i]);
+                        itemsDeletable[i].Dequeue();
+                        itemsDeleted.TryAdd(itemsDeletable[i]); // needs to be checked
                     }
                     catch
                     {
@@ -669,7 +677,6 @@ namespace AMDownloader
                 {
                     foreach (var item in itemsDeleted)
                     {
-                        if (item.IsQueued) item.Dequeue();
                         Application.Current.Dispatcher.Invoke(() => DownloadItemsList.Remove(item));
                     }
                 }
@@ -849,21 +856,42 @@ namespace AMDownloader
         }
         internal void RefreshCollection()
         {
+            if (_semaphoreUpdatingList.CurrentCount == 0)
+            {
+                return;
+            }
+            if (_ctsRefreshView != null)
+            {
+                _ctsRefreshView.Cancel();
+            }
             Task.Run(async () =>
             {
-                if (!await _semaphoreRefreshingView.WaitAsync(COLLECTION_REFRESH_INTERVAL))
+                if (_ctsRefreshView == null)
+                {
+                    _ctsRefreshView = new CancellationTokenSource();
+                }
+                var ct = _ctsRefreshView.Token;
+                try
+                {
+                    await _semaphoreRefreshingView.WaitAsync(ct);
+                    var stopWatch = new Stopwatch();
+                    stopWatch.Start();
+                    Application.Current?.Dispatcher?.Invoke(_collectionView.Refresh);
+                    stopWatch.Stop();
+                    if (stopWatch.ElapsedMilliseconds < COLLECTION_REFRESH_INTERVAL)
+                    {
+                        await Task.Delay(COLLECTION_REFRESH_INTERVAL - (int)stopWatch.ElapsedMilliseconds);
+                    }
+                    _semaphoreRefreshingView.Release();
+                }
+                catch (OperationCanceledException)
                 {
                     return;
                 }
-                var stopWatch = new Stopwatch();
-                stopWatch.Start();
-                Application.Current?.Dispatcher?.Invoke(_collectionView.Refresh);
-                stopWatch.Stop();
-                if (stopWatch.ElapsedMilliseconds < COLLECTION_REFRESH_INTERVAL)
+                finally
                 {
-                    await Task.Delay(COLLECTION_REFRESH_INTERVAL - (int)stopWatch.ElapsedMilliseconds);
+                    _ctsRefreshView = null;
                 }
-                _semaphoreRefreshingView.Release();
             });
         }
 
@@ -890,7 +918,7 @@ namespace AMDownloader
             {
                 int progress = (int)((double)(i + 1) / total * 100);
                 this.Progress = progress;
-                this.Status = "Creating download " + (i + 1) + " of " + total + " (" + progress + "%): " + urls[i];
+                this.Status = "Creating download " + (i + 1) + " of " + total + ": " + urls[i];
                 RaisePropertyChanged(nameof(this.Status));
                 RaisePropertyChanged(nameof(this.Progress));
 
@@ -948,7 +976,7 @@ namespace AMDownloader
                     if (objects[i] == null) continue;
                     int progress = (int)((double)(i + 1) / total * 100);
                     this.Progress = progress;
-                    this.Status = "Listing " + (i + 1) + " of " + objects.Count() + " (" + progress + "%): " + objects[i].Name;
+                    this.Status = "Listing " + (i + 1) + " of " + objects.Count() + ": " + objects[i].Name;
                     RaisePropertyChanged(nameof(this.Status));
                     RaisePropertyChanged(nameof(this.Progress));
                     Application.Current.Dispatcher.Invoke(() =>

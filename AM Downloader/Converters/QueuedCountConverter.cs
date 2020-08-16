@@ -16,7 +16,7 @@ namespace AMDownloader
             }
             else
             {
-                return i_value + " item(s) queued";
+                return "Queued: "+ i_value;
             }
         }
 

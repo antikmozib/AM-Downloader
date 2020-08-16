@@ -16,7 +16,7 @@ namespace AMDownloader
             }
             else
             {
-                return i_value + " item(s) finished";
+                return "Finished: "+ i_value;
             }
         }
 

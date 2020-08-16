@@ -44,8 +44,9 @@ namespace AMDownloader
             var version = Assembly.GetExecutingAssembly().GetName().Version;
             var description = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyDescriptionAttribute), false).OfType<AssemblyDescriptionAttribute>().FirstOrDefault()?.Description;
             var copyright = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyCopyrightAttribute), true).OfType<AssemblyCopyrightAttribute>().FirstOrDefault()?.Copyright;
-
-            MessageBox.Show(this, name + "\nVersion " + version + "\n\n" + description + "\n\n" + copyright, "About", MessageBoxButton.OK, MessageBoxImage.Information);
+            var funFact = "Total data transferred over lifetime: " + Math.Round((double)Settings.Default.BytesTransferredOverLifetime / (1024 * 1024 * 1024), 2) + " GB";
+            MessageBox.Show(this, name + "\nVersion " + version + "\n\n" + description + "\n\n" + copyright + "\n\n" + funFact,
+                "About", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -53,7 +54,6 @@ namespace AMDownloader
             this.Cursor = Cursors.Wait;
             this.Title = "Quitting, please wait...";
             this.IsEnabled = false;
-            Settings.Default.Save();
             e.Cancel = true;
         }
     }

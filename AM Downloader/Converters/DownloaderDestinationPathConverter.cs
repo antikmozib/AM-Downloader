@@ -1,25 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Text;
 using System.Windows.Data;
 
 namespace AMDownloader
 {
-    class VerifyingCountConverter : IValueConverter
+    class DownloaderDestinationPathConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            int i_value;
-            int.TryParse(value.ToString(), out i_value);
-            if (i_value < 1)
+            string dest = value.ToString();
+            string folder = Path.GetDirectoryName(Path.GetDirectoryName(dest));
+            if (folder == "")
             {
-                return string.Empty;
+                folder = Path.GetDirectoryName(dest);
             }
-            else
-            {
-                return "Verifying: " + i_value;
-            }
+            return folder;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

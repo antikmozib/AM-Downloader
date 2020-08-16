@@ -9,8 +9,8 @@ namespace AMDownloader
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            int i_value = (int)((double)value);
-            if (i_value > 0 && i_value < 100) return Visibility.Visible;
+            int.TryParse(value.ToString(), out int progress);
+            if (progress > 0 && progress < 100) return Visibility.Visible;
             return Visibility.Collapsed;
         }
 

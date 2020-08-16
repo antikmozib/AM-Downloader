@@ -202,5 +202,17 @@ namespace AMDownloader.Properties {
                 this["MainWindowLeft"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public ulong BytesTransferredOverLifetime {
+            get {
+                return ((ulong)(this["BytesTransferredOverLifetime"]));
+            }
+            set {
+                this["BytesTransferredOverLifetime"] = value;
+            }
+        }
     }
 }

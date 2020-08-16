@@ -10,7 +10,7 @@ namespace AMDownloader
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             string dest = value.ToString();
-            return new FileInfo(dest).Directory.Name + " [" + dest.Substring(0, dest.Length - Path.GetFileName(dest).Length - 1) + "]";
+            return new FileInfo(dest).Directory.Name;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
