@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Windows.Input;
+using AMDownloader.Common;
 using AMDownloader.Properties;
 
 namespace AMDownloader
@@ -17,13 +18,13 @@ namespace AMDownloader
 
         void SaveSettings(object obj)
         {
-            if (Settings.Default.MaxConnectionsPerDownload < 1 || Settings.Default.MaxConnectionsPerDownload > 5)
+            if (Settings.Default.MaxConnectionsPerDownload < 1 || Settings.Default.MaxConnectionsPerDownload > AppConstants.ParallelStreamsLimit)
             {
-                Settings.Default.MaxConnectionsPerDownload = 5;
+                Settings.Default.MaxConnectionsPerDownload = AppConstants.ParallelStreamsLimit;
             }
-            if (Settings.Default.MaxParallelDownloads < 1 || Settings.Default.MaxParallelDownloads > 10)
+            if (Settings.Default.MaxParallelDownloads < 1 || Settings.Default.MaxParallelDownloads > AppConstants.ParallelDownloadsLimit)
             {
-                Settings.Default.MaxParallelDownloads = 10;
+                Settings.Default.MaxParallelDownloads = AppConstants.ParallelDownloadsLimit;
             }
             Settings.Default.Save();
         }
@@ -31,11 +32,11 @@ namespace AMDownloader
         void ResetSettings(object obj)
         {
             Settings.Default.Reset();
-            if (Directory.Exists(Common.ApplicationPaths.LocalAppData))
+            if (Directory.Exists(Common.AppPaths.LocalAppData))
             {
                 try
                 {
-                    Directory.Delete(Common.ApplicationPaths.LocalAppData, true);
+                    Directory.Delete(Common.AppPaths.LocalAppData, true);
                 }
                 catch { }
             }

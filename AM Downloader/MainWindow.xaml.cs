@@ -1,8 +1,11 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using AMDownloader.Properties;
 
@@ -13,13 +16,16 @@ namespace AMDownloader
     /// </summary>
     public partial class MainWindow : Window
     {
-        private DownloaderViewModel primaryViewModel;
-        private static readonly string appGuid = "20d3be33-cd45-4c69-b038-e95bc434e09c";
-        private static readonly Mutex mutex = new Mutex(false, "Global\\" + appGuid);
+        ICollectionView _dataView = null;
+        private DownloaderViewModel _primaryViewModel = new DownloaderViewModel();
+        private static readonly string _appGuid = "20d3be33-cd45-4c69-b038-e95bc434e09c";
+        private static readonly Mutex _mutex = new Mutex(false, "Global\\" + _appGuid);
+        GridViewColumnHeader _lastHeaderClicked = null;
+        ListSortDirection? _lastDirection = null;
 
         public MainWindow()
         {
-            if (!mutex.WaitOne(0, false))
+            if (!_mutex.WaitOne(0, false))
             {
                 var name = Assembly.GetExecutingAssembly().GetName().Name;
                 MessageBox.Show("Another instance of " + name + " is already running.", name, MessageBoxButton.OK, MessageBoxImage.Error);
@@ -27,10 +33,7 @@ namespace AMDownloader
             }
 
             InitializeComponent();
-            primaryViewModel = new DownloaderViewModel();
-            DataContext = primaryViewModel;
-            lvDownload.ItemsSource = primaryViewModel.DownloadItemsList;
-            tvCategories.ItemsSource = primaryViewModel.CategoriesList;
+            DataContext = _primaryViewModel;
         }
 
         private void menuExit_Click(object sender, RoutedEventArgs e)
@@ -55,6 +58,104 @@ namespace AMDownloader
             this.Title = "Quitting, please wait...";
             this.IsEnabled = false;
             e.Cancel = true;
+        }
+
+        private void lvDownload_HeaderClick(object sender, RoutedEventArgs e)
+        {
+            ListSortDirection? direction = ListSortDirection.Ascending;
+            var headerClicked = e.OriginalSource as GridViewColumnHeader;
+            if (headerClicked != null)
+            {
+                if (headerClicked.Role != GridViewColumnHeaderRole.Padding)
+                {
+                    if (headerClicked == _lastHeaderClicked)
+                    {
+                        if (_lastDirection == ListSortDirection.Ascending)
+                        {
+                            direction = ListSortDirection.Descending;
+                        }
+                        else if (_lastDirection == ListSortDirection.Descending)
+                        {
+                            direction = null;
+                        }
+                        else
+                        {
+                            direction = ListSortDirection.Ascending;
+                        }
+                    }
+
+                    Sort(headerClicked, direction);
+
+                    if (_lastHeaderClicked != null)
+                    {
+                        _lastHeaderClicked.Column.HeaderTemplate = Resources["HeaderTemplate"] as DataTemplate;
+                    }
+                    if (direction == ListSortDirection.Ascending)
+                    {
+                        headerClicked.Column.HeaderTemplate =
+                          Resources["HeaderTemplateArrowDown"] as DataTemplate;
+                    }
+                    else if (direction == ListSortDirection.Descending)
+                    {
+                        headerClicked.Column.HeaderTemplate =
+                          Resources["HeaderTemplateArrowUp"] as DataTemplate;
+                    }
+                    else
+                    {
+                        headerClicked.Column.HeaderTemplate =
+                          Resources["HeaderTemplate"] as DataTemplate;
+                    }
+                    _dataView.Refresh();
+                    _lastHeaderClicked = headerClicked;
+                    _lastDirection = direction;
+                }
+            }
+        }
+
+        private void Sort(GridViewColumnHeader columnHeader, ListSortDirection? direction)
+        {
+            if (direction == null) return;
+            if (_dataView == null)
+            {
+                _dataView = CollectionViewSource.GetDefaultView(lvDownload.ItemsSource);
+            }
+            _dataView.SortDescriptions.Clear();
+            var columnBinding = columnHeader.Column.DisplayMemberBinding as Binding;
+            var sortBy = columnBinding?.Path.Path ?? columnHeader.Column.Header as string;
+            switch (sortBy.ToLower())
+            {
+                case null:
+                    return;
+                case "downloaded":
+                    sortBy = "TotalBytesCompleted";
+                    break;
+                case "size":
+                    sortBy = "TotalBytesToDownload";
+                    break;
+                case "location":
+                    sortBy = "Destination";
+                    break;
+                case "url":
+                    sortBy = "Url";
+                    break;
+                case "created":
+                    sortBy = "DateCreated";
+                    break;
+                case "http status":
+                    sortBy = "StatusCode";
+                    break;
+                case "eta":
+                    sortBy = "TimeRemaining";
+                    break;
+                case "type":
+                    sortBy = "Extension";
+                    break;
+                case "connections":
+                    sortBy = "NumberOfActiveStreams";
+                    break;
+            }
+            SortDescription sd = new SortDescription(sortBy, direction ?? ListSortDirection.Ascending);
+            _dataView.SortDescriptions.Add(sd);
         }
     }
 }

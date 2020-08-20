@@ -4,18 +4,12 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
+using AMDownloader.ObjectModel;
+using AMDownloader.ObjectModel.Queue;
 
-namespace AMDownloader
+namespace AMDownloader.QueueModel
 {
-    // Represents contracts that can be used by the QueueProcessor
-    public interface IQueueable
-    {
-        public Task StartAsync();
-        public void Pause();
-        public bool IsQueued { get; }
-        public bool IsCompleted { get; }
-    }
-
+    
     class QueueProcessor
     {
         #region Fields

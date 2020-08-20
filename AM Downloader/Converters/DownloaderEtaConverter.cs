@@ -10,16 +10,16 @@ namespace AMDownloader
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value == null) return string.Empty;
+            if (value == null) return String.Empty;
             try
             {
                 double.TryParse(value.ToString(), out double remaining);
                 TimeSpan t = TimeSpan.FromMilliseconds(remaining);
                 return t.Minutes + "m " + t.Seconds + "s";
             }
-            catch
-            {
-                return string.Empty;
+           catch
+           {
+               return String.Empty;
             }
         }
 

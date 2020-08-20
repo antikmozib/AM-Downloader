@@ -4,15 +4,20 @@
              xmlns:local="clr-namespace:AMDownloader"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-        <FontFamily x:Key="FontAwesomeRegular">
-            /AM Downloader;component/Fonts/fontawesomeregular.otf#Font Awesome 5 Free Regular
-        </FontFamily>
-        <FontFamily x:Key="FontAwesomeSolid">
-            /AM Downloader;component/Fonts/fontawesomesolid.otf#Font Awesome 5 Free Solid
-        </FontFamily>
-        <Style TargetType="{x:Type Button}">
-            <Setter Property="Width" Value="90"/>
-            <Setter Property="Height" Value="25"/>
-        </Style>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Style.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <Style TargetType="{x:Type Button}">
+                <Setter Property="Width" Value="90"/>
+                <Setter Property="Height" Value="25"/>
+            </Style>
+            <FontFamily x:Key="FontAwesomeRegular">
+                /AM Downloader;component/Fonts/fontawesomeregular.otf#Font Awesome 5 Free Regular
+            </FontFamily>
+            <FontFamily x:Key="FontAwesomeSolid">
+                /AM Downloader;component/Fonts/fontawesomesolid.otf#Font Awesome 5 Free Solid
+            </FontFamily>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

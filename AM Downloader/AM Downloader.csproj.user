@@ -24,5 +24,8 @@
     <Page Update="OptionsWindow.xaml">
       <SubType>Designer</SubType>
     </Page>
+    <Resource Update="Style.xaml">
+      <SubType>Designer</SubType>
+    </Resource>
   </ItemGroup>
 </Project>

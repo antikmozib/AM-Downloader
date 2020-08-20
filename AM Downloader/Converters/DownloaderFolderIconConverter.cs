@@ -1,25 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Globalization;
+using System.IO;
 using System.Text;
+using System.Windows;
 using System.Windows.Data;
+using System.Windows.Interop;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
-namespace AMDownloader
+namespace AMDownloader 
 {
-    class VerifyingCountConverter : IValueConverter
+    class DownloaderFolderIconConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            int i_value;
-            int.TryParse(value.ToString(), out i_value);
-            if (i_value < 1)
-            {
-                return string.Empty;
-            }
-            else
-            {
-                return "Verifying: " + i_value;
-            }
+            return IconExtractor.Extract(Path.GetDirectoryName(value.ToString()),String.Empty,true);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

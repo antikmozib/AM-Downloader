@@ -1,0 +1,20 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <SolidColorBrush x:Key="AddButtonIconColor" Color="SteelBlue" />
+    <SolidColorBrush x:Key="RemoveButtonIconColor" Color="SteelBlue" />
+    <SolidColorBrush x:Key="StartButtonIconColor" Color="SeaGreen" />
+    <SolidColorBrush x:Key="PauseButtonIconColor" Color="DarkOrange" />
+    <SolidColorBrush x:Key="StopButtonIconColor" Color="OrangeRed" />
+    <SolidColorBrush x:Key="StartQueueButtonIconColor" Color="LightSeaGreen" />
+    <SolidColorBrush x:Key="StopQueueButtonIconColor" Color="IndianRed" />
+    <SolidColorBrush x:Key="CategoryAllColor" Color="DarkSlateBlue" />
+    <SolidColorBrush x:Key="CategoryReadyColor" Color="LightSeaGreen" />
+    <SolidColorBrush x:Key="CategoryQueuedColor" Color="SandyBrown" />
+    <SolidColorBrush x:Key="CategoryPausedColor" Color="Gold" />
+    <SolidColorBrush x:Key="CategoryFinishedColor" Color="LightSlateGray" />
+    <SolidColorBrush x:Key="CategoryErroredColor" Color="Red" />
+    <SolidColorBrush x:Key="CategoryDownloadingColor" Color="LimeGreen" />
+    <SolidColorBrush x:Key="CategoryVerifyingColor" Color="Yellow" />
+    <SolidColorBrush x:Key="CategorySelectedBackground" Color="PowderBlue" />
+    <SolidColorBrush x:Key="ColumnHeaderSortDirectionColor" Color="Green" />
+    <SolidColorBrush x:Key="GridViewSelectedItemBackground" Color="PowderBlue" />
+</ResourceDictionary>

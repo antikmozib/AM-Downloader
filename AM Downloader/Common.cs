@@ -2,36 +2,86 @@
 using System.IO;
 using System.Reflection;
 
-namespace AMDownloader
+namespace AMDownloader.Common
 {
-    static class Common
+    enum ByteConstants
     {
-        public const long KILOBYTE = 1024;
-        public const long MEGABYTE = KILOBYTE * KILOBYTE;
-        public const long GIGABYTE = MEGABYTE * KILOBYTE;
-        public const long TERABYTE = GIGABYTE * KILOBYTE;
+        KILOBYTE = 1024,
+        MEGABYTE = KILOBYTE * KILOBYTE,
+        GIGABYTE = MEGABYTE * KILOBYTE
+    }
 
-        public static class ApplicationPaths
-        {
-            public static string LocalAppData => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Assembly.GetExecutingAssembly().GetName().Name);
-            public static string DownloadsHistoryFile => Path.Combine(LocalAppData, "history.xml");
-            public static string SavedLocationsFile => Path.Combine(LocalAppData, "savedlocations.xml");
-            public static string DownloadsFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
-        }
+    static class AppConstants
+    {
+        public const int CollectionRefreshInterval = 1000; // 1 sec
+        public const int RequestThrottlerInterval = 60000; // 1 min
+        public const int DownloaderStreamBufferLength = (int)ByteConstants.KILOBYTE;
+        public const int RemovingFileBytesBufferLength = (int)(ByteConstants.MEGABYTE);
+        public const string DownloaderSplitedPartExtension = ".AMDownload";
+        public const string DownloaderFileMagicString = "[AMDownload-Paused]";
+        public const int ParallelDownloadsLimit = 10;
+        public const int ParallelStreamsLimit = 5;
+    }
 
-        public static string GetValidFilename(string defaultFilename)
+    static class AppPaths
+    {
+        public static string LocalAppData => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Assembly.GetExecutingAssembly().GetName().Name);
+        public static string DownloadsHistoryFile => Path.Combine(LocalAppData, "history.xml");
+        public static string SavedLocationsFile => Path.Combine(LocalAppData, "savedlocations.xml");
+        public static string DownloadsFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+    }
+
+    static class CommonFunctions
+    {
+        public static string GetFreshFilename(string path)
         {
-            string path = Path.GetDirectoryName(defaultFilename);
-            string filename = Path.GetFileName(defaultFilename);
-            string result = path + Path.DirectorySeparatorChar + filename;
+            string dirName = Path.GetDirectoryName(path);
+            string fileName = Path.GetFileName(path);
+            string result = dirName + Path.DirectorySeparatorChar + fileName;
             int i = 0;
 
             while (File.Exists(result))
             {
-                result = path + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(filename) + " (" + ++i + ")" + Path.GetExtension(filename);
+                result = dirName + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(fileName) + " (" + ++i + ")" + Path.GetExtension(fileName);
             };
 
             return result;
         }
+
+        public static string DriveLetterToName(string rootPath)
+        {
+            var drives = DriveInfo.GetDrives();
+            foreach (var drive in drives)
+            {
+                if (drive.RootDirectory.FullName.TrimEnd(Path.DirectorySeparatorChar) != rootPath.TrimEnd(Path.DirectorySeparatorChar))
+                {
+                    continue;
+                }
+
+                if (drive.VolumeLabel == "")
+                {
+                    switch (drive.DriveType)
+                    {
+                        case DriveType.Fixed:
+                            return "Local Disk (" + drive.RootDirectory.FullName.TrimEnd(Path.DirectorySeparatorChar) + ")";
+                        case DriveType.CDRom:
+                        case DriveType.Removable:
+                            return "Removeable Disk (" + drive.RootDirectory.FullName.TrimEnd(Path.DirectorySeparatorChar) + ")";
+                        case DriveType.Network:
+                            return "Network Disk (" + drive.RootDirectory.FullName.TrimEnd(Path.DirectorySeparatorChar) + ")";
+                        case DriveType.Unknown:
+                        case DriveType.Ram:
+                            return "Disk (" + drive.RootDirectory.FullName.TrimEnd(Path.DirectorySeparatorChar) + ")";
+                    }
+                }
+                else
+                {
+                    return drive.VolumeLabel;
+                }
+            }
+
+            return string.Empty;
+        }
     }
 }
+

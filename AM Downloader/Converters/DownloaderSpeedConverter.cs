@@ -1,3 +1,4 @@
+using AMDownloader.Common;
 using System;
 using System.Globalization;
 using System.Windows.Data;
@@ -8,23 +9,23 @@ namespace AMDownloader
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value == null) return string.Empty;
+            if (value == null) return String.Empty;
 
             long? speed = (long)value;
 
             if (speed > 1000000)
             {
-                return ((double)speed / Common.MEGABYTE).ToString("#0.00") + " MB/s";
+                return ((double)speed / (long)ByteConstants.MEGABYTE).ToString("#0.00") + " MB/s";
             }
             else
             {
                 if (speed == null)
                 {
-                    return string.Empty;
+                    return String.Empty;
                 }
                 else
                 {
-                    return ((double)speed / Common.KILOBYTE).ToString("#0") + " KB/s";
+                    return ((double)speed / (long)ByteConstants.KILOBYTE).ToString("#0") + " KB/s";
                 }
             }
         }

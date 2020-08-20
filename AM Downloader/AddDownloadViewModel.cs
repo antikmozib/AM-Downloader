@@ -8,7 +8,8 @@ using System.ComponentModel;
 using System.Windows.Input;
 using System.Windows;
 using AMDownloader.Properties;
-using static AMDownloader.Common;
+using AMDownloader.Common;
+using System;
 
 namespace AMDownloader
 {
@@ -59,11 +60,11 @@ namespace AMDownloader
             }
             else
             {
-                this.SaveToFolder = ApplicationPaths.DownloadsFolder;
+                this.SaveToFolder = AppPaths.DownloadsFolder;
             }
             this.AddToQueue = Settings.Default.AddItemsToQueue;
             this.StartDownload = Settings.Default.StartDownloadingAddedItems;
-            this.Urls = string.Empty;
+            this.Urls = String.Empty;
 
             var clipText = _clipboardService.GetText();
             if (clipText.Contains("http") || clipText.Contains("ftp")) this.Urls += clipText.Trim() + "\n";
@@ -72,7 +73,7 @@ namespace AMDownloader
         public void Preview(object obj)
         {
             string[] urls = ListifyUrls().ToArray();
-            string output = string.Empty;
+            string output = String.Empty;
 
             if (urls.Length == 0) return;
 

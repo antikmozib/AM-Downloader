@@ -1,23 +1,20 @@
+﻿using AMDownloader.ObjectModel;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Windows.Data;
+using System.Windows.Media;
 
 namespace AMDownloader
 {
-    public class FinishedCountConverter : IValueConverter
+    class DownloaderFileIconConverter : IValueConverter
     {
+        private Dictionary<string, ImageSource> _icons = new Dictionary<string, ImageSource>();
+
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            int i_value;
-            int.TryParse(value.ToString(), out i_value);
-            if (i_value < 1)
-            {
-                return string.Empty;
-            }
-            else
-            {
-                return "Finished: "+ i_value;
-            }
+            var item = value as DownloaderObjectModel;
+            return IconExtractor.Extract(item.Destination, item.Url, false);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
@@ -25,5 +22,4 @@ namespace AMDownloader
             throw new NotImplementedException();
         }
     }
-
 }

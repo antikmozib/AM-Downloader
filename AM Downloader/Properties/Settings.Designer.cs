@@ -122,9 +122,9 @@ namespace AMDownloader.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("150")]
-        public int LeftPaneWidth {
+        public global::System.Windows.GridLength LeftPaneWidth {
             get {
-                return ((int)(this["LeftPaneWidth"]));
+                return ((global::System.Windows.GridLength)(this["LeftPaneWidth"]));
             }
             set {
                 this["LeftPaneWidth"] = value;
@@ -212,6 +212,41 @@ namespace AMDownloader.Properties {
             }
             set {
                 this["BytesTransferredOverLifetime"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Normal")]
+        public global::System.Windows.WindowState MainWindowState {
+            get {
+                return ((global::System.Windows.WindowState)(this["MainWindowState"]));
+            }
+            set {
+                this["MainWindowState"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LastColumnClicked {
+            get {
+                return ((string)(this["LastColumnClicked"]));
+            }
+            set {
+                this["LastColumnClicked"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public global::System.ComponentModel.ListSortDirection LastColumnSorting {
+            get {
+                return ((global::System.ComponentModel.ListSortDirection)(this["LastColumnSorting"]));
+            }
+            set {
+                this["LastColumnSorting"] = value;
             }
         }
     }

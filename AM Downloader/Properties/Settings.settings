@@ -26,7 +26,7 @@
     <Setting Name="MaxDownloadSpeed" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
-    <Setting Name="LeftPaneWidth" Type="System.Int32" Scope="User">
+    <Setting Name="LeftPaneWidth" Type="System.Windows.GridLength" Scope="User">
       <Value Profile="(Default)">150</Value>
     </Setting>
     <Setting Name="AddWindowHeight" Type="System.String" Scope="User">
@@ -49,6 +49,15 @@
     </Setting>
     <Setting Name="BytesTransferredOverLifetime" Type="System.UInt64" Scope="User">
       <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="MainWindowState" Type="System.Windows.WindowState" Scope="User">
+      <Value Profile="(Default)">Normal</Value>
+    </Setting>
+    <Setting Name="LastColumnClicked" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="LastColumnSorting" Type="System.ComponentModel.ListSortDirection" Scope="User">
+      <Value Profile="(Default)" />
     </Setting>
   </Settings>
 </SettingsFile>

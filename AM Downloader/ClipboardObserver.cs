@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Windows;
 
 namespace AMDownloader
@@ -18,7 +19,7 @@ namespace AMDownloader
         }
         public string GetText()
         {
-            string val = string.Empty;
+            string val = String.Empty;
 
             Thread t = new Thread(() =>
             {

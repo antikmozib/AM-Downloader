@@ -21,17 +21,27 @@ https://github.com/antikmozib/am-downloader</Description>
   </ItemGroup>
 
   <ItemGroup>
+    <Page Remove="Style.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="System.Threading.Tasks" Version="4.3.0" />
     <PackageReference Include="System.Windows.Interactivity.WPF" Version="2.0.20525" />
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="app.ico" />
+    <Resource Include="app.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
     <Resource Include="Fonts\fontawesomeregular.otf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Fonts\fontawesomesolid.otf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Style.xaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Generator>MSBuild:Compile</Generator>
     </Resource>
   </ItemGroup>
 
