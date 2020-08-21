@@ -3,7 +3,6 @@ A modern download manager for Windows.
 
 # Features
 - Parallel downloads
-- Multiple streams per download
 - Supports pausing, resuming and queueing
 - Supports URL patterns
 
