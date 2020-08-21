@@ -24,6 +24,15 @@
         GlowBrush="{DynamicResource AccentColorBrush}"
         Icon="/app.ico">
     <Window.Resources>
+        <Style x:Key="VirtualisedMetroListView"
+           BasedOn="{StaticResource MahApps.Styles.ListView}"
+           TargetType="{x:Type ListView}">
+            <Setter Property="ScrollViewer.CanContentScroll" Value="True" />
+            <Setter Property="ScrollViewer.IsDeferredScrollingEnabled" Value="True" />
+            <Setter Property="VirtualizingStackPanel.IsVirtualizing" Value="True" />
+            <Setter Property="VirtualizingStackPanel.VirtualizationMode" Value="Recycling" />
+        </Style>
+        <Style BasedOn="{StaticResource VirtualisedMetroListView}" TargetType="ListView" />
         <DataTemplate x:Key="HeaderTemplate">
             <TextBlock Padding="5" Text="{Binding}"/>
         </DataTemplate>

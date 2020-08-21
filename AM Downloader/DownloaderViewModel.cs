@@ -110,7 +110,6 @@ namespace AMDownloader
             _lock_downloadItemsList = DownloadItemsList;
             _lockBytesDownloaded = this.BytesDownloaded;
             _lockBytesTransferredOverLifetime = Settings.Default.BytesTransferredOverLifetime;
-            _lockRefreshViewToken = _ctsRefreshView;
             this.Count = 0;
             this.DownloadingCount = 0;
             this.ErroredCount = 0;
@@ -994,6 +993,7 @@ namespace AMDownloader
                         CommandManager.InvalidateRequerySuggested();
                     });
                     await throttler;
+                    _semaphoreRefreshingView.Release();
                 }
                 catch (OperationCanceledException)
                 {
@@ -1002,7 +1002,6 @@ namespace AMDownloader
                 finally
                 {
                     _ctsRefreshView = null;
-                    _semaphoreRefreshingView.Release();
                 }
             });
         }
