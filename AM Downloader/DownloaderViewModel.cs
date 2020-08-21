@@ -164,8 +164,9 @@ namespace AMDownloader
             {
                 this.Status = "Restoring data...";
                 RaisePropertyChanged(nameof(this.Status));
-                Task.Run(() =>
+                Task.Run(async () =>
                 {
+                    await Task.Delay(200);
                     SerializableDownloaderObjectModelList source;
                     var xmlReader = new XmlSerializer(typeof(SerializableDownloaderObjectModelList));
                     try
@@ -191,6 +192,7 @@ namespace AMDownloader
                                 sourceObjects[i].Destination,
                                 sourceObjects[i].IsQueued,
                                 sourceObjects[i].TotalBytesToDownload,
+                                Download_Created,
                                 Download_Verifying,
                                 Download_Verified,
                                 Download_Started,
@@ -828,7 +830,7 @@ namespace AMDownloader
             {
                 Monitor.Exit(_lock_downloadItemsList);
                 _semaphoreUpdatingList.Release();
-                Task.Run(RefreshCollection);
+                Task.Run(() => RefreshCollection());
                 RaisePropertyChanged(nameof(this.FinishedCount));
             }
         }
@@ -838,6 +840,11 @@ namespace AMDownloader
         }
 
         internal void Download_PropertyChanged(object sender, PropertyChangedEventArgs e) { }
+
+        internal void Download_Created(object sender, EventArgs e)
+        {
+            RefreshCollection();
+        }
 
         internal void Download_Verifying(object sender, EventArgs e)
         {
@@ -958,35 +965,29 @@ namespace AMDownloader
             {
                 return;
             }
+
             if (_ctsRefreshView != null)
             {
                 _ctsRefreshView.Cancel();
             }
+
             Task.Run(async () =>
             {
-                if (_ctsRefreshView == null)
-                {
-                    _ctsRefreshView = new CancellationTokenSource();
-                }
-                var ct = _ctsRefreshView.Token;
                 try
                 {
+                    _ctsRefreshView = new CancellationTokenSource();
+                    var ct = _ctsRefreshView.Token;
                     await _semaphoreRefreshingView.WaitAsync(ct);
-                    var stopWatch = new Stopwatch();
-                    stopWatch.Start();
+                    var throller = Task.Delay(1000);
                     Application.Current?.Dispatcher?.Invoke(() =>
                     {
                         CollectionView.Refresh();
                         CommandManager.InvalidateRequerySuggested();
                     });
-                    stopWatch.Stop();
-                    if (stopWatch.ElapsedMilliseconds < AppConstants.CollectionRefreshInterval)
-                    {
-                        await Task.Delay(AppConstants.CollectionRefreshInterval - (int)stopWatch.ElapsedMilliseconds);
-                    }
+                    await throller;
                     _semaphoreRefreshingView.Release();
                 }
-                catch (OperationCanceledException)
+                catch
                 {
                     return;
                 }
@@ -1039,6 +1040,7 @@ namespace AMDownloader
                         urls[i],
                         fileName,
                         enqueue: true,
+                        Download_Created,
                         Download_Verifying,
                         Download_Verified,
                         Download_Started,
@@ -1058,6 +1060,7 @@ namespace AMDownloader
                         urls[i],
                         fileName,
                         enqueue: false,
+                        Download_Created,
                         Download_Verifying,
                         Download_Verified,
                         Download_Started,
@@ -1134,7 +1137,6 @@ namespace AMDownloader
                 this.Status = "Ready";
                 RaisePropertyChanged(nameof(this.Progress));
                 RaisePropertyChanged(nameof(this.Status));
-                RefreshCollection();
             }
         }
 

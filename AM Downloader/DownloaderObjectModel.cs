@@ -37,6 +37,7 @@ namespace AMDownloader.ObjectModel
 
         #region Events
         public event PropertyChangedEventHandler PropertyChanged;
+        public event EventHandler DownloadCreated;
         public event EventHandler DownloadVerifying;
         public event EventHandler DownloadVerified;
         public event EventHandler DownloadStarted;
@@ -78,6 +79,7 @@ namespace AMDownloader.ObjectModel
             string url,
             string destination,
             bool enqueue,
+            EventHandler downloadCreatedEventHandler,
             EventHandler downloadVerifyingEventHandler,
             EventHandler downloadVerifiedEventHandler,
             EventHandler downloadStartedEventHandler,
@@ -93,6 +95,7 @@ namespace AMDownloader.ObjectModel
                 destination,
                 enqueue,
                 totalBytesToDownload: null,
+                downloadCreatedEventHandler,
                 downloadVerifyingEventHandler,
                 downloadVerifiedEventHandler,
                 downloadStartedEventHandler,
@@ -111,6 +114,7 @@ namespace AMDownloader.ObjectModel
             string destination,
             bool enqueue,
             long? totalBytesToDownload,
+            EventHandler downloadCreatedEventHandler,
             EventHandler downloadVerifyingEventHandler,
             EventHandler downloadVerifiedEventHandler,
             EventHandler downloadStartedEventHandler,
@@ -129,6 +133,7 @@ namespace AMDownloader.ObjectModel
             _pausedIdentifierBytes = GetEncodedBytes(AppConstants.DownloaderFileMagicString);
 
             PropertyChanged += propertyChangedEventHandler;
+            DownloadCreated += downloadCreatedEventHandler;
             DownloadVerifying += downloadVerifyingEventHandler;
             DownloadVerified += downloadVerifiedEventHandler;
             DownloadStarted += downloadStartedEventHandler;
@@ -168,6 +173,9 @@ namespace AMDownloader.ObjectModel
                 _semaphoreDownloading.Wait();
                 Task.Run(async () => await VerifyDownloadAsync(url)).ContinueWith(t => _semaphoreDownloading.Release());
             }
+
+            RaiseEvent(DownloadCreated);
+
         }
         #endregion // Constructors
 
