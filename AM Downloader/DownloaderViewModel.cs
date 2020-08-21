@@ -133,6 +133,7 @@ namespace AMDownloader
                 finally
                 {
                     Monitor.Exit(_lockBytesDownloaded);
+                    Monitor.Exit(_lockBytesTransferredOverLifetime);
                 }
             });
 
@@ -980,10 +981,10 @@ namespace AMDownloader
 
             Task.Run(async () =>
             {
+                _ctsRefreshView = new CancellationTokenSource();
+                var ct = _ctsRefreshView.Token;
                 try
                 {
-                    _ctsRefreshView = new CancellationTokenSource();
-                    var ct = _ctsRefreshView.Token;
                     await _semaphoreRefreshingView.WaitAsync(ct);
                     var throller = Task.Delay(1000);
                     Application.Current?.Dispatcher?.Invoke(() =>
