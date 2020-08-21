@@ -101,15 +101,16 @@ namespace AMDownloader
             CollectionView = CollectionViewSource.GetDefaultView(DownloadItemsList);
             CollectionView.CurrentChanged += CollectionView_CurrentChanged;
             _clipboardService = new ClipboardObserver();
-            _lock_downloadItemsList = DownloadItemsList;
-            _lockBytesDownloaded = this.BytesDownloaded;
-            _lockBytesTransferredOverLifetime = Settings.Default.BytesTransferredOverLifetime;
             _semaphoreMeasuringSpeed = new SemaphoreSlim(1);
             _semaphoreUpdatingList = new SemaphoreSlim(1);
             _semaphoreRefreshingView = new SemaphoreSlim(1);
             _ctsUpdatingList = null;
             _ctsRefreshView = null;
             _closeApplicationDel = closeApplicationDelegate;
+            _lock_downloadItemsList = DownloadItemsList;
+            _lockBytesDownloaded = this.BytesDownloaded;
+            _lockBytesTransferredOverLifetime = Settings.Default.BytesTransferredOverLifetime;
+            _lockRefreshViewToken = _ctsRefreshView;
             this.Count = 0;
             this.DownloadingCount = 0;
             this.ErroredCount = 0;
@@ -986,22 +987,22 @@ namespace AMDownloader
                 try
                 {
                     await _semaphoreRefreshingView.WaitAsync(ct);
-                    var throller = Task.Delay(1000);
+                    var throttler = Task.Delay(1000);
                     Application.Current?.Dispatcher?.Invoke(() =>
                     {
                         CollectionView.Refresh();
                         CommandManager.InvalidateRequerySuggested();
                     });
-                    await throller;
-                    _semaphoreRefreshingView.Release();
+                    await throttler;
                 }
-                catch
+                catch (OperationCanceledException)
                 {
                     return;
                 }
                 finally
                 {
                     _ctsRefreshView = null;
+                    _semaphoreRefreshingView.Release();
                 }
             });
         }
@@ -1014,7 +1015,6 @@ namespace AMDownloader
         private async Task AddItemsAsync(string destination, bool enqueue, bool start = false, params string[] urls)
         {
             await _semaphoreUpdatingList.WaitAsync();
-
             int total = urls.Count();
             int maxParallelDownloads = Settings.Default.MaxParallelDownloads;
             var items = new DownloaderObjectModel[urls.Count()];

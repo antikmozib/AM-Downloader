@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using AMDownloader.Properties;
+using MahApps.Metro.Controls;
 
 namespace AMDownloader
 {
@@ -16,7 +17,7 @@ namespace AMDownloader
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : MetroWindow
     {
         private ICollectionView _dataView = null;
         private readonly DownloaderViewModel _primaryViewModel = new DownloaderViewModel(new CloseApplicationDelegate(CloseApplication));
