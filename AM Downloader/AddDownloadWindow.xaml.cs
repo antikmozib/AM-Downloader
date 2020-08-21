@@ -5,6 +5,7 @@ using System.Xml.Serialization;
 using AMDownloader.Properties;
 using AMDownloader.Common;
 using AMDownloader.ObjectModel.Serializable;
+using MahApps.Metro.Controls;
 
 namespace AMDownloader
 {
@@ -12,7 +13,7 @@ namespace AMDownloader
     /// Interaction logic for AddDownloadWindow.xaml
     /// </summary>
     /// 
-    public partial class AddDownloadWindow : Window
+    public partial class AddDownloadWindow : MetroWindow
     {
         public AddDownloadWindow()
         {

@@ -7,11 +7,22 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Style.xaml"/>
+                <!-- MahApps.Metro resource dictionaries. Make sure that all file names are Case Sensitive! -->
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.Buttons.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.FlatButton.xaml" />
+                <!-- Theme setting -->
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Light.Mauve.xaml" />
             </ResourceDictionary.MergedDictionaries>
-            <Style TargetType="{x:Type Button}">
-                <Setter Property="Width" Value="90"/>
-                <Setter Property="Height" Value="25"/>
-            </Style>
+            <!--<Style TargetType="{x:Type Button}">
+                <Style.Triggers>
+                    <Trigger Property="Style" Value="{StaticResource MahApps.Styles.Button.Flat}">
+                        <Setter Property="Width" Value="90"/>
+                        <Setter Property="Height" Value="25"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>-->
             <FontFamily x:Key="FontAwesomeRegular">
                 /AM Downloader;component/Fonts/fontawesomeregular.otf#Font Awesome 5 Free Regular
             </FontFamily>
@@ -19,5 +30,5 @@
                 /AM Downloader;component/Fonts/fontawesomesolid.otf#Font Awesome 5 Free Solid
             </FontFamily>
         </ResourceDictionary>
-    </Application.Resources>
+    </Application.Resources>    
 </Application>
