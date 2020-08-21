@@ -10,6 +10,7 @@ using System.Windows;
 using AMDownloader.Properties;
 using AMDownloader.Common;
 using System;
+using AMDownloader.ClipboardObservation;
 
 namespace AMDownloader
 {

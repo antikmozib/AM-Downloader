@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
@@ -12,11 +11,12 @@ using System.Threading.Tasks;
 using AMDownloader.Properties;
 using AMDownloader.Common;
 using System.Text;
-using AMDownloader.ObjectModel.Queue;
+using AMDownloader.RequestThrottling;
+using AMDownloader.RequestThrottling.Model;
+using AMDownloader.QueueProcessing;
 
 namespace AMDownloader.ObjectModel
 {
-    delegate void RefreshCollection();
     public enum DownloadStatus
     {
         Ready, Queued, Downloading, Paused, Pausing, Finishing, Finished, Error, Cancelling, Connecting, Merging, Verifying
@@ -28,7 +28,7 @@ namespace AMDownloader.ObjectModel
         private CancellationToken _ctPause, _ctCancel;
         private HttpClient _httpClient;
         private TaskCompletionSource<DownloadStatus> _taskCompletion;
-        private readonly RefreshCollection _refreshCollectionDel;
+        //private readonly RefreshCollection _refreshCollectionDel;
         private readonly SemaphoreSlim _semaphoreDownloading;
         private IProgress<long> _reportBytesProgress;
         private RequestThrottler _requestThrottler;
@@ -86,9 +86,24 @@ namespace AMDownloader.ObjectModel
             EventHandler downloadDequeuedEventHandler,
             EventHandler downloadFinishedEventHandler,
             PropertyChangedEventHandler propertyChangedEventHandler,
-            RefreshCollection refreshCollectionDelegate,
             IProgress<long> bytesReporter,
-            ref RequestThrottler requestThrottler) : this(ref httpClient, url, destination, enqueue, totalBytesToDownload: null, downloadVerifyingEventHandler, downloadVerifiedEventHandler, downloadStartedEventHandler, downloadStoppedEventHandler, downloadEnqueuedEventHandler, downloadDequeuedEventHandler, downloadFinishedEventHandler, propertyChangedEventHandler, refreshCollectionDelegate, bytesReporter, ref requestThrottler) { }
+            ref RequestThrottler requestThrottler) : this(
+                ref httpClient,
+                url,
+                destination,
+                enqueue,
+                totalBytesToDownload: null,
+                downloadVerifyingEventHandler,
+                downloadVerifiedEventHandler,
+                downloadStartedEventHandler,
+                downloadStoppedEventHandler,
+                downloadEnqueuedEventHandler,
+                downloadDequeuedEventHandler,
+                downloadFinishedEventHandler,
+                propertyChangedEventHandler,
+                bytesReporter,
+                ref requestThrottler)
+        { }
 
         public DownloaderObjectModel(
             ref HttpClient httpClient,
@@ -104,12 +119,10 @@ namespace AMDownloader.ObjectModel
             EventHandler downloadDequeuedEventHandler,
             EventHandler downloadFinishedEventHandler,
             PropertyChangedEventHandler propertyChangedEventHandler,
-            RefreshCollection refreshCollectionDelegate,
             IProgress<long> bytesReporter,
             ref RequestThrottler requestThrottler)
         {
             _httpClient = httpClient;
-            _refreshCollectionDel = refreshCollectionDelegate;
             _semaphoreDownloading = new SemaphoreSlim(1);
             _reportBytesProgress = bytesReporter;
             _requestThrottler = requestThrottler;
@@ -243,13 +256,13 @@ namespace AMDownloader.ObjectModel
                 {
                     // we've seen this *recently*; just grab seen data
                     this.TotalBytesToDownload = requestModel?.TotalBytesToDownload;
-                    this.StatusCode = requestModel?.Status;
+                    this.StatusCode = requestModel?.StatusCode;
                 }
                 else
                 {
                     // we haven't seen this before; verify actual url
                     var downloadVerification = await VerifyUrlAsync(url);
-                    this.StatusCode = downloadVerification.Status;
+                    this.StatusCode = downloadVerification.StatusCode;
                     this.TotalBytesToDownload = downloadVerification.TotalBytesToDownload;
                     RaisePropertyChanged(nameof(this.TotalBytesToDownload));
                     if (this.TotalBytesToDownload > 0)
@@ -297,41 +310,40 @@ namespace AMDownloader.ObjectModel
 
             if (this.IsCompleted) RaiseEvent(DownloadFinished);
             RaiseEvent(DownloadVerified);
-            _refreshCollectionDel?.Invoke();
         }
 
         private async Task<DownloadVerificationModel> VerifyUrlAsync(string url)
         {
             // force checks the url and returns TotalBytesToDownload
             DownloadVerificationModel downloadVerificationModel;
-            downloadVerificationModel.Status = null;
+            downloadVerificationModel.StatusCode = null;
             downloadVerificationModel.TotalBytesToDownload = null;
             try
             {
                 using var request = new HttpRequestMessage(HttpMethod.Head, url);
                 using (HttpResponseMessage response = await this._httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
                 {
-                    downloadVerificationModel.Status = response.StatusCode;
+                    downloadVerificationModel.StatusCode = response.StatusCode;
                     downloadVerificationModel.TotalBytesToDownload = response.Content.Headers.ContentLength;
                 }
             }
             catch (HttpRequestException)
             {
-                downloadVerificationModel.Status = HttpStatusCode.BadRequest;
+                downloadVerificationModel.StatusCode = HttpStatusCode.BadRequest;
             }
             catch
             {
-                downloadVerificationModel.Status = null;
+                downloadVerificationModel.StatusCode = null;
             }
             return downloadVerificationModel;
         }
 
-        private long? GetCorrectFileLength(string destination, byte[] identifyingBytes)
+        private long? GetCorrectFileLength(string filename, byte[] identifyingBytes)
         {
-            if (File.Exists(destination))
+            if (File.Exists(filename))
             {
-                long length = new FileInfo(destination).Length;
-                if (IsFilePaused(destination, identifyingBytes))
+                long length = new FileInfo(filename).Length;
+                if (IsFilePaused(filename, identifyingBytes))
                 {
                     return length - identifyingBytes.Length;
                 }
@@ -343,19 +355,19 @@ namespace AMDownloader.ObjectModel
             return null;
         }
 
-        private bool CreateEmptyDownload(string destination, byte[] identiferBytes)
+        private bool CreateEmptyDownload(string filename, byte[] identiferBytes)
         {
             try
             {
-                if (!Directory.Exists(Path.GetDirectoryName(destination)))
+                if (!Directory.Exists(Path.GetDirectoryName(filename)))
                 {
-                    Directory.CreateDirectory(Path.GetDirectoryName(destination));
+                    Directory.CreateDirectory(Path.GetDirectoryName(filename));
                 }
-                if (File.Exists(destination))
+                if (File.Exists(filename))
                 {
-                    File.Delete(destination);
+                    File.Delete(filename);
                 }
-                using (var fs = File.Create(destination))
+                using (var fs = File.Create(filename))
                 {
                     using (var binaryWriter = new BinaryWriter(fs))
                     {
@@ -363,9 +375,9 @@ namespace AMDownloader.ObjectModel
                     }
                 }
                 // ensure this is an empty download by checking length
-                if (File.Exists(destination)
-                    && IsFilePaused(destination, identiferBytes)
-                    && new FileInfo(destination).Length <= identiferBytes.Length)
+                if (File.Exists(filename)
+                    && IsFilePaused(filename, identiferBytes)
+                    && new FileInfo(filename).Length <= identiferBytes.Length)
                 {
                     return true;
                 }
@@ -376,7 +388,7 @@ namespace AMDownloader.ObjectModel
             }
             catch (Exception ex)
             {
-                throw new AMDownloaderException("Failed to create new download: " + destination, ex);
+                throw new AMDownloaderException("Failed to create new download: " + filename, ex);
             }
         }
 
@@ -385,12 +397,12 @@ namespace AMDownloader.ObjectModel
             return Encoding.ASCII.GetBytes(text);
         }
 
-        private bool IsFilePaused(string destination, byte[] identifyingBytes)
+        private bool IsFilePaused(string filename, byte[] identifyingBytes)
         {
-            if (!File.Exists(destination)) return false;
+            if (!File.Exists(filename)) return false;
             try
             {
-                using (FileStream fs = new FileStream(destination, FileMode.Open, FileAccess.Read))
+                using (FileStream fs = new FileStream(filename, FileMode.Open, FileAccess.Read))
                 using (BinaryReader reader = new BinaryReader(fs))
                 {
                     var buffer = new byte[identifyingBytes.Length];
@@ -415,32 +427,30 @@ namespace AMDownloader.ObjectModel
             return true;
         }
 
-        public async Task<bool> RemoveIdentifyingBytesFromFile(string destination, byte[] remove, int bufferLength = AppConstants.RemovingFileBytesBufferLength)
+        private async Task<bool> RemoveIdentifyingBytesFromFile(string filename, byte[] remove, int bufferLength = AppConstants.RemovingFileBytesBufferLength)
         {
-            if (!File.Exists(destination)) return false;
-            var tempFilePath = destination + ".tmp";
+            if (!File.Exists(filename)) return false;
+            var tempFilePath = filename + ".tmp";
             using (var tempFile = File.Create(tempFilePath))
-            using (var originalFile = new FileStream(destination, FileMode.Open, FileAccess.Read))
+            using (var originalFile = new FileStream(filename, FileMode.Open, FileAccess.Read))
             {
                 originalFile.Seek(remove.Length, SeekOrigin.Begin);
                 await originalFile.CopyToAsync(tempFile, bufferLength);
             }
-            File.Delete(destination);
-            File.Move(tempFilePath, destination);
+            File.Delete(filename);
+            File.Move(tempFilePath, filename);
             return true;
         }
+
 
         private async Task<DownloadStatus> ProcessStreamsAsync(long bytesDownloadedPreviously)
         {
             var status = DownloadStatus.Error;
-            List<HttpRequestMessage> requests = new List<HttpRequestMessage>();
-            List<Task<bool>> streamTasks = new List<Task<bool>>();
-            Task<bool[]> aggregatedStreamTasks;
-            bool[] streamResults = null;
+            Task<bool> streamTask;
+            HttpRequestMessage request;
             long progressReportingFrequency = AppConstants.DownloaderStreamBufferLength;
             long nextProgressReportAt = AppConstants.DownloaderStreamBufferLength;
             long maxDownloadSpeed = Settings.Default.MaxDownloadSpeed * 1024;
-            int numStreams = Settings.Default.MaxConnectionsPerDownload;
             SemaphoreSlim semaphoreProgress = new SemaphoreSlim(1);
             IProgress<int> streamProgress = new Progress<int>(async (value) =>
             {
@@ -458,8 +468,6 @@ namespace AMDownloader.ObjectModel
                 }
                 semaphoreProgress.Release();
             });
-            long chunkSize = ((this.TotalBytesToDownload ?? 0) - bytesDownloadedPreviously) / numStreams;
-
             _ctsPaused = new CancellationTokenSource();
             _ctsCanceled = new CancellationTokenSource();
             _ctPause = _ctsPaused.Token;
@@ -467,25 +475,23 @@ namespace AMDownloader.ObjectModel
             var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(_ctPause, _ctCancel).Token;
 
             // doesn't support multiple streams or each steam under 1 MB
-            if (!this.SupportsResume || chunkSize <= (long)ByteConstants.MEGABYTE)
+            if (!this.SupportsResume)
             {
-                var request = new HttpRequestMessage
+                request = new HttpRequestMessage
                 {
                     RequestUri = new Uri(this.Url),
                     Method = HttpMethod.Get
                 };
-                requests.Add(request);
             }
             else
             {
-                // Set up the requests
-                var request = new HttpRequestMessage
+                // Set up the request
+                request = new HttpRequestMessage
                 {
                     RequestUri = new Uri(this.Url),
                     Method = HttpMethod.Get,
-                    Headers = { Range = new RangeHeaderValue(bytesDownloadedPreviously, TotalBytesToDownload) }
+                    Headers = { Range = new RangeHeaderValue(bytesDownloadedPreviously, this.TotalBytesToDownload) }
                 };
-                requests.Add(request);
             }
 
             if (this.SupportsResume)
@@ -503,110 +509,89 @@ namespace AMDownloader.ObjectModel
                     progressReportingFrequency = (this.TotalBytesToDownload ?? 0) / 100;
                 }
 
-                if (progressReportingFrequency < AppConstants.DownloaderStreamBufferLength)
-                    progressReportingFrequency = AppConstants.DownloaderStreamBufferLength;
+                if (progressReportingFrequency < 1)
+                    progressReportingFrequency = 1;
                 else if (progressReportingFrequency > 512 * (long)ByteConstants.KILOBYTE)
                     progressReportingFrequency = 512 * (long)ByteConstants.KILOBYTE;
 
                 nextProgressReportAt = progressReportingFrequency;
             }
 
-            // Set up the tasks to process the requests
-            foreach (var request in requests)
+            // Process the request
+            streamTask = Task.Run(async () =>
             {
-                streamTasks.Add(Task.Run(async () =>
+                try
                 {
-                    try
+                    if (!Directory.Exists(Path.GetDirectoryName(this.Destination)))
                     {
-                        if (!Directory.Exists(Path.GetDirectoryName(this.Destination)))
-                        {
-                            throw new AMDownloaderException("Destination directory does not exist.");
-                        }
-                        if (!File.Exists(this.Destination))
-                        {
-                            throw new AMDownloaderException("A new download has not been created.");
-                        }
+                        throw new AMDownloaderException("Destination directory does not exist.");
+                    }
+                    if (!File.Exists(this.Destination))
+                    {
+                        throw new AMDownloaderException("A new download has not been created.");
+                    }
 
-                        using (var destinationStream = new FileStream(this.Destination, FileMode.Append, FileAccess.Write))
-                        using (var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
-                        using (var sourceStream = await response.Content.ReadAsStreamAsync())
-                        using (var binaryWriter = new BinaryWriter(destinationStream))
+                    using (var destinationStream = new FileStream(this.Destination, FileMode.Append, FileAccess.Write))
+                    using (var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
+                    using (var sourceStream = await response.Content.ReadAsStreamAsync())
+                    using (var binaryWriter = new BinaryWriter(destinationStream))
+                    {
+                        byte[] buffer = new byte[AppConstants.DownloaderStreamBufferLength];
+                        int s_bytesReceived = 0;
+                        int read;
+                        var stopWatch = new Stopwatch();
+                        while (true)
                         {
-                            byte[] buffer = new byte[AppConstants.DownloaderStreamBufferLength];
-                            int s_bytesReceived = 0;
-                            int read;
-                            var stopWatch = new Stopwatch();
-                            while (true)
+                            linkedToken.ThrowIfCancellationRequested();
+
+                            stopWatch.Start();
+                            read = await sourceStream.ReadAsync(buffer, 0, buffer.Length, linkedToken);
+                            if (read == 0)
                             {
-                                linkedToken.ThrowIfCancellationRequested();
+                                return true;
+                            }
+                            else
+                            {
+                                byte[] data = new byte[read];
+                                buffer.ToList().CopyTo(0, data, 0, read);
+                                binaryWriter.Write(data, 0, data.Length);
+                                s_bytesReceived += read;
+                                streamProgress.Report(data.Length);
+                            }
 
-                                stopWatch.Start();
-                                read = await sourceStream.ReadAsync(buffer, 0, buffer.Length, linkedToken);
-                                if (read == 0)
-                                {
-                                    return true;
-                                }
-                                else
-                                {
-                                    byte[] data = new byte[read];
-                                    buffer.ToList().CopyTo(0, data, 0, read);
-                                    binaryWriter.Write(data, 0, data.Length);
-                                    s_bytesReceived += read;
-                                    streamProgress.Report(data.Length);
-                                }
+                            stopWatch.Stop();
 
-                                stopWatch.Stop();
-
-                                // Speed throttler
-                                if (maxDownloadSpeed > 0 && stopWatch.ElapsedMilliseconds > 0)
+                            // Speed throttler
+                            if (maxDownloadSpeed > 0 && stopWatch.ElapsedMilliseconds > 0)
+                            {
+                                int s_bytesExpected = (int)((double)maxDownloadSpeed / 1000 * stopWatch.ElapsedMilliseconds);
+                                if (s_bytesReceived > s_bytesExpected)
                                 {
-                                    int s_bytesExpected = (int)((double)maxDownloadSpeed / 1000 * stopWatch.ElapsedMilliseconds);
-                                    if (s_bytesReceived > s_bytesExpected)
-                                    {
-                                        long expectedMilliseconds = (long)(1000 / (double)maxDownloadSpeed * s_bytesReceived);
-                                        long delay = expectedMilliseconds - stopWatch.ElapsedMilliseconds;
-                                        if (delay > 0) await Task.Delay((int)delay);
-                                        s_bytesReceived = 0;
-                                        stopWatch.Reset();
-                                    }
+                                    long expectedMilliseconds = (long)(1000 / (double)maxDownloadSpeed * s_bytesReceived);
+                                    long delay = expectedMilliseconds - stopWatch.ElapsedMilliseconds;
+                                    if (delay > 0) await Task.Delay((int)delay);
+                                    s_bytesReceived = 0;
+                                    stopWatch.Reset();
                                 }
                             }
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        throw new AMDownloaderException(ex.Message, ex);
-                    }
-                    finally
-                    {
-                        --this.NumberOfActiveStreams;
-                        RaisePropertyChanged(nameof(this.NumberOfActiveStreams));
-                    }
-                }));
-
-            }
+                }
+                catch (Exception ex)
+                {
+                    throw new AMDownloaderException(ex.Message, ex);
+                }
+            });
 
             StartMeasuringSpeed();
             StartMeasuringEta();
 
-            this.NumberOfActiveStreams = requests.Count;
-            RaisePropertyChanged(nameof(this.NumberOfActiveStreams));
-
-            // Run the tasks
-            aggregatedStreamTasks = Task.WhenAll(streamTasks.ToArray());
             try
             {
-                streamResults = await aggregatedStreamTasks;
+                // Run the tasks
+                var finished = await streamTask;
+
                 // Operation complete; verify state
-                var finished = true;
-                foreach (var result in streamResults)
-                {
-                    if (!result)
-                    {
-                        finished = false;
-                        break;
-                    }
-                }
                 // completed successfully
                 if (finished)
                 {
@@ -636,9 +621,6 @@ namespace AMDownloader.ObjectModel
                     }
                 }
             }
-
-            this.NumberOfActiveStreams = null;
-            RaisePropertyChanged(nameof(this.NumberOfActiveStreams));
 
             // Update final size
             if (!this.SupportsResume) this.TotalBytesToDownload = this.TotalBytesCompleted;
@@ -738,7 +720,6 @@ namespace AMDownloader.ObjectModel
             if (this.IsQueued || this.IsBeingDownloaded) return;
             SetQueued();
             RaiseEvent(DownloadEnqueued);
-            _refreshCollectionDel?.Invoke();
         }
 
         public void Dequeue()
@@ -746,7 +727,6 @@ namespace AMDownloader.ObjectModel
             if (!this.IsQueued || this.IsBeingDownloaded) return;
             SetDequeued();
             RaiseEvent(DownloadDequeued);
-            _refreshCollectionDel?.Invoke();
         }
 
         public async Task StartAsync()
@@ -772,8 +752,9 @@ namespace AMDownloader.ObjectModel
                     RaisePropertyChanged(nameof(this.Status));
                     DownloadVerificationModel downloadVerification;
                     downloadVerification = await VerifyUrlAsync(this.Url);
+
                     // Ensure url is valid for all downloads
-                    if (downloadVerification.Status != HttpStatusCode.OK)
+                    if (downloadVerification.StatusCode != HttpStatusCode.OK)
                     {
                         SetErrored();
                         return;
@@ -835,7 +816,6 @@ namespace AMDownloader.ObjectModel
                     break;
             }
             _semaphoreDownloading.Release();
-            _refreshCollectionDel?.Invoke();
             RaiseEvent(DownloadStopped);
             if (_taskCompletion.Task.Result == DownloadStatus.Finished) RaiseEvent(DownloadFinished);
         }

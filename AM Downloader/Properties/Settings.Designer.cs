@@ -37,18 +37,6 @@ namespace AMDownloader.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1")]
-        public int MaxConnectionsPerDownload {
-            get {
-                return ((int)(this["MaxConnectionsPerDownload"]));
-            }
-            set {
-                this["MaxConnectionsPerDownload"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool ClearFinishedOnExit {
             get {

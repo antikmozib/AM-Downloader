@@ -697,12 +697,11 @@
                                         <Image Source="{Binding Converter={StaticResource DownloaderIconConverter}}" 
                                                Width="18" 
                                                Height="18" 
-                                               Margin="0 0 3 0" 
+                                               Margin="0 0 2 0" 
                                                VerticalAlignment="Center" />
                                         <TextBlock Grid.Column="1" 
                                                    Text="{Binding Name}"
-                                                   TextTrimming="CharacterEllipsis" 
-                                                   VerticalAlignment="Center" />
+                                                   TextTrimming="CharacterEllipsis"/>
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
@@ -803,19 +802,7 @@
                                                Text="{Binding TimeRemaining, Converter={StaticResource DownloaderEtaConverter}}" />
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
-                        </GridViewColumn>
-                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
-                                        HeaderContainerStyle="{StaticResource RightAligned}" 
-                                        Header="Connections"
-                                        Width="80">
-                            <GridViewColumn.CellTemplate>
-                                <DataTemplate>
-                                    <TextBlock TextAlignment="Right" 
-                                               TextTrimming="CharacterEllipsis" 
-                                               Text="{Binding NumberOfActiveStreams}" />
-                                </DataTemplate>
-                            </GridViewColumn.CellTemplate>
-                        </GridViewColumn>
+                        </GridViewColumn>						
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" 
                                         HeaderContainerStyle="{StaticResource LeftAligned}" 
                                         Header="Location" 
@@ -831,18 +818,16 @@
                                         <Image Source="{Binding Destination, Converter={StaticResource DownloaderFolderIconConverter}}"
                                                Width="18"
                                                Height="18"
-                                               Margin="0 0 3 0"
+                                               Margin="0 0 2 0"
                                                VerticalAlignment="Center" />
                                         <TextBlock Margin="0 0 5 0" 
                                                    Grid.Column="1" 
                                                    TextTrimming="CharacterEllipsis" 
-                                                   Text="{Binding Destination, Converter={StaticResource DownloaderDestinationConverter}}" 
-                                                   VerticalAlignment="Center" />
+                                                   Text="{Binding Destination, Converter={StaticResource DownloaderDestinationConverter}}"/>
                                         <TextBlock Grid.Column="2" 
                                                    TextTrimming="CharacterEllipsis" 
                                                    Text="{Binding Destination, Converter={StaticResource DownloaderDestinationPathConverter}}" 
-                                                   Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" 
-                                                   VerticalAlignment="Center" />
+                                                   Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>

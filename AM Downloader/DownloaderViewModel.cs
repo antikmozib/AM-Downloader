@@ -17,12 +17,15 @@ using Microsoft.VisualBasic.FileIO;
 using AMDownloader.Common;
 using AMDownloader.Properties;
 using AMDownloader.ObjectModel;
-using AMDownloader.QueueModel;
 using AMDownloader.ObjectModel.Serializable;
+using AMDownloader.ClipboardObservation;
+using AMDownloader.RequestThrottling;
+using AMDownloader.QueueProcessing;
 
 namespace AMDownloader
 {
     delegate Task AddItemsAsync(string destination, bool enqueue, bool start, params string[] urls);
+
     class DownloaderViewModel : INotifyPropertyChanged
     {
         #region Fields
@@ -37,7 +40,7 @@ namespace AMDownloader
         private CancellationTokenSource _ctsRefreshView;
         private RequestThrottler _requestThrottler;
         private HttpClient _client;
-        private string _tempDestination;
+        private readonly CloseApplicationDelegate _closeApplicationDel;
         #endregion // Fields
 
         #region Properties
@@ -88,12 +91,12 @@ namespace AMDownloader
         #endregion // Commands
 
         #region Constructors
-        public DownloaderViewModel()
+        public DownloaderViewModel(CloseApplicationDelegate closeApplicationDelegate)
         {
             _client = new HttpClient();
             DownloadItemsList = new ObservableCollection<DownloaderObjectModel>();
             CategoriesList = new ObservableCollection<Categories>();
-            QueueProcessor = new QueueProcessor(Settings.Default.MaxParallelDownloads, RefreshCollection);
+            QueueProcessor = new QueueProcessor(Settings.Default.MaxParallelDownloads);
             _requestThrottler = new RequestThrottler(AppConstants.RequestThrottlerInterval);
             CollectionView = CollectionViewSource.GetDefaultView(DownloadItemsList);
             CollectionView.CurrentChanged += CollectionView_CurrentChanged;
@@ -106,6 +109,7 @@ namespace AMDownloader
             _semaphoreRefreshingView = new SemaphoreSlim(1);
             _ctsUpdatingList = null;
             _ctsRefreshView = null;
+            _closeApplicationDel = closeApplicationDelegate;
             this.Count = 0;
             this.DownloadingCount = 0;
             this.ErroredCount = 0;
@@ -195,7 +199,6 @@ namespace AMDownloader
                                 Download_Dequeued,
                                 Download_Finished,
                                 Download_PropertyChanged,
-                                RefreshCollection,
                                 ProgressReporter,
                                 ref _requestThrottler); ;
                             item.SetCreationTime(sourceObjects[i].DateCreated);
@@ -314,7 +317,7 @@ namespace AMDownloader
 
             if (forceEnqueue)
             {
-                Task.Run(async () => await QueueProcessor.StartAsync(Settings.Default.MaxConnectionsPerDownload));
+                Task.Run(async () => await QueueProcessor.StartAsync());
             }
             else
             {
@@ -561,7 +564,7 @@ namespace AMDownloader
         {
             Task.Run(async () =>
             {
-                await QueueProcessor.StartAsync(Settings.Default.MaxConnectionsPerDownload);
+                await QueueProcessor.StartAsync();
                 this.Status = "Ready";
                 RaisePropertyChanged(nameof(this.Status));
             });
@@ -595,10 +598,6 @@ namespace AMDownloader
                 await _semaphoreUpdatingList.WaitAsync();
                 try
                 {
-                    if (File.Exists(AppPaths.DownloadsHistoryFile))
-                    {
-                        File.Delete(AppPaths.DownloadsHistoryFile);
-                    }
                     Directory.CreateDirectory(AppPaths.LocalAppData);
                     XmlSerializer writer = new XmlSerializer(typeof(SerializableDownloaderObjectModelList));
                     SerializableDownloaderObjectModelList list = new SerializableDownloaderObjectModelList();
@@ -617,19 +616,24 @@ namespace AMDownloader
                         sItem.DateCreated = item.DateCreated;
                         list.Objects.Add(sItem);
                     }
-                    using (var streamWriter = new StreamWriter(AppPaths.DownloadsHistoryFile))
+                    using (var streamWriter = new StreamWriter(AppPaths.DownloadsHistoryFile, false))
                     {
                         writer.Serialize(streamWriter, list);
                     }
+                }
+                catch
+                {
+                    return;
                 }
                 finally
                 {
                     _semaphoreUpdatingList.Release();
                 }
+            }).ContinueWith(t =>
+            {
+                Settings.Default.Save();
+                _closeApplicationDel.Invoke();
             });
-            t.Wait();
-            Settings.Default.Save();
-            Application.Current.Dispatcher.Invoke(() => Application.Current.Shutdown());
         }
 
         internal void ShowOptions(object obj)
@@ -720,7 +724,7 @@ namespace AMDownloader
                             }
                         }
                     }
-                    itemsDeleted.TryAdd(items[i]); // needs to be checked
+                    itemsDeleted.TryAdd(items[i]);
                     if (ct.IsCancellationRequested)
                     {
                         break;
@@ -835,12 +839,19 @@ namespace AMDownloader
 
         internal void Download_PropertyChanged(object sender, PropertyChangedEventArgs e) { }
 
-        internal void Download_Verifying(object sender, EventArgs e) { }
+        internal void Download_Verifying(object sender, EventArgs e)
+        {
+            RefreshCollection();
+        }
 
-        internal void Download_Verified(object sender, EventArgs e) { }
+        internal void Download_Verified(object sender, EventArgs e)
+        {
+            RefreshCollection();
+        }
 
         internal void Download_Started(object sender, EventArgs e)
         {
+            RefreshCollection();
             StartReportingSpeed();
         }
 
@@ -851,13 +862,23 @@ namespace AMDownloader
                 this.Status = "Ready";
                 RaisePropertyChanged(nameof(this.Status));
             }
+            RefreshCollection();
         }
 
-        internal void Download_Enqueued(object sender, EventArgs e) { }
+        internal void Download_Enqueued(object sender, EventArgs e)
+        {
+            RefreshCollection();
+        }
 
-        internal void Download_Dequeued(object sender, EventArgs e) { }
+        internal void Download_Dequeued(object sender, EventArgs e)
+        {
+            RefreshCollection();
+        }
 
-        internal void Download_Finished(object sender, EventArgs e) { }
+        internal void Download_Finished(object sender, EventArgs e)
+        {
+            RefreshCollection();
+        }
 
         private void CollectionView_CurrentChanged(object sender, EventArgs e)
         {
@@ -912,6 +933,13 @@ namespace AMDownloader
             if (downloading > 0)
             {
                 this.Status = downloading + " item(s) downloading";
+            }
+            else
+            {
+                if (_semaphoreUpdatingList.CurrentCount > 0)
+                {
+                    this.Status = "Ready";
+                }
             }
             RaisePropertyChanged(nameof(this.Count));
             RaisePropertyChanged(nameof(this.DownloadingCount));
@@ -980,7 +1008,6 @@ namespace AMDownloader
 
             int total = urls.Count();
             int maxParallelDownloads = Settings.Default.MaxParallelDownloads;
-            int maxConnectionsPerDownload = Settings.Default.MaxConnectionsPerDownload;
             var items = new DownloaderObjectModel[urls.Count()];
             var tasks = new List<Task>();
             var forceEnqueue = false;
@@ -1020,7 +1047,6 @@ namespace AMDownloader
                         Download_Dequeued,
                         Download_Finished,
                         Download_PropertyChanged,
-                        RefreshCollection,
                         ProgressReporter,
                         ref _requestThrottler);
                     QueueProcessor.Add(item);
@@ -1040,7 +1066,6 @@ namespace AMDownloader
                         Download_Dequeued,
                         Download_Finished,
                         Download_PropertyChanged,
-                        RefreshCollection,
                         ProgressReporter,
                         ref _requestThrottler);
                     if (start)
@@ -1061,7 +1086,7 @@ namespace AMDownloader
 
             if ((enqueue && start) || forceEnqueue)
             {
-                await QueueProcessor.StartAsync(maxConnectionsPerDownload);
+                await QueueProcessor.StartAsync();
             }
             else
             {
@@ -1086,10 +1111,7 @@ namespace AMDownloader
                     this.Status = "Listing " + (i + 1) + " of " + objects.Count() + ": " + objects[i].Name;
                     RaisePropertyChanged(nameof(this.Status));
                     RaisePropertyChanged(nameof(this.Progress));
-                    Application.Current.Dispatcher.Invoke(() =>
-                    {
-                        DownloadItemsList.Add(objects[i]);
-                    });
+                    Application.Current.Dispatcher.Invoke(() => DownloadItemsList.Add(objects[i]));
                     if (objects[i].IsQueued)
                     {
                         if (!this.QueueProcessor.Add(objects[i]))

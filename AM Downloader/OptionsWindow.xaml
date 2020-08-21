@@ -10,13 +10,7 @@
                 <Label Content="Max parallel downloads (1 - 10)*:" />
                 <TextBox VerticalContentAlignment="Center" HorizontalContentAlignment="Center" DockPanel.Dock="Right" Text="{Binding Source={x:Static properties:Settings.Default}, Path=MaxParallelDownloads}" Width="50" IsTabStop="True" />
                 <Separator DockPanel.Dock="Right" Opacity="0" />
-            </DockPanel>
-            <Separator Margin="0 5 0 5" Opacity="0.5" />
-            <DockPanel>
-                <Label Content="Max parallel connections per download (1 - 5):" />
-                <TextBox VerticalContentAlignment="Center" HorizontalContentAlignment="Center" DockPanel.Dock="Right" Text="{Binding Source={x:Static properties:Settings.Default}, Path=MaxConnectionsPerDownload}" Width="50" IsTabStop="True" IsReadOnly="True" />
-                <Separator DockPanel.Dock="Right" Opacity="0" />
-            </DockPanel>
+            </DockPanel>            
             <Separator Margin="0 5 0 5" Opacity="0.5" />
             <DockPanel>
                 <Label>Max speed per download (0 = Unlimited):</Label>

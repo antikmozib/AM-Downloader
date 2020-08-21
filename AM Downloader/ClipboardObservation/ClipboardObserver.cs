@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Windows;
 
-namespace AMDownloader
+namespace AMDownloader.ClipboardObservation
 {
     class ClipboardObserver
     {

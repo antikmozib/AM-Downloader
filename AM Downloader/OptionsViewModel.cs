@@ -18,10 +18,6 @@ namespace AMDownloader
 
         void SaveSettings(object obj)
         {
-            if (Settings.Default.MaxConnectionsPerDownload < 1 || Settings.Default.MaxConnectionsPerDownload > AppConstants.ParallelStreamsLimit)
-            {
-                Settings.Default.MaxConnectionsPerDownload = AppConstants.ParallelStreamsLimit;
-            }
             if (Settings.Default.MaxParallelDownloads < 1 || Settings.Default.MaxParallelDownloads > AppConstants.ParallelDownloadsLimit)
             {
                 Settings.Default.MaxParallelDownloads = AppConstants.ParallelDownloadsLimit;

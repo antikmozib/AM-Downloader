@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Net;
 
-namespace AMDownloader.ObjectModel
+namespace AMDownloader.RequestThrottling.Model
 {
     struct RequestModel
     {
         public string Url;
         public DateTime SeenAt;
         public long? TotalBytesToDownload;
-        public HttpStatusCode? Status;
+        public HttpStatusCode? StatusCode;
     }
 }

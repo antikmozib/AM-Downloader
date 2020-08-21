@@ -11,17 +11,19 @@ using AMDownloader.Properties;
 
 namespace AMDownloader
 {
+    delegate void CloseApplicationDelegate();
+
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
     {
-        ICollectionView _dataView = null;
-        private DownloaderViewModel _primaryViewModel = new DownloaderViewModel();
+        private ICollectionView _dataView = null;
+        private readonly DownloaderViewModel _primaryViewModel = new DownloaderViewModel(new CloseApplicationDelegate(CloseApplication));
         private static readonly string _appGuid = "20d3be33-cd45-4c69-b038-e95bc434e09c";
         private static readonly Mutex _mutex = new Mutex(false, "Global\\" + _appGuid);
-        GridViewColumnHeader _lastHeaderClicked = null;
-        ListSortDirection? _lastDirection = null;
+        private GridViewColumnHeader _lastHeaderClicked = null;
+        private ListSortDirection? _lastDirection = null;
 
         public MainWindow()
         {
@@ -156,6 +158,18 @@ namespace AMDownloader
             }
             SortDescription sd = new SortDescription(sortBy, direction ?? ListSortDirection.Ascending);
             _dataView.SortDescriptions.Add(sd);
+        }
+
+        internal static void CloseApplication()
+        {
+            try
+            {
+                Application.Current?.Dispatcher.Invoke(Application.Current.Shutdown);
+            }
+            catch
+            {
+
+            }
         }
     }
 }

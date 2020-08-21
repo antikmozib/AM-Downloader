@@ -1,4 +1,5 @@
 ﻿using AMDownloader.ObjectModel;
+using AMDownloader.RequestThrottling.Model;
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
@@ -6,7 +7,7 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace AMDownloader
+namespace AMDownloader.RequestThrottling
 {
     class RequestThrottler
     {
@@ -41,7 +42,7 @@ namespace AMDownloader
             requestModel.Url = value;
             requestModel.SeenAt = DateTime.Now;
             requestModel.TotalBytesToDownload = totalBytesToDownload;
-            requestModel.Status = status;
+            requestModel.StatusCode = status;
             _requestList.Enqueue(requestModel);
             if (_cts == null)
             {

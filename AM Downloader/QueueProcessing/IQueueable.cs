@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace AMDownloader.ObjectModel.Queue
+namespace AMDownloader.QueueProcessing
 {
     interface IQueueable
     {

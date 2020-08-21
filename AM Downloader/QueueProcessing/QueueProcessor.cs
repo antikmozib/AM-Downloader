@@ -5,18 +5,16 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
 using AMDownloader.ObjectModel;
-using AMDownloader.ObjectModel.Queue;
 
-namespace AMDownloader.QueueModel
-{
-    
+
+namespace AMDownloader.QueueProcessing
+{    
     class QueueProcessor
     {
         #region Fields
         private readonly SemaphoreSlim _semaphore;
         private readonly BlockingCollection<IQueueable> _queueList;
         private readonly List<IQueueable> _itemsProcessing;
-        private readonly RefreshCollection _refreshCollectionDel;
         private CancellationTokenSource _ctsCancel;
         private CancellationToken _ctCancel;
         #endregion // Fields
@@ -27,17 +25,16 @@ namespace AMDownloader.QueueModel
 
         #region Constructors
 
-        public QueueProcessor(int maxParallelDownloads, RefreshCollection refreshCollectionDelegate)
+        public QueueProcessor(int maxParallelDownloads)
         {
             _queueList = new BlockingCollection<IQueueable>();
             _semaphore = new SemaphoreSlim(maxParallelDownloads);
             _itemsProcessing = new List<IQueueable>();
-            _refreshCollectionDel = refreshCollectionDelegate;
         }
         #endregion // Constructors
 
         #region Private methods
-        private async Task ProcessQueueAsync(int numStreams)
+        private async Task ProcessQueueAsync()
         {
             var tasks = new List<Task>();
             _ctsCancel = new CancellationTokenSource();
@@ -47,6 +44,7 @@ namespace AMDownloader.QueueModel
             {
                 IQueueable item;
                 if (!_queueList.TryTake(out item)) break;
+           
                 if (!item.IsQueued) continue;
                 _itemsProcessing.Add(item);
                 Task t = Task.Run(async () =>
@@ -86,11 +84,10 @@ namespace AMDownloader.QueueModel
         }
 
         // Consumer
-        public async Task StartAsync(int numStreams)
+        public async Task StartAsync()
         {
             if (_ctsCancel != null) return;
-            await ProcessQueueAsync(numStreams);
-            _refreshCollectionDel?.Invoke();
+            await ProcessQueueAsync();
         }
 
         public void Stop()
