@@ -5,7 +5,7 @@ using System.Windows.Data;
 
 namespace AMDownloader
 {
-    public class DownloaderSpeedConverter : IValueConverter
+    class DownloaderSpeedConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {

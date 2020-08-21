@@ -3,21 +3,21 @@ using System;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
+using System.Windows.Media;
 
 namespace AMDownloader
 {
-    class ProgressBarVisibilityConverter : IValueConverter
+    class ProgressBarForegroundConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             DownloadStatus status = (DownloadStatus)value;
             switch (status)
             {
-                case DownloadStatus.Queued:
-                case DownloadStatus.Ready:
-                    return Visibility.Collapsed;
+                case DownloadStatus.Finished:
+                    return Application.Current.Resources["ProgressBarFinishedForeground"];
             }
-            return Visibility.Visible;
+            return Application.Current.Resources["ProgressBarForeground"];
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

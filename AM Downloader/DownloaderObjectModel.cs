@@ -28,7 +28,6 @@ namespace AMDownloader.ObjectModel
         private CancellationToken _ctPause, _ctCancel;
         private HttpClient _httpClient;
         private TaskCompletionSource<DownloadStatus> _taskCompletion;
-        //private readonly RefreshCollection _refreshCollectionDel;
         private readonly SemaphoreSlim _semaphoreDownloading;
         private IProgress<long> _reportBytesProgress;
         private RequestThrottler _requestThrottler;

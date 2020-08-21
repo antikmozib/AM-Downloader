@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using System.Linq;
 using AMDownloader.ObjectModel;
 
-
 namespace AMDownloader.QueueProcessing
 {    
     class QueueProcessor

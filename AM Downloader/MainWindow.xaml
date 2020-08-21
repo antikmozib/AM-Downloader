@@ -42,7 +42,10 @@
             </TextBlock>
         </DataTemplate>
         <CollectionViewSource x:Key="CategoriesList" Source="{Binding Path=CategoriesList}"/>
-        <local:ProgressBarVisibilityConverter x:Key="ProgressBarVisbilityConverter" />
+        <local:ProgressBarVisibilityConverter x:Key="ProgressBarVisibilityConverter"/>
+        <local:ProgressBarForegroundConverter x:Key="ProgressBarForegroundConverter"/>
+        <local:ProgressBarBackgroundConverter x:Key="ProgressBarBackgroundConverter"/>
+        <local:ProgressBarValueColorConverter x:Key="ProgressBarValueColorConverter"/>
         <local:DownloaderSizeConverter x:Key="DownloaderSizeConverter" />
         <local:DownloaderSpeedConverter x:Key="DownloaderSpeedConverter" />
         <local:DownloaderStatusConverter x:Key="DownloaderStatusConverter" />
@@ -259,7 +262,7 @@
                     </Grid>
                 </StatusBarItem>
                 <StatusBarItem Grid.Column="1"
-                               Visibility="{Binding Progress, Converter={StaticResource ProgressBarVisbilityConverter}}">
+                               Visibility="{Binding Progress, Converter={StaticResource ProgressBarVisibilityConverter}}">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
@@ -676,10 +679,10 @@
                         <Setter Property="HorizontalContentAlignment" Value="Right" />
                     </Style>
                 </ListView.Resources>
-                <ListView.ItemContainerStyle>                    
+                <ListView.ItemContainerStyle>
                     <Style TargetType="{x:Type ListViewItem}">
-                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />                        
-                    </Style>                    
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    </Style>
                 </ListView.ItemContainerStyle>
                 <ListView.View>
                     <GridView x:Name="gridViewDownloadItems">
@@ -745,10 +748,14 @@
                                                      HorizontalAlignment="Stretch" 
                                                      Minimum="0" 
                                                      Maximum="100" 
-                                                     Value="{Binding Progress, Mode=OneWay}" />
+                                                     Value="{Binding Progress, Mode=OneWay}"
+                                                     Background="{Binding Status, Converter={StaticResource ProgressBarBackgroundConverter}}"
+                                                     Foreground="{Binding Status, Converter={StaticResource ProgressBarForegroundConverter}}"
+                                                     Visibility="{Binding Status, Converter={StaticResource ProgressBarVisibilityConverter}}"/>
                                         <TextBlock Text="{Binding Value, ElementName=pbProgress, StringFormat=\{0:0\}%}" 
                                                    HorizontalAlignment="Center" 
-                                                   VerticalAlignment="Center" />
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{Binding Status, Converter={StaticResource ProgressBarValueColorConverter}}"/>
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
@@ -802,7 +809,7 @@
                                                Text="{Binding TimeRemaining, Converter={StaticResource DownloaderEtaConverter}}" />
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
-                        </GridViewColumn>						
+                        </GridViewColumn>
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" 
                                         HeaderContainerStyle="{StaticResource LeftAligned}" 
                                         Header="Location" 

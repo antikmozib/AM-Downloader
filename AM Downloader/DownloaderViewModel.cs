@@ -160,65 +160,72 @@ namespace AMDownloader
             }
 
             // Populate history
-            if (Directory.Exists(AppPaths.LocalAppData))
+            Task.Run(() =>
             {
-                this.Status = "Restoring data...";
-                RaisePropertyChanged(nameof(this.Status));
-                Task.Run(async () =>
+                if (Directory.Exists(AppPaths.LocalAppData))
                 {
-                    await Task.Delay(200);
-                    SerializableDownloaderObjectModelList source;
-                    var xmlReader = new XmlSerializer(typeof(SerializableDownloaderObjectModelList));
-                    try
+                    this.Status = "Restoring data...";
+                    RaisePropertyChanged(nameof(this.Status));
+                }
+                else
+                {
+                    return;
+                }
+                SerializableDownloaderObjectModelList source;
+                var xmlReader = new XmlSerializer(typeof(SerializableDownloaderObjectModelList));
+                try
+                {
+                    using (var streamReader = new StreamReader(AppPaths.DownloadsHistoryFile))
                     {
-                        using (var streamReader = new StreamReader(AppPaths.DownloadsHistoryFile))
-                        {
-                            source = (SerializableDownloaderObjectModelList)xmlReader.Deserialize(streamReader);
-                        }
-                        var sourceObjects = source.Objects.ToArray();
-                        var finalObjects = new DownloaderObjectModel[sourceObjects.Count()];
-                        var total = sourceObjects.Count();
-                        for (int i = 0; i < sourceObjects.Count(); i++)
-                        {
-                            if (sourceObjects[i] == null) continue;
-                            int progress = (int)((double)(i + 1) / total * 100);
-                            this.Progress = progress;
-                            this.Status = "Restoring " + (i + 1) + " of " + total + ": " + sourceObjects[i].Url;
-                            RaisePropertyChanged(nameof(this.Progress));
-                            RaisePropertyChanged(nameof(this.Status));
-                            var item = new DownloaderObjectModel(
-                                ref _client,
-                                sourceObjects[i].Url,
-                                sourceObjects[i].Destination,
-                                sourceObjects[i].IsQueued,
-                                sourceObjects[i].TotalBytesToDownload,
-                                Download_Created,
-                                Download_Verifying,
-                                Download_Verified,
-                                Download_Started,
-                                Download_Stopped,
-                                Download_Enqueued,
-                                Download_Dequeued,
-                                Download_Finished,
-                                Download_PropertyChanged,
-                                ProgressReporter,
-                                ref _requestThrottler); ;
-                            item.SetCreationTime(sourceObjects[i].DateCreated);
-                            finalObjects[i] = item;
-                        }
-                        AddObjects(finalObjects);
+                        source = (SerializableDownloaderObjectModelList)xmlReader.Deserialize(streamReader);
                     }
-                    catch
+                    var sourceObjects = source.Objects.ToArray();
+                    var finalObjects = new DownloaderObjectModel[sourceObjects.Count()];
+                    var total = sourceObjects.Count();
+                    for (int i = 0; i < sourceObjects.Count(); i++)
                     {
-                        return;
-                    }
-                    finally
-                    {
-                        this.Status = "Ready";
+                        if (sourceObjects[i] == null) continue;
+                        int progress = (int)((double)(i + 1) / total * 100);
+                        this.Progress = progress;
+                        this.Status = "Restoring " + (i + 1) + " of " + total + ": " + sourceObjects[i].Url;
+                        RaisePropertyChanged(nameof(this.Progress));
                         RaisePropertyChanged(nameof(this.Status));
+                        var item = new DownloaderObjectModel(
+                            ref _client,
+                            sourceObjects[i].Url,
+                            sourceObjects[i].Destination,
+                            sourceObjects[i].IsQueued,
+                            sourceObjects[i].TotalBytesToDownload,
+                            Download_Created,
+                            Download_Verifying,
+                            Download_Verified,
+                            Download_Started,
+                            Download_Stopped,
+                            Download_Enqueued,
+                            Download_Dequeued,
+                            Download_Finished,
+                            Download_PropertyChanged,
+                            ProgressReporter,
+                            ref _requestThrottler); ;
+                        item.SetCreationTime(sourceObjects[i].DateCreated);
+                        finalObjects[i] = item;
                     }
-                });
-            }
+                    AddObjects(finalObjects);
+                }
+                catch
+                {
+                    return;
+                }
+                finally
+                {
+                    this.Progress = 0;
+                    this.Status = "Ready";
+                    RaisePropertyChanged(nameof(this.Progress));
+                    RaisePropertyChanged(nameof(this.Status));
+                    RefreshCollection();
+                }
+            });
+
         }
         #endregion // Constructors
 
@@ -1086,6 +1093,7 @@ namespace AMDownloader
 
             _semaphoreUpdatingList.Release();
             AddObjects(items);
+            RefreshCollection();
 
             if ((enqueue && start) || forceEnqueue)
             {

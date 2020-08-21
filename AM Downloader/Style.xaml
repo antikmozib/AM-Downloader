@@ -17,4 +17,9 @@
     <SolidColorBrush x:Key="CategorySelectedBackground" Color="PowderBlue" />
     <SolidColorBrush x:Key="ColumnHeaderSortDirectionColor" Color="Green" />
     <SolidColorBrush x:Key="GridViewSelectedItemBackground" Color="PowderBlue" />
+    <SolidColorBrush x:Key="ProgressBarFinishedForeground" Color="#669999" />
+    <SolidColorBrush x:Key="ProgressBarErroredBackground" Color="#ff8080" />
+    <SolidColorBrush x:Key="ProgressBarForeground" Color="#00b300" />
+    <SolidColorBrush x:Key="ProgressBarValueLightColor" Color="#ffffff" />
+    <SolidColorBrush x:Key="ProgressBarValueDarkColor" Color="#000000" />
 </ResourceDictionary>

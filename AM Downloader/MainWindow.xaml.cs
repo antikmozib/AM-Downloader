@@ -27,14 +27,13 @@ namespace AMDownloader
 
         public MainWindow()
         {
+            InitializeComponent();
             if (!_mutex.WaitOne(0, false))
             {
                 var name = Assembly.GetExecutingAssembly().GetName().Name;
                 MessageBox.Show("Another instance of " + name + " is already running.", name, MessageBoxButton.OK, MessageBoxImage.Error);
                 Application.Current.Shutdown();
             }
-
-            InitializeComponent();
             DataContext = _primaryViewModel;
         }
 
