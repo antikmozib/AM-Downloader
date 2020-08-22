@@ -24,7 +24,10 @@
     <Page Update="OptionsWindow.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Resource Update="Style.xaml">
+    <Resource Update="Styles\ListViewColors.xaml">
+      <SubType>Designer</SubType>
+    </Resource>
+    <Resource Update="Styles\Style.xaml">
       <SubType>Designer</SubType>
     </Resource>
   </ItemGroup>

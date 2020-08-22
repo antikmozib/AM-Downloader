@@ -4,12 +4,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-        xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity" 
-        xmlns:s="clr-namespace:System.Collections;assembly=mscorlib"
-        xmlns:p="clr-namespace:System;assembly=mscorlib"
+        xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
         xmlns:properties="clr-namespace:AMDownloader.Properties" 
-        xmlns:fa5="http://schemas.fontawesome.com/icons/" 
-        xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase" 
         xmlns:mah="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
         mc:Ignorable="d" 
         Title="AM Downloader" 
@@ -22,7 +18,27 @@
         WindowState="{Binding Source={x:Static properties:Settings.Default}, Path=MainWindowState, Mode=TwoWay}" 
         Closing="Window_Closing"
         GlowBrush="{DynamicResource AccentColorBrush}"
+        BorderThickness="1"
         Icon="/app.ico">
+    <Window.InputBindings>
+        <KeyBinding Command="{Binding ClearFinishedDownloadsCommand}"
+                    Key="Delete" Modifiers="Alt" />
+        <KeyBinding Command="{Binding RemoveFromListCommand}" 
+                    CommandParameter="{Binding SelectedItems, ElementName=lvDownload}" 
+                    Key="Delete" />
+        <KeyBinding Command="{Binding DeleteFileCommand}" 
+                    CommandParameter="{Binding SelectedItems, ElementName=lvDownload}" 
+                    Key="Delete" Modifiers="Shift" />
+        <KeyBinding Command="{Binding OpenCommand}" 
+                    CommandParameter="{Binding SelectedItems, ElementName=lvDownload}" 
+                    Key="O" Modifiers="Ctrl" />
+        <KeyBinding Command="{Binding OpenContainingFolderCommand}" 
+                    CommandParameter="{Binding SelectedItems, ElementName=lvDownload}" 
+                    Key="O" Modifiers="Alt" />
+        <KeyBinding Command="{Binding CopyLinkToClipboardCommand}" 
+                    CommandParameter="{Binding SelectedItems, ElementName=lvDownload}" 
+                    Key="C" Modifiers="Ctrl" />
+    </Window.InputBindings>
     <Window.Resources>
         <Style x:Key="VirtualisedMetroListView"
            BasedOn="{StaticResource MahApps.Styles.ListView}"
@@ -87,14 +103,16 @@
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File" TabIndex="9">
                 <MenuItem Command="{Binding ClearFinishedDownloadsCommand}" 
-                          Header="Clear finished downloads" />
+                          Header="Clear finished downloads"
+                          InputGestureText="Alt+Del"/>
                 <MenuItem Header="_Options" 
                           CommandParameter="{Binding RelativeSource={RelativeSource AncestorType={x:Type Window}}}" 
                           Command="{Binding OptionsCommand}" />
                 <Separator />
                 <MenuItem x:Name="menuExit" 
                           Header="E_xit" 
-                          Click="menuExit_Click" />
+                          Click="menuExit_Click"
+                          InputGestureText="Alt+F4"/>
             </MenuItem>
             <MenuItem Header="_Help" 
                       TabIndex="10">
@@ -273,7 +291,8 @@
                     </Grid>
                 </StatusBarItem>
                 <StatusBarItem Grid.Column="1"
-                               Visibility="{Binding Progress, Converter={StaticResource ProgressBarVisibilityConverter}}">
+                               Visibility="{Binding Progress, Converter={StaticResource ProgressBarVisibilityConverter}}"
+                               Margin="20 0 0 0">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
@@ -282,12 +301,13 @@
                         <TextBlock VerticalAlignment="Center"
                                    Text="{Binding Progress, StringFormat=\{0:0\}%}"
                                    Margin="0 0 4 0" />
-                        <ProgressBar VerticalAlignment="Center"
-                                     Grid.Column="1"
-                                     x:Name="pbProgress"
-                                     Value="{Binding Progress, Mode=OneWay}"
-                                     Width="100" 
-                                     Height="16" />
+                        <mah:MetroProgressBar VerticalAlignment="Center"
+                                              Grid.Column="1"
+                                              x:Name="pbProgress"
+                                              Value="{Binding Progress, Mode=OneWay}"
+                                              Width="100"
+                                              Height="16"
+                                              Background="{DynamicResource MahApps.Brushes.Accent2}"/>
                     </Grid>
                 </StatusBarItem>
                 <StatusBarItem Margin="20 0 0 0" 
@@ -295,7 +315,7 @@
                                Visibility="{Binding Path=Text, ElementName=tbVerifyingCount, Converter={StaticResource StatusBarItemVisibilityConverter}}">
                     <TextBlock>
                         <TextBlock Margin="0 0 4 0" 
-                                   Text="&#xf12a;"
+                                   Text="&#xf021;"
                                    FontFamily="{StaticResource FontAwesomeSolid}" />                        
                         <TextBlock Text="Verifiying:"/>
                         <TextBlock x:Name="tbVerifyingCount" 
@@ -643,13 +663,16 @@
                     <ContextMenu>
                         <MenuItem Header="Open" 
                                   Command="{Binding OpenCommand}" 
-                                  CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                  CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}" 
+                                  InputGestureText="Ctrl+O"/>
                         <MenuItem Header="Open folder" 
                                   Command="{Binding OpenContainingFolderCommand}" 
-                                  CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                  CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                  InputGestureText="Alt+O"/>
                         <MenuItem Header="Copy link" 
                                   Command="{Binding CopyLinkToClipboardCommand}" 
-                                  CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                  CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                  InputGestureText="Ctrl+C"/>
                         <Separator />
                         <MenuItem Header="Start" 
                                   Command="{Binding StartCommand}" 
@@ -674,42 +697,33 @@
                         <Separator />
                         <MenuItem Header="Remove from list" 
                                   Command="{Binding RemoveFromListCommand}" 
-                                  CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                  CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}" 
+                                  InputGestureText="Del" />
                         <MenuItem Header="Delete file" 
                                   Command="{Binding DeleteFileCommand}" 
-                                  CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                  CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                  InputGestureText="Shift+Del"/>
                     </ContextMenu>
                 </ListView.ContextMenu>
                 <ListView.Resources>
-                    <Style x:Key="LeftAligned" TargetType="{x:Type GridViewColumnHeader}">
+                    <Style x:Key="DefaultHeaderStyle" TargetType="{x:Type GridViewColumnHeader}">
+                        <Setter Property="Background" Value="{DynamicResource MahApps.Brushes.Control.Background}"/>
+                        <Setter Property="Foreground" Value="{DynamicResource MahApps.Brushes.Text}"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource MahApps.Brushes.Control.Border}"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Foreground" Value="{DynamicResource MahApps.Brushes.Control.Background}"/>                            
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                    <Style x:Key="LeftAligned" TargetType="{x:Type GridViewColumnHeader}" BasedOn="{StaticResource DefaultHeaderStyle}">
                         <Setter Property="HorizontalContentAlignment" Value="Left" />
-                        <Setter Property="Background" Value="{DynamicResource MahApps.Brushes.Control.Background}"/>
-                        <Setter Property="Foreground" Value="{DynamicResource MahApps.Brushes.Text}"/>
-                        <Style.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Foreground" Value="{DynamicResource MahApps.Brushes.ThemeForeground}"/>
-                            </Trigger>
-                        </Style.Triggers>
                     </Style>
-                    <Style x:Key="MiddleAligned" TargetType="{x:Type GridViewColumnHeader}">
+                    <Style x:Key="MiddleAligned" TargetType="{x:Type GridViewColumnHeader}" BasedOn="{StaticResource DefaultHeaderStyle}">
                         <Setter Property="HorizontalContentAlignment" Value="Center" />
-                        <Setter Property="Background" Value="{DynamicResource MahApps.Brushes.Control.Background}"/>
-                        <Setter Property="Foreground" Value="{DynamicResource MahApps.Brushes.Text}"/>
-                        <Style.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Foreground" Value="{DynamicResource MahApps.Brushes.ThemeForeground}"/>
-                            </Trigger>
-                        </Style.Triggers>
                     </Style>
-                    <Style x:Key="RightAligned" TargetType="{x:Type GridViewColumnHeader}">
+                    <Style x:Key="RightAligned" TargetType="{x:Type GridViewColumnHeader}" BasedOn="{StaticResource DefaultHeaderStyle}">
                         <Setter Property="HorizontalContentAlignment" Value="Right" />
-                        <Setter Property="Background" Value="{DynamicResource MahApps.Brushes.Control.Background}"/>
-                        <Setter Property="Foreground" Value="{DynamicResource MahApps.Brushes.Text}"/>
-                        <Style.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Foreground" Value="{DynamicResource MahApps.Brushes.ThemeForeground}"/>
-                            </Trigger>
-                        </Style.Triggers>
                     </Style>
                 </ListView.Resources>
                 <ListView.ItemContainerStyle>
@@ -718,14 +732,14 @@
                         <!--<Setter Property="BorderThickness" Value="0"/>-->
                         <Style.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="{DynamicResource MahApps.Brushes.Accent2}"/>
-                                <Setter Property="Foreground" Value="{DynamicResource MahApps.Brushes.Text}"/>
-                                <Setter Property="BorderBrush" Value="Transparent"/>
+                                <Setter Property="Background" Value="{DynamicResource MahApps.Brushes.DataGrid.Selection.Background.MouseOver}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource MahApps.Brushes.DataGrid.Selection.Text.MouseOver}"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource MahApps.Brushes.DataGrid.Selection.BorderBrush.MouseOver}"/>
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="{DynamicResource MahApps.Brushes.Accent4}"/>
-                                <Setter Property="Foreground" Value="{DynamicResource MahApps.Brushes.Text}"/>
-                                <Setter Property="BorderBrush" Value="Transparent"/>
+                                <Setter Property="Background" Value="{DynamicResource MahApps.Brushes.DataGrid.Selection.Background}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource MahApps.Brushes.DataGrid.Selection.Text}"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource MahApps.Brushes.DataGrid.Selection.BorderBrush}"/>
                             </Trigger>
                         </Style.Triggers>
                     </Style>
@@ -802,9 +816,9 @@
                                         <TextBlock Text="{Binding Value, ElementName=pbProgress, StringFormat=\{0:0\}%}" 
                                                    HorizontalAlignment="Center" 
                                                    VerticalAlignment="Center"
-                                                   Foreground="White">
-                                            <TextBlock.Effect>                                                
-                                                <DropShadowEffect Color="Black" ShadowDepth="1" BlurRadius="2" />
+                                                   Foreground="{StaticResource ProgressBarValueColor}">
+                                            <TextBlock.Effect>
+                                                <DropShadowEffect Color="{StaticResource MahApps.Colors.Accent}" ShadowDepth="1" BlurRadius="2" />
                                             </TextBlock.Effect>
                                         </TextBlock>
                                                    <!--Foreground="{Binding Status, Converter={StaticResource ProgressBarValueColorConverter}}"-->

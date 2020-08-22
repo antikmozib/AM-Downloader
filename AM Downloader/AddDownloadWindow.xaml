@@ -16,10 +16,13 @@
         MinWidth="650"
         MinHeight="250"
         WindowStyle="ToolWindow"
-        Closing="Window_Closing">
+        Closing="Window_Closing"
+        GlowBrush="{DynamicResource AccentColorBrush}"
+        BorderThickness="1"
+        ShowMaxRestoreButton="false"
+        ShowMinButton="false">
     <Window.Resources>
         <local:DownloaderDestinationFolderNameConverter x:Key="DownloaderDestinationConverter"/>
-        <Style TargetType="{x:Type Button}" BasedOn="{StaticResource MahApps.Styles.Button.Flat}"/>
     </Window.Resources>
     <Grid Margin="10">
         <Grid.RowDefinitions>

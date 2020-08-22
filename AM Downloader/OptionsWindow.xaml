@@ -15,11 +15,9 @@
     ShowInTaskbar="False"
     Width="400"
     SizeToContent="Height"
-    ResizeMode="NoResize">
-    <Window.Resources>
-        <Style TargetType="{x:Type Button}"
-           BasedOn="{StaticResource MahApps.Styles.Button.Flat}" />
-    </Window.Resources>
+    ResizeMode="NoResize"    
+    GlowBrush="{DynamicResource AccentColorBrush}"
+    BorderThickness="1">
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="auto" />

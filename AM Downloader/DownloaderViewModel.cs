@@ -515,12 +515,12 @@ namespace AMDownloader
             if (obj == null) return;
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
             var itemsFinished = from item in items where item.Status == DownloadStatus.Finished where new FileInfo(item.Destination).Exists select item;
-            if (itemsFinished.Count() > 5)
+            if (itemsFinished.Count() > 1)
             {
                 MessageBoxResult r = MessageBox.Show(
-                    "You have elected to open " + itemsFinished.Count() + " files. " +
-                    "Opening too many files at the same file may cause system freezeups.\n\nDo you wish to proceed?",
-                    "Open", MessageBoxButton.YesNo, MessageBoxImage.Exclamation);
+                    "You have selected to open " + itemsFinished.Count() + " files.\n\n" +
+                    "Opening too many files at the same file may cause the system to crash.\n\nDo you wish to proceed?",
+                    "Open", MessageBoxButton.YesNo, MessageBoxImage.Exclamation, MessageBoxResult.No);
 
                 if (r == MessageBoxResult.No) return;
             }
@@ -543,7 +543,19 @@ namespace AMDownloader
         {
             if (obj == null) return;
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
-            foreach (var item in items)
+            var itemsOpenable = from item in items where File.Exists(item.Destination) || Directory.Exists(Path.GetDirectoryName(item.Destination)) select item;
+            if (itemsOpenable.Count() > 1)
+            {
+                var result = MessageBox.Show("You have selected to open " + items.Count + " folders.\n\n"+
+                    "Opening too many folders at the same time may cause the system to crash.\n\nDo you wish to proceed?", 
+                    "Open folder", MessageBoxButton.YesNo, MessageBoxImage.Exclamation, MessageBoxResult.No);
+
+                if (result == MessageBoxResult.No)
+                {
+                    return;
+                }
+            }
+            foreach (var item in itemsOpenable)
             {
                 if (File.Exists(item.Destination))
                 {
@@ -982,9 +994,9 @@ namespace AMDownloader
             Task.Run(async () =>
             {
                 _ctsRefreshView = new CancellationTokenSource();
-                var ct = _ctsRefreshView.Token;
                 try
                 {
+                    var ct = _ctsRefreshView.Token;
                     await _semaphoreRefreshingView.WaitAsync(ct);
                     var throttler = Task.Delay(1000);
                     Application.Current?.Dispatcher?.Invoke(() =>

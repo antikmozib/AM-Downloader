@@ -9,6 +9,7 @@ using System.Windows.Data;
 using System.Windows.Input;
 using AMDownloader.Properties;
 using MahApps.Metro.Controls;
+using MahApps.Metro.Controls.Dialogs;
 
 namespace AMDownloader
 {
@@ -43,15 +44,14 @@ namespace AMDownloader
             this.Close();
         }
 
-        private void menuAbout_Click(object sender, RoutedEventArgs e)
+        private async void menuAbout_Click(object sender, RoutedEventArgs e)
         {
             var name = Assembly.GetExecutingAssembly().GetName().Name;
             var version = Assembly.GetExecutingAssembly().GetName().Version;
             var description = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyDescriptionAttribute), false).OfType<AssemblyDescriptionAttribute>().FirstOrDefault()?.Description;
             var copyright = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyCopyrightAttribute), true).OfType<AssemblyCopyrightAttribute>().FirstOrDefault()?.Copyright;
             var funFact = "Total data transferred over lifetime: " + Math.Round((double)Settings.Default.BytesTransferredOverLifetime / (1024 * 1024 * 1024), 2) + " GB";
-            MessageBox.Show(this, name + "\nVersion " + version + "\n\n" + description + "\n\n" + copyright + "\n\n" + funFact,
-                "About", MessageBoxButton.OK, MessageBoxImage.Information);
+            await this.ShowMessageAsync("About", name + "\nVersion " + version + "\n\n" + description + "\n\n" + copyright + "\n\n" + funFact);
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
