@@ -17,8 +17,8 @@
     <SolidColorBrush x:Key="CategoryVerifyingColor" Color="Yellow" />
     <SolidColorBrush x:Key="CategorySelectedBackground" Color="{DynamicResource MahApps.Colors.Accent3}" />
     <SolidColorBrush x:Key="CategorySelectedForeground" Color="{DynamicResource MahApps.Colors.ThemeForeground}" />
-    
-    <SolidColorBrush x:Key="ColumnHeaderSortDirectionColor" Color="Green" />
+
+    <SolidColorBrush x:Key="ColumnHeaderSortDirectionColor" Color="{DynamicResource MahApps.Colors.AccentBase}" />
     <SolidColorBrush x:Key="GridViewSelectedItemBackground" Color="PowderBlue" />
     
     <SolidColorBrush x:Key="StatusBarReadyColor" Color="{DynamicResource Theme.PrimaryAccentColor}" />

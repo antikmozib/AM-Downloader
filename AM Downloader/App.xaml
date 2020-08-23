@@ -7,16 +7,17 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="Styles/Style.xaml"/>
-                <ResourceDictionary Source="Styles/ListViewColors.xaml"/>
                 <!-- MahApps.Metro resource dictionaries. Make sure that all file names are Case Sensitive! -->
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.xaml" />
                 <!--<ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml" />-->
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.Buttons.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.TreeView.xaml" />
                 <!--<ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.FlatButton.xaml" />-->
                 <!-- Theme setting -->
-                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Light.Sienna.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Dark.Blue.xaml" />
+                <ResourceDictionary Source="Styles/Style.xaml"/>
             </ResourceDictionary.MergedDictionaries>
+            <Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource MahApps.Styles.CheckBox}"/>
             <FontFamily x:Key="FontAwesomeRegular">
                 /AM Downloader;component/Fonts/fontawesomeregular.otf#Font Awesome 5 Free Regular
             </FontFamily>
@@ -25,8 +26,8 @@
             </FontFamily>
             <Style TargetType="{x:Type Button}" BasedOn="{StaticResource MahApps.Styles.Button.Square}">
                 <Setter Property="Width" Value="80"/>
+                <Setter Property="BorderThickness" Value="1"/>
             </Style>
-            <Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource MahApps.Styles.CheckBox}"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

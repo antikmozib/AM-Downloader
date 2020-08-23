@@ -171,5 +171,10 @@ namespace AMDownloader
 
             }
         }
+
+        private void tvCategories_Loaded(object sender, RoutedEventArgs e)
+        {
+            (tvCategories.ItemContainerGenerator.ContainerFromIndex(0) as TreeViewItem).IsSelected = true;
+        }
     }
 }

@@ -40,35 +40,6 @@
                     Key="C" Modifiers="Ctrl" />
     </Window.InputBindings>
     <Window.Resources>
-        <Style x:Key="VirtualisedMetroListView"
-           BasedOn="{StaticResource MahApps.Styles.ListView}"
-           TargetType="{x:Type ListView}">
-            <Setter Property="ScrollViewer.CanContentScroll" Value="True" />
-            <Setter Property="ScrollViewer.IsDeferredScrollingEnabled" Value="True" />
-            <Setter Property="VirtualizingStackPanel.IsVirtualizing" Value="True" />
-            <Setter Property="VirtualizingStackPanel.VirtualizationMode" Value="Recycling" />
-        </Style>
-        <Style BasedOn="{StaticResource VirtualisedMetroListView}" TargetType="ListView" />
-        <DataTemplate x:Key="HeaderTemplate">
-            <TextBlock Padding="5" Text="{Binding}"/>
-        </DataTemplate>
-        <DataTemplate x:Key="HeaderTemplateArrowUp">
-            <TextBlock Padding="5">
-                <TextBlock Foreground="{StaticResource ColumnHeaderSortDirectionColor}" 
-                           Text="&#xf077;" 
-                           FontFamily="{StaticResource FontAwesomeSolid}"/>
-                <TextBlock Text="{Binding}"/>
-            </TextBlock>
-        </DataTemplate>
-        <DataTemplate x:Key="HeaderTemplateArrowDown">
-            <TextBlock Padding="5">
-                <TextBlock Foreground="{StaticResource ColumnHeaderSortDirectionColor}" 
-                           Text="&#xf078;" 
-                           FontFamily="{StaticResource FontAwesomeSolid}"/>
-                <TextBlock Text="{Binding}"/>
-            </TextBlock>
-        </DataTemplate>
-        <CollectionViewSource x:Key="CategoriesList" Source="{Binding Path=CategoriesList}"/>
         <local:ProgressBarVisibilityConverter x:Key="ProgressBarVisibilityConverter"/>
         <local:ProgressBarForegroundConverter x:Key="ProgressBarForegroundConverter"/>
         <local:ProgressBarBackgroundConverter x:Key="ProgressBarBackgroundConverter"/>
@@ -88,6 +59,36 @@
         <local:TaskBarProgressConverter x:Key="TaskBarProgressConverter" />
         <local:TaskBarProgressStateConverter x:Key="TaskBarProgressStateConverter" />
         <local:TreeViewCountConverter x:Key="TreeViewCountConverter" />
+        <local:TreeViewCategoryColorConverter x:Key="TreeViewCategoryColorConverter" />
+        <Style x:Key="VirtualisedMetroListView"
+           BasedOn="{StaticResource MahApps.Styles.ListView}"
+           TargetType="{x:Type ListView}">
+            <Setter Property="ScrollViewer.CanContentScroll" Value="True" />
+            <Setter Property="ScrollViewer.IsDeferredScrollingEnabled" Value="True" />
+            <Setter Property="VirtualizingStackPanel.IsVirtualizing" Value="True" />
+            <Setter Property="VirtualizingStackPanel.VirtualizationMode" Value="Recycling" />
+        </Style>
+        <Style BasedOn="{StaticResource VirtualisedMetroListView}" TargetType="ListView" />
+        <DataTemplate x:Key="HeaderTemplate">
+            <TextBlock Padding="5" Text="{Binding}"/>
+        </DataTemplate>
+        <DataTemplate x:Key="HeaderTemplateArrowUp">
+            <TextBlock Padding="5">
+                <TextBlock Foreground="{DynamicResource ColumnHeaderSortDirectionColor}" 
+                           Text="&#xf077;" 
+                           FontFamily="{StaticResource FontAwesomeSolid}"/>
+                <TextBlock Text="{Binding}"/>
+            </TextBlock>
+        </DataTemplate>
+        <DataTemplate x:Key="HeaderTemplateArrowDown">
+            <TextBlock Padding="5">
+                <TextBlock Foreground="{DynamicResource ColumnHeaderSortDirectionColor}" 
+                           Text="&#xf078;" 
+                           FontFamily="{StaticResource FontAwesomeSolid}"/>
+                <TextBlock Text="{Binding}"/>
+            </TextBlock>
+        </DataTemplate>
+        <CollectionViewSource x:Key="CategoriesList" Source="{Binding Path=CategoriesList}"/>
     </Window.Resources>
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Closing">
@@ -396,258 +397,129 @@
             <!--region CATEGORYLIST-->
             <TreeView ItemsSource="{Binding CategoriesList}"                        
                       x:Name="tvCategories" 
-                      TabIndex="1">
+                      TabIndex="1" Loaded="tvCategories_Loaded">
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="SelectedItemChanged">
                         <i:InvokeCommandAction Command="{Binding CategoryChangedCommand}"
                                                CommandParameter="{Binding SelectedItem, ElementName=tvCategories}" />
                     </i:EventTrigger>
                 </i:Interaction.Triggers>
-                <TreeView.Resources>
-                    <ControlTemplate x:Key="QueuedTemplate"
-                                     TargetType="TreeViewItem">
-                        <Grid Background="{TemplateBinding Background}">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="25" />
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="auto" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="auto" />
-                            </Grid.ColumnDefinitions>
-                            <Ellipse Width="12"
-                                     Height="12"
-                                     Fill="{StaticResource CategoryQueuedColor}" />
-                            <TextBlock TextTrimming="CharacterEllipsis"
-                                       Grid.Column="1"
-                                       VerticalAlignment="Center" 
-                                       Text="{Binding}" />
-                            <TextBlock Grid.Column="2"
-                                       HorizontalAlignment="Right" 
-                                       VerticalAlignment="Center" 
-                                       Text="{Binding DataContext.QueuedCount, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource TreeViewCountConverter}}" 
-                                       Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
-                        </Grid>
-                    </ControlTemplate>
-                    <ControlTemplate x:Key="DownloadTemplate"
-                                     TargetType="TreeViewItem">
-                        <Grid Background="{TemplateBinding Background}">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="25" />
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="auto" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="auto" />
-                            </Grid.ColumnDefinitions>
-                            <Ellipse Width="12" 
-                                     Height="12" 
-                                     Fill="{StaticResource CategoryDownloadingColor}" />
-                            <TextBlock TextTrimming="CharacterEllipsis"
-                                       Grid.Column="1"
-                                       VerticalAlignment="Center" 
-                                       Text="{Binding}" />
-                            <TextBlock Grid.Column="2"
-                                       HorizontalAlignment="Right" 
-                                       VerticalAlignment="Center"
-                                       Text="{Binding DataContext.DownloadingCount, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource TreeViewCountConverter}}" 
-                                       Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
-                        </Grid>
-                    </ControlTemplate>
-                    <ControlTemplate x:Key="AllTemplate"
-                                     TargetType="TreeViewItem">
-                        <Grid Background="{TemplateBinding Background}">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="25" />
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="auto" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="auto" />
-                            </Grid.ColumnDefinitions>
-                            <Ellipse Width="12"
-                                     Height="12"
-                                     Fill="{StaticResource CategoryAllColor}" />
-                            <TextBlock TextTrimming="CharacterEllipsis" 
-                                       Grid.Column="1" 
-                                       VerticalAlignment="Center" 
-                                       Text="{Binding}" />
-                            <TextBlock Grid.Column="2" 
-                                       HorizontalAlignment="Right" 
-                                       VerticalAlignment="Center" 
-                                       Text="{Binding DataContext.Count, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource TreeViewCountConverter}}" 
-                                       Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
-                        </Grid>
-                    </ControlTemplate>
-                    <ControlTemplate x:Key="ReadyTemplate"
-                                     TargetType="TreeViewItem">
-                        <Grid Background="{TemplateBinding Background}">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="25" />
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="auto" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="auto" />
-                            </Grid.ColumnDefinitions>
-                            <Ellipse Width="12" 
-                                     Height="12" 
-                                     Fill="{StaticResource CategoryReadyColor}" />
-                            <TextBlock TextTrimming="CharacterEllipsis" 
-                                       Grid.Column="1" 
-                                       VerticalAlignment="Center" 
-                                       Text="{Binding}" />
-                            <TextBlock Grid.Column="2" 
-                                       HorizontalAlignment="Right" 
-                                       VerticalAlignment="Center" 
-                                       Text="{Binding DataContext.ReadyCount, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource TreeViewCountConverter}}" 
-                                       Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
-                        </Grid>
-                    </ControlTemplate>
-                    <ControlTemplate x:Key="PausedTemplate"                        
-                                     TargetType="TreeViewItem">
-                        <Grid Background="{TemplateBinding Background}">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="25" />
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="auto" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="auto" />
-                            </Grid.ColumnDefinitions>
-                            <Ellipse Width="12" 
-                                     Height="12"
-                                     Fill="{StaticResource CategoryQueuedColor}" />
-                            <TextBlock TextTrimming="CharacterEllipsis" 
-                                       Grid.Column="1" 
-                                       VerticalAlignment="Center"
-                                       Text="{Binding}" />
-                            <TextBlock Grid.Column="2"
-                                       HorizontalAlignment="Right" 
-                                       VerticalAlignment="Center"
-                                       Text="{Binding DataContext.PausedCount, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource TreeViewCountConverter}}" 
-                                       Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
-                        </Grid>
-                    </ControlTemplate>
-                    <ControlTemplate x:Key="ErrorTemplate"
-                                     TargetType="TreeViewItem">
-                        <Grid Background="{TemplateBinding Background}">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="25" />
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="auto" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="auto" />
-                            </Grid.ColumnDefinitions>
-                            <Ellipse Width="12"
-                                     Height="12" 
-                                     Fill="{StaticResource CategoryErroredColor}" />
-                            <TextBlock TextTrimming="CharacterEllipsis"
-                                       Grid.Column="1" 
-                                       VerticalAlignment="Center" 
-                                       Text="{Binding}" />
-                            <TextBlock Grid.Column="2" 
-                                       HorizontalAlignment="Right"
-                                       VerticalAlignment="Center"
-                                       Text="{Binding DataContext.ErroredCount, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource TreeViewCountConverter}}"
-                                       Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
-                        </Grid>
-                    </ControlTemplate>
-                    <ControlTemplate x:Key="FinishedTemplate"
-                                     TargetType="TreeViewItem">
-                        <Grid Background="{TemplateBinding Background}">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="25" />
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="auto" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="auto" />
-                            </Grid.ColumnDefinitions>
-                            <Ellipse Width="12"
-                                     Height="12" 
-                                     Fill="{StaticResource CategoryFinishedColor}" />
-                            <TextBlock TextTrimming="CharacterEllipsis" 
-                                       Grid.Column="1" 
-                                       VerticalAlignment="Center"
-                                       Text="{Binding}" />
-                            <TextBlock Grid.Column="2"
-                                       HorizontalAlignment="Right" 
-                                       VerticalAlignment="Center" 
-                                       Text="{Binding DataContext.FinishedCount, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource TreeViewCountConverter}}" 
-                                       Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
-                        </Grid>
-                    </ControlTemplate>
-                    <ControlTemplate x:Key="VerifyingTemplate"
-                                     TargetType="TreeViewItem">
-                        <Grid Background="{TemplateBinding Background}">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="25" />
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="auto" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="auto" />
-                            </Grid.ColumnDefinitions>
-                            <Ellipse Width="12"                                 
-                                     Height="12"                                 
-                                     Fill="{StaticResource CategoryVerifyingColor}" />
-                            <TextBlock TextTrimming="CharacterEllipsis" 
-                                       Grid.Column="1" 
-                                       VerticalAlignment="Center" 
-                                       Text="{Binding}" />
-                            <TextBlock Grid.Column="2" 
-                                       HorizontalAlignment="Right" 
-                                       VerticalAlignment="Center"
-                                       Text="{Binding DataContext.VerifyingCount, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource TreeViewCountConverter}}" 
-                                       Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
-                        </Grid>
-                    </ControlTemplate>
-                </TreeView.Resources>
                 <TreeView.ItemContainerStyle>
-                    <Style TargetType="{x:Type TreeViewItem}">
-                        <Style.Resources>
-                            <Style TargetType="{x:Type Ellipse}">
-                                <Setter Property="Margin" Value="5 0 0 0" />
-                            </Style>
-                            <Style TargetType="{x:Type TextBlock}">
-                                <Setter Property="Margin" Value="5 0 5 0" />
-                            </Style>
-                        </Style.Resources>
-                        <Style.Triggers>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="{StaticResource CategorySelectedBackground}" />
-                                <Setter Property="Foreground" Value="{StaticResource CategorySelectedForeground}" />
-                                <Setter Property="FontWeight" Value="Bold" />
-                            </Trigger>
-                            <DataTrigger Binding="{Binding}" Value="Downloading">
-                                <Setter Property="Template" Value="{StaticResource DownloadTemplate}" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding}" Value="Queued">
-                                <Setter Property="Template" Value="{StaticResource QueuedTemplate}" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding}" Value="All">
-                                <Setter Property="Template" Value="{StaticResource AllTemplate}" />
-                                <Setter Property="IsSelected" Value="True" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding}" Value="Ready">
-                                <Setter Property="Template" Value="{StaticResource ReadyTemplate}" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding}" Value="Paused">
-                                <Setter Property="Template" Value="{StaticResource PausedTemplate}" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding}" Value="Errored">
-                                <Setter Property="Template" Value="{StaticResource ErrorTemplate}" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding}" Value="Finished">
-                                <Setter Property="Template" Value="{StaticResource FinishedTemplate}" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding}" Value="Verifying">
-                                <Setter Property="Template" Value="{StaticResource VerifyingTemplate}" />
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
+                    <Style TargetType="{x:Type TreeViewItem}" BasedOn="{StaticResource MahApps.Styles.TreeViewItem}">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="{x:Type TreeViewItem}">
+                                    <Grid x:Name="CatItem">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="30" />
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Ellipse Width="12"
+                                                 VerticalAlignment="Center"
+                                    Height="12"
+                                    Margin="4 0 4 0">
+                                            <Ellipse.Style>
+                                                <Style TargetType="{x:Type Ellipse}">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding}" Value="All">
+                                                            <Setter Property="Fill" Value="{StaticResource CategoryAllColor}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding}" Value="Ready">
+                                                            <Setter Property="Fill" Value="{StaticResource CategoryReadyColor}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding}" Value="Downloading">
+                                                            <Setter Property="Fill" Value="{StaticResource CategoryDownloadingColor}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding}" Value="Queued">
+                                                            <Setter Property="Fill" Value="{StaticResource CategoryQueuedColor}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding}" Value="Paused">
+                                                            <Setter Property="Fill" Value="{StaticResource CategoryPausedColor}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding}" Value="Finished">
+                                                            <Setter Property="Fill" Value="{StaticResource CategoryFinishedColor}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding}" Value="Errored">
+                                                            <Setter Property="Fill" Value="{StaticResource CategoryErroredColor}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding}" Value="Verifying">
+                                                            <Setter Property="Fill" Value="{StaticResource CategoryVerifyingColor}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Ellipse.Style>
+                                        </Ellipse>
+                                        <TextBlock Grid.Column="1"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           VerticalAlignment="Center"
+                                                           Text="{Binding}" />
+                                        <TextBlock x:Name="CatCount"
+                                            Margin="4 0 4 0"
+                                            Grid.Column="2"
+                                                           HorizontalAlignment="Right" 
+                                                           VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="{x:Type TextBlock}">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding}" Value="All">
+                                                            <Setter Property="Text" 
+                                                                Value="{Binding DataContext.Count, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource TreeViewCountConverter}}" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding}" Value="Ready">
+                                                            <Setter Property="Text" 
+                                                                Value="{Binding DataContext.ReadyCount, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource TreeViewCountConverter}}" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding}" Value="Queued">
+                                                            <Setter Property="Text" 
+                                                                Value="{Binding DataContext.QueuedCount, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource TreeViewCountConverter}}" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding}" Value="Paused">
+                                                            <Setter Property="Text" 
+                                                                Value="{Binding DataContext.PausedCount, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource TreeViewCountConverter}}" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding}" Value="Errored">
+                                                            <Setter Property="Text" 
+                                                                Value="{Binding DataContext.ErroredCount, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource TreeViewCountConverter}}" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Grid>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="CatItem" Property="Background" Value="{DynamicResource MahApps.Brushes.Accent3}"/>
+                                        </Trigger>
+                                        <Trigger Property="IsSelected" Value="true">
+                                            <Setter TargetName="CatItem" Property="Background" Value="{DynamicResource MahApps.Brushes.DataGrid.Selection.Background}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource MahApps.Brushes.DataGrid.Selection.Text}"/>
+                                            <Setter Property="FontWeight" Value="Bold"/>
+                                        </Trigger>
+                                        <Trigger Property="IsFocused" Value="true">
+                                            <Setter TargetName="CatItem" Property="Background" Value="{DynamicResource MahApps.Brushes.DataGrid.Selection.Background}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource MahApps.Brushes.DataGrid.Selection.Text}"/>
+                                            <Setter Property="FontWeight" Value="Bold"/>
+                                        </Trigger>
+                                        <!--<MultiTrigger>
+                                            <MultiTrigger.Conditions>
+                                                <Condition Property="IsSelected" Value="true"/>
+                                                <Condition Property="IsSelectionActive" Value="true"/>
+                                            </MultiTrigger.Conditions>
+                                            <Setter Property="Foreground" Value="{DynamicResource MahApps.Brushes.DataGrid.Selection.Text}"/>
+                                            <Setter Property="Background" Value="{DynamicResource MahApps.Brushes.Accent4}"/>
+                                        </MultiTrigger>-->
+                                        <!--<Trigger Property="IsEnabled" Value="false">
+                                            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
+                                        </Trigger>-->
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>                                
+                            </Setter.Value>
+                        </Setter>
+                    </Style>                    
                 </TreeView.ItemContainerStyle>
             </TreeView>
             <!--endregion CategoryList-->
@@ -706,42 +578,19 @@
                     </ContextMenu>
                 </ListView.ContextMenu>
                 <ListView.Resources>
-                    <Style x:Key="DefaultHeaderStyle" TargetType="{x:Type GridViewColumnHeader}">
-                        <Setter Property="Background" Value="{DynamicResource MahApps.Brushes.Control.Background}"/>
-                        <Setter Property="Foreground" Value="{DynamicResource MahApps.Brushes.Text}"/>
-                        <Setter Property="BorderBrush" Value="{DynamicResource MahApps.Brushes.Control.Border}"/>
-                        <Style.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Foreground" Value="{DynamicResource MahApps.Brushes.Control.Background}"/>                            
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                    <Style x:Key="LeftAligned" TargetType="{x:Type GridViewColumnHeader}" BasedOn="{StaticResource DefaultHeaderStyle}">
+                    <Style x:Key="LeftAligned" TargetType="{x:Type GridViewColumnHeader}" BasedOn="{StaticResource MahApps.Styles.GridViewColumnHeader}">
                         <Setter Property="HorizontalContentAlignment" Value="Left" />
                     </Style>
-                    <Style x:Key="MiddleAligned" TargetType="{x:Type GridViewColumnHeader}" BasedOn="{StaticResource DefaultHeaderStyle}">
+                    <Style x:Key="MiddleAligned" TargetType="{x:Type GridViewColumnHeader}" BasedOn="{StaticResource MahApps.Styles.GridViewColumnHeader}">
                         <Setter Property="HorizontalContentAlignment" Value="Center" />
                     </Style>
-                    <Style x:Key="RightAligned" TargetType="{x:Type GridViewColumnHeader}" BasedOn="{StaticResource DefaultHeaderStyle}">
+                    <Style x:Key="RightAligned" TargetType="{x:Type GridViewColumnHeader}" BasedOn="{StaticResource MahApps.Styles.GridViewColumnHeader}">
                         <Setter Property="HorizontalContentAlignment" Value="Right" />
                     </Style>
                 </ListView.Resources>
                 <ListView.ItemContainerStyle>
-                    <Style TargetType="{x:Type ListViewItem}">
+                    <Style TargetType="{x:Type ListViewItem}" BasedOn="{StaticResource MahApps.Styles.ListViewItem}">
                         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                        <!--<Setter Property="BorderThickness" Value="0"/>-->
-                        <Style.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="{DynamicResource MahApps.Brushes.DataGrid.Selection.Background.MouseOver}"/>
-                                <Setter Property="Foreground" Value="{DynamicResource MahApps.Brushes.DataGrid.Selection.Text.MouseOver}"/>
-                                <Setter Property="BorderBrush" Value="{DynamicResource MahApps.Brushes.DataGrid.Selection.BorderBrush.MouseOver}"/>
-                            </Trigger>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="{DynamicResource MahApps.Brushes.DataGrid.Selection.Background}"/>
-                                <Setter Property="Foreground" Value="{DynamicResource MahApps.Brushes.DataGrid.Selection.Text}"/>
-                                <Setter Property="BorderBrush" Value="{DynamicResource MahApps.Brushes.DataGrid.Selection.BorderBrush}"/>
-                            </Trigger>
-                        </Style.Triggers>
                     </Style>
                 </ListView.ItemContainerStyle>
                 <ListView.View>

@@ -21,8 +21,9 @@ https://github.com/antikmozib/am-downloader</Description>
   </ItemGroup>
 
   <ItemGroup>
+    <Page Remove="Converters.xaml" />
     <Page Remove="Style.xaml" />
-    <Page Remove="Styles\ListViewColors.xaml" />
+    <Page Remove="Styles\TreeViewItemNoIndent.xaml" />
   </ItemGroup>
 
   <ItemGroup>
@@ -39,10 +40,6 @@ https://github.com/antikmozib/am-downloader</Description>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Fonts\fontawesomesolid.otf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Styles\ListViewColors.xaml">
-      <Generator>MSBuild:Compile</Generator>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Styles\Style.xaml">

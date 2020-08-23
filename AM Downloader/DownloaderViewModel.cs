@@ -25,7 +25,10 @@ using AMDownloader.QueueProcessing;
 namespace AMDownloader
 {
     delegate Task AddItemsAsync(string destination, bool enqueue, bool start, params string[] urls);
-
+    public enum Categories
+    {
+        All, Ready, Queued, Downloading, Paused, Finished, Errored, Verifying
+    }
     class DownloaderViewModel : INotifyPropertyChanged
     {
         #region Fields
@@ -61,10 +64,6 @@ namespace AMDownloader
         public int VerifyingCount { get; private set; }
         public string Status { get; private set; }
         public event PropertyChangedEventHandler PropertyChanged;
-        public enum Categories
-        {
-            All, Ready, Queued, Downloading, Paused, Finished, Errored, Verifying
-        }
         public AddItemsAsync AddItemsAsyncDelegate;
         public IProgress<long> ProgressReporter;
         #endregion // Properties
@@ -546,8 +545,8 @@ namespace AMDownloader
             var itemsOpenable = from item in items where File.Exists(item.Destination) || Directory.Exists(Path.GetDirectoryName(item.Destination)) select item;
             if (itemsOpenable.Count() > 1)
             {
-                var result = MessageBox.Show("You have selected to open " + items.Count + " folders.\n\n"+
-                    "Opening too many folders at the same time may cause the system to crash.\n\nDo you wish to proceed?", 
+                var result = MessageBox.Show("You have selected to open " + items.Count + " folders.\n\n" +
+                    "Opening too many folders at the same time may cause the system to crash.\n\nDo you wish to proceed?",
                     "Open folder", MessageBoxButton.YesNo, MessageBoxImage.Exclamation, MessageBoxResult.No);
 
                 if (result == MessageBoxResult.No)
