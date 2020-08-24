@@ -6,6 +6,7 @@ using AMDownloader.Properties;
 using AMDownloader.Common;
 using AMDownloader.ObjectModel.Serializable;
 using MahApps.Metro.Controls;
+using MahApps.Metro.Controls.Dialogs;
 
 namespace AMDownloader
 {
@@ -147,6 +148,11 @@ namespace AMDownloader
             if (fontSize < this.FontSize) fontSize = this.FontSize;
             if (fontSize > (3 * this.FontSize)) fontSize = 3 * this.FontSize;
             txtUrl.FontSize = fontSize;
+        }
+
+        internal async void Preview(string preview)
+        {
+            await this.ShowMessageAsync("Preview", preview,MessageDialogStyle.Affirmative,null);
         }
     }
 }

@@ -43,7 +43,7 @@ namespace AMDownloader
         private CancellationTokenSource _ctsRefreshView;
         private RequestThrottler _requestThrottler;
         private HttpClient _client;
-        private readonly CloseApplicationDelegate _closeApplicationDel;
+        private readonly DisplayMessageDelegate _displayMessageDel;
         #endregion // Fields
 
         #region Properties
@@ -62,6 +62,7 @@ namespace AMDownloader
         public int ErroredCount { get; private set; }
         public int PausedCount { get; private set; }
         public int VerifyingCount { get; private set; }
+        public bool IsBackgroundWorking => _ctsUpdatingList != null;
         public string Status { get; private set; }
         public event PropertyChangedEventHandler PropertyChanged;
         public AddItemsAsync AddItemsAsyncDelegate;
@@ -87,10 +88,11 @@ namespace AMDownloader
         public ICommand RecheckCommand { get; private set; }
         public ICommand CopyLinkToClipboardCommand { get; private set; }
         public ICommand ClearFinishedDownloadsCommand { get; private set; }
+        public ICommand CancelBackgroundTaskCommand { get; private set; }
         #endregion // Commands
 
         #region Constructors
-        public DownloaderViewModel(CloseApplicationDelegate closeApplicationDelegate)
+        public DownloaderViewModel(DisplayMessageDelegate displayMessageDelegate)
         {
             _client = new HttpClient();
             DownloadItemsList = new ObservableCollection<DownloaderObjectModel>();
@@ -105,7 +107,7 @@ namespace AMDownloader
             _semaphoreRefreshingView = new SemaphoreSlim(1);
             _ctsUpdatingList = null;
             _ctsRefreshView = null;
-            _closeApplicationDel = closeApplicationDelegate;
+            _displayMessageDel = displayMessageDelegate;
             _lock_downloadItemsList = DownloadItemsList;
             _lockBytesDownloaded = this.BytesDownloaded;
             _lockBytesTransferredOverLifetime = Settings.Default.BytesTransferredOverLifetime;
@@ -154,6 +156,7 @@ namespace AMDownloader
             RecheckCommand = new RelayCommand<object>(Recheck, Recheck_CanExecute);
             CopyLinkToClipboardCommand = new RelayCommand<object>(CopyLinkToClipboard, CopyLinkToClipboard_CanExecute);
             ClearFinishedDownloadsCommand = new RelayCommand<object>(ClearFinishedDownloads);
+            CancelBackgroundTaskCommand = new RelayCommand<object>(CancelBackgroundTask, CancelBackgroundTask_CanExecute);
             foreach (Categories cat in (Categories[])Enum.GetValues(typeof(Categories)))
             {
                 CategoriesList.Add(cat);
@@ -411,6 +414,7 @@ namespace AMDownloader
                 return;
             }
 
+            CancellationToken ct;
             Monitor.Enter(_lock_downloadItemsList);
             try
             {
@@ -419,7 +423,8 @@ namespace AMDownloader
                     var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
                     await _semaphoreUpdatingList.WaitAsync();
                     _ctsUpdatingList = new CancellationTokenSource();
-                    var ct = _ctsUpdatingList.Token;
+                    ct = _ctsUpdatingList.Token;
+                    RaisePropertyChanged(nameof(this.IsBackgroundWorking));
                     try
                     {
                         int total = items.Count();
@@ -449,23 +454,41 @@ namespace AMDownloader
                                 if (items[i].IsQueued) items[i].Dequeue();
                                 if (ct.IsCancellationRequested)
                                 {
-                                    break;
+                                    ct.ThrowIfCancellationRequested();
                                 }
                             }
                         }
+                    }
+                    catch (Exception ex)
+                    {
+                        throw ex;
                     }
                     finally
                     {
                         _semaphoreUpdatingList.Release();
                         _ctsUpdatingList = null;
                         this.Progress = 0;
-                        this.Status = "Ready";
+                        if (ct.IsCancellationRequested)
+                        {
+                            this.Status = "Cancelling..";
+                        }
+                        else
+                        {
+                            this.Status = "Refreshing list...";
+                        }
+                        RaisePropertyChanged(nameof(this.IsBackgroundWorking));
                         RaisePropertyChanged(nameof(this.Progress));
                         RaisePropertyChanged(nameof(this.FinishedCount));
                         RaisePropertyChanged(nameof(this.Status));
                         RefreshCollection();
+                        this.Status = "Ready";
+                        RaisePropertyChanged(nameof(this.Status));
                     }
                 });
+            }
+            catch
+            {
+
             }
             finally
             {
@@ -492,8 +515,8 @@ namespace AMDownloader
             Monitor.Enter(_lock_downloadItemsList);
             try
             {
-                var vm = new AddDownloadViewModel(this);
                 var win = new AddDownloadWindow();
+                var vm = new AddDownloadViewModel(this, new ShowPreview(win.Preview));
                 win.DataContext = vm;
                 win.Owner = obj as Window;
                 win.ShowDialog();
@@ -608,8 +631,16 @@ namespace AMDownloader
 
         internal void CloseApp(object obj)
         {
+            var window = (Window)obj;
+
             if (_ctsUpdatingList != null)
             {
+                if (MessageBox.Show("Background operation in progress. Cancel and exit program?", "Exit", MessageBoxButton.YesNo, MessageBoxImage.Exclamation, MessageBoxResult.No) == MessageBoxResult.No)
+                {
+                    return;
+                }
+                window.IsEnabled = false;
+                window.Title = "Quitting, please wait...";
                 _ctsUpdatingList.Cancel();
             }
             this.Status = "Saving data...";
@@ -653,7 +684,14 @@ namespace AMDownloader
             }).ContinueWith(t =>
             {
                 Settings.Default.Save();
-                _closeApplicationDel.Invoke();
+                try
+                {
+                    Application.Current?.Dispatcher.Invoke(Application.Current.Shutdown);
+                }
+                catch
+                {
+
+                }
             });
         }
 
@@ -679,7 +717,7 @@ namespace AMDownloader
         {
             if (obj == null) return false;
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
-            return (from item in items where !item.IsQueued where !item.IsBeingDownloaded select item).Count() > 0;
+            return (from item in items where !item.IsQueued where !item.IsBeingDownloaded where !item.IsCompleted select item).Count() > 0;
         }
 
         internal void Dequeue(object obj)
@@ -719,6 +757,7 @@ namespace AMDownloader
                 await _semaphoreUpdatingList.WaitAsync();
                 _ctsUpdatingList = new CancellationTokenSource();
                 var ct = _ctsUpdatingList.Token;
+                RaisePropertyChanged(nameof(this.IsBackgroundWorking));
                 for (int i = 0; i < total; i++)
                 {
                     int progress = (int)((double)(i + 1) / total * 100);
@@ -751,9 +790,15 @@ namespace AMDownloader
                         break;
                     }
                 }
-                Monitor.Enter(_lock_downloadItemsList);
-                this.Status = "Refreshing list...";
+                if (!ct.IsCancellationRequested)
+                {
+                    this.Status = "Refreshing list...";
+                }
+                {
+                    this.Status = "Cancelling...";
+                }
                 RaisePropertyChanged(nameof(this.Status));
+                Monitor.Enter(_lock_downloadItemsList);
                 try
                 {
                     foreach (var item in itemsDeleted)
@@ -770,6 +815,7 @@ namespace AMDownloader
                     this.Progress = 0;
                     RaisePropertyChanged(nameof(this.Progress));
                     RaisePropertyChanged(nameof(this.Status));
+                    RaisePropertyChanged(nameof(this.IsBackgroundWorking));
                     RefreshCollection();
                 }
             });
@@ -825,7 +871,8 @@ namespace AMDownloader
         internal bool CopyLinkToClipboard_CanExecute(object obj)
         {
             if (obj == null) return false;
-            return true;
+            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
+            return items.Count() > 0;
         }
 
         internal void ClearFinishedDownloads(object obj)
@@ -985,10 +1032,7 @@ namespace AMDownloader
                 return;
             }
 
-            if (_ctsRefreshView != null)
-            {
-                _ctsRefreshView.Cancel();
-            }
+            _ctsRefreshView?.Cancel();
 
             Task.Run(async () =>
             {
@@ -1025,11 +1069,17 @@ namespace AMDownloader
         private async Task AddItemsAsync(string destination, bool enqueue, bool start = false, params string[] urls)
         {
             await _semaphoreUpdatingList.WaitAsync();
+            _ctsUpdatingList = new CancellationTokenSource();
+            var ct = _ctsUpdatingList.Token;
+            RaisePropertyChanged(nameof(this.IsBackgroundWorking));
             int total = urls.Count();
             int maxParallelDownloads = Settings.Default.MaxParallelDownloads;
             var items = new DownloaderObjectModel[urls.Count()];
             var tasks = new List<Task>();
             var forceEnqueue = false;
+            var existingUrls = (from di in DownloadItemsList select di.Url).ToArray();
+            var existingDestinations = (from di in DownloadItemsList select di.Destination).ToArray();
+            List<string> skipping = new List<string>();
 
             if (start && !enqueue && urls.Count() > Settings.Default.MaxParallelDownloads)
             {
@@ -1044,11 +1094,17 @@ namespace AMDownloader
                 RaisePropertyChanged(nameof(this.Status));
                 RaisePropertyChanged(nameof(this.Progress));
 
+                if (existingUrls.Contains(urls[i]))
+                {
+                    skipping.Add(urls[i]);
+                    continue;
+                }
                 var fileName = CommonFunctions.GetFreshFilename(destination + Path.GetFileName(urls[i]));
-                var checkifUrlExists = from di in DownloadItemsList where di.Url == urls[i] select di;
-                var checkIfDestinationExists = from di in DownloadItemsList where di.Destination == fileName select di;
-                var sameItems = checkIfDestinationExists.Intersect(checkifUrlExists);
-                if (sameItems.Count() > 0) continue;
+                if (existingDestinations.Contains(fileName))
+                {
+                    skipping.Add(urls[i]);
+                    continue;
+                }
 
                 DownloaderObjectModel item;
                 if (forceEnqueue || enqueue)
@@ -1095,16 +1151,33 @@ namespace AMDownloader
                     }
                 }
                 items[i] = item;
+
+                if (ct.IsCancellationRequested)
+                {
+                    break;
+                }
             }
 
+            _semaphoreUpdatingList.Release();
+            _ctsUpdatingList = null;
             this.Progress = 0;
             this.Status = "Ready";
             RaisePropertyChanged(nameof(this.Status));
             RaisePropertyChanged(nameof(this.Progress));
-
-            _semaphoreUpdatingList.Release();
             AddObjects(items);
             RefreshCollection();
+
+            if (skipping.Count > 0)
+            {
+                if (skipping.Count < 100)
+                {
+                    _displayMessageDel("The following URLs were skipped because they are already in the list:\n\n" + string.Join('\n', skipping), "Duplicate URLs");
+                }
+                else
+                {
+                    _displayMessageDel(skipping.Count + " URLs were skipped because they are already in the list.", "Duplicate URLs");
+                }
+            }
 
             if ((enqueue && start) || forceEnqueue)
             {
@@ -1121,12 +1194,17 @@ namespace AMDownloader
             _semaphoreUpdatingList.Wait();
             _ctsUpdatingList = new CancellationTokenSource();
             var ct = _ctsUpdatingList.Token;
+            RaisePropertyChanged(nameof(this.IsBackgroundWorking));
             Monitor.Enter(_lock_downloadItemsList);
             int total = objects.Count();
             try
             {
                 for (int i = 0; i < total; i++)
                 {
+                    if (ct.IsCancellationRequested)
+                    {
+                        ct.ThrowIfCancellationRequested();
+                    }
                     if (objects[i] == null) continue;
                     int progress = (int)((double)(i + 1) / total * 100);
                     this.Progress = progress;
@@ -1141,12 +1219,9 @@ namespace AMDownloader
                             objects[i].Dequeue();
                         }
                     }
-                    if (ct.IsCancellationRequested)
-                    {
-                        break;
-                    }
                 }
             }
+            catch (OperationCanceledException) { }
             finally
             {
                 Monitor.Exit(_lock_downloadItemsList);
@@ -1156,6 +1231,7 @@ namespace AMDownloader
                 this.Status = "Ready";
                 RaisePropertyChanged(nameof(this.Progress));
                 RaisePropertyChanged(nameof(this.Status));
+                RaisePropertyChanged(nameof(this.IsBackgroundWorking));
             }
         }
 
@@ -1197,6 +1273,16 @@ namespace AMDownloader
         private void ShowBusyMessage()
         {
             MessageBox.Show("Operation in progress. Please wait.", "Busy", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+        }
+
+        internal void CancelBackgroundTask(object obj)
+        {
+            _ctsUpdatingList?.Cancel();
+        }
+
+        internal bool CancelBackgroundTask_CanExecute(object obj)
+        {
+            return this.IsBackgroundWorking;
         }
         #endregion // Methods
     }

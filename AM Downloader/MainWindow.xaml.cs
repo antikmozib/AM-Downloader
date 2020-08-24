@@ -13,7 +13,7 @@ using MahApps.Metro.Controls.Dialogs;
 
 namespace AMDownloader
 {
-    delegate void CloseApplicationDelegate();
+    delegate void DisplayMessageDelegate(string message, string title = "");
 
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -21,7 +21,7 @@ namespace AMDownloader
     public partial class MainWindow : MetroWindow
     {
         private ICollectionView _dataView = null;
-        private readonly DownloaderViewModel _primaryViewModel = new DownloaderViewModel(new CloseApplicationDelegate(CloseApplication));
+        private readonly DownloaderViewModel _primaryViewModel;
         private static readonly string _appGuid = "20d3be33-cd45-4c69-b038-e95bc434e09c";
         private static readonly Mutex _mutex = new Mutex(false, "Global\\" + _appGuid);
         private GridViewColumnHeader _lastHeaderClicked = null;
@@ -29,6 +29,8 @@ namespace AMDownloader
 
         public MainWindow()
         {
+            _primaryViewModel = new DownloaderViewModel( new DisplayMessageDelegate(DisplayMessage));
+
             InitializeComponent();
             if (!_mutex.WaitOne(0, false))
             {
@@ -36,6 +38,7 @@ namespace AMDownloader
                 MessageBox.Show("Another instance of " + name + " is already running.", name, MessageBoxButton.OK, MessageBoxImage.Error);
                 Application.Current.Shutdown();
             }
+
             DataContext = _primaryViewModel;
         }
 
@@ -56,9 +59,6 @@ namespace AMDownloader
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            this.Cursor = Cursors.Wait;
-            this.Title = "Quitting, please wait...";
-            this.IsEnabled = false;
             e.Cancel = true;
         }
 
@@ -160,21 +160,16 @@ namespace AMDownloader
             _dataView.SortDescriptions.Add(sd);
         }
 
-        internal static void CloseApplication()
-        {
-            try
-            {
-                Application.Current?.Dispatcher.Invoke(Application.Current.Shutdown);
-            }
-            catch
-            {
-
-            }
-        }
-
         private void tvCategories_Loaded(object sender, RoutedEventArgs e)
         {
             (tvCategories.ItemContainerGenerator.ContainerFromIndex(0) as TreeViewItem).IsSelected = true;
+        }
+
+        internal void DisplayMessage(string message, string title = "")
+        {
+            if (title == "") title = Assembly.GetExecutingAssembly().GetName().Name;
+            Application.Current?.Dispatcher?.Invoke(() =>
+            this.ShowMessageAsync(title, message));
         }
     }
 }

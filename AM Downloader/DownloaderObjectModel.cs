@@ -724,7 +724,7 @@ namespace AMDownloader.ObjectModel
         #region Public methods
         public void Enqueue()
         {
-            if (this.IsQueued || this.IsBeingDownloaded) return;
+            if (this.IsQueued || this.IsBeingDownloaded || this.IsCompleted) return;
             SetQueued();
             RaiseEvent(DownloadEnqueued);
         }

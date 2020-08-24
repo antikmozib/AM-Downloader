@@ -56,5 +56,8 @@
     <Setting Name="LastColumnSorting" Type="System.ComponentModel.ListSortDirection" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="AddDownloadWindowFontSize" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">14</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

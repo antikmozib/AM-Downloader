@@ -14,6 +14,7 @@ using AMDownloader.ClipboardObservation;
 
 namespace AMDownloader
 {
+    delegate void ShowPreview(string preview);
     class AddDownloadViewModel : INotifyPropertyChanged
     {
         private readonly DownloaderViewModel _parentViewModel;
@@ -23,6 +24,7 @@ namespace AMDownloader
 
         public event PropertyChangedEventHandler PropertyChanged;
 
+        public ShowPreview ShowPreview { get;private set; }
         public string Urls { get; set; }
         public string SaveToFolder { get; set; }
         public bool StartDownload { get; set; }
@@ -46,7 +48,7 @@ namespace AMDownloader
         public ICommand AddCommand { get; private set; }
         public ICommand PreviewCommand { get; private set; }
 
-        public AddDownloadViewModel(DownloaderViewModel parentViewModel)
+        public AddDownloadViewModel(DownloaderViewModel parentViewModel, ShowPreview showPreview)
         {
             _parentViewModel = parentViewModel;
 
@@ -66,12 +68,13 @@ namespace AMDownloader
             this.AddToQueue = Settings.Default.AddItemsToQueue;
             this.StartDownload = Settings.Default.StartDownloadingAddedItems;
             this.Urls = String.Empty;
+            this.ShowPreview = showPreview;
 
             var clipText = _clipboardService.GetText();
             if (clipText.Contains("http") || clipText.Contains("ftp")) this.Urls += clipText.Trim() + "\n";
         }
 
-        public void Preview(object obj)
+        internal void Preview(object obj)
         {
             string[] urls = ListifyUrls().ToArray();
             string output = String.Empty;
@@ -98,7 +101,7 @@ namespace AMDownloader
                 }
             }
 
-            MessageBox.Show(output, "Preview", MessageBoxButton.OK, MessageBoxImage.Information);
+            this.ShowPreview.Invoke(output);
         }
 
         bool Add_CanExecute(object obj)

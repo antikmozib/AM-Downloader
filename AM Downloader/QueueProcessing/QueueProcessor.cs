@@ -78,7 +78,7 @@ namespace AMDownloader.QueueProcessing
         // Producer
         public bool Add(IQueueable item)
         {
-            if (_queueList.Contains(item)) return true;
+            if (item.IsCompleted || _queueList.Contains(item)) return true;
             return _queueList.TryAdd(item);
         }
 

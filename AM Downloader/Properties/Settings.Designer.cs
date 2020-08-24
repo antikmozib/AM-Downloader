@@ -237,5 +237,17 @@ namespace AMDownloader.Properties {
                 this["LastColumnSorting"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("14")]
+        public int AddDownloadWindowFontSize {
+            get {
+                return ((int)(this["AddDownloadWindowFontSize"]));
+            }
+            set {
+                this["AddDownloadWindowFontSize"] = value;
+            }
+        }
     }
 }
