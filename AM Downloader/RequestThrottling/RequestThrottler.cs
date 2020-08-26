@@ -66,9 +66,9 @@ namespace AMDownloader.RequestThrottling
                     continue;
                 }
                 TimeSpan diff = DateTime.Now.Subtract(requestModel.SeenAt);
-                if (diff.TotalSeconds < 60)
+                if (diff.TotalSeconds < _interval)
                 {
-                    int delay = 60000 - (int)diff.TotalMilliseconds;
+                    int delay = _interval - (int)diff.TotalMilliseconds;
                     await Task.Delay(delay);
                 }
             }

@@ -63,6 +63,7 @@ namespace AMDownloader
         public int PausedCount { get; private set; }
         public int VerifyingCount { get; private set; }
         public bool IsBackgroundWorking => _ctsUpdatingList != null;
+        public bool IsDownloading => DownloadingCount > 0;
         public string Status { get; private set; }
         public event PropertyChangedEventHandler PropertyChanged;
         public AddItemsAsync AddItemsAsyncDelegate;
@@ -1023,6 +1024,7 @@ namespace AMDownloader
             RaisePropertyChanged(nameof(this.ReadyCount));
             RaisePropertyChanged(nameof(this.VerifyingCount));
             RaisePropertyChanged(nameof(this.Status));
+            RaisePropertyChanged(nameof(this.IsDownloading));
         }
 
         internal void RefreshCollection()
@@ -1080,6 +1082,7 @@ namespace AMDownloader
             var existingUrls = (from di in DownloadItemsList select di.Url).ToArray();
             var existingDestinations = (from di in DownloadItemsList select di.Destination).ToArray();
             List<string> skipping = new List<string>();
+            var wasCanceled = false;
 
             if (start && !enqueue && urls.Count() > Settings.Default.MaxParallelDownloads)
             {
@@ -1154,6 +1157,7 @@ namespace AMDownloader
 
                 if (ct.IsCancellationRequested)
                 {
+                    wasCanceled = true;
                     break;
                 }
             }
@@ -1164,10 +1168,10 @@ namespace AMDownloader
             this.Status = "Ready";
             RaisePropertyChanged(nameof(this.Status));
             RaisePropertyChanged(nameof(this.Progress));
-            AddObjects(items);
+            if (!wasCanceled) AddObjects(items);
             RefreshCollection();
 
-            if (skipping.Count > 0)
+            if (skipping.Count > 0 && !wasCanceled)
             {
                 if (skipping.Count < 100)
                 {
@@ -1179,7 +1183,7 @@ namespace AMDownloader
                 }
             }
 
-            if ((enqueue && start) || forceEnqueue)
+            if (((enqueue && start) || forceEnqueue) && !wasCanceled)
             {
                 await QueueProcessor.StartAsync();
             }

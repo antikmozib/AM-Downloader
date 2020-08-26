@@ -6,7 +6,6 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Input;
 using AMDownloader.Properties;
 using MahApps.Metro.Controls;
 using MahApps.Metro.Controls.Dialogs;
@@ -168,8 +167,7 @@ namespace AMDownloader
         internal void DisplayMessage(string message, string title = "")
         {
             if (title == "") title = Assembly.GetExecutingAssembly().GetName().Name;
-            Application.Current?.Dispatcher?.Invoke(() =>
-            this.ShowMessageAsync(title, message));
+            Application.Current?.Dispatcher?.Invoke(() => this.ShowMessageAsync(title, message));
         }
     }
 }

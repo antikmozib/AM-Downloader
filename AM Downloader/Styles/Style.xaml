@@ -20,10 +20,7 @@
 
     <SolidColorBrush x:Key="ColumnHeaderSortDirectionColor" Color="{DynamicResource MahApps.Colors.AccentBase}" />
     <SolidColorBrush x:Key="GridViewSelectedItemBackground" Color="PowderBlue" />
-
-    <SolidColorBrush x:Key="StatusBarReadyColor" Color="{DynamicResource Theme.PrimaryAccentColor}" />
-    <SolidColorBrush x:Key="StatusBarBusyColor" Color="{DynamicResource MahApps.Colors.ThemeForeground}" />
-
+    
     <SolidColorBrush x:Key="ProgressBarValueColor" Color="#f2f2f2" />
     <SolidColorBrush x:Key="ProgressBarValueShadowColor" Color="#4d4d4d" />
     <SolidColorBrush x:Key="ProgressBarFinishedForeground" Color="#669999" />

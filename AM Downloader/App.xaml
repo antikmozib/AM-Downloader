@@ -9,8 +9,8 @@
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.TreeView.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.FlatButton.xaml" />
                 <!-- Theme setting -->
-                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Dark.Blue.xaml" />
-                <ResourceDictionary Source="Styles/Style.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Light.Blue.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/Styles/Style.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource MahApps.Styles.CheckBox}" />
             <FontFamily x:Key="FontAwesomeRegular">
@@ -30,7 +30,17 @@
                     </Trigger>
                 </Style.Triggers>
             </Style>
-            <Style x:Key="DefaultAccentedButton" TargetType="Button" BasedOn="{StaticResource MahApps.Styles.Button.MetroSquare.Accent}"/>
+            <Style TargetType="MenuItem" BasedOn="{StaticResource MahApps.Styles.MenuItem}">
+                <Style.Resources>
+                    <Style TargetType="Frame">
+                        <Style.Triggers>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.5"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Style.Resources>
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
