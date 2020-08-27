@@ -1276,7 +1276,7 @@ namespace AMDownloader
 
         private void ShowBusyMessage()
         {
-            MessageBox.Show("Operation in progress. Please wait.", "Busy", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+            _displayMessageDel.Invoke("Operation in progress. Please wait.");
         }
 
         internal void CancelBackgroundTask(object obj)

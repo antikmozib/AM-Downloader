@@ -5,6 +5,11 @@ VisualStudioVersion = 16.0.29409.12
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AM Downloader", "AM Downloader\AM Downloader.csproj", "{0A3FCC28-B99A-44AA-82EE-CBB35E8EE054}"
 EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Installer", "Installer\Installer.vdproj", "{5532384B-2646-456E-B1CF-6FEA0680B624}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0A3FCC28-B99A-44AA-82EE-CBB35E8EE054} = {0A3FCC28-B99A-44AA-82EE-CBB35E8EE054}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +20,9 @@ Global
 		{0A3FCC28-B99A-44AA-82EE-CBB35E8EE054}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0A3FCC28-B99A-44AA-82EE-CBB35E8EE054}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0A3FCC28-B99A-44AA-82EE-CBB35E8EE054}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5532384B-2646-456E-B1CF-6FEA0680B624}.Debug|Any CPU.ActiveCfg = Release
+		{5532384B-2646-456E-B1CF-6FEA0680B624}.Release|Any CPU.ActiveCfg = Release
+		{5532384B-2646-456E-B1CF-6FEA0680B624}.Release|Any CPU.Build.0 = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

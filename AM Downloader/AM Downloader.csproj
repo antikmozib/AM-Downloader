@@ -5,20 +5,36 @@
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <RootNamespace>AMDownloader</RootNamespace>
     <UseWPF>true</UseWPF>
-    <ApplicationIcon>app.ico</ApplicationIcon>
+	<UseWindowsForms>true</UseWindowsForms>
+    <ApplicationIcon>Icons\app.ico</ApplicationIcon>
     <Company>Antik Mozib</Company>
     <Description>A free, modern download manager for Windows.
 https://github.com/antikmozib/am-downloader</Description>
     <Copyright>Developed by Antik Mozib. Released under GNU GPLv3.</Copyright>
+    <StartupObject></StartupObject>
+    <PackageIcon>app.ico</PackageIcon>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <Optimize>true</Optimize>
+    <OutputPath></OutputPath>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <Optimize>false</Optimize>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="app.ico" />
     <None Remove="Fonts\fontawesome-webfont.ttf" />
     <None Remove="Fonts\fontawesome.otf" />
     <None Remove="Fonts\fontawesomeregular.otf" />
     <None Remove="Fonts\fontawesomesolid.otf" />
-    <None Remove="Icons\application-run.png" />
+    <None Remove="Icons\app.ico" />
+    <None Include="Icons\app.ico">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
@@ -49,14 +65,13 @@ https://github.com/antikmozib/am-downloader</Description>
 
   <ItemGroup>
     <PackageReference Include="MahApps.Metro" Version="2.2.0" />
+    <PackageReference Include="Microsoft.NETCore.Platforms" Version="3.1.2" />
+    <PackageReference Include="Microsoft.NETCore.Targets" Version="3.1.0" />
+    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.19" />
     <PackageReference Include="System.Threading.Tasks" Version="4.3.0" />
-    <PackageReference Include="System.Windows.Interactivity.WPF" Version="2.0.20525" />
   </ItemGroup>
-
+  
   <ItemGroup>
-    <Resource Include="app.ico">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
     <Resource Include="Fonts\fontawesomeregular.otf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
@@ -64,6 +79,9 @@ https://github.com/antikmozib/am-downloader</Description>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Icons\AddRow_16x.xaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\app.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Icons\Cancel_16x.xaml">
@@ -130,23 +148,11 @@ https://github.com/antikmozib/am-downloader</Description>
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Properties\Resources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
     <Compile Update="Properties\Settings.Designer.cs">
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <AutoGen>True</AutoGen>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
@@ -156,11 +162,7 @@ https://github.com/antikmozib/am-downloader</Description>
     </None>
   </ItemGroup>
   
-   <ItemGroup>
-    <FrameworkReference Include="Microsoft.WindowsDesktop.App" />
-  </ItemGroup>
-  
-   <ItemGroup>
+  <ItemGroup>
      <Page Update="Icons\AddCellToLeft_16x.xaml">
        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
      </Page>

@@ -1,4 +1,27 @@
-﻿<mah:MetroWindow x:Class="AMDownloader.AddDownloadWindow" xmlns:local="clr-namespace:AMDownloader" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:properties="clr-namespace:AMDownloader.Properties" xmlns:mah="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro" mc:Ignorable="d" Title="Add" WindowStartupLocation="CenterOwner" ShowInTaskbar="False" ResizeMode="CanResizeWithGrip" Height="{Binding Source={x:Static properties:Settings.Default}, Path=AddWindowHeight, Mode=TwoWay}" Width="{Binding Source={x:Static properties:Settings.Default}, Path=AddWindowWidth, Mode=TwoWay}" MinWidth="650" MinHeight="250" WindowStyle="ToolWindow" Closing="Window_Closing" BorderThickness="1" ShowMaxRestoreButton="false" ShowMinButton="false" GlowBrush="{DynamicResource MahApps.Brushes.Accent}" NonActiveGlowBrush="{DynamicResource MahApps.Brushes.Border.WindowTitle.NonActive}">
+﻿<mah:MetroWindow x:Class="AMDownloader.AddDownloadWindow" 
+xmlns:local="clr-namespace:AMDownloader" 
+xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+xmlns:properties="clr-namespace:AMDownloader.Properties" 
+xmlns:mah="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+mc:Ignorable="d" 
+Title="Add" 
+WindowStartupLocation="CenterOwner"
+ShowInTaskbar="False" 
+ResizeMode="CanResizeWithGrip" 
+Height="{Binding Source={x:Static properties:Settings.Default}, Path=AddWindowHeight, Mode=TwoWay}"
+Width="{Binding Source={x:Static properties:Settings.Default}, Path=AddWindowWidth, Mode=TwoWay}"
+MinWidth="650" 
+MinHeight="250" 
+WindowStyle="ToolWindow"
+Closing="Window_Closing"
+BorderThickness="1"
+ShowMaxRestoreButton="false" 
+ShowMinButton="false"
+GlowBrush="{DynamicResource MahApps.Brushes.Gray}"
+NonActiveGlowBrush="{DynamicResource MahApps.Brushes.Border.WindowTitle.NonActive}">
     <Window.Resources>
         <local:DownloaderDestinationFolderNameConverter x:Key="DownloaderDestinationConverter" />
         <Style TargetType="MenuItem">
