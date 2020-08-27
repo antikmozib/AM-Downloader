@@ -23,6 +23,7 @@ https://github.com/antikmozib/am-downloader</Description>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <Optimize>false</Optimize>
+    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
 
   <ItemGroup>
@@ -182,4 +183,8 @@ https://github.com/antikmozib/am-downloader</Description>
        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
      </Page>
    </ItemGroup>
+  
+  <ItemGroup>
+    <Folder Include="Properties\PublishProfiles\" />
+  </ItemGroup>
 </Project>

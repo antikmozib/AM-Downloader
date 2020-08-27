@@ -13,12 +13,6 @@
 "SccProvider" = "8:"
     "Hierarchy"
     {
-        "Entry"
-        {
-        "MsmKey" = "8:_11FC999A48B24FAD9F7FE9A28E19A6D5"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
     }
     "Configurations"
     {
@@ -136,7 +130,7 @@
                 {
                 "Name" = "8:.NET Core"
                 "Message" = "8:[VSDNETCOREMSG]"
-                "FrameworkVersion" = "8:3.1         "
+                "FrameworkVersion" = "8:3.1             "
                 "AllowLaterVersions" = "11:FALSE"
                 "InstallUrl" = "8:https://dotnet.microsoft.com/download/dotnet-core/[NetCoreVerMajorDotMinor]"
                 "IsNETCore" = "11:TRUE"
@@ -204,7 +198,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:AM Downloader"
         "ProductCode" = "8:{C07F368D-7D62-45E0-AEB3-A3C0D91D34A7}"
-        "PackageCode" = "8:{303DEF53-E8DE-497C-98DD-4BD5DB011F76}"
+        "PackageCode" = "8:{9E0D2F51-DBD7-4B5D-B87F-C55E8194DEED}"
         "UpgradeCode" = "8:{B993A5FE-4D65-41CD-98BD-1B975D4B57B4}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
@@ -221,7 +215,7 @@
         "Keywords" = "8:"
         "ARPCOMMENTS" = "8:"
         "ARPURLINFOABOUT" = "8:https://github.com/antikmozib"
-        "ARPPRODUCTICON" = "8:"
+        "ARPPRODUCTICON" = "8:_DE1FEDF4FCEE4E0FAF88EB0D0D42A356"
         "ARPIconIndex" = "3:32512"
         "SearchPath" = "8:"
         "UseSystemSearchPath" = "11:TRUE"
@@ -324,32 +318,32 @@
         }
         "Shortcut"
         {
-            "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_558BFAE808134D248C3657F93623DBCE"
+            "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_A1FBF8C133D4402AA21B85E785EB4D7E"
             {
             "Name" = "8:AM Downloader"
             "Arguments" = "8:"
             "Description" = "8:"
             "ShowCmd" = "3:1"
-            "IconIndex" = "3:0"
+            "IconIndex" = "3:32512"
             "Transitive" = "11:FALSE"
-            "Target" = "8:_11FC999A48B24FAD9F7FE9A28E19A6D5"
+            "Target" = "8:_DE1FEDF4FCEE4E0FAF88EB0D0D42A356"
             "Folder" = "8:_67E5A5C941B4488B992EF4E72D655DE1"
             "WorkingFolder" = "8:_A9C9FFE9E38B462D8BB4B79832C13647"
-            "Icon" = "8:"
+            "Icon" = "8:_DE1FEDF4FCEE4E0FAF88EB0D0D42A356"
             "Feature" = "8:"
             }
-            "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_CF7F5C4A705441A38E28AB20977A2731"
+            "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_E8628CD3E009436D8FDB778D58F79E38"
             {
             "Name" = "8:AM Downloader"
             "Arguments" = "8:"
             "Description" = "8:"
             "ShowCmd" = "3:1"
-            "IconIndex" = "3:0"
+            "IconIndex" = "3:32512"
             "Transitive" = "11:FALSE"
-            "Target" = "8:_11FC999A48B24FAD9F7FE9A28E19A6D5"
+            "Target" = "8:_DE1FEDF4FCEE4E0FAF88EB0D0D42A356"
             "Folder" = "8:_DFAA5178BC744DF9968B8686097566B8"
             "WorkingFolder" = "8:_A9C9FFE9E38B462D8BB4B79832C13647"
-            "Icon" = "8:"
+            "Icon" = "8:_DE1FEDF4FCEE4E0FAF88EB0D0D42A356"
             "Feature" = "8:"
             }
         }
@@ -751,9 +745,9 @@
         }
         "ProjectOutput"
         {
-            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_11FC999A48B24FAD9F7FE9A28E19A6D5"
+            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_DE1FEDF4FCEE4E0FAF88EB0D0D42A356"
             {
-            "SourcePath" = "8:..\\AM Downloader\\obj\\Release\\netcoreapp3.0\\AM Downloader.exe"
+            "SourcePath" = "8:..\\AM Downloader\\obj\\Release\\netcoreapp3.0\\win-x86\\AM Downloader.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_A9C9FFE9E38B462D8BB4B79832C13647"
@@ -771,11 +765,11 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             "ProjectOutputGroupRegister" = "3:1"
-            "OutputConfiguration" = "8:"
+            "OutputConfiguration" = "8:Release|Any CPU"
             "OutputGroupCanonicalName" = "8:PublishItems"
             "OutputProjectGuid" = "8:{0A3FCC28-B99A-44AA-82EE-CBB35E8EE054}"
             "ShowKeyOutput" = "11:TRUE"
-            "PublishProfilePath" = "8:Properties\\PublishProfiles\\PrimaryPublishProfile.pubxml"
+            "PublishProfilePath" = "8:Properties\\PublishProfiles\\DesktopPublishProfile.pubxml"
                 "ExcludeFilters"
                 {
                 }
