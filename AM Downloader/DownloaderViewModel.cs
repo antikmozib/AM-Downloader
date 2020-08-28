@@ -627,7 +627,7 @@ namespace AMDownloader
 
         internal bool StopQueue_CanExecute(object obj)
         {
-            return (obj != null || QueueProcessor.IsBusy);
+            return QueueProcessor.IsBusy;
         }
 
         internal void CloseApp(object obj)
@@ -646,6 +646,7 @@ namespace AMDownloader
             }
             this.Status = "Saving data...";
             RaisePropertyChanged(nameof(this.Status));
+            if (QueueProcessor.IsBusy) QueueProcessor.Stop();
             Task t = Task.Run(async () =>
             {
                 await _semaphoreUpdatingList.WaitAsync();
@@ -724,11 +725,12 @@ namespace AMDownloader
         internal void Dequeue(object obj)
         {
             if (obj == null) return;
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
+            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
             foreach (var item in items)
             {
                 item.Dequeue();
             }
+            QueueProcessor.Remove(items);
         }
 
         internal bool Dequeue_CanExecute(object obj)

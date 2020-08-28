@@ -19,6 +19,13 @@
                 <ResourceDictionary Source="pack://application:,,,/Styles/Style.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <Style
+                    x:Key="WindowStyle"
+                    TargetType="{x:Type mah:MetroWindow}">
+                <Setter
+                        Property="GlowBrush"
+                        Value="{DynamicResource MahApps.Brushes.Accent2}" />
+            </Style>
+            <Style
                     TargetType="{x:Type CheckBox}"
                     BasedOn="{StaticResource MahApps.Styles.CheckBox}" />
             <FontFamily x:Key="FontAwesomeRegular">

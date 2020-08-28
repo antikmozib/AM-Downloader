@@ -7,13 +7,13 @@ using System.Linq;
 using AMDownloader.ObjectModel;
 
 namespace AMDownloader.QueueProcessing
-{    
+{
     class QueueProcessor
     {
         #region Fields
         private readonly SemaphoreSlim _semaphore;
-        private readonly BlockingCollection<IQueueable> _queueList;
         private readonly List<IQueueable> _itemsProcessing;
+        private BlockingCollection<IQueueable> _queueList;
         private CancellationTokenSource _ctsCancel;
         private CancellationToken _ctCancel;
         #endregion // Fields
@@ -43,7 +43,7 @@ namespace AMDownloader.QueueProcessing
             {
                 IQueueable item;
                 if (!_queueList.TryTake(out item)) break;
-           
+
                 if (!item.IsQueued) continue;
                 _itemsProcessing.Add(item);
                 Task t = Task.Run(async () =>
@@ -62,7 +62,7 @@ namespace AMDownloader.QueueProcessing
 
             foreach (var item in _itemsProcessing)
             {
-                if (!item.IsCompleted && !this.Contains(item))
+                if (!item.IsCompleted && !this.Contains(item) && item.IsQueued)
                 {
                     this.Add(item);
                 }
@@ -80,6 +80,22 @@ namespace AMDownloader.QueueProcessing
         {
             if (item.IsCompleted || _queueList.Contains(item)) return true;
             return _queueList.TryAdd(item);
+        }
+
+        public void Remove(params IQueueable[] items)
+        {
+            if (this.IsBusy) return;
+            var newList = new BlockingCollection<IQueueable>();
+            foreach (var oldItem in _queueList)
+            {
+                if (items.Contains(oldItem))
+                {
+                    continue;
+                }
+                newList.TryAdd(oldItem);
+            }
+            _queueList.Dispose();
+            _queueList = newList;
         }
 
         // Consumer

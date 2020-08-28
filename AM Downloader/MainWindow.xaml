@@ -19,10 +19,8 @@
         Left="{Binding MainWindowLeft, Mode=TwoWay, Source={x:Static properties:Settings.Default}}"
         WindowState="{Binding MainWindowState, Mode=TwoWay, Source={x:Static properties:Settings.Default}}"
         Closing="Window_Closing"
-        BorderThickness="1"
         Icon="pack://application:,,,/Icons/app.ico"
-        GlowBrush="{DynamicResource MahApps.Brushes.Gray}"
-        NonActiveGlowBrush="{DynamicResource MahApps.Brushes.Border.WindowTitle.NonActive}">
+        Style="{StaticResource WindowStyle}">
     <mah:MetroWindow.Resources>
         <local:ProgressBarVisibilityConverter x:Key="ProgressBarVisibilityConverter" />
         <local:ProgressBarForegroundConverter x:Key="ProgressBarForegroundConverter" />
@@ -69,7 +67,7 @@
                     Padding="5"
                     Text="{Binding}" />
         </DataTemplate>
-        <DataTemplate x:Key="HeaderTemplateArrowUp">
+        <DataTemplate x:Key="HeaderTemplateArrowDown">
             <TextBlock Padding="5">
                 <TextBlock
                         Foreground="{DynamicResource ColumnHeaderSortDirectionColor}"
@@ -78,7 +76,7 @@
                 <TextBlock Text="{Binding}" />
             </TextBlock>
         </DataTemplate>
-        <DataTemplate x:Key="HeaderTemplateArrowDown">
+        <DataTemplate x:Key="HeaderTemplateArrowUp">
             <TextBlock Padding="5">
                 <TextBlock
                         Foreground="{DynamicResource ColumnHeaderSortDirectionColor}"
@@ -91,7 +89,6 @@
                 x:Key="CategoriesList"
                 Source="{Binding CategoriesList}" />
     </mah:MetroWindow.Resources>
-
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Closing">
             <i:InvokeCommandAction
@@ -143,7 +140,7 @@
                     TabIndex="9">
                 <MenuItem
                         Command="{Binding ClearFinishedDownloadsCommand}"
-                        Header="Clear finished downloads"
+                        Header="Clear Finished Downloads"
                         InputGestureText="Alt+Del">
                     <MenuItem.Icon>
                         <Viewbox>
@@ -891,7 +888,7 @@
                             </MenuItem.Icon>
                         </MenuItem>
                         <MenuItem
-                                Header="Open folder"
+                                Header="Open Containing Folder"
                                 Command="{Binding OpenContainingFolderCommand}"
                                 CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
                                 InputGestureText="Alt+O">
@@ -902,7 +899,7 @@
                             </MenuItem.Icon>
                         </MenuItem>
                         <MenuItem
-                                Header="Copy link"
+                                Header="Copy Link"
                                 Command="{Binding CopyLinkToClipboardCommand}"
                                 CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
                                 InputGestureText="Ctrl+C">
@@ -977,7 +974,7 @@
                         </MenuItem>
                         <Separator />
                         <MenuItem
-                                Header="Remove from list"
+                                Header="Remove From List"
                                 Command="{Binding RemoveFromListCommand}"
                                 CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
                                 InputGestureText="Del">
@@ -988,7 +985,7 @@
                             </MenuItem.Icon>
                         </MenuItem>
                         <MenuItem
-                                Header="Delete file"
+                                Header="Delete File"
                                 Command="{Binding DeleteFileCommand}"
                                 CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
                                 InputGestureText="Shift+Del">

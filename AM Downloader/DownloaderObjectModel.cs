@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
@@ -10,7 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using AMDownloader.Properties;
 using AMDownloader.Common;
-using System.Text;
 using AMDownloader.RequestThrottling;
 using AMDownloader.RequestThrottling.Model;
 using AMDownloader.QueueProcessing;
@@ -55,9 +55,10 @@ namespace AMDownloader.ObjectModel
         public long? Speed { get; private set; } // nullable
         public int? NumberOfActiveStreams { get; private set; } // nullable    
         public HttpStatusCode? StatusCode { get; private set; } // nullable
+        public double? TimeRemaining { get; private set; }// nullable
         public bool IsBeingDownloaded => _ctsPaused != null;
         public bool IsCompleted => File.Exists(this.Destination) && !IsFilePaused(this.Destination, _pausedIdentifierBytes);
-        public bool IsPaused => File.Exists(this.Destination) && IsFilePaused(this.Destination, _pausedIdentifierBytes);
+        public bool IsPaused => File.Exists(this.Destination) && IsFilePaused(this.Destination, _pausedIdentifierBytes) && !IsBeingDownloaded;
         public bool IsQueued { get; private set; }
         public string Name { get; private set; }
         public string Extension => GetExtension();
@@ -69,7 +70,6 @@ namespace AMDownloader.ObjectModel
         public long BytesDownloadedThisSession { get; private set; }
         public bool SupportsResume { get; private set; }
         public DateTime DateCreated { get; private set; }
-        public double? TimeRemaining { get; private set; }
         #endregion // Properties
 
         #region Constructors        
@@ -215,6 +215,7 @@ namespace AMDownloader.ObjectModel
         {
             this.IsQueued = true;
             RaisePropertyChanged(nameof(this.IsQueued));
+            RaisePropertyChanged(nameof(this.TotalBytesCompleted));
             if (this.Status != DownloadStatus.Paused)
             {
                 this.Status = DownloadStatus.Queued;
@@ -286,7 +287,7 @@ namespace AMDownloader.ObjectModel
                     }
                 }
 
-                if (this.StatusCode != HttpStatusCode.OK)
+                if (this.StatusCode != HttpStatusCode.OK && this.StatusCode != HttpStatusCode.PartialContent)
                 {
                     // invalid url
                     SetErrored();
@@ -294,10 +295,18 @@ namespace AMDownloader.ObjectModel
                 else
                 {
                     // valid url
+                    if (File.Exists(this.Destination))
+                    {
+                        this.TotalBytesCompleted = GetCorrectFileLength(this.Destination, _pausedIdentifierBytes) ?? 0;
+                    }
+                    else
+                    {
+                        this.TotalBytesCompleted = 0;
+                    }
+
                     if (this.IsPaused)
                     {
                         // paused download
-                        this.TotalBytesCompleted = GetCorrectFileLength(this.Destination, _pausedIdentifierBytes) ?? 0;
                         SetPaused();
                     }
                     else
@@ -319,10 +328,10 @@ namespace AMDownloader.ObjectModel
             RaiseEvent(DownloadVerified);
         }
 
-        private async Task<DownloadVerificationModel> VerifyUrlAsync(string url)
+        private async Task<UrlVerificationModel> VerifyUrlAsync(string url)
         {
             // force checks the url and returns TotalBytesToDownload
-            DownloadVerificationModel downloadVerificationModel;
+            UrlVerificationModel downloadVerificationModel;
             downloadVerificationModel.StatusCode = null;
             downloadVerificationModel.TotalBytesToDownload = null;
             try
@@ -406,7 +415,10 @@ namespace AMDownloader.ObjectModel
 
         private bool IsFilePaused(string filename, byte[] identifyingBytes)
         {
-            if (!File.Exists(filename)) return false;
+            if (!File.Exists(filename))
+            {
+                throw new AMDownloaderException("File not found", new IOException());
+            }
             try
             {
                 using (FileStream fs = new FileStream(filename, FileMode.Open, FileAccess.Read))
@@ -475,11 +487,6 @@ namespace AMDownloader.ObjectModel
                 }
                 semaphoreProgress.Release();
             });
-            _ctsPaused = new CancellationTokenSource();
-            _ctsCanceled = new CancellationTokenSource();
-            _ctPause = _ctsPaused.Token;
-            _ctCancel = _ctsCanceled.Token;
-            var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(_ctPause, _ctCancel).Token;
 
             // doesn't support multiple streams or each steam under 1 MB
             if (!this.SupportsResume)
@@ -523,6 +530,12 @@ namespace AMDownloader.ObjectModel
 
                 nextProgressReportAt = progressReportingFrequency;
             }
+
+            _ctsPaused = new CancellationTokenSource();
+            _ctsCanceled = new CancellationTokenSource();
+            _ctPause = _ctsPaused.Token;
+            _ctCancel = _ctsCanceled.Token;
+            var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(_ctPause, _ctCancel).Token;
 
             // Process the request
             streamTask = Task.Run(async () =>
@@ -616,27 +629,23 @@ namespace AMDownloader.ObjectModel
                 {
                     status = DownloadStatus.Error;
                 }
-                else
+                else if (_ctPause.IsCancellationRequested)
                 {
-                    if (_ctsPaused.IsCancellationRequested)
-                    {
-                        status = DownloadStatus.Paused;
-                    }
-                    else if (_ctsCanceled.IsCancellationRequested)
-                    {
-                        status = DownloadStatus.Ready;
-                    }
+                    status = DownloadStatus.Paused;
+                }
+                else if (_ctCancel.IsCancellationRequested)
+                {
+                    status = DownloadStatus.Ready;
                 }
             }
 
             // Update final size
             if (!this.SupportsResume) this.TotalBytesToDownload = this.TotalBytesCompleted;
 
-            _ctsCanceled = null;
             _ctsPaused = null;
-            _ctCancel = default;
+            _ctsCanceled = null;
             _ctPause = default;
-
+            _ctCancel = default;
             _taskCompletion.SetResult(status);
             return status;
         }
@@ -739,6 +748,7 @@ namespace AMDownloader.ObjectModel
         public async Task StartAsync()
         {
             await _semaphoreDownloading.WaitAsync();
+
             long bytesAlreadyDownloaded = 0;
             if (_ctsPaused != null)
             {
@@ -757,11 +767,12 @@ namespace AMDownloader.ObjectModel
                 {
                     this.Status = DownloadStatus.Connecting;
                     RaisePropertyChanged(nameof(this.Status));
-                    DownloadVerificationModel downloadVerification;
+                    UrlVerificationModel downloadVerification;
                     downloadVerification = await VerifyUrlAsync(this.Url);
 
                     // Ensure url is valid for all downloads
-                    if (downloadVerification.StatusCode != HttpStatusCode.OK)
+                    if (downloadVerification.StatusCode != HttpStatusCode.OK &&
+                        downloadVerification.StatusCode != HttpStatusCode.PartialContent)
                     {
                         SetErrored();
                         return;
@@ -783,34 +794,34 @@ namespace AMDownloader.ObjectModel
             }
 
             _taskCompletion = new TaskCompletionSource<DownloadStatus>(ProcessStreamsAsync(bytesAlreadyDownloaded));
-
             this.BytesDownloadedThisSession = 0;
             this.TotalBytesCompleted = bytesAlreadyDownloaded;
             this.Status = DownloadStatus.Downloading;
             RaisePropertyChanged(nameof(this.Status));
             RaisePropertyChanged(nameof(this.TotalBytesCompleted));
+            RaisePropertyChanged(nameof(this.IsBeingDownloaded));
             RaiseEvent(DownloadStarted);
 
             await _taskCompletion.Task;
 
             switch (_taskCompletion.Task.Result)
             {
-                case (DownloadStatus.Error):
+                case DownloadStatus.Error:
                     this.Cancel();
                     SetErrored();
                     break;
 
-                case (DownloadStatus.Ready): // a.k.a canceled
+                case DownloadStatus.Ready:
                     this.Cancel();
                     SetReady();
                     break;
 
-                case (DownloadStatus.Paused):
+                case DownloadStatus.Paused:
                     this.Pause();
                     SetPaused();
                     break;
 
-                case (DownloadStatus.Finished):
+                case DownloadStatus.Finished:
                     this.Status = DownloadStatus.Finishing;
                     RaisePropertyChanged(nameof(this.Status));
                     await RemoveIdentifyingBytesFromFile(this.Destination, _pausedIdentifierBytes);
@@ -823,6 +834,7 @@ namespace AMDownloader.ObjectModel
                     break;
             }
             _semaphoreDownloading.Release();
+            RaisePropertyChanged(nameof(this.IsBeingDownloaded));
             RaiseEvent(DownloadStopped);
             if (_taskCompletion.Task.Result == DownloadStatus.Finished) RaiseEvent(DownloadFinished);
         }
@@ -860,7 +872,6 @@ namespace AMDownloader.ObjectModel
             {
                 // Download in progress; request cancellation
                 _ctsCanceled.Cancel();
-
                 this.Status = DownloadStatus.Cancelling;
                 RaisePropertyChanged(nameof(this.Status));
             }

@@ -2,7 +2,7 @@
 
 namespace AMDownloader.ObjectModel
 {
-    struct DownloadVerificationModel
+    struct UrlVerificationModel
     {
         public HttpStatusCode? StatusCode;
         public long? TotalBytesToDownload;
