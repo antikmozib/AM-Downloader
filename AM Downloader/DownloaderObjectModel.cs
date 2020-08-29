@@ -168,13 +168,16 @@ namespace AMDownloader.ObjectModel
                 SetFinished();
             }
             else
-            {
-                _semaphoreDownloading.Wait();
-                Task.Run(async () => await VerifyDownloadAsync(url)).ContinueWith(t => _semaphoreDownloading.Release());
+            {                
+                Task.Run(async () =>
+				{ 
+					await _semaphoreDownloading.WaitAsync();
+					await VerifyDownloadAsync(url);
+					_semaphoreDownloading.Release();
+				});
             }
 
             RaiseEvent(DownloadCreated);
-
         }
         #endregion // Constructors
 
@@ -205,7 +208,14 @@ namespace AMDownloader.ObjectModel
 
         private void SetPaused()
         {
-            this.Progress = (int)((double)this.TotalBytesCompleted / (double)this.TotalBytesToDownload * 100);
+            if (!this.SupportsResume)
+            {
+                this.Progress = 0;
+            }
+            else
+            {
+                this.Progress = (int)((double)this.TotalBytesCompleted / (double)this.TotalBytesToDownload * 100);
+            }
             this.Status = DownloadStatus.Paused;
             RaisePropertyChanged(nameof(this.Status));
             RaisePropertyChanged(nameof(this.Progress));
@@ -461,7 +471,6 @@ namespace AMDownloader.ObjectModel
             return true;
         }
 
-
         private async Task<DownloadStatus> ProcessStreamsAsync(long bytesDownloadedPreviously)
         {
             var status = DownloadStatus.Error;
@@ -476,6 +485,7 @@ namespace AMDownloader.ObjectModel
                 await semaphoreProgress.WaitAsync();
                 this.BytesDownloadedThisSession += value;
                 this.TotalBytesCompleted = this.BytesDownloadedThisSession + bytesDownloadedPreviously;
+                if (!this.SupportsResume) this.TotalBytesToDownload = this.TotalBytesCompleted;
                 _reportBytesProgress.Report(value);
                 if (this.SupportsResume && (this.TotalBytesCompleted >= nextProgressReportAt || this.TotalBytesCompleted > this.TotalBytesToDownload - progressReportingFrequency))
                 {
@@ -484,6 +494,11 @@ namespace AMDownloader.ObjectModel
                     RaisePropertyChanged(nameof(this.Progress));
                     RaisePropertyChanged(nameof(this.TotalBytesCompleted));
                     nextProgressReportAt += progressReportingFrequency;
+                }
+                else if (!this.SupportsResume)
+                {
+                    RaisePropertyChanged(nameof(this.TotalBytesCompleted));
+                    RaisePropertyChanged(nameof(this.TotalBytesToDownload));
                 }
                 semaphoreProgress.Release();
             });
@@ -748,95 +763,98 @@ namespace AMDownloader.ObjectModel
         public async Task StartAsync()
         {
             await _semaphoreDownloading.WaitAsync();
-
-            long bytesAlreadyDownloaded = 0;
-            if (_ctsPaused != null)
+            try
             {
-                // Download in progress
-                return;
-            }
-            else if (_ctsCanceled != null || (_ctsPaused == null && _ctsCanceled == null))
-            {
-                if (this.IsCompleted)
+                long bytesAlreadyDownloaded = 0;
+                if (_ctsPaused != null)
                 {
-                    // Don't start an already completed download
-                    SetFinished();
+                    // Download in progress
                     return;
                 }
-                else
+                else if (_ctsCanceled != null || (_ctsPaused == null && _ctsCanceled == null))
                 {
-                    this.Status = DownloadStatus.Connecting;
-                    RaisePropertyChanged(nameof(this.Status));
-                    UrlVerificationModel downloadVerification;
-                    downloadVerification = await VerifyUrlAsync(this.Url);
-
-                    // Ensure url is valid for all downloads
-                    if (downloadVerification.StatusCode != HttpStatusCode.OK &&
-                        downloadVerification.StatusCode != HttpStatusCode.PartialContent)
+                    if (this.IsCompleted)
                     {
-                        SetErrored();
+                        // Don't start an already completed download
+                        SetFinished();
                         return;
-                    }
-
-                    if (this.IsPaused)
-                    {
-                        // Download is paused; resume from specific point
-                        bytesAlreadyDownloaded = GetCorrectFileLength(this.Destination, _pausedIdentifierBytes) ?? 0;
                     }
                     else
                     {
-                        if (!CreateEmptyDownload(this.Destination, _pausedIdentifierBytes))
+                        this.Status = DownloadStatus.Connecting;
+                        RaisePropertyChanged(nameof(this.Status));
+                        UrlVerificationModel downloadVerification;
+                        downloadVerification = await VerifyUrlAsync(this.Url);
+
+                        // Ensure url is valid for all downloads
+                        if (downloadVerification.StatusCode != HttpStatusCode.OK &&
+                            downloadVerification.StatusCode != HttpStatusCode.PartialContent)
                         {
-                            throw new IOException("Failed to create new download.");
+                            SetErrored();
+                            return;
+                        }
+
+                        if (this.IsPaused)
+                        {
+                            // Download is paused; resume from specific point
+                            bytesAlreadyDownloaded = GetCorrectFileLength(this.Destination, _pausedIdentifierBytes) ?? 0;
+                        }
+                        else
+                        {
+                            if (!CreateEmptyDownload(this.Destination, _pausedIdentifierBytes))
+                            {
+                                throw new IOException("Failed to create new download.");
+                            }
                         }
                     }
                 }
+
+                _taskCompletion = new TaskCompletionSource<DownloadStatus>(ProcessStreamsAsync(bytesAlreadyDownloaded));
+                this.BytesDownloadedThisSession = 0;
+                this.TotalBytesCompleted = bytesAlreadyDownloaded;
+                this.Status = DownloadStatus.Downloading;
+                RaisePropertyChanged(nameof(this.Status));
+                RaisePropertyChanged(nameof(this.TotalBytesCompleted));
+                RaisePropertyChanged(nameof(this.IsBeingDownloaded));
+                RaiseEvent(DownloadStarted);
+
+                await _taskCompletion.Task; switch (_taskCompletion.Task.Result)
+                {
+                    case DownloadStatus.Error:
+                        this.Cancel();
+                        SetErrored();
+                        break;
+
+                    case DownloadStatus.Ready:
+                        this.Cancel();
+                        SetReady();
+                        break;
+
+                    case DownloadStatus.Paused:
+                        this.Pause();
+                        SetPaused();
+                        break;
+
+                    case DownloadStatus.Finished:
+                        this.Status = DownloadStatus.Finishing;
+                        RaisePropertyChanged(nameof(this.Status));
+                        await RemoveIdentifyingBytesFromFile(this.Destination, _pausedIdentifierBytes);
+                        SetFinished();
+                        break;
+
+                    default:
+                        this.Cancel();
+                        SetReady();
+                        break;
+                }
+                RaisePropertyChanged(nameof(this.IsBeingDownloaded));
+                RaiseEvent(DownloadStopped);
+                if (_taskCompletion.Task.Result == DownloadStatus.Finished) RaiseEvent(DownloadFinished);
             }
-
-            _taskCompletion = new TaskCompletionSource<DownloadStatus>(ProcessStreamsAsync(bytesAlreadyDownloaded));
-            this.BytesDownloadedThisSession = 0;
-            this.TotalBytesCompleted = bytesAlreadyDownloaded;
-            this.Status = DownloadStatus.Downloading;
-            RaisePropertyChanged(nameof(this.Status));
-            RaisePropertyChanged(nameof(this.TotalBytesCompleted));
-            RaisePropertyChanged(nameof(this.IsBeingDownloaded));
-            RaiseEvent(DownloadStarted);
-
-            await _taskCompletion.Task;
-
-            switch (_taskCompletion.Task.Result)
+            finally
             {
-                case DownloadStatus.Error:
-                    this.Cancel();
-                    SetErrored();
-                    break;
-
-                case DownloadStatus.Ready:
-                    this.Cancel();
-                    SetReady();
-                    break;
-
-                case DownloadStatus.Paused:
-                    this.Pause();
-                    SetPaused();
-                    break;
-
-                case DownloadStatus.Finished:
-                    this.Status = DownloadStatus.Finishing;
-                    RaisePropertyChanged(nameof(this.Status));
-                    await RemoveIdentifyingBytesFromFile(this.Destination, _pausedIdentifierBytes);
-                    SetFinished();
-                    break;
-
-                default:
-                    this.Cancel();
-                    SetReady();
-                    break;
+                _semaphoreDownloading.Release();
             }
-            _semaphoreDownloading.Release();
-            RaisePropertyChanged(nameof(this.IsBeingDownloaded));
-            RaiseEvent(DownloadStopped);
-            if (_taskCompletion.Task.Result == DownloadStatus.Finished) RaiseEvent(DownloadFinished);
         }
 
         public void Pause()

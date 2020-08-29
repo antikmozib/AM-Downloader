@@ -39,7 +39,7 @@ namespace AMDownloader.QueueProcessing
             _ctsCancel = new CancellationTokenSource();
             _ctCancel = _ctsCancel.Token;
 
-            while (_queueList.Count() > 0 && !_ctCancel.IsCancellationRequested)
+            while (true)
             {
                 IQueueable item;
                 if (!_queueList.TryTake(out item)) break;
