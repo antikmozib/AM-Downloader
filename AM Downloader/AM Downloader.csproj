@@ -13,6 +13,7 @@ https://github.com/antikmozib/am-downloader</Description>
     <Copyright>Developed by Antik Mozib. Released under GNU GPLv3.</Copyright>
     <StartupObject></StartupObject>
     <PackageIcon>app.ico</PackageIcon>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -183,8 +184,4 @@ https://github.com/antikmozib/am-downloader</Description>
        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
      </Page>
    </ItemGroup>
-  
-  <ItemGroup>
-    <Folder Include="Properties\PublishProfiles\" />
-  </ItemGroup>
 </Project>

@@ -98,7 +98,7 @@ namespace AMDownloader
             _client = new HttpClient();
             DownloadItemsList = new ObservableCollection<DownloaderObjectModel>();
             CategoriesList = new ObservableCollection<Categories>();
-            QueueProcessor = new QueueProcessor(Settings.Default.MaxParallelDownloads);
+            QueueProcessor = new QueueProcessor(Settings.Default.MaxParallelDownloads,QueueProcessor_PropertyChanged);
             _requestThrottler = new RequestThrottler(AppConstants.RequestThrottlerInterval);
             CollectionView = CollectionViewSource.GetDefaultView(DownloadItemsList);
             CollectionView.CurrentChanged += CollectionView_CurrentChanged;
@@ -907,6 +907,8 @@ namespace AMDownloader
         {
             return _semaphoreUpdatingList.CurrentCount > 0;
         }
+
+        internal void QueueProcessor_PropertyChanged(object sender, PropertyChangedEventArgs e) { }
 
         internal void Download_PropertyChanged(object sender, PropertyChangedEventArgs e) { }
 

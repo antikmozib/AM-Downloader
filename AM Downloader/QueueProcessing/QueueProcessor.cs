@@ -5,10 +5,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
 using AMDownloader.ObjectModel;
+using System.ComponentModel;
 
 namespace AMDownloader.QueueProcessing
 {
-    class QueueProcessor
+    class QueueProcessor : INotifyPropertyChanged
     {
         #region Fields
         private readonly SemaphoreSlim _semaphore;
@@ -19,16 +20,17 @@ namespace AMDownloader.QueueProcessing
         #endregion // Fields
 
         #region Properties
+        public event PropertyChangedEventHandler PropertyChanged;
         public bool IsBusy => _ctsCancel != null;
         #endregion // Properties
 
         #region Constructors
-
-        public QueueProcessor(int maxParallelDownloads)
+        public QueueProcessor(int maxParallelDownloads, PropertyChangedEventHandler propertyChangedEventHandler)
         {
             _queueList = new BlockingCollection<IQueueable>();
             _semaphore = new SemaphoreSlim(maxParallelDownloads);
             _itemsProcessing = new List<IQueueable>();
+            this.PropertyChanged += propertyChangedEventHandler;
         }
         #endregion // Constructors
 
@@ -38,8 +40,9 @@ namespace AMDownloader.QueueProcessing
             var tasks = new List<Task>();
             _ctsCancel = new CancellationTokenSource();
             _ctCancel = _ctsCancel.Token;
+            RaisePropertyChanged(nameof(this.IsBusy));
 
-            while (true)
+            while (!_ctCancel.IsCancellationRequested)
             {
                 IQueueable item;
                 if (!_queueList.TryTake(out item)) break;
@@ -48,12 +51,19 @@ namespace AMDownloader.QueueProcessing
                 _itemsProcessing.Add(item);
                 Task t = Task.Run(async () =>
                 {
-                    await _semaphore.WaitAsync();
-                    if (item.IsQueued && !_ctCancel.IsCancellationRequested)
+                    try
                     {
-                        await item.StartAsync();
+                        await _semaphore.WaitAsync(_ctCancel);
+                        if (item.IsQueued && !_ctCancel.IsCancellationRequested)
+                        {
+                            await item.StartAsync();
+                        }
+                        _semaphore.Release();
                     }
-                    _semaphore.Release();
+                    catch (OperationCanceledException)
+                    {
+                        return;
+                    }
                 });
                 tasks.Add(t);
             }
@@ -71,6 +81,12 @@ namespace AMDownloader.QueueProcessing
             _itemsProcessing.Clear();
             _ctsCancel = null;
             _ctCancel = default;
+            RaisePropertyChanged(nameof(this.IsBusy));
+        }
+
+        protected void RaisePropertyChanged(string prop)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
         }
         #endregion // Private methods
 
