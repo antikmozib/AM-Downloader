@@ -168,13 +168,13 @@ namespace AMDownloader.ObjectModel
                 SetFinished();
             }
             else
-            {                
+            {
                 Task.Run(async () =>
-				{ 
-					await _semaphoreDownloading.WaitAsync();
-					await VerifyDownloadAsync(url);
-					_semaphoreDownloading.Release();
-				});
+                {
+                    await _semaphoreDownloading.WaitAsync(); 
+                    await VerifyDownloadAsync(url); 
+                    _semaphoreDownloading.Release();
+                });
             }
 
             RaiseEvent(DownloadCreated);
@@ -816,9 +816,11 @@ namespace AMDownloader.ObjectModel
                 RaisePropertyChanged(nameof(this.Status));
                 RaisePropertyChanged(nameof(this.TotalBytesCompleted));
                 RaisePropertyChanged(nameof(this.IsBeingDownloaded));
-                RaiseEvent(DownloadStarted);
 
-                await _taskCompletion.Task; switch (_taskCompletion.Task.Result)
+                RaiseEvent(DownloadStarted);
+                await _taskCompletion.Task;
+
+                switch (_taskCompletion.Task.Result)
                 {
                     case DownloadStatus.Error:
                         this.Cancel();
@@ -847,6 +849,7 @@ namespace AMDownloader.ObjectModel
                         SetReady();
                         break;
                 }
+
                 RaisePropertyChanged(nameof(this.IsBeingDownloaded));
                 RaiseEvent(DownloadStopped);
                 if (_taskCompletion.Task.Result == DownloadStatus.Finished) RaiseEvent(DownloadFinished);

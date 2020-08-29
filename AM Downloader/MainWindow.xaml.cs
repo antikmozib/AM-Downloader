@@ -7,8 +7,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using AMDownloader.Properties;
-using MahApps.Metro.Controls;
-using MahApps.Metro.Controls.Dialogs;
 
 namespace AMDownloader
 {
@@ -17,7 +15,7 @@ namespace AMDownloader
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : MetroWindow
+    public partial class MainWindow : Window
     {
         private ICollectionView _dataView = null;
         private readonly DownloaderViewModel _primaryViewModel;
@@ -46,14 +44,14 @@ namespace AMDownloader
             this.Close();
         }
 
-        private async void menuAbout_Click(object sender, RoutedEventArgs e)
+        private void menuAbout_Click(object sender, RoutedEventArgs e)
         {
             var name = Assembly.GetExecutingAssembly().GetName().Name;
             var version = Assembly.GetExecutingAssembly().GetName().Version;
             var description = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyDescriptionAttribute), false).OfType<AssemblyDescriptionAttribute>().FirstOrDefault()?.Description;
             var copyright = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyCopyrightAttribute), true).OfType<AssemblyCopyrightAttribute>().FirstOrDefault()?.Copyright;
             var funFact = "Total data transferred over lifetime: " + Math.Round((double)Settings.Default.BytesTransferredOverLifetime / (1024 * 1024 * 1024), 2) + " GB";
-            await this.ShowMessageAsync("About", name + "\nVersion " + version + "\n\n" + description + "\n\n" + copyright + "\n\n" + funFact);
+            MessageBox.Show("About", name + "\nVersion " + version + "\n\n" + description + "\n\n" + copyright + "\n\n" + funFact);
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -167,7 +165,7 @@ namespace AMDownloader
         internal void DisplayMessage(string message, string title = "")
         {
             if (title == "") title = Assembly.GetExecutingAssembly().GetName().Name;
-            Application.Current?.Dispatcher?.Invoke(() => this.ShowMessageAsync(title, message));
+            Application.Current?.Dispatcher?.Invoke(() => MessageBox.Show(title, message));
         }
     }
 }

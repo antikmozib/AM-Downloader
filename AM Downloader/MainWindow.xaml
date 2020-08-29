@@ -1,27 +1,5 @@
-﻿<mah:MetroWindow
-        xmlns:local="clr-namespace:AMDownloader"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
-        xmlns:properties="clr-namespace:AMDownloader.Properties"
-        xmlns:mah="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
-        x:Name="WindowMain"
-        x:Class="AMDownloader.MainWindow"
-        mc:Ignorable="d"
-        Title="AM Downloader"
-        Height="{Binding MainWindowHeight, Mode=TwoWay, Source={x:Static properties:Settings.Default}}"
-        MinHeight="270"
-        Width="{Binding MainWindowWidth, Mode=TwoWay, Source={x:Static properties:Settings.Default}}"
-        MinWidth="600"
-        Top="{Binding MainWindowTop, Mode=TwoWay, Source={x:Static properties:Settings.Default}}"
-        Left="{Binding MainWindowLeft, Mode=TwoWay, Source={x:Static properties:Settings.Default}}"
-        WindowState="{Binding MainWindowState, Mode=TwoWay, Source={x:Static properties:Settings.Default}}"
-        Closing="Window_Closing"
-        Icon="pack://application:,,,/Icons/app.ico"
-        Style="{StaticResource WindowStyle}">
-    <mah:MetroWindow.Resources>
+﻿<Window xmlns:local="clr-namespace:AMDownloader" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:i="http://schemas.microsoft.com/xaml/behaviors" xmlns:properties="clr-namespace:AMDownloader.Properties" x:Name="WindowMain" x:Class="AMDownloader.MainWindow" mc:Ignorable="d" Title="AM Downloader" Height="{Binding MainWindowHeight, Mode=TwoWay, Source={x:Static properties:Settings.Default}}" MinHeight="270" Width="{Binding MainWindowWidth, Mode=TwoWay, Source={x:Static properties:Settings.Default}}" MinWidth="600" Top="{Binding MainWindowTop, Mode=TwoWay, Source={x:Static properties:Settings.Default}}" Left="{Binding MainWindowLeft, Mode=TwoWay, Source={x:Static properties:Settings.Default}}" WindowState="{Binding MainWindowState, Mode=TwoWay, Source={x:Static properties:Settings.Default}}" Closing="Window_Closing" Icon="pack://application:,,,/Icons/app.ico">
+    <Window.Resources>
         <local:ProgressBarVisibilityConverter x:Key="ProgressBarVisibilityConverter" />
         <local:ProgressBarForegroundConverter x:Key="ProgressBarForegroundConverter" />
         <local:ProgressBarBackgroundConverter x:Key="ProgressBarBackgroundConverter" />
@@ -42,116 +20,54 @@
         <local:TaskBarProgressStateConverter x:Key="TaskBarProgressStateConverter" />
         <local:TreeViewCountConverter x:Key="TreeViewCountConverter" />
         <local:TreeViewCategoryColorConverter x:Key="TreeViewCategoryColorConverter" />
-        <Style
-                x:Key="VirtualisedMetroListView"
-                BasedOn="{StaticResource MahApps.Styles.ListView}"
-                TargetType="{x:Type ListView}">
-            <Setter
-                    Property="ScrollViewer.CanContentScroll"
-                    Value="True" />
-            <Setter
-                    Property="ScrollViewer.IsDeferredScrollingEnabled"
-                    Value="False" />
-            <Setter
-                    Property="VirtualizingPanel.IsVirtualizing"
-                    Value="True" />
-            <Setter
-                    Property="VirtualizingPanel.VirtualizationMode"
-                    Value="Recycling" />
-        </Style>
-        <Style
-                BasedOn="{StaticResource VirtualisedMetroListView}"
-                TargetType="{x:Type ListView}" />
+
+
         <DataTemplate x:Key="HeaderTemplate">
-            <TextBlock
-                    Padding="5"
-                    Text="{Binding}" />
+            <TextBlock Padding="5" Text="{Binding}" />
         </DataTemplate>
         <DataTemplate x:Key="HeaderTemplateArrowDown">
             <TextBlock Padding="5">
-                <TextBlock
-                        Foreground="{DynamicResource ColumnHeaderSortDirectionColor}"
-                        Text="&#xF077;"
-                        FontFamily="{StaticResource FontAwesomeSolid}" />
+                <TextBlock Foreground="{DynamicResource ColumnHeaderSortDirectionColor}" Text="&#xF077;" FontFamily="{StaticResource FontAwesomeSolid}" />
                 <TextBlock Text="{Binding}" />
             </TextBlock>
         </DataTemplate>
         <DataTemplate x:Key="HeaderTemplateArrowUp">
             <TextBlock Padding="5">
-                <TextBlock
-                        Foreground="{DynamicResource ColumnHeaderSortDirectionColor}"
-                        Text="&#xF078;"
-                        FontFamily="{StaticResource FontAwesomeSolid}" />
+                <TextBlock Foreground="{DynamicResource ColumnHeaderSortDirectionColor}" Text="&#xF078;" FontFamily="{StaticResource FontAwesomeSolid}" />
                 <TextBlock Text="{Binding}" />
             </TextBlock>
         </DataTemplate>
-        <CollectionViewSource
-                x:Key="CategoriesList"
-                Source="{Binding CategoriesList}" />
-    </mah:MetroWindow.Resources>
+        <CollectionViewSource x:Key="CategoriesList" Source="{Binding CategoriesList}" />
+    </Window.Resources>
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Closing">
-            <i:InvokeCommandAction
-                    Command="{Binding CloseAppCommand, Mode=OneTime}"
-                    CommandParameter="{Binding ElementName=WindowMain}" />
+            <i:InvokeCommandAction Command="{Binding CloseAppCommand, Mode=OneTime}" CommandParameter="{Binding ElementName=WindowMain}" />
         </i:EventTrigger>
     </i:Interaction.Triggers>
-    <mah:MetroWindow.InputBindings>
-        <KeyBinding
-                Command="{Binding ClearFinishedDownloadsCommand}"
-                Key="Delete"
-                Modifiers="Alt" />
-        <KeyBinding
-                Command="{Binding RemoveFromListCommand}"
-                CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
-                Key="Delete" />
-        <KeyBinding
-                Command="{Binding DeleteFileCommand}"
-                CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
-                Key="Delete"
-                Modifiers="Shift" />
-        <KeyBinding
-                Command="{Binding OpenCommand}"
-                CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
-                Key="O"
-                Modifiers="Ctrl" />
-        <KeyBinding
-                Command="{Binding OpenContainingFolderCommand}"
-                CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
-                Key="O"
-                Modifiers="Alt" />
-        <KeyBinding
-                Command="{Binding CopyLinkToClipboardCommand}"
-                CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
-                Key="C"
-                Modifiers="Ctrl" />
-    </mah:MetroWindow.InputBindings>
+    <Window.InputBindings>
+        <KeyBinding Command="{Binding ClearFinishedDownloadsCommand}" Key="Delete" Modifiers="Alt" />
+        <KeyBinding Command="{Binding RemoveFromListCommand}" CommandParameter="{Binding SelectedItems, ElementName=lvDownload}" Key="Delete" />
+        <KeyBinding Command="{Binding DeleteFileCommand}" CommandParameter="{Binding SelectedItems, ElementName=lvDownload}" Key="Delete" Modifiers="Shift" />
+        <KeyBinding Command="{Binding OpenCommand}" CommandParameter="{Binding SelectedItems, ElementName=lvDownload}" Key="O" Modifiers="Ctrl" />
+        <KeyBinding Command="{Binding OpenContainingFolderCommand}" CommandParameter="{Binding SelectedItems, ElementName=lvDownload}" Key="O" Modifiers="Alt" />
+        <KeyBinding Command="{Binding CopyLinkToClipboardCommand}" CommandParameter="{Binding SelectedItems, ElementName=lvDownload}" Key="C" Modifiers="Ctrl" />
+    </Window.InputBindings>
 
-    <mah:MetroWindow.TaskbarItemInfo>
-        <TaskbarItemInfo
-                ProgressState="{Binding Progress, Converter={StaticResource TaskBarProgressStateConverter}}"
-                ProgressValue="{Binding Progress, Converter={StaticResource TaskBarProgressConverter}}" />
-    </mah:MetroWindow.TaskbarItemInfo>
+    <Window.TaskbarItemInfo>
+        <TaskbarItemInfo ProgressState="{Binding Progress, Converter={StaticResource TaskBarProgressStateConverter}}" ProgressValue="{Binding Progress, Converter={StaticResource TaskBarProgressConverter}}" />
+    </Window.TaskbarItemInfo>
     <DockPanel>
         <!--#region MENU-->
         <Menu DockPanel.Dock="Top">
-            <MenuItem
-                    Header="_File"
-                    TabIndex="9">
-                <MenuItem
-                        Command="{Binding ClearFinishedDownloadsCommand}"
-                        Header="Clear Finished Downloads"
-                        InputGestureText="Alt+Del">
+            <MenuItem Header="_File" TabIndex="9">
+                <MenuItem Command="{Binding ClearFinishedDownloadsCommand}" Header="Clear Finished Downloads" InputGestureText="Alt+Del">
                     <MenuItem.Icon>
                         <Viewbox>
                             <Frame Source="pack://application:,,,/Icons/Checklist_16x.xaml" />
                         </Viewbox>
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem
-                        Header="_Options"
-                        CommandParameter="{Binding RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
-                        Command="{Binding OptionsCommand}">
+                <MenuItem Header="_Options" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType={x:Type Window}}}" Command="{Binding OptionsCommand}">
                     <MenuItem.Icon>
                         <Viewbox>
                             <Frame Source="pack://application:,,,/Icons/Settings_16x.xaml" />
@@ -159,11 +75,7 @@
                     </MenuItem.Icon>
                 </MenuItem>
                 <Separator />
-                <MenuItem
-                        x:Name="menuExit"
-                        Header="E_xit"
-                        Click="menuExit_Click"
-                        InputGestureText="Alt+F4">
+                <MenuItem x:Name="menuExit" Header="E_xit" Click="menuExit_Click" InputGestureText="Alt+F4">
                     <MenuItem.Icon>
                         <Viewbox>
                             <Frame Source="pack://application:,,,/Icons/ShutDown_16x.xaml" />
@@ -171,13 +83,8 @@
                     </MenuItem.Icon>
                 </MenuItem>
             </MenuItem>
-            <MenuItem
-                    Header="_Help"
-                    TabIndex="10">
-                <MenuItem
-                        x:Name="menuAbout"
-                        Header="_About"
-                        Click="menuAbout_Click">
+            <MenuItem Header="_Help" TabIndex="10">
+                <MenuItem x:Name="menuAbout" Header="_About" Click="menuAbout_Click">
                     <MenuItem.Icon>
                         <Viewbox>
                             <Frame Source="pack://application:,,,/Icons/StatusInformation_16x.xaml" />
@@ -193,141 +100,54 @@
                 <ToolBar.Resources>
                     <Style TargetType="{x:Type TextBlock}">
                         <Style.Triggers>
-                            <DataTrigger
-                                    Binding="{Binding IsEnabled, RelativeSource={RelativeSource AncestorType={x:Type Button}}}"
-                                    Value="False">
-                                <Setter
-                                        Property="Opacity"
-                                        Value="0.5" />
+                            <DataTrigger Binding="{Binding IsEnabled, RelativeSource={RelativeSource AncestorType={x:Type Button}}}" Value="False">
+                                <Setter Property="Opacity" Value="0.5" />
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
                 </ToolBar.Resources>
-                <Button
-                        Padding="5"
-                        x:Name="btnAdd"
-                        CommandParameter="{Binding RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
-                        Command="{Binding AddCommand}"
-                        TabIndex="2">
+                <Button Padding="5" x:Name="btnAdd" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType={x:Type Window}}}" Command="{Binding AddCommand}" TabIndex="2">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock
-                                FontSize="18"
-                                Text="&#xF055;"
-                                FontFamily="{StaticResource FontAwesomeSolid}"
-                                Foreground="{StaticResource ResourceKey=AddButtonIconColor}" />
-                        <TextBlock
-                                Margin="5 0 0 0"
-                                VerticalAlignment="Center"
-                                Text="Add" />
+                        <TextBlock FontSize="18" Text="&#xF055;" FontFamily="{StaticResource FontAwesomeSolid}" Foreground="{StaticResource ResourceKey=AddButtonIconColor}" />
+                        <TextBlock Margin="5 0 0 0" VerticalAlignment="Center" Text="Add" />
                     </StackPanel>
                 </Button>
-                <Button
-                        CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
-                        Command="{Binding RemoveFromListCommand}"
-                        Padding="5"
-                        x:Name="btnRemove"
-                        TabIndex="3">
+                <Button CommandParameter="{Binding SelectedItems, ElementName=lvDownload}" Command="{Binding RemoveFromListCommand}" Padding="5" x:Name="btnRemove" TabIndex="3">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock
-                                FontSize="18"
-                                Text="&#xF056;"
-                                FontFamily="{StaticResource FontAwesomeSolid}"
-                                Foreground="{StaticResource ResourceKey=RemoveButtonIconColor}" />
-                        <TextBlock
-                                Margin="5 0 0 0"
-                                VerticalAlignment="Center"
-                                Text="Remove" />
+                        <TextBlock FontSize="18" Text="&#xF056;" FontFamily="{StaticResource FontAwesomeSolid}" Foreground="{StaticResource ResourceKey=RemoveButtonIconColor}" />
+                        <TextBlock Margin="5 0 0 0" VerticalAlignment="Center" Text="Remove" />
                     </StackPanel>
                 </Button>
                 <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
-                <Button
-                        Padding="5"
-                        x:Name="btnStart"
-                        CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
-                        Command="{Binding StartCommand}"
-                        TabIndex="4">
+                <Button Padding="5" x:Name="btnStart" CommandParameter="{Binding SelectedItems, ElementName=lvDownload}" Command="{Binding StartCommand}" TabIndex="4">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock
-                                FontSize="18"
-                                Text="&#xF144;"
-                                FontFamily="{StaticResource FontAwesomeSolid}"
-                                Foreground="{StaticResource ResourceKey=StartButtonIconColor}" />
-                        <TextBlock
-                                Margin="5 0 0 0"
-                                VerticalAlignment="Center"
-                                Text="Start" />
+                        <TextBlock FontSize="18" Text="&#xF144;" FontFamily="{StaticResource FontAwesomeSolid}" Foreground="{StaticResource ResourceKey=StartButtonIconColor}" />
+                        <TextBlock Margin="5 0 0 0" VerticalAlignment="Center" Text="Start" />
                     </StackPanel>
                 </Button>
-                <Button
-                        Padding="5"
-                        x:Name="btnPause"
-                        CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
-                        Command="{Binding PauseCommand}"
-                        TabIndex="5">
+                <Button Padding="5" x:Name="btnPause" CommandParameter="{Binding SelectedItems, ElementName=lvDownload}" Command="{Binding PauseCommand}" TabIndex="5">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock
-                                FontSize="18"
-                                Text="&#xF28B;"
-                                FontFamily="{StaticResource FontAwesomeSolid}"
-                                Foreground="{StaticResource ResourceKey=PauseButtonIconColor}" />
-                        <TextBlock
-                                Margin="5 0 0 0"
-                                VerticalAlignment="Center"
-                                Text="Pause" />
+                        <TextBlock FontSize="18" Text="&#xF28B;" FontFamily="{StaticResource FontAwesomeSolid}" Foreground="{StaticResource ResourceKey=PauseButtonIconColor}" />
+                        <TextBlock Margin="5 0 0 0" VerticalAlignment="Center" Text="Pause" />
                     </StackPanel>
                 </Button>
-                <Button
-                        Padding="5"
-                        x:Name="btnCancel"
-                        CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
-                        Command="{Binding CancelCommand}"
-                        TabIndex="6">
+                <Button Padding="5" x:Name="btnCancel" CommandParameter="{Binding SelectedItems, ElementName=lvDownload}" Command="{Binding CancelCommand}" TabIndex="6">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock
-                                FontSize="18"
-                                Text="&#xF28D;"
-                                FontFamily="{StaticResource FontAwesomeSolid}"
-                                Foreground="{StaticResource ResourceKey=StopButtonIconColor}" />
-                        <TextBlock
-                                Margin="5 0 0 0"
-                                VerticalAlignment="Center"
-                                Text="Cancel" />
+                        <TextBlock FontSize="18" Text="&#xF28D;" FontFamily="{StaticResource FontAwesomeSolid}" Foreground="{StaticResource ResourceKey=StopButtonIconColor}" />
+                        <TextBlock Margin="5 0 0 0" VerticalAlignment="Center" Text="Cancel" />
                     </StackPanel>
                 </Button>
                 <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
-                <Button
-                        Padding="5"
-                        x:Name="btnStartQueue"
-                        Command="{Binding StartQueueCommand}"
-                        CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
-                        TabIndex="7">
+                <Button Padding="5" x:Name="btnStartQueue" Command="{Binding StartQueueCommand}" CommandParameter="{Binding SelectedItems, ElementName=lvDownload}" TabIndex="7">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock
-                                FontSize="18"
-                                Text="&#xF144;"
-                                FontFamily="{StaticResource FontAwesomeSolid}"
-                                Foreground="{StaticResource ResourceKey=StartQueueButtonIconColor}" />
-                        <TextBlock
-                                Margin="5 0 0 0"
-                                VerticalAlignment="Center"
-                                Text="Start Queue" />
+                        <TextBlock FontSize="18" Text="&#xF144;" FontFamily="{StaticResource FontAwesomeSolid}" Foreground="{StaticResource ResourceKey=StartQueueButtonIconColor}" />
+                        <TextBlock Margin="5 0 0 0" VerticalAlignment="Center" Text="Start Queue" />
                     </StackPanel>
                 </Button>
-                <Button
-                        Padding="5"
-                        x:Name="btnCancelQueue"
-                        Command="{Binding StopQueueCommand}"
-                        TabIndex="8">
+                <Button Padding="5" x:Name="btnCancelQueue" Command="{Binding StopQueueCommand}" TabIndex="8">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock
-                                FontSize="18"
-                                Text="&#xF28D;"
-                                FontFamily="{StaticResource FontAwesomeSolid}"
-                                Foreground="{StaticResource ResourceKey=StopQueueButtonIconColor}" />
-                        <TextBlock
-                                Margin="5 0 0 0"
-                                VerticalAlignment="Center"
-                                Text="Stop Queue" />
+                        <TextBlock FontSize="18" Text="&#xF28D;" FontFamily="{StaticResource FontAwesomeSolid}" Foreground="{StaticResource ResourceKey=StopQueueButtonIconColor}" />
+                        <TextBlock Margin="5 0 0 0" VerticalAlignment="Center" Text="Stop Queue" />
                     </StackPanel>
                 </Button>
             </ToolBar>
@@ -337,10 +157,57 @@
         <DockPanel DockPanel.Dock="Bottom">
             <StatusBar Padding="5">
                 <StatusBar.Resources>
-                    <Style TargetType="{x:Type mah:MetroProgressBar}">
+                    <Style TargetType="{x:Type ProgressBar}">
+                        <Setter Property="Height" Value="14" />
+                    </Style>
+                    <Style TargetType="{x:Type Button}">
+                        <!-- <Setter
+                                Property="Background"
+                                Value="{DynamicResource MahApps.Brushes.IdealForeground}" />
                         <Setter
-                                Property="Height"
-                                Value="14" />
+                                Property="Foreground"
+                                Value="{DynamicResource MahApps.Brushes.AccentBase}" />
+                        <Setter
+                                Property="BorderBrush"
+                                Value="{DynamicResource MahApps.Brushes.Button.Border}" />
+                        <Setter
+                                Property="BorderThickness"
+                                Value="1" /> -->
+                        <Setter Property="HorizontalContentAlignment" Value="Center" />
+                        <Setter Property="VerticalContentAlignment" Value="Center" />
+                        <Setter Property="Width" Value="14" />
+                        <Setter Property="Height" Value="14" />
+                        <Style.Triggers>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </Trigger>
+                            <!-- <Trigger
+                                    Property="IsMouseOver"
+                                    Value="True">
+                                <Setter
+                                        Property="Background"
+                                        Value="{DynamicResource MahApps.Brushes.AccentBase}" />
+                                <Setter
+                                        Property="Foreground"
+                                        Value="{DynamicResource MahApps.Brushes.IdealForeground}" />
+                                <Setter
+                                        Property="BorderBrush"
+                                        Value="{DynamicResource MahApps.Brushes.IdealForeground}" />
+                            </Trigger>
+                            <Trigger
+                                    Property="IsFocused"
+                                    Value="True">
+                                <Setter
+                                        Property="Background"
+                                        Value="{DynamicResource MahApps.Brushes.Gray}" />
+                                <Setter
+                                        Property="Foreground"
+                                        Value="{DynamicResource MahApps.Brushes.IdealForeground}" />
+                                <Setter
+                                        Property="BorderBrush"
+                                        Value="{DynamicResource MahApps.Brushes.Gray}" />
+                            </Trigger> -->
+                        </Style.Triggers>
                     </Style>
                 </StatusBar.Resources>
                 <StatusBar.ItemsPanel>
@@ -363,98 +230,37 @@
                     <Grid>
                         <Grid.Resources>
                             <Style TargetType="{x:Type Ellipse}">
-                                <Setter
-                                        Property="Fill"
-                                        Value="{DynamicResource MahApps.Brushes.IdealForeground}" />
-                                <Setter
-                                        Property="StrokeThickness"
-                                        Value="1" />
-                                <Setter
-                                        Property="Stroke"
-                                        Value="{DynamicResource MahApps.Brushes.Button.Border}" />
-                                <Setter
-                                        Property="Width"
-                                        Value="14" />
-                                <Setter
-                                        Property="Height"
-                                        Value="14" />
+                                <Setter Property="Fill" Value="{StaticResource StausBarEllipseBusyColor}" />
+                                <Setter Property="Width" Value="14" />
+                                <Setter Property="Height" Value="14" />
                                 <Style.Triggers>
-                                    <DataTrigger
-                                            Binding="{Binding Status}"
-                                            Value="Ready">
-                                        <Setter
-                                                Property="Fill"
-                                                Value="{DynamicResource MahApps.Brushes.Accent}" />
+                                    <DataTrigger Binding="{Binding Status}" Value="Ready">
+                                        <Setter Property="Fill" Value="{StaticResource StausBarEllipseReadyColor}" />
                                     </DataTrigger>
-                                    <DataTrigger
-                                            Binding="{Binding Path=Visibility, ElementName=btnCancelBackgroundTask}"
-                                            Value="Visible">
-                                        <Setter
-                                                Property="Visibility"
-                                                Value="Collapsed" />
+                                    <DataTrigger Binding="{Binding Path=Visibility, ElementName=btnCancelBackgroundTask}" Value="Visible">
+                                        <Setter Property="Visibility" Value="Collapsed" />
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
-                            <Style
-                                    TargetType="{x:Type Button}"
-                                    BasedOn="{StaticResource MahApps.Styles.Button.Circle}">
-                                <Setter
-                                        Property="Background"
-                                        Value="{DynamicResource MahApps.Brushes.IdealForeground}" />
-                                <Setter
-                                        Property="Foreground"
-                                        Value="{DynamicResource MahApps.Brushes.AccentBase}" />
-                                <Setter
-                                        Property="BorderBrush"
-                                        Value="{DynamicResource MahApps.Brushes.Button.Border}" />
-                                <Setter
-                                        Property="BorderThickness"
-                                        Value="1" />
-                                <Setter
-                                        Property="HorizontalContentAlignment"
-                                        Value="Center" />
-                                <Setter
-                                        Property="VerticalContentAlignment"
-                                        Value="Center" />
-                                <Setter
-                                        Property="Width"
-                                        Value="14" />
-                                <Setter
-                                        Property="Height"
-                                        Value="14" />
+                            <Style x:Key="CancelButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                <Setter Property="Background" Value="Transparent" />
+                                <Setter Property="Foreground" Value="{StaticResource StausBarEllipseBusyColor}" />
+                                <Setter Property="Width" Value="16" />
+                                <Setter Property="Height" Value="16" />
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="{x:Type Button}">
+                                            <Border Background="{TemplateBinding Background}" BorderBrush="{StaticResource StausBarEllipseBusyColor}" BorderThickness="1">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
                                 <Style.Triggers>
-                                    <Trigger
-                                            Property="IsEnabled"
-                                            Value="False">
-                                        <Setter
-                                                Property="Visibility"
-                                                Value="Collapsed" />
-                                    </Trigger>
-                                    <Trigger
-                                            Property="IsMouseOver"
-                                            Value="True">
-                                        <Setter
-                                                Property="Background"
-                                                Value="{DynamicResource MahApps.Brushes.AccentBase}" />
-                                        <Setter
-                                                Property="Foreground"
-                                                Value="{DynamicResource MahApps.Brushes.IdealForeground}" />
-                                        <Setter
-                                                Property="BorderBrush"
-                                                Value="{DynamicResource MahApps.Brushes.IdealForeground}" />
-                                    </Trigger>
-                                    <Trigger
-                                            Property="IsFocused"
-                                            Value="True">
-                                        <Setter
-                                                Property="Background"
-                                                Value="{DynamicResource MahApps.Brushes.Gray}" />
-                                        <Setter
-                                                Property="Foreground"
-                                                Value="{DynamicResource MahApps.Brushes.IdealForeground}" />
-                                        <Setter
-                                                Property="BorderBrush"
-                                                Value="{DynamicResource MahApps.Brushes.Gray}" />
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="BorderBrush" Value="{StaticResource StausBarEllipseBusyColor}" />
+                                        <Setter Property="Background" Value="{StaticResource StausBarEllipseBusyColor}" />
+                                        <Setter Property="Foreground" Value="{Binding Path=Background,RelativeSource={RelativeSource AncestorType=StatusBar}}" />
                                     </Trigger>
                                 </Style.Triggers>
                             </Style>
@@ -464,137 +270,59 @@
                             <ColumnDefinition Width="auto" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <Button
-                                x:Name="btnCancelBackgroundTask"
-                                Content="&#xF00D;"
-                                Command="{Binding CancelBackgroundTaskCommand}"
-                                FontFamily="{StaticResource FontAwesomeSolid}"
-                                Margin="0,0,4,0"
-                                ToolTip="Cancel operation"
-                                Cursor="Hand" />
-                        <Ellipse
-                                x:Name="ellipseBackgroundTask"
-                                Grid.Column="1"
-                                Margin="0 0 4 0" />
-                        <TextBlock
-                                x:Name="tbPriamryStatus"
-                                TextTrimming="CharacterEllipsis"
-                                Grid.Column="2"
-                                Text="{Binding Status, Converter={StaticResource DownloaderStatusConverter}}"
-                                VerticalAlignment="Center" />
+                        <Button x:Name="btnCancelBackgroundTask" Content="&#xF00D;" Command="{Binding CancelBackgroundTaskCommand}" FontFamily="{StaticResource FontAwesomeSolid}" Margin="0,0,4,0" ToolTip="Cancel operation" Cursor="Hand" Style="{StaticResource CancelButtonStyle}" />
+                        <Ellipse x:Name="ellipseBackgroundTask" Grid.Column="1" Margin="0 0 4 0" />
+                        <TextBlock x:Name="tbPriamryStatus" TextTrimming="CharacterEllipsis" Grid.Column="2" Text="{Binding Status, Converter={StaticResource DownloaderStatusConverter}}" VerticalAlignment="Center" />
                     </Grid>
                 </StatusBarItem>
-                <StatusBarItem
-                        Grid.Column="1"
-                        Visibility="{Binding Progress, Converter={StaticResource ProgressBarVisibilityConverter}}"
-                        Margin="20 0 0 0">
+                <StatusBarItem Grid.Column="1" Visibility="{Binding Progress, Converter={StaticResource ProgressBarVisibilityConverter}}" Margin="20 0 0 0">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="auto" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock
-                                VerticalAlignment="Center"
-                                Text="{Binding Progress, StringFormat=\{0:0\}%}"
-                                Margin="4 0 4 0" />
-                        <mah:MetroProgressBar
-                                Grid.Column="1"
-                                x:Name="pbProgress"
-                                Value="{Binding Progress, Mode=OneWay}"
-                                Width="100"
-                                Background="{DynamicResource MahApps.Brushes.Accent2}" />
+                        <TextBlock VerticalAlignment="Center" Text="{Binding Progress, StringFormat=\{0:0\}%}" Margin="4 0 4 0" />
+                        <ProgressBar Grid.Column="1" x:Name="pbProgress" Value="{Binding Progress, Mode=OneWay}" Width="100" />
                     </Grid>
                 </StatusBarItem>
-                <StatusBarItem
-                        Margin="20 0 0 0"
-                        Grid.Column="2"
-                        Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=tbVerifyingCount}">
+                <StatusBarItem Margin="20 0 0 0" Grid.Column="2" Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=tbVerifyingCount}">
                     <TextBlock>
-                        <TextBlock
-                                Margin="0 0 4 0"
-                                Text="&#xF021;"
-                                FontFamily="{StaticResource FontAwesomeSolid}" />
+                        <TextBlock Margin="0 0 4 0" Text="&#xF021;" FontFamily="{StaticResource FontAwesomeSolid}" />
                         <TextBlock Text="Verifiying:" />
-                        <TextBlock
-                                x:Name="tbVerifyingCount"
-                                Text="{Binding VerifyingCount, Converter={StaticResource TreeViewCountConverter}}" />
+                        <TextBlock x:Name="tbVerifyingCount" Text="{Binding VerifyingCount, Converter={StaticResource TreeViewCountConverter}}" />
                     </TextBlock>
                 </StatusBarItem>
-                <StatusBarItem
-                        Margin="20 0 0 0"
-                        Grid.Column="3"
-                        Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=tbQueuedCount}">
+                <StatusBarItem Margin="20 0 0 0" Grid.Column="3" Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=tbQueuedCount}">
                     <TextBlock>
-                        <TextBlock
-                                Margin="0 0 4 0"
-                                Text="&#xF0AE;"
-                                FontFamily="{StaticResource FontAwesomeSolid}" />
+                        <TextBlock Margin="0 0 4 0" Text="&#xF0AE;" FontFamily="{StaticResource FontAwesomeSolid}" />
                         <TextBlock Text="Queued:" />
-                        <TextBlock
-                                x:Name="tbQueuedCount"
-                                Text="{Binding QueuedCount, Converter={StaticResource TreeViewCountConverter}}" />
+                        <TextBlock x:Name="tbQueuedCount" Text="{Binding QueuedCount, Converter={StaticResource TreeViewCountConverter}}" />
                     </TextBlock>
                 </StatusBarItem>
-                <StatusBarItem
-                        Margin="20 0 0 0"
-                        Grid.Column="4"
-                        Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=tbPausedCount}">
+                <StatusBarItem Margin="20 0 0 0" Grid.Column="4" Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=tbPausedCount}">
                     <TextBlock>
-                        <TextBlock
-                                Margin="0 0 4 0"
-                                Text="&#xF04C;"
-                                FontFamily="{StaticResource FontAwesomeSolid}" />
+                        <TextBlock Margin="0 0 4 0" Text="&#xF04C;" FontFamily="{StaticResource FontAwesomeSolid}" />
                         <TextBlock Text="Paused:" />
-                        <TextBlock
-                                x:Name="tbPausedCount"
-                                Text="{Binding PausedCount, Converter={StaticResource TreeViewCountConverter}}" />
+                        <TextBlock x:Name="tbPausedCount" Text="{Binding PausedCount, Converter={StaticResource TreeViewCountConverter}}" />
                     </TextBlock>
                 </StatusBarItem>
-                <StatusBarItem
-                        Margin="20 0 0 0"
-                        Grid.Column="5"
-                        Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=tbFinishedCount}">
+                <StatusBarItem Margin="20 0 0 0" Grid.Column="5" Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=tbFinishedCount}">
                     <TextBlock>
-                        <TextBlock
-                                Margin="0 0 4 0"
-                                Text="&#xF00C;"
-                                FontFamily="{StaticResource FontAwesomeSolid}" />
+                        <TextBlock Margin="0 0 4 0" Text="&#xF00C;" FontFamily="{StaticResource FontAwesomeSolid}" />
                         <TextBlock Text="Finished:" />
-                        <TextBlock
-                                x:Name="tbFinishedCount"
-                                Text="{Binding FinishedCount, Converter={StaticResource TreeViewCountConverter}}" />
+                        <TextBlock x:Name="tbFinishedCount" Text="{Binding FinishedCount, Converter={StaticResource TreeViewCountConverter}}" />
                     </TextBlock>
                 </StatusBarItem>
-                <StatusBarItem
-                        Margin="20 0 0 0"
-                        Grid.Column="6"
-                        Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=tbBytesDownloaded}">
+                <StatusBarItem Margin="20 0 0 0" Grid.Column="6" Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=tbBytesDownloaded}">
                     <TextBlock>
-                        <TextBlock
-                                Margin="0 0 4 0"
-                                Text="&#xF019;"
-                                FontFamily="{StaticResource FontAwesomeSolid}" />
-                        <TextBlock
-                                x:Name="tbBytesDownloaded"
-                                Text="{Binding BytesDownloaded, Converter={StaticResource DownloaderSizeConverter}}"
-                                ToolTip="Data transferred this session" />
+                        <TextBlock Margin="0 0 4 0" Text="&#xF019;" FontFamily="{StaticResource FontAwesomeSolid}" />
+                        <TextBlock x:Name="tbBytesDownloaded" Text="{Binding BytesDownloaded, Converter={StaticResource DownloaderSizeConverter}}" ToolTip="Data transferred this session" />
                     </TextBlock>
                 </StatusBarItem>
-                <StatusBarItem
-                        Margin="20 0 0 0"
-                        Grid.Column="7"
-                        Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=tbSpeed}"
-                        HorizontalAlignment="Right">
+                <StatusBarItem Margin="20 0 0 0" Grid.Column="7" Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=tbSpeed}" HorizontalAlignment="Right">
                     <TextBlock>
-                        <TextBlock
-                                Margin="0 0 4 0"
-                                Text="&#xF3FD;"
-                                FontFamily="{StaticResource FontAwesomeSolid}" />
-                        <TextBlock
-                                TextAlignment="Right"
-                                x:Name="tbSpeed"
-                                Text="{Binding Speed, Converter={StaticResource DownloaderSpeedConverter}}"
-                                ToolTip="Current data transfer rate" />
+                        <TextBlock Margin="0 0 4 0" Text="&#xF3FD;" FontFamily="{StaticResource FontAwesomeSolid}" />
+                        <TextBlock TextAlignment="Right" x:Name="tbSpeed" Text="{Binding Speed, Converter={StaticResource DownloaderSpeedConverter}}" ToolTip="Current data transfer rate" />
                     </TextBlock>
                 </StatusBarItem>
             </StatusBar>
@@ -608,22 +336,14 @@
             </Grid.ColumnDefinitions>
             <!--#endregion DOWNLOADLIST-->
             <!--region CATEGORYLIST-->
-            <TreeView
-                    ItemsSource="{Binding CategoriesList}"
-                    x:Name="tvCategories"
-                    TabIndex="1"
-                    Loaded="tvCategories_Loaded">
+            <TreeView ItemsSource="{Binding CategoriesList}" x:Name="tvCategories" TabIndex="1" Loaded="tvCategories_Loaded">
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="SelectedItemChanged">
-                        <i:InvokeCommandAction
-                                Command="{Binding CategoryChangedCommand}"
-                                CommandParameter="{Binding SelectedItem, ElementName=tvCategories}" />
+                        <i:InvokeCommandAction Command="{Binding CategoryChangedCommand}" CommandParameter="{Binding SelectedItem, ElementName=tvCategories}" />
                     </i:EventTrigger>
                 </i:Interaction.Triggers>
                 <TreeView.ItemContainerStyle>
-                    <Style
-                            TargetType="{x:Type TreeViewItem}"
-                            BasedOn="{StaticResource MahApps.Styles.TreeViewItem}">
+                    <Style TargetType="{x:Type TreeViewItem}">
                         <Setter Property="Template">
                             <Setter.Value>
                                 <ControlTemplate TargetType="{x:Type TreeViewItem}">
@@ -636,143 +356,66 @@
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="auto" />
                                         </Grid.ColumnDefinitions>
-                                        <Ellipse
-                                                Width="12"
-                                                VerticalAlignment="Center"
-                                                Height="12"
-                                                Margin="4 0 4 0">
+                                        <Ellipse Width="12" VerticalAlignment="Center" Height="12" Margin="4 0 4 0">
                                             <Ellipse.Style>
                                                 <Style TargetType="{x:Type Ellipse}">
                                                     <Style.Triggers>
-                                                        <DataTrigger
-                                                                Binding="{Binding}"
-                                                                Value="All">
-                                                            <Setter
-                                                                    Property="Fill"
-                                                                    Value="{StaticResource CategoryAllColor}" />
+                                                        <DataTrigger Binding="{Binding}" Value="All">
+                                                            <Setter Property="Fill" Value="{StaticResource CategoryAllColor}" />
                                                         </DataTrigger>
-                                                        <DataTrigger
-                                                                Binding="{Binding}"
-                                                                Value="Ready">
-                                                            <Setter
-                                                                    Property="Fill"
-                                                                    Value="{StaticResource CategoryReadyColor}" />
+                                                        <DataTrigger Binding="{Binding}" Value="Ready">
+                                                            <Setter Property="Fill" Value="{StaticResource CategoryReadyColor}" />
                                                         </DataTrigger>
-                                                        <DataTrigger
-                                                                Binding="{Binding}"
-                                                                Value="Downloading">
-                                                            <Setter
-                                                                    Property="Fill"
-                                                                    Value="{StaticResource CategoryDownloadingColor}" />
+                                                        <DataTrigger Binding="{Binding}" Value="Downloading">
+                                                            <Setter Property="Fill" Value="{StaticResource CategoryDownloadingColor}" />
                                                         </DataTrigger>
-                                                        <DataTrigger
-                                                                Binding="{Binding}"
-                                                                Value="Queued">
-                                                            <Setter
-                                                                    Property="Fill"
-                                                                    Value="{StaticResource CategoryQueuedColor}" />
+                                                        <DataTrigger Binding="{Binding}" Value="Queued">
+                                                            <Setter Property="Fill" Value="{StaticResource CategoryQueuedColor}" />
                                                         </DataTrigger>
-                                                        <DataTrigger
-                                                                Binding="{Binding}"
-                                                                Value="Paused">
-                                                            <Setter
-                                                                    Property="Fill"
-                                                                    Value="{StaticResource CategoryPausedColor}" />
+                                                        <DataTrigger Binding="{Binding}" Value="Paused">
+                                                            <Setter Property="Fill" Value="{StaticResource CategoryPausedColor}" />
                                                         </DataTrigger>
-                                                        <DataTrigger
-                                                                Binding="{Binding}"
-                                                                Value="Finished">
-                                                            <Setter
-                                                                    Property="Fill"
-                                                                    Value="{StaticResource CategoryFinishedColor}" />
+                                                        <DataTrigger Binding="{Binding}" Value="Finished">
+                                                            <Setter Property="Fill" Value="{StaticResource CategoryFinishedColor}" />
                                                         </DataTrigger>
-                                                        <DataTrigger
-                                                                Binding="{Binding}"
-                                                                Value="Errored">
-                                                            <Setter
-                                                                    Property="Fill"
-                                                                    Value="{StaticResource CategoryErroredColor}" />
+                                                        <DataTrigger Binding="{Binding}" Value="Errored">
+                                                            <Setter Property="Fill" Value="{StaticResource CategoryErroredColor}" />
                                                         </DataTrigger>
-                                                        <DataTrigger
-                                                                Binding="{Binding}"
-                                                                Value="Verifying">
-                                                            <Setter
-                                                                    Property="Fill"
-                                                                    Value="{StaticResource CategoryVerifyingColor}" />
+                                                        <DataTrigger Binding="{Binding}" Value="Verifying">
+                                                            <Setter Property="Fill" Value="{StaticResource CategoryVerifyingColor}" />
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
                                             </Ellipse.Style>
                                         </Ellipse>
-                                        <TextBlock
-                                                Grid.Column="1"
-                                                TextTrimming="CharacterEllipsis"
-                                                VerticalAlignment="Center"
-                                                Text="{Binding}" />
-                                        <TextBlock
-                                                x:Name="CatCount"
-                                                Margin="4 0 4 0"
-                                                Grid.Column="2"
-                                                HorizontalAlignment="Right"
-                                                VerticalAlignment="Center">
+                                        <TextBlock Grid.Column="1" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Text="{Binding}" />
+                                        <TextBlock x:Name="CatCount" Margin="4 0 4 0" Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center">
                                             <TextBlock.Style>
                                                 <Style TargetType="{x:Type TextBlock}">
                                                     <Style.Triggers>
-                                                        <DataTrigger
-                                                                Binding="{Binding}"
-                                                                Value="All">
-                                                            <Setter
-                                                                    Property="Text"
-                                                                    Value="{Binding DataContext.Count, Converter={StaticResource TreeViewCountConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+                                                        <DataTrigger Binding="{Binding}" Value="All">
+                                                            <Setter Property="Text" Value="{Binding DataContext.Count, Converter={StaticResource TreeViewCountConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
                                                         </DataTrigger>
-                                                        <DataTrigger
-                                                                Binding="{Binding}"
-                                                                Value="Ready">
-                                                            <Setter
-                                                                    Property="Text"
-                                                                    Value="{Binding DataContext.ReadyCount, Converter={StaticResource TreeViewCountConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+                                                        <DataTrigger Binding="{Binding}" Value="Ready">
+                                                            <Setter Property="Text" Value="{Binding DataContext.ReadyCount, Converter={StaticResource TreeViewCountConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
                                                         </DataTrigger>
-                                                        <DataTrigger
-                                                                Binding="{Binding}"
-                                                                Value="Queued">
-                                                            <Setter
-                                                                    Property="Text"
-                                                                    Value="{Binding DataContext.QueuedCount, Converter={StaticResource TreeViewCountConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+                                                        <DataTrigger Binding="{Binding}" Value="Queued">
+                                                            <Setter Property="Text" Value="{Binding DataContext.QueuedCount, Converter={StaticResource TreeViewCountConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
                                                         </DataTrigger>
-                                                        <DataTrigger
-                                                                Binding="{Binding}"
-                                                                Value="Paused">
-                                                            <Setter
-                                                                    Property="Text"
-                                                                    Value="{Binding DataContext.PausedCount, Converter={StaticResource TreeViewCountConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+                                                        <DataTrigger Binding="{Binding}" Value="Paused">
+                                                            <Setter Property="Text" Value="{Binding DataContext.PausedCount, Converter={StaticResource TreeViewCountConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
                                                         </DataTrigger>
-                                                        <DataTrigger
-                                                                Binding="{Binding}"
-                                                                Value="Errored">
-                                                            <Setter
-                                                                    Property="Text"
-                                                                    Value="{Binding DataContext.ErroredCount, Converter={StaticResource TreeViewCountConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+                                                        <DataTrigger Binding="{Binding}" Value="Errored">
+                                                            <Setter Property="Text" Value="{Binding DataContext.ErroredCount, Converter={StaticResource TreeViewCountConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
                                                         </DataTrigger>
-                                                        <DataTrigger
-                                                                Binding="{Binding}"
-                                                                Value="Downloading">
-                                                            <Setter
-                                                                    Property="Text"
-                                                                    Value="{Binding DataContext.DownloadingCount, Converter={StaticResource TreeViewCountConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+                                                        <DataTrigger Binding="{Binding}" Value="Downloading">
+                                                            <Setter Property="Text" Value="{Binding DataContext.DownloadingCount, Converter={StaticResource TreeViewCountConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
                                                         </DataTrigger>
-                                                        <DataTrigger
-                                                                Binding="{Binding}"
-                                                                Value="Finished">
-                                                            <Setter
-                                                                    Property="Text"
-                                                                    Value="{Binding DataContext.FinishedCount, Converter={StaticResource TreeViewCountConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+                                                        <DataTrigger Binding="{Binding}" Value="Finished">
+                                                            <Setter Property="Text" Value="{Binding DataContext.FinishedCount, Converter={StaticResource TreeViewCountConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
                                                         </DataTrigger>
-                                                        <DataTrigger
-                                                                Binding="{Binding}"
-                                                                Value="Verifying">
-                                                            <Setter
-                                                                    Property="Text"
-                                                                    Value="{Binding DataContext.VerifyingCount, Converter={StaticResource TreeViewCountConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+                                                        <DataTrigger Binding="{Binding}" Value="Verifying">
+                                                            <Setter Property="Text" Value="{Binding DataContext.VerifyingCount, Converter={StaticResource TreeViewCountConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
@@ -780,51 +423,9 @@
                                         </TextBlock>
                                     </Grid>
                                     <ControlTemplate.Triggers>
-                                        <Trigger
-                                                Property="IsMouseOver"
-                                                Value="True">
-                                            <Setter
-                                                    TargetName="CatItem"
-                                                    Property="Background"
-                                                    Value="{DynamicResource MahApps.Brushes.DataGrid.Selection.Background.MouseOver}" />
-                                        </Trigger>
-                                        <Trigger
-                                                Property="IsSelected"
-                                                Value="true">
-                                            <Setter
-                                                    TargetName="CatItem"
-                                                    Property="Background"
-                                                    Value="{DynamicResource MahApps.Brushes.DataGrid.Selection.Background}" />
-                                            <Setter
-                                                    Property="Foreground"
-                                                    Value="{DynamicResource MahApps.Brushes.DataGrid.Selection.Text}" />
-                                            <Setter
-                                                    Property="FontWeight"
-                                                    Value="Bold" />
-                                        </Trigger>
-                                        <MultiTrigger>
-                                            <MultiTrigger.Conditions>
-                                                <Condition
-                                                        Property="IsSelected"
-                                                        Value="true" />
-                                                <Condition
-                                                        Property="IsSelectionActive"
-                                                        Value="false" />
-                                            </MultiTrigger.Conditions>
-                                            <Setter
-                                                    Property="Foreground"
-                                                    Value="{DynamicResource MahApps.Brushes.DataGrid.Selection.Text.Inactive}" />
-                                            <Setter
-                                                    TargetName="CatItem"
-                                                    Property="Background"
-                                                    Value="{DynamicResource MahApps.Brushes.DataGrid.Selection.Background.Inactive}" />
-                                        </MultiTrigger>
-                                        <Trigger
-                                                Property="IsEnabled"
-                                                Value="false">
-                                            <Setter
-                                                    Property="Foreground"
-                                                    Value="Green" />
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter TargetName="CatItem" Property="Background" Value="{DynamicResource {x:Static SystemColors.MenuHighlightBrushKey}}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}" />
                                         </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
@@ -834,75 +435,37 @@
                 </TreeView.ItemContainerStyle>
             </TreeView>
             <!--endregion CategoryList-->
-            <GridSplitter
-                    Grid.Column="1"
-                    HorizontalAlignment="Stretch" />
+            <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" />
             <!--#region DOWNLOADLIST-->
-            <ListView
-                    ItemsSource="{Binding CollectionView}"
-                    x:Name="lvDownload"
-                    TabIndex="0"
-                    Grid.Column="2"
-                    ButtonBase.Click="lvDownload_HeaderClick"
-                    SelectionMode="Extended"
-                    ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                    ScrollViewer.VerticalScrollBarVisibility="Auto"
-                    mah:ScrollViewerHelper.IsHorizontalScrollWheelEnabled="True">
+            <ListView ItemsSource="{Binding CollectionView}" x:Name="lvDownload" TabIndex="0" Grid.Column="2" ButtonBase.Click="lvDownload_HeaderClick" SelectionMode="Extended" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto">
                 <ListView.Resources>
-                    <Style
-                            x:Key="LeftAligned"
-                            TargetType="{x:Type GridViewColumnHeader}"
-                            BasedOn="{StaticResource MahApps.Styles.GridViewColumnHeader}">
-                        <Setter
-                                Property="HorizontalContentAlignment"
-                                Value="Left" />
+                    <Style x:Key="LeftAligned" TargetType="{x:Type GridViewColumnHeader}">
+                        <Setter Property="HorizontalContentAlignment" Value="Left" />
                     </Style>
-                    <Style
-                            x:Key="MiddleAligned"
-                            TargetType="{x:Type GridViewColumnHeader}"
-                            BasedOn="{StaticResource MahApps.Styles.GridViewColumnHeader}">
-                        <Setter
-                                Property="HorizontalContentAlignment"
-                                Value="Center" />
+                    <Style x:Key="MiddleAligned" TargetType="{x:Type GridViewColumnHeader}">
+                        <Setter Property="HorizontalContentAlignment" Value="Center" />
                     </Style>
-                    <Style
-                            x:Key="RightAligned"
-                            TargetType="{x:Type GridViewColumnHeader}"
-                            BasedOn="{StaticResource MahApps.Styles.GridViewColumnHeader}">
-                        <Setter
-                                Property="HorizontalContentAlignment"
-                                Value="Right" />
+                    <Style x:Key="RightAligned" TargetType="{x:Type GridViewColumnHeader}">
+                        <Setter Property="HorizontalContentAlignment" Value="Right" />
                     </Style>
                 </ListView.Resources>
                 <ListView.ContextMenu>
                     <ContextMenu>
-                        <MenuItem
-                                Header="Open"
-                                Command="{Binding OpenCommand}"
-                                CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
-                                InputGestureText="Ctrl+O">
+                        <MenuItem Header="Open" Command="{Binding OpenCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}" InputGestureText="Ctrl+O">
                             <MenuItem.Icon>
                                 <Viewbox>
                                     <Frame Source="pack://application:,,,/Icons/Open_16x.xaml" />
                                 </Viewbox>
                             </MenuItem.Icon>
                         </MenuItem>
-                        <MenuItem
-                                Header="Open Containing Folder"
-                                Command="{Binding OpenContainingFolderCommand}"
-                                CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
-                                InputGestureText="Alt+O">
+                        <MenuItem Header="Open Containing Folder" Command="{Binding OpenContainingFolderCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}" InputGestureText="Alt+O">
                             <MenuItem.Icon>
                                 <Viewbox>
                                     <Frame Source="pack://application:,,,/Icons/OpenFolder_16x.xaml" />
                                 </Viewbox>
                             </MenuItem.Icon>
                         </MenuItem>
-                        <MenuItem
-                                Header="Copy Link"
-                                Command="{Binding CopyLinkToClipboardCommand}"
-                                CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
-                                InputGestureText="Ctrl+C">
+                        <MenuItem Header="Copy Link" Command="{Binding CopyLinkToClipboardCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}" InputGestureText="Ctrl+C">
                             <MenuItem.Icon>
                                 <Viewbox>
                                     <Frame Source="pack://application:,,,/Icons/CopyLongTextToClipboard_16x.xaml" />
@@ -910,30 +473,21 @@
                             </MenuItem.Icon>
                         </MenuItem>
                         <Separator />
-                        <MenuItem
-                                Header="Start"
-                                Command="{Binding StartCommand}"
-                                CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}">
+                        <MenuItem Header="Start" Command="{Binding StartCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}">
                             <MenuItem.Icon>
                                 <Viewbox>
                                     <Frame Source="pack://application:,,,/Icons/Run_16x.xaml" />
                                 </Viewbox>
                             </MenuItem.Icon>
                         </MenuItem>
-                        <MenuItem
-                                Header="Pause"
-                                Command="{Binding PauseCommand}"
-                                CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}">
+                        <MenuItem Header="Pause" Command="{Binding PauseCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}">
                             <MenuItem.Icon>
                                 <Viewbox>
                                     <Frame Source="pack://application:,,,/Icons/Pause_16x.xaml" />
                                 </Viewbox>
                             </MenuItem.Icon>
                         </MenuItem>
-                        <MenuItem
-                                Header="Cancel"
-                                Command="{Binding CancelCommand}"
-                                CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}">
+                        <MenuItem Header="Cancel" Command="{Binding CancelCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}">
                             <MenuItem.Icon>
                                 <Viewbox>
                                     <Frame Source="pack://application:,,,/Icons/Stop_16x.xaml" />
@@ -941,20 +495,14 @@
                             </MenuItem.Icon>
                         </MenuItem>
                         <Separator />
-                        <MenuItem
-                                Header="Enqueue"
-                                Command="{Binding EnqueueCommand}"
-                                CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}">
+                        <MenuItem Header="Enqueue" Command="{Binding EnqueueCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}">
                             <MenuItem.Icon>
                                 <Viewbox>
                                     <Frame Source="pack://application:,,,/Icons/AddRow_16x.xaml" />
                                 </Viewbox>
                             </MenuItem.Icon>
                         </MenuItem>
-                        <MenuItem
-                                Header="Dequeue"
-                                Command="{Binding DequeueCommand}"
-                                CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}">
+                        <MenuItem Header="Dequeue" Command="{Binding DequeueCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}">
                             <MenuItem.Icon>
                                 <Viewbox>
                                     <Frame Source="pack://application:,,,/Icons/RemoveRow_16x.xaml" />
@@ -962,10 +510,7 @@
                             </MenuItem.Icon>
                         </MenuItem>
                         <Separator />
-                        <MenuItem
-                                Header="Recheck"
-                                Command="{Binding RecheckCommand}"
-                                CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}">
+                        <MenuItem Header="Recheck" Command="{Binding RecheckCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}">
                             <MenuItem.Icon>
                                 <Viewbox>
                                     <Frame Source="pack://application:,,,/Icons/Refresh_16x.xaml" />
@@ -973,22 +518,14 @@
                             </MenuItem.Icon>
                         </MenuItem>
                         <Separator />
-                        <MenuItem
-                                Header="Remove From List"
-                                Command="{Binding RemoveFromListCommand}"
-                                CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
-                                InputGestureText="Del">
+                        <MenuItem Header="Remove From List" Command="{Binding RemoveFromListCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}" InputGestureText="Del">
                             <MenuItem.Icon>
                                 <Viewbox>
                                     <Frame Source="pack://application:,,,/Icons/Remove_16x.xaml" />
                                 </Viewbox>
                             </MenuItem.Icon>
                         </MenuItem>
-                        <MenuItem
-                                Header="Delete File"
-                                Command="{Binding DeleteFileCommand}"
-                                CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
-                                InputGestureText="Shift+Del">
+                        <MenuItem Header="Delete File" Command="{Binding DeleteFileCommand}" CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}" InputGestureText="Shift+Del">
                             <MenuItem.Icon>
                                 <Viewbox>
                                     <Frame Source="pack://application:,,,/Icons/Trash_16x.xaml" />
@@ -998,21 +535,13 @@
                     </ContextMenu>
                 </ListView.ContextMenu>
                 <ListView.ItemContainerStyle>
-                    <Style
-                            TargetType="{x:Type ListViewItem}"
-                            BasedOn="{StaticResource MahApps.Styles.ListViewItem}">
-                        <Setter
-                                Property="HorizontalContentAlignment"
-                                Value="Stretch" />
+                    <Style TargetType="{x:Type ListViewItem}">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                     </Style>
                 </ListView.ItemContainerStyle>
                 <ListView.View>
                     <GridView x:Name="gridViewDownloadItems">
-                        <GridViewColumn
-                                HeaderTemplate="{StaticResource HeaderTemplate}"
-                                HeaderContainerStyle="{StaticResource LeftAligned}"
-                                Width="250"
-                                Header="Name">
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource LeftAligned}" Width="250" Header="Name">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
@@ -1020,80 +549,41 @@
                                             <ColumnDefinition Width="auto" />
                                             <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
-                                        <Image
-                                                Source="{Binding Converter={StaticResource DownloaderIconConverter}}"
-                                                Width="18"
-                                                Height="18"
-                                                Margin="0 0 2 0"
-                                                VerticalAlignment="Center" />
-                                        <TextBlock
-                                                Grid.Column="1"
-                                                Text="{Binding Name}"
-                                                TextTrimming="CharacterEllipsis" />
+                                        <Image Source="{Binding Converter={StaticResource DownloaderIconConverter}}" Width="18" Height="18" Margin="0 0 2 0" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn
-                                HeaderTemplate="{StaticResource HeaderTemplate}"
-                                HeaderContainerStyle="{StaticResource RightAligned}"
-                                Header="Type"
-                                Width="120">
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource RightAligned}" Header="Type" Width="120">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <TextBlock
-                                                TextAlignment="Right"
-                                                Text="{Binding Destination, Converter={StaticResource DownloaderTypeConverter}}"
-                                                TextTrimming="CharacterEllipsis" />
+                                        <TextBlock TextAlignment="Right" Text="{Binding Destination, Converter={StaticResource DownloaderTypeConverter}}" TextTrimming="CharacterEllipsis" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn
-                                HeaderTemplate="{StaticResource HeaderTemplate}"
-                                HeaderContainerStyle="{StaticResource LeftAligned}"
-                                Header="Status"
-                                Width="100">
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="Status" Width="100">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <TextBlock
-                                                TextTrimming="CharacterEllipsis"
-                                                Text="{Binding Status}" />
+                                        <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding Status}" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn
-                                HeaderTemplate="{StaticResource HeaderTemplate}"
-                                HeaderContainerStyle="{StaticResource MiddleAligned}"
-                                Header="Progress"
-                                Width="100">
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource MiddleAligned}" Header="Progress" Width="100">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <mah:MetroProgressBar
-                                                x:Name="pbProgress"
-                                                Background="{DynamicResource MahApps.Brushes.Accent4}"
-                                                VerticalAlignment="Stretch"
-                                                HorizontalAlignment="Stretch"
-                                                Minimum="0"
-                                                Maximum="100"
-                                                Value="{Binding Progress, Mode=OneWay}" />
+                                        <ProgressBar x:Name="pbProgress" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Minimum="0" Maximum="100" Value="{Binding Progress, Mode=OneWay}" />
                                         <!--Background="{Binding Status, Converter={StaticResource ProgressBarBackgroundConverter}}"
                                                      Foreground="{Binding Status, Converter={StaticResource ProgressBarForegroundConverter}}"
                                                      Visibility="{Binding Status, Converter={StaticResource ProgressBarVisibilityConverter}}"-->
-                                        <TextBlock
-                                                Text="{Binding Value, ElementName=pbProgress, StringFormat=\{0:0\}%}"
-                                                HorizontalAlignment="Center"
-                                                VerticalAlignment="Center"
-                                                Foreground="{StaticResource ProgressBarValueColor}">
+                                        <TextBlock Text="{Binding Value, ElementName=pbProgress, StringFormat=\{0:0\}%}" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource ProgressBarValueColor}">
                                             <TextBlock.Effect>
-                                                <DropShadowEffect
-                                                        Color="{StaticResource MahApps.Colors.Accent}"
-                                                        ShadowDepth="1"
-                                                        BlurRadius="2" />
+                                                <DropShadowEffect ShadowDepth="1" BlurRadius="2" />
                                             </TextBlock.Effect>
                                         </TextBlock>
                                         <!--Foreground="{Binding Status, Converter={StaticResource ProgressBarValueColorConverter}}"-->
@@ -1101,69 +591,39 @@
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn
-                                HeaderTemplate="{StaticResource HeaderTemplate}"
-                                HeaderContainerStyle="{StaticResource RightAligned}"
-                                Header="Downloaded"
-                                Width="120">
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource RightAligned}" Header="Downloaded" Width="120">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <TextBlock
-                                                TextTrimming="CharacterEllipsis"
-                                                Text="{Binding TotalBytesCompleted, Converter={StaticResource DownloaderSizeConverter}}"
-                                                HorizontalAlignment="Right" />
+                                        <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding TotalBytesCompleted, Converter={StaticResource DownloaderSizeConverter}}" HorizontalAlignment="Right" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn
-                                HeaderTemplate="{StaticResource HeaderTemplate}"
-                                HeaderContainerStyle="{StaticResource LeftAligned}"
-                                Header="Size"
-                                Width="75">
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="Size" Width="75">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock
-                                            TextTrimming="CharacterEllipsis"
-                                            Text="{Binding TotalBytesToDownload, Converter={StaticResource DownloaderSizeConverter}}" />
+                                    <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding TotalBytesToDownload, Converter={StaticResource DownloaderSizeConverter}}" />
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn
-                                HeaderTemplate="{StaticResource HeaderTemplate}"
-                                HeaderContainerStyle="{StaticResource RightAligned}"
-                                Header="Speed"
-                                Width="75">
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource RightAligned}" Header="Speed" Width="75">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <TextBlock
-                                                TextTrimming="CharacterEllipsis"
-                                                Text="{Binding Speed, Converter={StaticResource DownloaderSpeedConverter}}"
-                                                HorizontalAlignment="Right" />
+                                        <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding Speed, Converter={StaticResource DownloaderSpeedConverter}}" HorizontalAlignment="Right" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn
-                                HeaderTemplate="{StaticResource HeaderTemplate}"
-                                HeaderContainerStyle="{StaticResource LeftAligned}"
-                                Header="ETA"
-                                Width="80">
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="ETA" Width="80">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock
-                                            TextTrimming="CharacterEllipsis"
-                                            Text="{Binding TimeRemaining, Converter={StaticResource DownloaderEtaConverter}}" />
+                                    <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding TimeRemaining, Converter={StaticResource DownloaderEtaConverter}}" />
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn
-                                HeaderTemplate="{StaticResource HeaderTemplate}"
-                                HeaderContainerStyle="{StaticResource LeftAligned}"
-                                Header="Location"
-                                Width="250">
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="Location" Width="250">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
@@ -1172,66 +632,33 @@
                                             <ColumnDefinition Width="auto" />
                                             <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
-                                        <Image
-                                                Source="{Binding Destination, Converter={StaticResource DownloaderFolderIconConverter}}"
-                                                Width="18"
-                                                Height="18"
-                                                Margin="0 0 2 0"
-                                                VerticalAlignment="Center" />
-                                        <TextBlock
-                                                Margin="0 0 5 0"
-                                                Grid.Column="1"
-                                                TextTrimming="CharacterEllipsis"
-                                                Text="{Binding Destination, Converter={StaticResource DownloaderDestinationConverter}}" />
-                                        <TextBlock
-                                                Grid.Column="2"
-                                                TextTrimming="CharacterEllipsis"
-                                                Text="{Binding Destination, Converter={StaticResource DownloaderDestinationPathConverter}}"
-                                                Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
+                                        <Image Source="{Binding Destination, Converter={StaticResource DownloaderFolderIconConverter}}" Width="18" Height="18" Margin="0 0 2 0" VerticalAlignment="Center" />
+                                        <TextBlock Margin="0 0 5 0" Grid.Column="1" TextTrimming="CharacterEllipsis" Text="{Binding Destination, Converter={StaticResource DownloaderDestinationConverter}}" />
+                                        <TextBlock Grid.Column="2" TextTrimming="CharacterEllipsis" Text="{Binding Destination, Converter={StaticResource DownloaderDestinationPathConverter}}" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn
-                                HeaderTemplate="{StaticResource HeaderTemplate}"
-                                HeaderContainerStyle="{StaticResource LeftAligned}"
-                                Header="URL"
-                                Width="400">
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="URL" Width="400">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock
-                                            TextTrimming="CharacterEllipsis"
-                                            Text="{Binding Url}" />
+                                    <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding Url}" />
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn
-                                HeaderTemplate="{StaticResource HeaderTemplate}"
-                                HeaderContainerStyle="{StaticResource RightAligned}"
-                                Header="Created"
-                                Width="150">
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource RightAligned}" Header="Created" Width="150">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <TextBlock
-                                                TextTrimming="CharacterEllipsis"
-                                                Text="{Binding DateCreated, Converter={StaticResource DownloaderDateConverter}}"
-                                                TextAlignment="Right" />
+                                        <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding DateCreated, Converter={StaticResource DownloaderDateConverter}}" TextAlignment="Right" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn
-                                HeaderTemplate="{StaticResource HeaderTemplate}"
-                                HeaderContainerStyle="{StaticResource LeftAligned}"
-                                Header="HTTP Status"
-                                Width="120">
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="HTTP Status" Width="120">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock
-                                            Grid.Column="1"
-                                            TextTrimming="CharacterEllipsis"
-                                            Text="{Binding StatusCode}" />
+                                    <TextBlock Grid.Column="1" TextTrimming="CharacterEllipsis" Text="{Binding StatusCode}" />
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
@@ -1240,4 +667,4 @@
             </ListView>
         </Grid>
     </DockPanel>
-</mah:MetroWindow>    
+</Window>    

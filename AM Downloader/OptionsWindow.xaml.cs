@@ -1,12 +1,11 @@
-﻿using MahApps.Metro.Controls;
-using System.Windows;
+﻿using System.Windows;
 
 namespace AMDownloader
 {
     /// <summary>
     /// Interaction logic for OptionsWindow.xaml
     /// </summary>
-    public partial class OptionsWindow : MetroWindow
+    public partial class OptionsWindow : Window
     {
         private OptionsViewModel optionsViewModel = new OptionsViewModel();
 

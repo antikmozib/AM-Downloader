@@ -28,4 +28,7 @@
     <SolidColorBrush x:Key="ProgressBarForeground" Color="#00b300" />
     <SolidColorBrush x:Key="ProgressBarValueLightColor" Color="#ffffff" />
     <SolidColorBrush x:Key="ProgressBarValueDarkColor" Color="#000000" />
+
+    <SolidColorBrush x:Key="StausBarEllipseReadyColor" Color="MediumSeaGreen"/>
+    <SolidColorBrush x:Key="StausBarEllipseBusyColor" Color="DarkOrange"/>
 </ResourceDictionary>

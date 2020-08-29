@@ -5,8 +5,6 @@ using System.Xml.Serialization;
 using AMDownloader.Properties;
 using AMDownloader.Common;
 using AMDownloader.ObjectModel.Serializable;
-using MahApps.Metro.Controls;
-using MahApps.Metro.Controls.Dialogs;
 
 namespace AMDownloader
 {
@@ -14,7 +12,7 @@ namespace AMDownloader
     /// Interaction logic for AddDownloadWindow.xaml
     /// </summary>
     /// 
-    public partial class AddDownloadWindow : MetroWindow
+    public partial class AddDownloadWindow : Window
     {
         public AddDownloadWindow()
         {
@@ -150,9 +148,9 @@ namespace AMDownloader
             txtUrl.FontSize = fontSize;
         }
 
-        internal async void Preview(string preview)
+        internal void Preview(string preview)
         {
-            await this.ShowMessageAsync("Preview", preview,MessageDialogStyle.Affirmative,null);
+            MessageBox.Show(preview);
         }
     }
 }

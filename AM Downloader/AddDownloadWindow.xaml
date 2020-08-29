@@ -1,4 +1,4 @@
-﻿<mah:MetroWindow
+﻿<Window
                 x:Class="AMDownloader.AddDownloadWindow"
                 xmlns:local="clr-namespace:AMDownloader"
                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -6,7 +6,6 @@
                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                 xmlns:properties="clr-namespace:AMDownloader.Properties"
-                xmlns:mah="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
                 mc:Ignorable="d"
                 Title="Add"
                 WindowStartupLocation="CenterOwner"
@@ -17,10 +16,7 @@
                 MinWidth="650"
                 MinHeight="250"
                 WindowStyle="ToolWindow"
-                Closing="Window_Closing"
-                ShowMaxRestoreButton="false"
-                ShowMinButton="false"
-                Style="{StaticResource WindowStyle}">
+                Closing="Window_Closing">
         <Window.Resources>
                 <local:DownloaderDestinationFolderNameConverter x:Key="DownloaderDestinationConverter" />
                 <Style TargetType="MenuItem">
@@ -125,4 +121,4 @@
                                         TabIndex="3" />
                 </StackPanel>
         </Grid>
-</mah:MetroWindow>
+</Window>

@@ -1,4 +1,4 @@
-﻿<mah:MetroWindow
+﻿<Window
                 x:Class="AMDownloader.OptionsWindow"
                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -7,7 +7,6 @@
                 xmlns:local="clr-namespace:AMDownloader"
                 xmlns:properties="clr-namespace:AMDownloader.Properties"
                 xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
-                xmlns:mah="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
                 mc:Ignorable="d"
                 Title="Options"
                 WindowStartupLocation="CenterOwner"
@@ -15,8 +14,7 @@
                 ShowInTaskbar="False"
                 Width="400"
                 SizeToContent="Height"
-                ResizeMode="NoResize"
-                Style="{StaticResource WindowStyle}">
+                ResizeMode="NoResize">
         <Grid Margin="10">
                 <Grid.RowDefinitions>
                         <RowDefinition Height="auto" />
@@ -102,4 +100,4 @@
                                         Click="btnReset_Click" />
                 </StackPanel>
         </Grid>
-</mah:MetroWindow>
+</Window>
