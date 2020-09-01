@@ -32,8 +32,9 @@ namespace AMDownloader
     class DownloaderViewModel : INotifyPropertyChanged
     {
         #region Fields
+        private readonly DisplayMessageDelegate _displayMessageDel;
         private readonly ClipboardObserver _clipboardService;
-        private readonly object _lock_downloadItemsList;
+        private readonly object _lockDownloadItemsList;
         private readonly object _lockBytesDownloaded;
         private readonly object _lockBytesTransferredOverLifetime;
         private readonly SemaphoreSlim _semaphoreMeasuringSpeed;
@@ -43,7 +44,6 @@ namespace AMDownloader
         private CancellationTokenSource _ctsRefreshView;
         private RequestThrottler _requestThrottler;
         private HttpClient _client;
-        private readonly DisplayMessageDelegate _displayMessageDel;
         #endregion // Fields
 
         #region Properties
@@ -98,7 +98,7 @@ namespace AMDownloader
             _client = new HttpClient();
             DownloadItemsList = new ObservableCollection<DownloaderObjectModel>();
             CategoriesList = new ObservableCollection<Categories>();
-            QueueProcessor = new QueueProcessor(Settings.Default.MaxParallelDownloads,QueueProcessor_PropertyChanged);
+            QueueProcessor = new QueueProcessor(Settings.Default.MaxParallelDownloads, QueueProcessor_PropertyChanged);
             _requestThrottler = new RequestThrottler(AppConstants.RequestThrottlerInterval);
             CollectionView = CollectionViewSource.GetDefaultView(DownloadItemsList);
             CollectionView.CurrentChanged += CollectionView_CurrentChanged;
@@ -109,7 +109,7 @@ namespace AMDownloader
             _ctsUpdatingList = null;
             _ctsRefreshView = null;
             _displayMessageDel = displayMessageDelegate;
-            _lock_downloadItemsList = DownloadItemsList;
+            _lockDownloadItemsList = DownloadItemsList;
             _lockBytesDownloaded = this.BytesDownloaded;
             _lockBytesTransferredOverLifetime = Settings.Default.BytesTransferredOverLifetime;
             this.Count = 0;
@@ -126,16 +126,13 @@ namespace AMDownloader
             this.ProgressReporter = new Progress<long>(value =>
             {
                 Monitor.Enter(_lockBytesDownloaded);
-                Monitor.Enter(_lockBytesTransferredOverLifetime);
                 try
                 {
                     this.BytesDownloaded += value;
-                    Settings.Default.BytesTransferredOverLifetime += (ulong)value;
                 }
                 finally
                 {
                     Monitor.Exit(_lockBytesDownloaded);
-                    Monitor.Exit(_lockBytesTransferredOverLifetime);
                 }
             });
 
@@ -416,7 +413,7 @@ namespace AMDownloader
             }
 
             CancellationToken ct;
-            Monitor.Enter(_lock_downloadItemsList);
+            Monitor.Enter(_lockDownloadItemsList);
             try
             {
                 Task.Run(async () =>
@@ -493,7 +490,7 @@ namespace AMDownloader
             }
             finally
             {
-                Monitor.Exit(_lock_downloadItemsList);
+                Monitor.Exit(_lockDownloadItemsList);
             }
         }
 
@@ -513,7 +510,7 @@ namespace AMDownloader
                 ShowBusyMessage();
                 return;
             }
-            Monitor.Enter(_lock_downloadItemsList);
+            Monitor.Enter(_lockDownloadItemsList);
             try
             {
                 var win = new AddDownloadWindow();
@@ -524,7 +521,7 @@ namespace AMDownloader
             }
             finally
             {
-                Monitor.Exit(_lock_downloadItemsList);
+                Monitor.Exit(_lockDownloadItemsList);
             }
         }
 
@@ -797,11 +794,12 @@ namespace AMDownloader
                 {
                     this.Status = "Refreshing list...";
                 }
+                else
                 {
                     this.Status = "Cancelling...";
                 }
                 RaisePropertyChanged(nameof(this.Status));
-                Monitor.Enter(_lock_downloadItemsList);
+                Monitor.Enter(_lockDownloadItemsList);
                 try
                 {
                     foreach (var item in itemsDeleted)
@@ -811,7 +809,7 @@ namespace AMDownloader
                 }
                 finally
                 {
-                    Monitor.Exit(_lock_downloadItemsList);
+                    Monitor.Exit(_lockDownloadItemsList);
                     _semaphoreUpdatingList.Release();
                     _ctsUpdatingList = null;
                     this.Status = "Ready";
@@ -886,7 +884,7 @@ namespace AMDownloader
                 return;
             }
             _semaphoreUpdatingList.Wait();
-            Monitor.Enter(_lock_downloadItemsList);
+            Monitor.Enter(_lockDownloadItemsList);
             try
             {
                 var itemsFinished = (from item in DownloadItemsList where item.Status == DownloadStatus.Finished select item).ToArray<DownloaderObjectModel>();
@@ -897,7 +895,7 @@ namespace AMDownloader
             }
             finally
             {
-                Monitor.Exit(_lock_downloadItemsList);
+                Monitor.Exit(_lockDownloadItemsList);
                 _semaphoreUpdatingList.Release();
                 Task.Run(() => RefreshCollection());
                 RaisePropertyChanged(nameof(this.FinishedCount));
@@ -940,7 +938,18 @@ namespace AMDownloader
                 this.Status = "Ready";
                 RaisePropertyChanged(nameof(this.Status));
             }
+
             RefreshCollection();
+
+            Monitor.Enter(_lockBytesTransferredOverLifetime);
+            try
+            {
+                Settings.Default.BytesTransferredOverLifetime += (ulong)(sender as DownloaderObjectModel).BytesDownloadedThisSession;
+            }
+            finally
+            {
+                Monitor.Exit(_lockBytesTransferredOverLifetime);
+            }
         }
 
         internal void Download_Enqueued(object sender, EventArgs e)
@@ -1203,7 +1212,7 @@ namespace AMDownloader
             _ctsUpdatingList = new CancellationTokenSource();
             var ct = _ctsUpdatingList.Token;
             RaisePropertyChanged(nameof(this.IsBackgroundWorking));
-            Monitor.Enter(_lock_downloadItemsList);
+            Monitor.Enter(_lockDownloadItemsList);
             int total = objects.Count();
             try
             {
@@ -1232,7 +1241,7 @@ namespace AMDownloader
             catch (OperationCanceledException) { }
             finally
             {
-                Monitor.Exit(_lock_downloadItemsList);
+                Monitor.Exit(_lockDownloadItemsList);
                 _semaphoreUpdatingList.Release();
                 _ctsUpdatingList = null;
                 this.Progress = 0;

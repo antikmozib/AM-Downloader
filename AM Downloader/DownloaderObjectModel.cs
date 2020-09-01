@@ -818,9 +818,9 @@ namespace AMDownloader.ObjectModel
                 RaisePropertyChanged(nameof(this.IsBeingDownloaded));
 
                 RaiseEvent(DownloadStarted);
-                await _taskCompletion.Task;
+                var result = await _taskCompletion.Task;
 
-                switch (_taskCompletion.Task.Result)
+                switch (result)
                 {
                     case DownloadStatus.Error:
                         this.Cancel();
@@ -840,8 +840,15 @@ namespace AMDownloader.ObjectModel
                     case DownloadStatus.Finished:
                         this.Status = DownloadStatus.Finishing;
                         RaisePropertyChanged(nameof(this.Status));
-                        await RemoveIdentifyingBytesFromFile(this.Destination, _pausedIdentifierBytes);
-                        SetFinished();
+                        if (await RemoveIdentifyingBytesFromFile(this.Destination, _pausedIdentifierBytes))
+                        {
+                            SetFinished();
+                        }
+                        else
+                        {
+                            this.Cancel();
+                            SetErrored();
+                        }
                         break;
 
                     default:
@@ -852,7 +859,7 @@ namespace AMDownloader.ObjectModel
 
                 RaisePropertyChanged(nameof(this.IsBeingDownloaded));
                 RaiseEvent(DownloadStopped);
-                if (_taskCompletion.Task.Result == DownloadStatus.Finished) RaiseEvent(DownloadFinished);
+                if (result == DownloadStatus.Finished) RaiseEvent(DownloadFinished);
             }
             finally
             {

@@ -26,7 +26,7 @@ namespace AMDownloader
 
         public MainWindow()
         {
-            _primaryViewModel = new DownloaderViewModel( new DisplayMessageDelegate(DisplayMessage));
+            _primaryViewModel = new DownloaderViewModel(new DisplayMessageDelegate(DisplayMessage));
 
             InitializeComponent();
             if (!_mutex.WaitOne(0, false))
@@ -51,7 +51,7 @@ namespace AMDownloader
             var description = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyDescriptionAttribute), false).OfType<AssemblyDescriptionAttribute>().FirstOrDefault()?.Description;
             var copyright = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyCopyrightAttribute), true).OfType<AssemblyCopyrightAttribute>().FirstOrDefault()?.Copyright;
             var funFact = "Total data transferred over lifetime: " + Math.Round((double)Settings.Default.BytesTransferredOverLifetime / (1024 * 1024 * 1024), 2) + " GB";
-            MessageBox.Show("About", name + "\nVersion " + version + "\n\n" + description + "\n\n" + copyright + "\n\n" + funFact);
+            MessageBox.Show(name + "\nVersion " + version + "\n\n" + description + "\n\n" + copyright + "\n\n" + funFact, "About");
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -89,6 +89,7 @@ namespace AMDownloader
                     {
                         _lastHeaderClicked.Column.HeaderTemplate = Resources["HeaderTemplate"] as DataTemplate;
                     }
+
                     if (direction == ListSortDirection.Ascending)
                     {
                         headerClicked.Column.HeaderTemplate =
@@ -104,6 +105,7 @@ namespace AMDownloader
                         headerClicked.Column.HeaderTemplate =
                           Resources["HeaderTemplate"] as DataTemplate;
                     }
+
                     _dataView.Refresh();
                     _lastHeaderClicked = headerClicked;
                     _lastDirection = direction;
@@ -165,7 +167,7 @@ namespace AMDownloader
         internal void DisplayMessage(string message, string title = "")
         {
             if (title == "") title = Assembly.GetExecutingAssembly().GetName().Name;
-            Application.Current?.Dispatcher?.Invoke(() => MessageBox.Show(title, message));
+            Application.Current?.Dispatcher?.Invoke(() => MessageBox.Show(message, title));
         }
     }
 }

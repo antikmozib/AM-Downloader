@@ -124,10 +124,7 @@ namespace AMDownloader.QueueProcessing
         public void Stop()
         {
             _ctsCancel?.Cancel();
-            foreach (var item in _itemsProcessing)
-            {
-                item.Pause();
-            }
+            Parallel.ForEach(_itemsProcessing, (item) => item.Pause());
         }
         #endregion // Public methods
 

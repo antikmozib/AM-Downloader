@@ -1,5 +1,4 @@
-﻿using AMDownloader.ObjectModel;
-using AMDownloader.RequestThrottling.Model;
+﻿using AMDownloader.RequestThrottling.Model;
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
@@ -11,10 +10,10 @@ namespace AMDownloader.RequestThrottling
 {
     class RequestThrottler
     {
-        ConcurrentQueue<RequestModel> _requestList;
-        CancellationTokenSource _cts;
-        CancellationToken _ct;
-        int _interval;
+        private readonly int _interval;
+        private readonly ConcurrentQueue<RequestModel> _requestList;
+        private CancellationTokenSource _cts;
+        private CancellationToken _ct;
 
         public RequestThrottler(int interval)
         {

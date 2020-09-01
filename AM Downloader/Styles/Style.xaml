@@ -15,10 +15,10 @@
     <SolidColorBrush x:Key="CategoryErroredColor" Color="Red" />
     <SolidColorBrush x:Key="CategoryDownloadingColor" Color="LimeGreen" />
     <SolidColorBrush x:Key="CategoryVerifyingColor" Color="Yellow" />
-    <SolidColorBrush x:Key="CategorySelectedBackground" Color="{DynamicResource MahApps.Colors.Accent3}" />
-    <SolidColorBrush x:Key="CategorySelectedForeground" Color="{DynamicResource MahApps.Colors.ThemeForeground}" />
+    <!--<SolidColorBrush x:Key="CategorySelectedBackground" Color="{DynamicResource MahApps.Colors.Accent3}" />
+    <SolidColorBrush x:Key="CategorySelectedForeground" Color="{DynamicResource MahApps.Colors.ThemeForeground}" />-->
 
-    <SolidColorBrush x:Key="ColumnHeaderSortDirectionColor" Color="{DynamicResource MahApps.Colors.AccentBase}" />
+    <SolidColorBrush x:Key="ColumnHeaderSortDirectionColor" Color="DarkGreen" />
     <SolidColorBrush x:Key="GridViewSelectedItemBackground" Color="PowderBlue" />
     
     <SolidColorBrush x:Key="ProgressBarValueColor" Color="#f2f2f2" />
