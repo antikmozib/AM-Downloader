@@ -4,7 +4,6 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
-using AMDownloader.ObjectModel;
 using System.ComponentModel;
 
 namespace AMDownloader.QueueProcessing
@@ -17,11 +16,13 @@ namespace AMDownloader.QueueProcessing
         private BlockingCollection<IQueueable> _queueList;
         private CancellationTokenSource _ctsCancel;
         private CancellationToken _ctCancel;
+        private bool _hasItems;
         #endregion // Fields
 
         #region Properties
         public event PropertyChangedEventHandler PropertyChanged;
         public bool IsBusy => _ctsCancel != null;
+        public bool HasItems => _hasItems;
         #endregion // Properties
 
         #region Constructors
@@ -30,6 +31,7 @@ namespace AMDownloader.QueueProcessing
             _queueList = new BlockingCollection<IQueueable>();
             _semaphore = new SemaphoreSlim(maxParallelDownloads);
             _itemsProcessing = new List<IQueueable>();
+            _hasItems = false;
             this.PropertyChanged += propertyChangedEventHandler;
         }
         #endregion // Constructors
@@ -95,7 +97,16 @@ namespace AMDownloader.QueueProcessing
         public bool Add(IQueueable item)
         {
             if (item.IsCompleted || _queueList.Contains(item)) return true;
-            return _queueList.TryAdd(item);
+            if ( _queueList.TryAdd(item))
+            {
+                if (!_hasItems)
+                {
+                    _hasItems = true;
+                    RaisePropertyChanged(nameof(this.HasItems));
+                }
+                return true;
+            }
+            return false;
         }
 
         public void Remove(params IQueueable[] items)
@@ -119,6 +130,11 @@ namespace AMDownloader.QueueProcessing
         {
             if (_ctsCancel != null) return;
             await ProcessQueueAsync();
+            if (_queueList.Count == 0)
+            {
+                _hasItems = false;
+                RaisePropertyChanged(nameof(this.HasItems));
+            }
         }
 
         public void Stop()
@@ -133,10 +149,7 @@ namespace AMDownloader.QueueProcessing
         {
             return _queueList.Contains(value);
         }
-        public int Count()
-        {
-            return _queueList.Count + _itemsProcessing.Count;
-        }
+
         #endregion // Public functions
     }
 }

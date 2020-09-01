@@ -413,10 +413,9 @@ namespace AMDownloader
             }
 
             CancellationToken ct;
-            Monitor.Enter(_lockDownloadItemsList);
-            try
+            Task.Run(async () =>
             {
-                Task.Run(async () =>
+                try
                 {
                     var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
                     await _semaphoreUpdatingList.WaitAsync();
@@ -426,34 +425,31 @@ namespace AMDownloader
                     try
                     {
                         int total = items.Count();
-                        if (total == DownloadItemsList.Count())
+                        for (int i = 0; i < total; i++)
                         {
-                            Application.Current.Dispatcher.Invoke(() => DownloadItemsList.Clear());
-                        }
-                        else
-                        {
-                            for (int i = 0; i < total; i++)
+                            if ((total > 100 && total <= 1000 && (i + 1) % 100 == 0) ||
+                                (total > 1000 && (i + 1) % 500 == 0) ||
+                                i + 1 == total ||
+                                i + 1 == 1 ||
+                                total <= 100)
                             {
-                                if ((total > 100 && total <= 1000 && (i + 1) % 100 == 0) ||
-                                    (total > 1000 && (i + 1) % 500 == 0) ||
-                                    i + 1 == total ||
-                                    i + 1 == 1 ||
-                                    total <= 100)
-                                {
-                                    int progress = (int)((double)(i + 1) / total * 100);
-                                    this.Progress = progress;
-                                    this.Status = "Removing " + (i + 1) + " of " + total + ": " + items[i].Name;
-                                    RaisePropertyChanged(nameof(this.Status));
-                                    RaisePropertyChanged(nameof(this.Progress));
-                                    await Task.Delay(100);
-                                }
-                                Application.Current.Dispatcher.Invoke(() => DownloadItemsList.Remove(items[i]));
-                                if (items[i].IsBeingDownloaded) items[i].Cancel();
-                                if (items[i].IsQueued) items[i].Dequeue();
-                                if (ct.IsCancellationRequested)
-                                {
-                                    ct.ThrowIfCancellationRequested();
-                                }
+                                int progress = (int)((double)(i + 1) / total * 100);
+                                this.Progress = progress;
+                                this.Status = "Removing " + (i + 1) + " of " + total + ": " + items[i].Name;
+                                RaisePropertyChanged(nameof(this.Status));
+                                RaisePropertyChanged(nameof(this.Progress));
+                                await Task.Delay(100);
+                            }
+
+                            Monitor.Enter(_lockDownloadItemsList);
+                            Application.Current.Dispatcher.Invoke(() => DownloadItemsList.Remove(items[i]));
+                            Monitor.Exit(_lockDownloadItemsList);
+
+                            if (items[i].IsBeingDownloaded) items[i].Pause();
+                            if (items[i].IsQueued) items[i].Dequeue();
+                            if (ct.IsCancellationRequested)
+                            {
+                                ct.ThrowIfCancellationRequested();
                             }
                         }
                     }
@@ -482,16 +478,13 @@ namespace AMDownloader
                         this.Status = "Ready";
                         RaisePropertyChanged(nameof(this.Status));
                     }
-                });
-            }
-            catch
-            {
 
-            }
-            finally
-            {
-                Monitor.Exit(_lockDownloadItemsList);
-            }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                }
+            });
         }
 
         internal bool RemoveFromList_CanExecute(object obj)
@@ -614,7 +607,7 @@ namespace AMDownloader
 
         internal bool StartQueue_CanExecute(object obj)
         {
-            return !QueueProcessor.IsBusy && QueueProcessor.Count() > 0;
+            return !QueueProcessor.IsBusy && QueueProcessor.HasItems && this.QueuedCount>0 && _ctsUpdatingList == null;
         }
 
         internal void StopQueue(object obj)
@@ -922,11 +915,13 @@ namespace AMDownloader
 
         internal void Download_Verified(object sender, EventArgs e)
         {
+            Debug.WriteLine("Verified: " + (sender as DownloaderObjectModel).Name);
             RefreshCollection();
         }
 
         internal void Download_Started(object sender, EventArgs e)
         {
+            Debug.WriteLine("Starting: " + (sender as DownloaderObjectModel).Name);
             RefreshCollection();
             StartReportingSpeed();
         }
@@ -937,6 +932,11 @@ namespace AMDownloader
             {
                 this.Status = "Ready";
                 RaisePropertyChanged(nameof(this.Status));
+
+                if (this.QueuedCount == 0)
+                {
+                    this.QueueProcessor.Stop();
+                }
             }
 
             RefreshCollection();
@@ -1184,25 +1184,28 @@ namespace AMDownloader
             if (!wasCanceled) AddObjects(items);
             RefreshCollection();
 
-            if (skipping.Count > 0 && !wasCanceled)
+            if (!wasCanceled)
             {
-                if (skipping.Count < 100)
+                if (skipping.Count > 0)
                 {
-                    _displayMessageDel("The following URLs were skipped because they are already in the list:\n\n" + string.Join('\n', skipping), "Duplicate URLs");
+                    if (skipping.Count < 100)
+                    {
+                        _displayMessageDel("The following URLs were skipped because they are already in the list:\n\n" + string.Join('\n', skipping), "Duplicate URLs");
+                    }
+                    else
+                    {
+                        _displayMessageDel(skipping.Count + " URLs were skipped because they are already in the list.", "Duplicate URLs");
+                    }
+                }
+
+                if ((enqueue && start) || forceEnqueue)
+                {
+                    await QueueProcessor.StartAsync();
                 }
                 else
                 {
-                    _displayMessageDel(skipping.Count + " URLs were skipped because they are already in the list.", "Duplicate URLs");
+                    await Task.WhenAll(tasks);
                 }
-            }
-
-            if (((enqueue && start) || forceEnqueue) && !wasCanceled)
-            {
-                await QueueProcessor.StartAsync();
-            }
-            else
-            {
-                await Task.WhenAll(tasks);
             }
         }
 

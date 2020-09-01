@@ -40,7 +40,7 @@ namespace AMDownloader.Common
             string result = dirName + Path.DirectorySeparatorChar + fileName;
             int i = 0;
 
-            while (File.Exists(result))
+            while (File.Exists(result) || File.Exists(result + AppConstants.DownloaderSplitedPartExtension))
             {
                 result = dirName + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(fileName) + " (" + ++i + ")" + Path.GetExtension(fileName);
             };

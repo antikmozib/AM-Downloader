@@ -31,7 +31,7 @@ namespace AMDownloader.ObjectModel
         private readonly SemaphoreSlim _semaphoreDownloading;
         private IProgress<long> _reportBytesProgress;
         private RequestThrottler _requestThrottler;
-        private readonly byte[] _pausedIdentifierBytes;
+        private readonly string _tempPath;
         #endregion // Fields
 
         #region Events
@@ -51,17 +51,18 @@ namespace AMDownloader.ObjectModel
         #endregion // Events
 
         #region Properties
+        public string TempDestination => _tempPath;
         public long? TotalBytesToDownload { get; private set; } // nullable
         public long? Speed { get; private set; } // nullable
         public int? NumberOfActiveStreams { get; private set; } // nullable    
         public HttpStatusCode? StatusCode { get; private set; } // nullable
         public double? TimeRemaining { get; private set; }// nullable
         public bool IsBeingDownloaded => _ctsPaused != null;
-        public bool IsCompleted => File.Exists(this.Destination) && !IsFilePaused(this.Destination, _pausedIdentifierBytes);
-        public bool IsPaused => File.Exists(this.Destination) && IsFilePaused(this.Destination, _pausedIdentifierBytes) && !IsBeingDownloaded;
+        public bool IsCompleted => File.Exists(this.Destination) && !File.Exists(_tempPath);
+        public bool IsPaused => File.Exists(_tempPath) && !File.Exists(this.Destination);
         public bool IsQueued { get; private set; }
         public string Name { get; private set; }
-        public string Extension => GetExtension();
+        public string Extension => Path.GetExtension(this.Destination);
         public string Url { get; private set; }
         public string Destination { get; private set; }
         public DownloadStatus Status { get; private set; }
@@ -129,7 +130,7 @@ namespace AMDownloader.ObjectModel
             _semaphoreDownloading = new SemaphoreSlim(1);
             _reportBytesProgress = bytesReporter;
             _requestThrottler = requestThrottler;
-            _pausedIdentifierBytes = GetEncodedBytes(AppConstants.DownloaderFileMagicString);
+            _tempPath = destination + AppConstants.DownloaderSplitedPartExtension;
 
             PropertyChanged += propertyChangedEventHandler;
             DownloadCreated += downloadCreatedEventHandler;
@@ -169,12 +170,11 @@ namespace AMDownloader.ObjectModel
             }
             else
             {
+                _semaphoreDownloading.Wait();
                 Task.Run(async () =>
                 {
-                    await _semaphoreDownloading.WaitAsync(); 
-                    await VerifyDownloadAsync(url); 
-                    _semaphoreDownloading.Release();
-                });
+                    await VerifyDownloadAsync(url);
+                }).ContinueWith(t => _semaphoreDownloading.Release());
             }
 
             RaiseEvent(DownloadCreated);
@@ -305,9 +305,9 @@ namespace AMDownloader.ObjectModel
                 else
                 {
                     // valid url
-                    if (File.Exists(this.Destination))
+                    if (File.Exists(_tempPath))
                     {
-                        this.TotalBytesCompleted = GetCorrectFileLength(this.Destination, _pausedIdentifierBytes) ?? 0;
+                        this.TotalBytesCompleted = new FileInfo(_tempPath).Length;
                     }
                     else
                     {
@@ -364,24 +364,7 @@ namespace AMDownloader.ObjectModel
             return downloadVerificationModel;
         }
 
-        private long? GetCorrectFileLength(string filename, byte[] identifyingBytes)
-        {
-            if (File.Exists(filename))
-            {
-                long length = new FileInfo(filename).Length;
-                if (IsFilePaused(filename, identifyingBytes))
-                {
-                    return length - identifyingBytes.Length;
-                }
-                else
-                {
-                    return length;
-                }
-            }
-            return null;
-        }
-
-        private bool CreateEmptyDownload(string filename, byte[] identiferBytes)
+        private bool CreateEmptyDownload(string filename)
         {
             try
             {
@@ -389,21 +372,23 @@ namespace AMDownloader.ObjectModel
                 {
                     Directory.CreateDirectory(Path.GetDirectoryName(filename));
                 }
+
+                var tempFile = filename + AppConstants.DownloaderSplitedPartExtension;
+
+                if (File.Exists(tempFile))
+                {
+                    File.Delete(tempFile);
+                }
+
                 if (File.Exists(filename))
                 {
                     File.Delete(filename);
                 }
-                using (var fs = File.Create(filename))
-                {
-                    using (var binaryWriter = new BinaryWriter(fs))
-                    {
-                        binaryWriter.Write(identiferBytes, 0, identiferBytes.Length);
-                    }
-                }
+                
+                File.Create(tempFile).Close();
+
                 // ensure this is an empty download by checking length
-                if (File.Exists(filename)
-                    && IsFilePaused(filename, identiferBytes)
-                    && new FileInfo(filename).Length <= identiferBytes.Length)
+                if (File.Exists(tempFile) && new FileInfo(tempFile).Length == 0 && !File.Exists(filename))
                 {
                     return true;
                 }
@@ -416,59 +401,6 @@ namespace AMDownloader.ObjectModel
             {
                 throw new AMDownloaderException("Failed to create new download: " + filename, ex);
             }
-        }
-
-        private byte[] GetEncodedBytes(string text)
-        {
-            return Encoding.ASCII.GetBytes(text);
-        }
-
-        private bool IsFilePaused(string filename, byte[] identifyingBytes)
-        {
-            if (!File.Exists(filename))
-            {
-                throw new AMDownloaderException("File not found", new IOException());
-            }
-            try
-            {
-                using (FileStream fs = new FileStream(filename, FileMode.Open, FileAccess.Read))
-                using (BinaryReader reader = new BinaryReader(fs))
-                {
-                    var buffer = new byte[identifyingBytes.Length];
-                    var read = reader.Read(buffer, 0, identifyingBytes.Length);
-                    if (read > 0)
-                    {
-                        byte[] output = new byte[read];
-                        buffer.ToList().CopyTo(0, output, 0, read);
-                        return identifyingBytes.SequenceEqual(output);
-                    }
-                }
-            }
-            catch (IOException)
-            {
-                return true;
-            }
-            catch (Exception ex)
-            {
-                throw new AMDownloaderException(ex.Message, ex);
-            }
-
-            return true;
-        }
-
-        private async Task<bool> RemoveIdentifyingBytesFromFile(string filename, byte[] remove, int bufferLength = AppConstants.RemovingFileBytesBufferLength)
-        {
-            if (!File.Exists(filename)) return false;
-            var tempFilePath = filename + ".tmp";
-            using (var tempFile = File.Create(tempFilePath))
-            using (var originalFile = new FileStream(filename, FileMode.Open, FileAccess.Read))
-            {
-                originalFile.Seek(remove.Length, SeekOrigin.Begin);
-                await originalFile.CopyToAsync(tempFile, bufferLength);
-            }
-            File.Delete(filename);
-            File.Move(tempFilePath, filename);
-            return true;
         }
 
         private async Task<DownloadStatus> ProcessStreamsAsync(long bytesDownloadedPreviously)
@@ -561,12 +493,12 @@ namespace AMDownloader.ObjectModel
                     {
                         throw new AMDownloaderException("Destination directory does not exist.");
                     }
-                    if (!File.Exists(this.Destination))
+                    if (!File.Exists(_tempPath) && File.Exists(this.Destination))
                     {
                         throw new AMDownloaderException("A new download has not been created.");
                     }
 
-                    using (var destinationStream = new FileStream(this.Destination, FileMode.Append, FileAccess.Write))
+                    using (var destinationStream = new FileStream(_tempPath, FileMode.Append, FileAccess.Write))
                     using (var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
                     using (var sourceStream = await response.Content.ReadAsStreamAsync())
                     using (var binaryWriter = new BinaryWriter(destinationStream))
@@ -734,15 +666,6 @@ namespace AMDownloader.ObjectModel
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
         }
-
-        private string GetExtension()
-        {
-            if (File.Exists(this.Destination))
-            {
-                return Path.GetExtension(this.Destination);
-            }
-            return Path.GetExtension(this.Url);
-        }
         #endregion // Private methods
 
         #region Public methods
@@ -797,11 +720,11 @@ namespace AMDownloader.ObjectModel
                         if (this.IsPaused)
                         {
                             // Download is paused; resume from specific point
-                            bytesAlreadyDownloaded = GetCorrectFileLength(this.Destination, _pausedIdentifierBytes) ?? 0;
+                            bytesAlreadyDownloaded = new FileInfo(_tempPath).Length;
                         }
                         else
                         {
-                            if (!CreateEmptyDownload(this.Destination, _pausedIdentifierBytes))
+                            if (!CreateEmptyDownload(this.Destination))
                             {
                                 throw new IOException("Failed to create new download.");
                             }
@@ -840,11 +763,12 @@ namespace AMDownloader.ObjectModel
                     case DownloadStatus.Finished:
                         this.Status = DownloadStatus.Finishing;
                         RaisePropertyChanged(nameof(this.Status));
-                        if (await RemoveIdentifyingBytesFromFile(this.Destination, _pausedIdentifierBytes))
+                        try
                         {
+                            File.Move(_tempPath, this.Destination, true);
                             SetFinished();
                         }
-                        else
+                        catch
                         {
                             this.Cancel();
                             SetErrored();
@@ -909,12 +833,12 @@ namespace AMDownloader.ObjectModel
                 Task.Run(async () =>
                 {
                     int numRetries = 30;
-                    while (File.Exists(this.Destination) && numRetries-- > 0)
+                    while (File.Exists(_tempPath) && numRetries-- > 0)
                     {
                         // if deletion fails, retry 30 times with 1 sec interval
                         try
                         {
-                            File.Delete(this.Destination);
+                            File.Delete(_tempPath);
                             SetReady();
                         }
                         catch (IOException)
