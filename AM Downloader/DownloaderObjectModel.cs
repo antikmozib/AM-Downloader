@@ -256,7 +256,7 @@ namespace AMDownloader.ObjectModel
 
         private async Task VerifyDownloadAsync(string url)
         {
-            // verifies the download; uses RequestThrottler to throttle many requests
+            // verifies the download; uses RequestThrottler to throttle multiple concurrent requests
             this.Status = DownloadStatus.Verifying;
             RaisePropertyChanged(nameof(this.Status));
             RaiseEvent(DownloadVerifying);
@@ -292,6 +292,7 @@ namespace AMDownloader.ObjectModel
                     {
                         case HttpStatusCode.OK:
                         case HttpStatusCode.NotFound:
+                        case HttpStatusCode.PartialContent:
                             _requestThrottler.Keep(url, TotalBytesToDownload, StatusCode);
                             break;
                     }
@@ -384,7 +385,7 @@ namespace AMDownloader.ObjectModel
                 {
                     File.Delete(filename);
                 }
-                
+
                 File.Create(tempFile).Close();
 
                 // ensure this is an empty download by checking length

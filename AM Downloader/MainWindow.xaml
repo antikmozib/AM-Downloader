@@ -587,9 +587,7 @@
                                 <DataTemplate>
                                     <Grid>
                                         <ProgressBar x:Name="pbProgress" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Minimum="0" Maximum="100" Value="{Binding Progress, Mode=OneWay}" />
-                                        <!--Background="{Binding Status, Converter={StaticResource ProgressBarBackgroundConverter}}"
-                                                     Foreground="{Binding Status, Converter={StaticResource ProgressBarForegroundConverter}}"
-                                                     Visibility="{Binding Status, Converter={StaticResource ProgressBarVisibilityConverter}}"-->
+                                        <!-- Background="{Binding Status, Converter={StaticResource ProgressBarBackgroundConverter}}" Foreground="{Binding Status, Converter={StaticResource ProgressBarForegroundConverter}}" Visibility="{Binding Status, Converter={StaticResource ProgressBarVisibilityConverter}}" -->
                                         <TextBlock Text="{Binding Value, ElementName=pbProgress, StringFormat=\{0:0\}%}" HorizontalAlignment="Center" VerticalAlignment="Center">
                                             <!-- Foreground="{StaticResource ProgressBarValueColor}"> -->
                                             <!-- <TextBlock.Effect>
