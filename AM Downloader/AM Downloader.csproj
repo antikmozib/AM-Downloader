@@ -5,20 +5,20 @@
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <RootNamespace>AMDownloader</RootNamespace>
     <UseWPF>true</UseWPF>
-	<UseWindowsForms>true</UseWindowsForms>
+    <UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon>Icons\app.ico</ApplicationIcon>
     <Company>Antik Mozib</Company>
     <Description>A free, modern download manager for Windows.
 https://github.com/antikmozib/am-downloader</Description>
     <Copyright>Developed by Antik Mozib. Released under GNU GPLv3.</Copyright>
-    <StartupObject></StartupObject>
+    <StartupObject />
     <PackageIcon>app.ico</PackageIcon>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <Optimize>true</Optimize>
-    <OutputPath></OutputPath>
+    <OutputPath />
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
 
@@ -35,7 +35,7 @@ https://github.com/antikmozib/am-downloader</Description>
     <None Remove="Icons\app.ico" />
     <None Include="Icons\app.ico">
       <Pack>True</Pack>
-      <PackagePath></PackagePath>
+      <PackagePath />
     </None>
   </ItemGroup>
 
@@ -71,7 +71,7 @@ https://github.com/antikmozib/am-downloader</Description>
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.19" />
     <PackageReference Include="System.Threading.Tasks" Version="4.3.0" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <Resource Include="Fonts\fontawesomeregular.otf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -162,25 +162,25 @@ https://github.com/antikmozib/am-downloader</Description>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
-  
+
   <ItemGroup>
-     <Page Update="Icons\AddCellToLeft_16x.xaml">
-       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-     </Page>
-     <Page Update="Icons\DeleteCell_16x.xaml">
-       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-     </Page>
-     <Page Update="Icons\StatusBlocked_16x.xaml">
-       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-     </Page>
-     <Page Update="Icons\StatusPause_16x.xaml">
-       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-     </Page>
-     <Page Update="Icons\StatusRun_16x.xaml">
-       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-     </Page>
-     <Page Update="Icons\StatusStop_16x.xaml">
-       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-     </Page>
-   </ItemGroup>
+    <Page Update="Icons\AddCellToLeft_16x.xaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Page>
+    <Page Update="Icons\DeleteCell_16x.xaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Page>
+    <Page Update="Icons\StatusBlocked_16x.xaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Page>
+    <Page Update="Icons\StatusPause_16x.xaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Page>
+    <Page Update="Icons\StatusRun_16x.xaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Page>
+    <Page Update="Icons\StatusStop_16x.xaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Page>
+  </ItemGroup>
 </Project>

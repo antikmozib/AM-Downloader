@@ -1,6 +1,6 @@
 ﻿// Copyright (C) 2020 Antik Mozib. Released under GNU GPLv3.
 
- using System.IO;
+using System.IO;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Linq;
@@ -8,7 +8,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Windows.Input;
-using System.Windows;
 using AMDownloader.Properties;
 using AMDownloader.Common;
 using System;
@@ -26,7 +25,7 @@ namespace AMDownloader
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public ShowPreview ShowPreview { get;private set; }
+        public ShowPreview ShowPreview { get; private set; }
         public string Urls { get; set; }
         public string SaveToFolder { get; set; }
         public bool StartDownload { get; set; }
