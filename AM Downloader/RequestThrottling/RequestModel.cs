@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Copyright (C) 2020 Antik Mozib. Released under GNU GPLv3.
+
+using System;
 using System.Net;
 
 namespace AMDownloader.RequestThrottling.Model

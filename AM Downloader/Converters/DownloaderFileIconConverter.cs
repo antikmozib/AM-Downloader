@@ -1,4 +1,6 @@
-﻿using AMDownloader.ObjectModel;
+﻿// Copyright (C) 2020 Antik Mozib. Released under GNU GPLv3.
+
+using AMDownloader.ObjectModel;
 using System;
 using System.Collections.Generic;
 using System.Globalization;

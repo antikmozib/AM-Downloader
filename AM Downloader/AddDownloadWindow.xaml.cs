@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿// Copyright (C) 2020 Antik Mozib. Released under GNU GPLv3.
+
+using System.IO;
 using System.Windows;
 using System.Windows.Input;
 using System.Xml.Serialization;

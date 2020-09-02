@@ -1,4 +1,6 @@
-﻿using AMDownloader.RequestThrottling.Model;
+﻿// Copyright (C) 2020 Antik Mozib. Released under GNU GPLv3.
+
+using AMDownloader.RequestThrottling.Model;
 using System;
 using System.Collections.Concurrent;
 using System.Linq;

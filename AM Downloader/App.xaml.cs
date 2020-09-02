@@ -1,4 +1,6 @@
-﻿using System.Windows;
+﻿// Copyright (C) 2020 Antik Mozib. Released under GNU GPLv3.
+
+using System.Windows;
 
 namespace AMDownloader
 {

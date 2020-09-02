@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿// Copyright (C) 2020 Antik Mozib. Released under GNU GPLv3.
+
+ using System.IO;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Linq;

@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Copyright (C) 2020 Antik Mozib. Released under GNU GPLv3.
+
+using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;

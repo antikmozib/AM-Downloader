@@ -1,3 +1,5 @@
+// Copyright (C) 2020 Antik Mozib. Released under GNU GPLv3.
+
 using System;
 using System.Globalization;
 using System.Windows.Data;

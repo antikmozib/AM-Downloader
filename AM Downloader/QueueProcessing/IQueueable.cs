@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿// Copyright (C) 2020 Antik Mozib. Released under GNU GPLv3.
+
+using System.Threading.Tasks;
 
 namespace AMDownloader.QueueProcessing
 {
