@@ -1,7 +1,7 @@
 # AM Downloader
 A modern download manager for Windows.
 
-![Screenshot](https://github.com/antikmozib/AM-Downloader/blob/master/Screenshot.png)
+![Screenshot](https://github.com/antikmozib/AM-Downloader/blob/master/Screenshot.png?raw=true)
 
 # Features
 - Parallel downloads
