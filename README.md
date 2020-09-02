@@ -10,7 +10,7 @@ A modern download manager for Windows.
 
 # Building
 
-Prerequisites: .NET Core 3.0 SDK on Windows 10
+Prerequisites: Visual Studio 2019 with .NET Core 3.0 + Windows Desktop SDK
 
 1. Run `git clone https://github.com/antikmozib/AM-Downloader.git`
 2. Navigate to folder 'AM-Downloader/AM Downloader/'
