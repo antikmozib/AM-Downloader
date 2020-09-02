@@ -20,8 +20,6 @@
         <local:TaskBarProgressStateConverter x:Key="TaskBarProgressStateConverter" />
         <local:TreeViewCountConverter x:Key="TreeViewCountConverter" />
         <local:TreeViewCategoryColorConverter x:Key="TreeViewCategoryColorConverter" />
-
-
         <DataTemplate x:Key="HeaderTemplate">
             <TextBlock Padding="5" Text="{Binding}" />
         </DataTemplate>
