@@ -323,6 +323,7 @@ namespace AMDownloader
                 else
                 {
                     item.Dequeue();
+                    QueueProcessor.Remove(item);
                     tasks.Add(item.StartAsync());
                 }
             }
@@ -431,22 +432,25 @@ namespace AMDownloader
                         {
                             for (int i = 0; i < total; i++)
                             {
-                                Monitor.Enter(_lockDownloadItemsList);
-                                DownloadItemsList.Remove(items[i]);
-                                Monitor.Exit(_lockDownloadItemsList);
-
-                                if (items[i].IsBeingDownloaded)
-                                {
-                                    await items[i].PauseAsync();
-                                }
-                                if (items[i].IsQueued)
-                                {
-                                    items[i].Dequeue();
-                                }
                                 if (ct.IsCancellationRequested)
                                 {
                                     ct.ThrowIfCancellationRequested();
                                 }
+
+                                if (items[i].IsBeingDownloaded)
+                                {
+                                    await Task.Run(async () => await items[i].PauseAsync());
+                                }
+
+                                if (items[i].IsQueued)
+                                {
+                                    items[i].Dequeue();
+                                    this.QueueProcessor.Remove(items[i]);
+                                }
+
+                                Monitor.Enter(_lockDownloadItemsList);
+                                DownloadItemsList.Remove(items[i]);
+                                Monitor.Exit(_lockDownloadItemsList);
                             }
                         });
                     }
@@ -732,29 +736,46 @@ namespace AMDownloader
         internal void DeleteFile(object obj)
         {
             if (obj == null) return;
+
             if (_ctsUpdatingList != null)
             {
                 ShowBusyMessage();
                 return;
             }
+
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
             var itemsDeleted = new BlockingCollection<DownloaderObjectModel>();
             var total = items.Count();
+
             Task.Run(async () =>
             {
                 await _semaphoreUpdatingList.WaitAsync();
+
                 _ctsUpdatingList = new CancellationTokenSource();
                 var ct = _ctsUpdatingList.Token;
+
                 RaisePropertyChanged(nameof(this.IsBackgroundWorking));
+
                 for (int i = 0; i < total; i++)
                 {
+                    int progress = (int)((double)(i + 1) / total * 100);
+                    this.Progress = progress;
+                    this.Status = "Deleting " + (i + 1) + " of " + total + ": " + items[i].Name;
+                    RaisePropertyChanged(nameof(this.Status));
+                    RaisePropertyChanged(nameof(this.Progress));
+
                     if (items[i].IsBeingDownloaded)
                     {
-                        items[i].Cancel();
+                        await Task.Run(async () => await items[i].CancelAsync());
                     }
                     else
                     {
-                        if (items[i].IsQueued) items[i].Dequeue();
+                        if (items[i].IsQueued)
+                        {
+                            items[i].Dequeue();
+                            this.QueueProcessor.Remove(items[i]);
+                        }
+
                         if (File.Exists(items[i].Destination))
                         {
                             try
@@ -767,12 +788,15 @@ namespace AMDownloader
                             }
                         }
                     }
-                    itemsDeleted.TryAdd(items[i]);
+
+                    itemsDeleted.Add(items[i]);
+
                     if (ct.IsCancellationRequested)
                     {
                         break;
                     }
                 }
+
                 if (!ct.IsCancellationRequested)
                 {
                     this.Status = "Refreshing list...";
@@ -781,8 +805,10 @@ namespace AMDownloader
                 {
                     this.Status = "Cancelling...";
                 }
+
                 RaisePropertyChanged(nameof(this.Status));
                 Monitor.Enter(_lockDownloadItemsList);
+
                 try
                 {
                     Application.Current.Dispatcher.Invoke(() =>
@@ -798,9 +824,13 @@ namespace AMDownloader
                     Monitor.Exit(_lockDownloadItemsList);
                     _semaphoreUpdatingList.Release();
                     _ctsUpdatingList = null;
+
                     this.Status = "Ready";
+                    this.Progress = 0;
+                    RaisePropertyChanged(nameof(this.Progress));
                     RaisePropertyChanged(nameof(this.Status));
                     RaisePropertyChanged(nameof(this.IsBackgroundWorking));
+
                     RefreshCollection();
                 }
             });
@@ -875,6 +905,7 @@ namespace AMDownloader
                 foreach (var item in itemsFinished)
                 {
                     DownloadItemsList.Remove(item);
+                    if (item.IsQueued) this.QueueProcessor.Remove(item);
                 }
             }
             finally
@@ -1225,6 +1256,7 @@ namespace AMDownloader
                             if (!this.QueueProcessor.Add(objects[i]))
                             {
                                 objects[i].Dequeue();
+                                QueueProcessor.Remove(objects[i]);
                             }
                         }
                     }
@@ -1235,7 +1267,7 @@ namespace AMDownloader
             {
                 Monitor.Exit(_lockDownloadItemsList);
                 _semaphoreUpdatingList.Release();
-                _ctsUpdatingList = null;                
+                _ctsUpdatingList = null;
                 RaisePropertyChanged(nameof(this.IsBackgroundWorking));
             }
         }

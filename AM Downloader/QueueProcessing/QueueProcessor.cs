@@ -99,7 +99,7 @@ namespace AMDownloader.QueueProcessing
         public bool Add(IQueueable item)
         {
             if (item.IsCompleted || _queueList.Contains(item)) return true;
-            if ( _queueList.TryAdd(item))
+            if (_queueList.TryAdd(item))
             {
                 if (!_hasItems)
                 {
@@ -113,8 +113,13 @@ namespace AMDownloader.QueueProcessing
 
         public void Remove(params IQueueable[] items)
         {
-            if (this.IsBusy) return;
+            if (items.Count() == 1 && !_queueList.Contains(items[0]))
+            {
+                return;
+            }
+
             var newList = new BlockingCollection<IQueueable>();
+
             foreach (var oldItem in _queueList)
             {
                 if (items.Contains(oldItem))
@@ -123,6 +128,7 @@ namespace AMDownloader.QueueProcessing
                 }
                 newList.TryAdd(oldItem);
             }
+
             _queueList.Dispose();
             _queueList = newList;
         }

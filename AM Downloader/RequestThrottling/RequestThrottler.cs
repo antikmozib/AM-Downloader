@@ -70,7 +70,7 @@ namespace AMDownloader.RequestThrottling
                 if (diff.TotalSeconds < _interval)
                 {
                     int delay = _interval - (int)diff.TotalMilliseconds;
-                    await Task.Delay(delay);
+                    if (delay > 0) await Task.Delay(delay);
                 }
             }
             _cts = null;

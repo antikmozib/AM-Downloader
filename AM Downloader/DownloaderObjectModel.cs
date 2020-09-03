@@ -859,6 +859,11 @@ namespace AMDownloader.ObjectModel
             }
         }
 
+        public async Task CancelAsync()
+        {
+            await Task.Run(() => this.Cancel());
+            _taskCompletion?.Task.Wait();
+        }
         public void SetCreationTime(DateTime newDateCreated)
         {
             this.DateCreated = newDateCreated;
