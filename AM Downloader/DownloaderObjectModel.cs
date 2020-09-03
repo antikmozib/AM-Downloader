@@ -176,7 +176,8 @@ namespace AMDownloader.ObjectModel
                 Task.Run(async () =>
                 {
                     await VerifyDownloadAsync(url);
-                }).ContinueWith(t => _semaphoreDownloading.Release());
+                    _semaphoreDownloading.Release();
+                });
             }
 
             RaiseEvent(DownloadCreated);
@@ -284,21 +285,26 @@ namespace AMDownloader.ObjectModel
                     var downloadVerification = await VerifyUrlAsync(url);
                     this.StatusCode = downloadVerification.StatusCode;
                     this.TotalBytesToDownload = downloadVerification.TotalBytesToDownload;
-                    RaisePropertyChanged(nameof(this.TotalBytesToDownload));
-                    if (this.TotalBytesToDownload > 0)
-                    {
-                        this.SupportsResume = true;
-                        RaisePropertyChanged(nameof(this.SupportsResume));
-                    }
-                    switch (this.StatusCode)
-                    {
-                        case HttpStatusCode.OK:
-                        case HttpStatusCode.NotFound:
-                        case HttpStatusCode.PartialContent:
-                            _requestThrottler.Keep(url, TotalBytesToDownload, StatusCode);
-                            break;
-                    }
                 }
+
+                RaisePropertyChanged(nameof(this.StatusCode));
+                RaisePropertyChanged(nameof(this.TotalBytesToDownload));
+
+                if (this.TotalBytesToDownload > 0)
+                {
+                    this.SupportsResume = true;
+                    RaisePropertyChanged(nameof(this.SupportsResume));
+                }
+
+                switch (this.StatusCode)
+                {
+                    case HttpStatusCode.OK:
+                    case HttpStatusCode.NotFound:
+                    case HttpStatusCode.PartialContent:
+                        _requestThrottler.Keep(url, TotalBytesToDownload, StatusCode);
+                        break;
+                }
+
 
                 if (this.StatusCode != HttpStatusCode.OK && this.StatusCode != HttpStatusCode.PartialContent)
                 {
@@ -349,11 +355,13 @@ namespace AMDownloader.ObjectModel
             downloadVerificationModel.TotalBytesToDownload = null;
             try
             {
-                using var request = new HttpRequestMessage(HttpMethod.Head, url);
-                using (HttpResponseMessage response = await this._httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
+                using (var request = new HttpRequestMessage(HttpMethod.Get, url))
                 {
-                    downloadVerificationModel.StatusCode = response.StatusCode;
-                    downloadVerificationModel.TotalBytesToDownload = response.Content.Headers.ContentLength;
+                    using (HttpResponseMessage response = await this._httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
+                    {
+                        downloadVerificationModel.StatusCode = response.StatusCode;
+                        downloadVerificationModel.TotalBytesToDownload = response.Content.Headers.ContentLength;
+                    }
                 }
             }
             catch (HttpRequestException)
@@ -518,6 +526,7 @@ namespace AMDownloader.ObjectModel
                             read = await sourceStream.ReadAsync(buffer, 0, buffer.Length, linkedToken);
                             if (read == 0)
                             {
+                                request.Dispose();
                                 return true;
                             }
                             else

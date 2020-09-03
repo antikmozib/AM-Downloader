@@ -437,16 +437,9 @@ namespace AMDownloader
                                     ct.ThrowIfCancellationRequested();
                                 }
 
-                                if (items[i].IsBeingDownloaded)
-                                {
-                                    await Task.Run(async () => await items[i].PauseAsync());
-                                }
-
-                                if (items[i].IsQueued)
-                                {
-                                    items[i].Dequeue();
-                                    this.QueueProcessor.Remove(items[i]);
-                                }
+                                await Task.Run(async () => await items[i].PauseAsync());
+                                items[i].Dequeue();
+                                this.QueueProcessor.Remove(items[i]);
 
                                 Monitor.Enter(_lockDownloadItemsList);
                                 DownloadItemsList.Remove(items[i]);
@@ -770,12 +763,6 @@ namespace AMDownloader
                     }
                     else
                     {
-                        if (items[i].IsQueued)
-                        {
-                            items[i].Dequeue();
-                            this.QueueProcessor.Remove(items[i]);
-                        }
-
                         if (File.Exists(items[i].Destination))
                         {
                             try
@@ -808,7 +795,6 @@ namespace AMDownloader
 
                 RaisePropertyChanged(nameof(this.Status));
                 Monitor.Enter(_lockDownloadItemsList);
-
                 try
                 {
                     Application.Current.Dispatcher.Invoke(() =>
@@ -816,6 +802,8 @@ namespace AMDownloader
                         foreach (var item in itemsDeleted)
                         {
                             DownloadItemsList.Remove(item);
+                            item.Dequeue();
+                            this.QueueProcessor.Remove(item);
                         }
                     });
                 }
@@ -1270,6 +1258,11 @@ namespace AMDownloader
                 _ctsUpdatingList = null;
                 RaisePropertyChanged(nameof(this.IsBackgroundWorking));
             }
+        }
+
+        private void RemoveObjects(bool delete, params DownloaderObjectModel[] items)
+        {
+
         }
 
         private void StartReportingSpeed()

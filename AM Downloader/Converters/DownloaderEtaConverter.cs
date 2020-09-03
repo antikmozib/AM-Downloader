@@ -14,7 +14,7 @@ namespace AMDownloader
             try
             {
                 double.TryParse(value.ToString(), out double remaining);
-                if (remaining > 0)
+                if (remaining > 0 && !double.IsInfinity(remaining))
                 {
                     TimeSpan t = TimeSpan.FromMilliseconds(remaining);
                     return t.Minutes + "m " + t.Seconds + "s";
