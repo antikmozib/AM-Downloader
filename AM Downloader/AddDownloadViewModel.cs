@@ -15,17 +15,17 @@ using AMDownloader.ClipboardObservation;
 
 namespace AMDownloader
 {
-    delegate void ShowPreview(string preview);
+    delegate void ShowPreviewDelegate(string preview);
     class AddDownloadViewModel : INotifyPropertyChanged
     {
-        private readonly DownloaderViewModel _parentViewModel;
+        private AddItemsAsyncDelegate _addItemsAsync;
         private bool _monitorClipboard;
         private CancellationTokenSource _ctsClipboard;
         private ClipboardObserver _clipboardService;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public ShowPreview ShowPreview { get; private set; }
+        public ShowPreviewDelegate ShowPreview { get; private set; }
         public string Urls { get; set; }
         public string SaveToFolder { get; set; }
         public bool StartDownload { get; set; }
@@ -49,10 +49,9 @@ namespace AMDownloader
         public ICommand AddCommand { get; private set; }
         public ICommand PreviewCommand { get; private set; }
 
-        public AddDownloadViewModel(DownloaderViewModel parentViewModel, ShowPreview showPreview)
+        public AddDownloadViewModel(AddItemsAsyncDelegate addItemsAsync, ShowPreviewDelegate showPreview)
         {
-            _parentViewModel = parentViewModel;
-
+            _addItemsAsync = addItemsAsync;
             AddCommand = new RelayCommand<object>(Add, Add_CanExecute);
             PreviewCommand = new RelayCommand<object>(Preview, Add_CanExecute);
 
@@ -122,7 +121,7 @@ namespace AMDownloader
             Settings.Default.StartDownloadingAddedItems = this.StartDownload;
             Settings.Default.Save();
 
-            Task.Run(async () => await _parentViewModel.AddItemsAsyncDelegate(SaveToFolder, AddToQueue, StartDownload, ListifyUrls().ToArray()));
+            Task.Run(async () => await _addItemsAsync.Invoke(SaveToFolder, AddToQueue, StartDownload, ListifyUrls().ToArray()));
         }
 
         private List<string> ListifyUrls()

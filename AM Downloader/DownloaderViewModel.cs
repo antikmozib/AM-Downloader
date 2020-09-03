@@ -26,7 +26,7 @@ using AMDownloader.QueueProcessing;
 
 namespace AMDownloader
 {
-    delegate Task AddItemsAsync(string destination, bool enqueue, bool start, params string[] urls);
+    delegate Task AddItemsAsyncDelegate(string destination, bool enqueue, bool start, params string[] urls);
     public enum Categories
     {
         All, Ready, Queued, Downloading, Paused, Finished, Errored, Verifying
@@ -68,7 +68,7 @@ namespace AMDownloader
         public bool IsDownloading => DownloadingCount > 0;
         public string Status { get; private set; }
         public event PropertyChangedEventHandler PropertyChanged;
-        public AddItemsAsync AddItemsAsyncDelegate;
+        public AddItemsAsyncDelegate AddItemsAsyncDelegate;
         public IProgress<long> ProgressReporter;
         #endregion // Properties
 
@@ -124,7 +124,7 @@ namespace AMDownloader
             this.VerifyingCount = 0;
             this.BytesDownloaded = 0;
             this.Status = "Ready";
-            this.AddItemsAsyncDelegate = new AddItemsAsync(AddItemsAsync);
+            this.AddItemsAsyncDelegate = new AddItemsAsyncDelegate(AddItemsAsync);
             this.ProgressReporter = new Progress<long>(value =>
             {
                 Monitor.Enter(_lockBytesDownloaded);
@@ -427,33 +427,28 @@ namespace AMDownloader
                     try
                     {
                         int total = items.Count();
-                        for (int i = 0; i < total; i++)
+                        await Application.Current.Dispatcher.Invoke(async () =>
                         {
-                            if ((total > 100 && total <= 1000 && (i + 1) % 100 == 0) ||
-                                (total > 1000 && (i + 1) % 500 == 0) ||
-                                i + 1 == total ||
-                                i + 1 == 1 ||
-                                total <= 100)
+                            for (int i = 0; i < total; i++)
                             {
-                                int progress = (int)((double)(i + 1) / total * 100);
-                                this.Progress = progress;
-                                this.Status = "Removing " + (i + 1) + " of " + total + ": " + items[i].Name;
-                                RaisePropertyChanged(nameof(this.Status));
-                                RaisePropertyChanged(nameof(this.Progress));
-                                await Task.Delay(100);
-                            }
+                                Monitor.Enter(_lockDownloadItemsList);
+                                DownloadItemsList.Remove(items[i]);
+                                Monitor.Exit(_lockDownloadItemsList);
 
-                            Monitor.Enter(_lockDownloadItemsList);
-                            Application.Current.Dispatcher.Invoke(() => DownloadItemsList.Remove(items[i]));
-                            Monitor.Exit(_lockDownloadItemsList);
-
-                            if (items[i].IsBeingDownloaded) items[i].Pause();
-                            if (items[i].IsQueued) items[i].Dequeue();
-                            if (ct.IsCancellationRequested)
-                            {
-                                ct.ThrowIfCancellationRequested();
+                                if (items[i].IsBeingDownloaded)
+                                {
+                                    await items[i].PauseAsync();
+                                }
+                                if (items[i].IsQueued)
+                                {
+                                    items[i].Dequeue();
+                                }
+                                if (ct.IsCancellationRequested)
+                                {
+                                    ct.ThrowIfCancellationRequested();
+                                }
                             }
-                        }
+                        });
                     }
                     catch (Exception ex)
                     {
@@ -463,7 +458,6 @@ namespace AMDownloader
                     {
                         _semaphoreUpdatingList.Release();
                         _ctsUpdatingList = null;
-                        this.Progress = 0;
                         if (ct.IsCancellationRequested)
                         {
                             this.Status = "Cancelling..";
@@ -473,7 +467,6 @@ namespace AMDownloader
                             this.Status = "Refreshing list...";
                         }
                         RaisePropertyChanged(nameof(this.IsBackgroundWorking));
-                        RaisePropertyChanged(nameof(this.Progress));
                         RaisePropertyChanged(nameof(this.FinishedCount));
                         RaisePropertyChanged(nameof(this.Status));
                         RefreshCollection();
@@ -509,7 +502,7 @@ namespace AMDownloader
             try
             {
                 var win = new AddDownloadWindow();
-                var vm = new AddDownloadViewModel(this, new ShowPreview(win.Preview));
+                var vm = new AddDownloadViewModel(AddItemsAsync, win.Preview);
                 win.DataContext = vm;
                 win.Owner = obj as Window;
                 win.ShowDialog();
@@ -609,7 +602,7 @@ namespace AMDownloader
 
         internal bool StartQueue_CanExecute(object obj)
         {
-            return !QueueProcessor.IsBusy && QueueProcessor.HasItems && this.QueuedCount>0 && _ctsUpdatingList == null;
+            return !QueueProcessor.IsBusy && QueueProcessor.HasItems && this.QueuedCount > 0 && _ctsUpdatingList == null;
         }
 
         internal void StopQueue(object obj)
@@ -755,11 +748,6 @@ namespace AMDownloader
                 RaisePropertyChanged(nameof(this.IsBackgroundWorking));
                 for (int i = 0; i < total; i++)
                 {
-                    int progress = (int)((double)(i + 1) / total * 100);
-                    this.Progress = progress;
-                    this.Status = "Deleting " + (i + 1) + " of " + total + ": " + items[i].Name;
-                    RaisePropertyChanged(nameof(this.Status));
-                    RaisePropertyChanged(nameof(this.Progress));
                     if (items[i].IsBeingDownloaded)
                     {
                         items[i].Cancel();
@@ -797,10 +785,13 @@ namespace AMDownloader
                 Monitor.Enter(_lockDownloadItemsList);
                 try
                 {
-                    foreach (var item in itemsDeleted)
+                    Application.Current.Dispatcher.Invoke(() =>
                     {
-                        Application.Current.Dispatcher.Invoke(() => DownloadItemsList.Remove(item));
-                    }
+                        foreach (var item in itemsDeleted)
+                        {
+                            DownloadItemsList.Remove(item);
+                        }
+                    });
                 }
                 finally
                 {
@@ -808,8 +799,6 @@ namespace AMDownloader
                     _semaphoreUpdatingList.Release();
                     _ctsUpdatingList = null;
                     this.Status = "Ready";
-                    this.Progress = 0;
-                    RaisePropertyChanged(nameof(this.Progress));
                     RaisePropertyChanged(nameof(this.Status));
                     RaisePropertyChanged(nameof(this.IsBackgroundWorking));
                     RefreshCollection();
@@ -1221,38 +1210,32 @@ namespace AMDownloader
             int total = objects.Count();
             try
             {
-                for (int i = 0; i < total; i++)
+                Application.Current.Dispatcher.Invoke(() =>
                 {
-                    if (ct.IsCancellationRequested)
+                    for (int i = 0; i < total; i++)
                     {
-                        ct.ThrowIfCancellationRequested();
-                    }
-                    if (objects[i] == null) continue;
-                    int progress = (int)((double)(i + 1) / total * 100);
-                    this.Progress = progress;
-                    this.Status = "Listing " + (i + 1) + " of " + objects.Count() + ": " + objects[i].Name;
-                    RaisePropertyChanged(nameof(this.Status));
-                    RaisePropertyChanged(nameof(this.Progress));
-                    Application.Current.Dispatcher.Invoke(() => DownloadItemsList.Add(objects[i]));
-                    if (objects[i].IsQueued)
-                    {
-                        if (!this.QueueProcessor.Add(objects[i]))
+                        if (ct.IsCancellationRequested)
                         {
-                            objects[i].Dequeue();
+                            ct.ThrowIfCancellationRequested();
+                        }
+                        if (objects[i] == null) continue;
+                        DownloadItemsList.Add(objects[i]);
+                        if (objects[i].IsQueued)
+                        {
+                            if (!this.QueueProcessor.Add(objects[i]))
+                            {
+                                objects[i].Dequeue();
+                            }
                         }
                     }
-                }
+                });
             }
             catch (OperationCanceledException) { }
             finally
             {
                 Monitor.Exit(_lockDownloadItemsList);
                 _semaphoreUpdatingList.Release();
-                _ctsUpdatingList = null;
-                this.Progress = 0;
-                this.Status = "Ready";
-                RaisePropertyChanged(nameof(this.Progress));
-                RaisePropertyChanged(nameof(this.Status));
+                _ctsUpdatingList = null;                
                 RaisePropertyChanged(nameof(this.IsBackgroundWorking));
             }
         }
