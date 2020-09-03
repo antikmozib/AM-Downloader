@@ -163,21 +163,29 @@ namespace AMDownloader
             }
 
             // Populate history
-            Task.Run(() =>
+            Task.Run(async () =>
             {
-                if (Directory.Exists(AppPaths.LocalAppData))
-                {
-                    this.Status = "Restoring data...";
-                    RaisePropertyChanged(nameof(this.Status));
-                }
-                else
-                {
-                    return;
-                }
-                SerializableDownloaderObjectModelList source;
-                var xmlReader = new XmlSerializer(typeof(SerializableDownloaderObjectModelList));
+                await _semaphoreUpdatingList.WaitAsync();
+
+                _ctsUpdatingList = new CancellationTokenSource();
+                var ct = _ctsUpdatingList.Token;
+
+                RaisePropertyChanged(nameof(this.IsBackgroundWorking));
+
                 try
                 {
+                    if (Directory.Exists(AppPaths.LocalAppData))
+                    {
+                        this.Status = "Restoring data...";
+                        RaisePropertyChanged(nameof(this.Status));
+                    }
+                    else
+                    {
+                        return;
+                    }
+                    SerializableDownloaderObjectModelList source;
+                    var xmlReader = new XmlSerializer(typeof(SerializableDownloaderObjectModelList));
+
                     using (var streamReader = new StreamReader(AppPaths.DownloadsHistoryFile))
                     {
                         source = (SerializableDownloaderObjectModelList)xmlReader.Deserialize(streamReader);
@@ -213,6 +221,8 @@ namespace AMDownloader
                         item.SetCreationTime(sourceObjects[i].DateCreated);
                         finalObjects[i] = item;
                     }
+                    this.Status = "Listing...";
+                    RaisePropertyChanged(nameof(this.Status));
                     AddObjects(finalObjects);
                 }
                 catch
@@ -221,10 +231,16 @@ namespace AMDownloader
                 }
                 finally
                 {
+                    _ctsUpdatingList = null;
+
                     this.Progress = 0;
                     this.Status = "Ready";
                     RaisePropertyChanged(nameof(this.Progress));
                     RaisePropertyChanged(nameof(this.Status));
+                    RaisePropertyChanged(nameof(this.IsBackgroundWorking));
+
+                    _semaphoreUpdatingList.Release();
+
                     RefreshCollection();
                 }
             });
@@ -415,19 +431,22 @@ namespace AMDownloader
                 return;
             }
 
-            CancellationToken ct;
             Task.Run(async () =>
             {
                 try
                 {
-                    var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
                     await _semaphoreUpdatingList.WaitAsync();
+
                     _ctsUpdatingList = new CancellationTokenSource();
-                    ct = _ctsUpdatingList.Token;
+                    var ct = _ctsUpdatingList.Token;
+
                     RaisePropertyChanged(nameof(this.IsBackgroundWorking));
+
                     try
                     {
+                        var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
                         int total = items.Count();
+
                         await Application.Current.Dispatcher.Invoke(async () =>
                         {
                             for (int i = 0; i < total; i++)
@@ -436,6 +455,11 @@ namespace AMDownloader
                                 {
                                     ct.ThrowIfCancellationRequested();
                                 }
+
+                                this.Status = "Removing " + (i + 1) + " of " + total + ": " + items[i].Name;
+                                this.Progress = (int)((double)(i + 1) / total * 100);
+                                RaisePropertyChanged(nameof(this.Status));
+                                RaisePropertyChanged(nameof(this.Progress));
 
                                 await Task.Run(async () => await items[i].PauseAsync());
                                 items[i].Dequeue();
@@ -792,8 +816,8 @@ namespace AMDownloader
                 {
                     this.Status = "Cancelling...";
                 }
-
                 RaisePropertyChanged(nameof(this.Status));
+                
                 Monitor.Enter(_lockDownloadItemsList);
                 try
                 {
@@ -1094,9 +1118,11 @@ namespace AMDownloader
         private async Task AddItemsAsync(string destination, bool enqueue, bool start = false, params string[] urls)
         {
             await _semaphoreUpdatingList.WaitAsync();
+
             _ctsUpdatingList = new CancellationTokenSource();
             var ct = _ctsUpdatingList.Token;
             RaisePropertyChanged(nameof(this.IsBackgroundWorking));
+
             int total = urls.Count();
             int maxParallelDownloads = Settings.Default.MaxParallelDownloads;
             var items = new DownloaderObjectModel[urls.Count()];
@@ -1150,8 +1176,7 @@ namespace AMDownloader
                         Download_Finished,
                         Download_PropertyChanged,
                         ProgressReporter,
-                        ref _requestThrottler);
-                    QueueProcessor.Add(item);
+                        ref _requestThrottler);                    
                 }
                 else
                 {
@@ -1185,13 +1210,23 @@ namespace AMDownloader
                 }
             }
 
-            _semaphoreUpdatingList.Release();
+            if (!wasCanceled)
+            {
+                this.Status = "Listing...";
+                RaisePropertyChanged(nameof(this.Status));
+                AddObjects(items);
+            }
+
             _ctsUpdatingList = null;
+
             this.Progress = 0;
             this.Status = "Ready";
             RaisePropertyChanged(nameof(this.Status));
             RaisePropertyChanged(nameof(this.Progress));
-            if (!wasCanceled) AddObjects(items);
+            RaisePropertyChanged(nameof(this.IsBackgroundWorking));
+
+            _semaphoreUpdatingList.Release();
+
             RefreshCollection();
 
             if (!wasCanceled)
@@ -1221,10 +1256,6 @@ namespace AMDownloader
 
         private void AddObjects(params DownloaderObjectModel[] objects)
         {
-            _semaphoreUpdatingList.Wait();
-            _ctsUpdatingList = new CancellationTokenSource();
-            var ct = _ctsUpdatingList.Token;
-            RaisePropertyChanged(nameof(this.IsBackgroundWorking));
             Monitor.Enter(_lockDownloadItemsList);
             int total = objects.Count();
             try
@@ -1233,30 +1264,21 @@ namespace AMDownloader
                 {
                     for (int i = 0; i < total; i++)
                     {
-                        if (ct.IsCancellationRequested)
-                        {
-                            ct.ThrowIfCancellationRequested();
-                        }
                         if (objects[i] == null) continue;
+
                         DownloadItemsList.Add(objects[i]);
+
                         if (objects[i].IsQueued)
                         {
-                            if (!this.QueueProcessor.Add(objects[i]))
-                            {
-                                objects[i].Dequeue();
-                                QueueProcessor.Remove(objects[i]);
-                            }
+                            this.QueueProcessor.Add(objects[i]);
                         }
                     }
                 });
             }
-            catch (OperationCanceledException) { }
+            catch { }
             finally
             {
                 Monitor.Exit(_lockDownloadItemsList);
-                _semaphoreUpdatingList.Release();
-                _ctsUpdatingList = null;
-                RaisePropertyChanged(nameof(this.IsBackgroundWorking));
             }
         }
 

@@ -12,7 +12,7 @@ using AMDownloader.Properties;
 
 namespace AMDownloader
 {
-    delegate void DisplayMessageDelegate(string message, string title = "");
+    delegate void DisplayMessageDelegate(string message, string title = "",MessageBoxImage image=MessageBoxImage.Information);
 
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -166,7 +166,7 @@ namespace AMDownloader
             (tvCategories.ItemContainerGenerator.ContainerFromIndex(0) as TreeViewItem).IsSelected = true;
         }
 
-        internal void DisplayMessage(string message, string title = "")
+        internal void DisplayMessage(string message, string title = "", MessageBoxImage image = MessageBoxImage.Information)
         {
             if (title == "") title = Assembly.GetExecutingAssembly().GetName().Name;
             Application.Current?.Dispatcher?.Invoke(() => MessageBox.Show(message, title));
