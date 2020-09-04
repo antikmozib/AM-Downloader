@@ -241,11 +241,11 @@
                                 </Style.Triggers>
                             </Style>
                             <Style x:Key="CancelButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-                                <Setter Property="Background" Value="Transparent" />
-                                <Setter Property="Foreground" Value="{StaticResource StausBarEllipseBusyColor}" />
-                                <Setter Property="BorderBrush" Value="{StaticResource StausBarEllipseBusyColor}" />
                                 <Setter Property="Width" Value="14" />
                                 <Setter Property="Height" Value="14" />
+                                <Setter Property="BorderBrush" Value="{StaticResource StausBarEllipseBusyColor}" />
+                                <Setter Property="Background" Value="{StaticResource StausBarEllipseBusyColor}" />
+                                <Setter Property="Foreground" Value="{Binding Path=Background,RelativeSource={RelativeSource AncestorType=StatusBar}}" />
                                 <Setter Property="Template">
                                     <Setter.Value>
                                         <ControlTemplate TargetType="{x:Type Button}">
@@ -260,9 +260,9 @@
                                 </Setter>
                                 <Style.Triggers>
                                     <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="Transparent" />
+                                        <Setter Property="Foreground" Value="{StaticResource StausBarEllipseBusyColor}" />
                                         <Setter Property="BorderBrush" Value="{StaticResource StausBarEllipseBusyColor}" />
-                                        <Setter Property="Background" Value="{StaticResource StausBarEllipseBusyColor}" />
-                                        <Setter Property="Foreground" Value="{Binding Path=Background,RelativeSource={RelativeSource AncestorType=StatusBar}}" />
                                     </Trigger>
                                     <Trigger Property="IsFocused" Value="True">
                                         <Setter Property="BorderBrush" Value="DarkGray" />
@@ -562,11 +562,11 @@
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource RightAligned}" Header="Type" Width="120">
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="Type" Width="120">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <TextBlock TextAlignment="Right" Text="{Binding Destination, Converter={StaticResource DownloaderTypeConverter}}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding Destination, Converter={StaticResource DownloaderTypeConverter}}" TextTrimming="CharacterEllipsis" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
@@ -606,10 +606,10 @@
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="Size" Width="75">
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource RightAligned}" Header="Size" Width="75">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding TotalBytesToDownload, Converter={StaticResource DownloaderSizeConverter}}" />
+                                    <TextBlock TextAlignment="Right" TextTrimming="CharacterEllipsis" Text="{Binding TotalBytesToDownload, Converter={StaticResource DownloaderSizeConverter}}" />
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
@@ -622,10 +622,10 @@
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource LeftAligned}" Header="ETA" Width="80">
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}" HeaderContainerStyle="{StaticResource RightAligned}" Header="ETA" Width="80">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding TimeRemaining, Converter={StaticResource DownloaderEtaConverter}}" />
+                                    <TextBlock TextAlignment="Right" TextTrimming="CharacterEllipsis" Text="{Binding TimeRemaining, Converter={StaticResource DownloaderEtaConverter}}" />
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>

@@ -114,12 +114,13 @@ namespace AMDownloader
 
         private void Sort(GridViewColumnHeader columnHeader, ListSortDirection? direction)
         {
-            if (direction == null) return;
             if (_dataView == null)
             {
                 _dataView = CollectionViewSource.GetDefaultView(lvDownload.ItemsSource);
             }
             _dataView.SortDescriptions.Clear();
+
+            if (direction == null) return;
             var columnBinding = columnHeader.Column.DisplayMemberBinding as Binding;
             var sortBy = columnBinding?.Path.Path ?? columnHeader.Column.Header as string;
             switch (sortBy.ToLower())

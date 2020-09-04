@@ -41,7 +41,7 @@ namespace AMDownloader
     {
         #region Fields
 
-        private readonly DisplayMessageDelegate _displayMessageDel;
+        private readonly DisplayMessageDelegate _displayMessage;
         private readonly ClipboardObserver _clipboardService;
         private readonly object _lockDownloadItemsList;
         private readonly object _lockBytesDownloaded;
@@ -79,7 +79,6 @@ namespace AMDownloader
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public AddItemsAsyncDelegate AddItemsAsyncDelegate;
         public IProgress<long> ProgressReporter;
 
         #endregion Properties
@@ -110,7 +109,7 @@ namespace AMDownloader
 
         #region Constructors
 
-        public DownloaderViewModel(DisplayMessageDelegate displayMessageDelegate)
+        public DownloaderViewModel(DisplayMessageDelegate displayMessage)
         {
             _client = new HttpClient();
             DownloadItemsList = new ObservableCollection<DownloaderObjectModel>();
@@ -125,7 +124,7 @@ namespace AMDownloader
             _semaphoreRefreshingView = new SemaphoreSlim(1);
             _ctsUpdatingList = null;
             _ctsRefreshView = null;
-            _displayMessageDel = displayMessageDelegate;
+            _displayMessage = displayMessage;
             _lockDownloadItemsList = DownloadItemsList;
             _lockBytesDownloaded = this.BytesDownloaded;
             _lockBytesTransferredOverLifetime = Settings.Default.BytesTransferredOverLifetime;
@@ -139,7 +138,6 @@ namespace AMDownloader
             this.VerifyingCount = 0;
             this.BytesDownloaded = 0;
             this.Status = "Ready";
-            this.AddItemsAsyncDelegate = new AddItemsAsyncDelegate(AddItemsAsync);
             this.ProgressReporter = new Progress<long>(value =>
             {
                 Monitor.Enter(_lockBytesDownloaded);
@@ -477,6 +475,7 @@ namespace AMDownloader
                     try
                     {
                         var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
+                        List<DownloaderObjectModel> dequeueThese = new List<DownloaderObjectModel>();
                         int total = items.Count();
 
                         await Application.Current.Dispatcher.Invoke(async () =>
@@ -485,7 +484,7 @@ namespace AMDownloader
                             {
                                 if (ct.IsCancellationRequested)
                                 {
-                                    ct.ThrowIfCancellationRequested();
+                                    break;
                                 }
 
                                 this.Status = "Removing " + (i + 1) + " of " + total + ": " + items[i].Name;
@@ -501,7 +500,7 @@ namespace AMDownloader
                                 if (items[i].IsQueued)
                                 {
                                     items[i].Dequeue();
-                                    this.QueueProcessor.Remove(items[i]);
+                                    dequeueThese.Add(items[i]);
                                 }
 
                                 Monitor.Enter(_lockDownloadItemsList);
@@ -509,6 +508,10 @@ namespace AMDownloader
                                 Monitor.Exit(_lockDownloadItemsList);
                             }
                         });
+
+                        this.Status = "Dequeueing items...";
+                        RaisePropertyChanged(nameof(this.Status));
+                        QueueProcessor.Remove(dequeueThese.ToArray());
                     }
                     catch (Exception ex)
                     {
@@ -531,7 +534,9 @@ namespace AMDownloader
                         RaisePropertyChanged(nameof(this.Status));
                         RefreshCollection();
                         this.Status = "Ready";
+                        this.Progress = 0;
                         RaisePropertyChanged(nameof(this.Status));
+                        RaisePropertyChanged(nameof(this.Progress));
                     }
                 }
                 catch (Exception ex)
@@ -544,7 +549,7 @@ namespace AMDownloader
         internal bool RemoveFromList_CanExecute(object obj)
         {
             if (obj == null) return false;
-            if (_semaphoreUpdatingList.CurrentCount == 0) return false;
+            if (_ctsUpdatingList!=null) return false;
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
             if (items.Count() == 0) return false;
             return true;
@@ -574,7 +579,8 @@ namespace AMDownloader
 
         internal bool Add_CanExecute(object obj)
         {
-            return _semaphoreUpdatingList.CurrentCount > 0;
+            if (_ctsUpdatingList != null) return false;
+            return true;
         }
 
         internal void Open(object obj)
@@ -1254,11 +1260,11 @@ namespace AMDownloader
                 {
                     if (skipping.Count < 100)
                     {
-                        _displayMessageDel("The following URLs were skipped because they are already in the list:\n\n" + string.Join('\n', skipping), "Duplicate URLs");
+                        _displayMessage("The following URLs were skipped because they are already in the list:\n\n" + string.Join('\n', skipping), "Duplicate URLs");
                     }
                     else
                     {
-                        _displayMessageDel(skipping.Count + " URLs were skipped because they are already in the list.", "Duplicate URLs");
+                        _displayMessage(skipping.Count + " URLs were skipped because they are already in the list.", "Duplicate URLs");
                     }
                 }
 
@@ -1342,7 +1348,7 @@ namespace AMDownloader
 
         private void ShowBusyMessage()
         {
-            _displayMessageDel.Invoke("Operation in progress. Please wait.");
+            _displayMessage.Invoke("Operation in progress. Please wait.");
         }
 
         internal void CancelBackgroundTask(object obj)
