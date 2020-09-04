@@ -1,12 +1,10 @@
 ﻿// Copyright (C) 2020 Antik Mozib. Released under GNU GPLv3.
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace AMDownloader.ObjectModel
 {
-    class AMDownloaderException : Exception
+    internal class AMDownloaderException : Exception
     {
         public AMDownloaderException()
         {

@@ -9,6 +9,7 @@ namespace AMDownloader.ObjectModel.Serializable
     public class SerializableDownloadPathHistoryList
     {
         public List<SerializableDownloadPathHistory> Objects;
+
         public SerializableDownloadPathHistoryList()
         {
             Objects = new List<SerializableDownloadPathHistory>();

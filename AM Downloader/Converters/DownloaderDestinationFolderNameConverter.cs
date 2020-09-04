@@ -1,14 +1,14 @@
 ﻿// Copyright (C) 2020 Antik Mozib. Released under GNU GPLv3.
 
+using AMDownloader.Common;
 using System;
 using System.Globalization;
 using System.IO;
 using System.Windows.Data;
-using AMDownloader.Common;
 
 namespace AMDownloader
 {
-    class DownloaderDestinationFolderNameConverter : IValueConverter
+    internal class DownloaderDestinationFolderNameConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {

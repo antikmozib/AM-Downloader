@@ -9,7 +9,7 @@ using System.Windows.Media;
 
 namespace AMDownloader
 {
-    class ProgressBarBackgroundConverter : IValueConverter
+    internal class ProgressBarBackgroundConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
@@ -27,5 +27,4 @@ namespace AMDownloader
             throw new NotImplementedException();
         }
     }
-
 }

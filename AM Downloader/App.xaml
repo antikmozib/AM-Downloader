@@ -4,12 +4,8 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/Styles/Style.xaml" />
             </ResourceDictionary.MergedDictionaries>
-            <FontFamily x:Key="FontAwesomeRegular">
-                /AM Downloader;component/Fonts/fontawesomeregular.otf#Font Awesome 5 Free Regular
-            </FontFamily>
-            <FontFamily x:Key="FontAwesomeSolid">
-                /AM Downloader;component/Fonts/fontawesomesolid.otf#Font Awesome 5 Free Solid
-            </FontFamily>
+            <FontFamily x:Key="FontAwesomeRegular">/AM Downloader;component/Fonts/fontawesomeregular.otf#Font Awesome 5 Free Regular</FontFamily>
+            <FontFamily x:Key="FontAwesomeSolid">/AM Downloader;component/Fonts/fontawesomesolid.otf#Font Awesome 5 Free Solid</FontFamily>
             <Style TargetType="Button">
                 <Setter Property="Height" Value="25" />
                 <Setter Property="Width" Value="80" />

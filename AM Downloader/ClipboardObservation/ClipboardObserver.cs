@@ -6,7 +6,7 @@ using System.Windows;
 
 namespace AMDownloader.ClipboardObservation
 {
-    class ClipboardObserver
+    internal class ClipboardObserver
     {
         public void SetText(string value)
         {
@@ -19,6 +19,7 @@ namespace AMDownloader.ClipboardObservation
             t.Start();
             t.Join();
         }
+
         public string GetText()
         {
             string val = String.Empty;
@@ -34,6 +35,7 @@ namespace AMDownloader.ClipboardObservation
 
             return val;
         }
+
         public void Clear()
         {
             Thread t = new Thread(() =>

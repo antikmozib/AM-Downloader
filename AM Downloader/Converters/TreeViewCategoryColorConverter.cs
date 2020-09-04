@@ -1,16 +1,14 @@
 ﻿// Copyright (C) 2020 Antik Mozib. Released under GNU GPLv3.
 
 using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Text;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
 
 namespace AMDownloader
 {
-    class TreeViewCategoryColorConverter : IValueConverter
+    internal class TreeViewCategoryColorConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
@@ -19,18 +17,25 @@ namespace AMDownloader
             {
                 case Categories.All:
                     return Application.Current.Resources["CategoryAllColor"];
+
                 case Categories.Downloading:
                     return Application.Current.Resources["CategoryDownloadingColor"];
+
                 case Categories.Queued:
                     return Application.Current.Resources["CategoryQueuedColor"];
+
                 case Categories.Finished:
                     return Application.Current.Resources["CategoryFinishedColor"];
+
                 case Categories.Ready:
                     return Application.Current.Resources["CategoryReadyColor"];
+
                 case Categories.Errored:
                     return Application.Current.Resources["CategoryErroredColor"];
+
                 case Categories.Verifying:
                     return Application.Current.Resources["CategoryVerifyingColor"];
+
                 case Categories.Paused:
                     return Application.Current.Resources["CategoryPausedColor"];
             }

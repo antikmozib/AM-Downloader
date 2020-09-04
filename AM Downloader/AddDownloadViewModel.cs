@@ -1,22 +1,21 @@
 ﻿// Copyright (C) 2020 Antik Mozib. Released under GNU GPLv3.
 
-using System.IO;
+using AMDownloader.ClipboardObservation;
+using AMDownloader.Common;
+using AMDownloader.Properties;
+using System;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
+using System.ComponentModel;
+using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using System.ComponentModel;
 using System.Windows.Input;
-using AMDownloader.Properties;
-using AMDownloader.Common;
-using System;
-using AMDownloader.ClipboardObservation;
 
 namespace AMDownloader
 {
-    delegate void ShowPreviewDelegate(string preview);
-    class AddDownloadViewModel : INotifyPropertyChanged
+    internal class AddDownloadViewModel : INotifyPropertyChanged
     {
         private AddItemsAsyncDelegate _addItemsAsync;
         private bool _monitorClipboard;
@@ -30,6 +29,7 @@ namespace AMDownloader
         public string SaveToFolder { get; set; }
         public bool StartDownload { get; set; }
         public bool AddToQueue { get; set; }
+
         public bool MonitorClipboard
         {
             get { return _monitorClipboard; }
@@ -104,7 +104,7 @@ namespace AMDownloader
             this.ShowPreview.Invoke(output);
         }
 
-        bool Add_CanExecute(object obj)
+        private bool Add_CanExecute(object obj)
         {
             if (this.Urls.Trim().Length == 0) return false;
             return true;

@@ -9,10 +9,10 @@ namespace AMDownloader
     {
         #region Fields
 
-        readonly Action<T> _execute;
-        readonly Predicate<T> _canExecute;
+        private readonly Action<T> _execute;
+        private readonly Predicate<T> _canExecute;
 
-        #endregion // Fields
+        #endregion Fields
 
         #region Constructors
 
@@ -29,7 +29,8 @@ namespace AMDownloader
             _execute = execute;
             _canExecute = canExecute;
         }
-        #endregion // Constructors
+
+        #endregion Constructors
 
         #region ICommand Members
 
@@ -49,6 +50,6 @@ namespace AMDownloader
             _execute((T)parameter);
         }
 
-        #endregion // ICommand Members
+        #endregion ICommand Members
     }
 }

@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace AMDownloader.RequestThrottling
 {
-    class RequestThrottler
+    internal class RequestThrottler
     {
         private readonly int _interval;
         private readonly ConcurrentQueue<RequestModel> _requestList;

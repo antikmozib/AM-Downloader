@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net;
 
 namespace AMDownloader.ObjectModel.Serializable
 {
@@ -15,6 +16,7 @@ namespace AMDownloader.ObjectModel.Serializable
         public bool IsQueued { get; set; }
         public bool IsCompleted { get; set; }
         public DateTime DateCreated { get; set; }
+        public HttpStatusCode? StatusCode { get; set; }
     }
 
     [Serializable]
@@ -22,6 +24,7 @@ namespace AMDownloader.ObjectModel.Serializable
     {
         public List<SerializableDownloaderObjectModel> Objects;
         public int Count => Objects.Count;
+
         public SerializableDownloaderObjectModelList()
         {
             Objects = new List<SerializableDownloaderObjectModel>();

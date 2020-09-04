@@ -6,14 +6,14 @@ using System.Reflection;
 
 namespace AMDownloader.Common
 {
-    enum ByteConstants
+    internal enum ByteConstants
     {
         KILOBYTE = 1024,
         MEGABYTE = KILOBYTE * KILOBYTE,
         GIGABYTE = MEGABYTE * KILOBYTE
     }
 
-    static class AppConstants
+    internal static class AppConstants
     {
         public const int CollectionRefreshInterval = 1000; // 1 sec
         public const int RequestThrottlerInterval = 60000; // 1 min
@@ -25,7 +25,7 @@ namespace AMDownloader.Common
         public const int ParallelStreamsLimit = 5;
     }
 
-    static class AppPaths
+    internal static class AppPaths
     {
         public static string LocalAppData => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Assembly.GetExecutingAssembly().GetName().Name);
         public static string DownloadsHistoryFile => Path.Combine(LocalAppData, "History.xml");
@@ -33,7 +33,7 @@ namespace AMDownloader.Common
         public static string DownloadsFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
     }
 
-    static class CommonFunctions
+    internal static class CommonFunctions
     {
         public static string GetFreshFilename(string path)
         {
@@ -66,11 +66,14 @@ namespace AMDownloader.Common
                     {
                         case DriveType.Fixed:
                             return "Local Disk (" + drive.RootDirectory.FullName.TrimEnd(Path.DirectorySeparatorChar) + ")";
+
                         case DriveType.CDRom:
                         case DriveType.Removable:
                             return "Removeable Disk (" + drive.RootDirectory.FullName.TrimEnd(Path.DirectorySeparatorChar) + ")";
+
                         case DriveType.Network:
                             return "Network Disk (" + drive.RootDirectory.FullName.TrimEnd(Path.DirectorySeparatorChar) + ")";
+
                         case DriveType.Unknown:
                         case DriveType.Ram:
                             return "Disk (" + drive.RootDirectory.FullName.TrimEnd(Path.DirectorySeparatorChar) + ")";
@@ -86,4 +89,3 @@ namespace AMDownloader.Common
         }
     }
 }
-

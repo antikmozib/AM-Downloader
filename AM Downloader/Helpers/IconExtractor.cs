@@ -17,10 +17,12 @@ namespace AMDownloader
     public class Shell32
     {
         public const int MAX_PATH = 256;
+
         [StructLayout(LayoutKind.Sequential)]
         public struct SHITEMID
         {
             public ushort cb;
+
             [MarshalAs(UnmanagedType.LPArray)]
             public byte[] abID;
         }
@@ -37,8 +39,10 @@ namespace AMDownloader
             public IntPtr hwndOwner;
             public IntPtr pidlRoot;
             public IntPtr pszDisplayName;
+
             [MarshalAs(UnmanagedType.LPTStr)]
             public string lpszTitle;
+
             public uint ulFlags;
             public IntPtr lpfn;
             public int lParam;
@@ -47,6 +51,7 @@ namespace AMDownloader
 
         // Browsing for directory.
         public const uint BIF_RETURNONLYFSDIRS = 0x0001;
+
         public const uint BIF_DONTGOBELOWDOMAIN = 0x0002;
         public const uint BIF_STATUSTEXT = 0x0004;
         public const uint BIF_RETURNFSANCESTORS = 0x0008;
@@ -67,8 +72,10 @@ namespace AMDownloader
             public IntPtr hIcon;
             public int iIcon;
             public uint dwAttributes;
+
             [MarshalAs(UnmanagedType.ByValTStr, SizeConst = MAX_PATH)]
             public string szDisplayName;
+
             [MarshalAs(UnmanagedType.ByValTStr, SizeConst = NAMESIZE)]
             public string szTypeName;
         };
@@ -120,9 +127,10 @@ namespace AMDownloader
         public static extern int DestroyIcon(IntPtr hIcon);
     }
 
-    static class IconExtractor
+    internal static class IconExtractor
     {
         private static Dictionary<string, ImageSource> _icons = new Dictionary<string, ImageSource>();
+
         public static ImageSource Extract(string destination, string url, bool isDirectory)
         {
             Shell32.SHFILEINFO shinfo = new Shell32.SHFILEINFO();
@@ -190,7 +198,7 @@ namespace AMDownloader
 
             // save the keys and images
             if (isDirectory && !_icons.ContainsKey(alternatePath))
-            {                
+            {
                 _icons.Add(alternatePath, imageSource);
             }
             else

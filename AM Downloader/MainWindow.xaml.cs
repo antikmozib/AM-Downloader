@@ -1,5 +1,6 @@
 ﻿// Copyright (C) 2020 Antik Mozib. Released under GNU GPLv3.
 
+using AMDownloader.Properties;
 using System;
 using System.ComponentModel;
 using System.Linq;
@@ -8,15 +9,11 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using AMDownloader.Properties;
 
 namespace AMDownloader
-{
-    delegate void DisplayMessageDelegate(string message, string title = "",MessageBoxImage image=MessageBoxImage.Information);
-
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
+{/// <summary>
+ /// Interaction logic for MainWindow.xaml
+ /// </summary>
     public partial class MainWindow : Window
     {
         private ICollectionView _dataView = null;
@@ -129,30 +126,39 @@ namespace AMDownloader
             {
                 case null:
                     return;
+
                 case "downloaded":
                     sortBy = "TotalBytesCompleted";
                     break;
+
                 case "size":
                     sortBy = "TotalBytesToDownload";
                     break;
+
                 case "location":
                     sortBy = "Destination";
                     break;
+
                 case "url":
                     sortBy = "Url";
                     break;
+
                 case "created":
                     sortBy = "DateCreated";
                     break;
+
                 case "http status":
                     sortBy = "StatusCode";
                     break;
+
                 case "eta":
                     sortBy = "TimeRemaining";
                     break;
+
                 case "type":
                     sortBy = "Extension";
                     break;
+
                 case "connections":
                     sortBy = "NumberOfActiveStreams";
                     break;

@@ -1,21 +1,20 @@
 ﻿// Copyright (C) 2020 Antik Mozib. Released under GNU GPLv3.
 
+using AMDownloader.Common;
+using AMDownloader.Properties;
+using AMDownloader.QueueProcessing;
+using AMDownloader.RequestThrottling;
+using AMDownloader.RequestThrottling.Model;
 using System;
-using System.IO;
-using System.Text;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
-using AMDownloader.Properties;
-using AMDownloader.Common;
-using AMDownloader.RequestThrottling;
-using AMDownloader.RequestThrottling.Model;
-using AMDownloader.QueueProcessing;
 
 namespace AMDownloader.ObjectModel
 {
@@ -23,9 +22,11 @@ namespace AMDownloader.ObjectModel
     {
         Ready, Queued, Downloading, Paused, Pausing, Finishing, Finished, Error, Cancelling, Connecting, Merging, Verifying
     }
-    class DownloaderObjectModel : INotifyPropertyChanged, IQueueable
+
+    internal class DownloaderObjectModel : INotifyPropertyChanged, IQueueable
     {
         #region Fields
+
         private CancellationTokenSource _ctsPaused, _ctsCanceled;
         private CancellationToken _ctPause, _ctCancel;
         private HttpClient _httpClient;
@@ -33,35 +34,47 @@ namespace AMDownloader.ObjectModel
         private readonly SemaphoreSlim _semaphoreDownloading;
         private IProgress<long> _reportBytesProgress;
         private RequestThrottler _requestThrottler;
-        private readonly string _tempPath;
-        #endregion // Fields
+
+        #endregion Fields
 
         #region Events
+
         public event PropertyChangedEventHandler PropertyChanged;
+
         public event EventHandler DownloadCreated;
+
         public event EventHandler DownloadVerifying;
+
         public event EventHandler DownloadVerified;
+
         public event EventHandler DownloadStarted;
+
         public event EventHandler DownloadStopped;
+
         public event EventHandler DownloadEnqueued;
+
         public event EventHandler DownloadDequeued;
+
         public event EventHandler DownloadFinished;
+
         protected virtual void RaiseEvent(EventHandler handler)
         {
             handler?.Invoke(this, null);
         }
-        #endregion // Events
+
+        #endregion Events
 
         #region Properties
-        public string TempDestination => _tempPath;
+
+        public string TempDestination { get; }
         public long? TotalBytesToDownload { get; private set; } // nullable
         public long? Speed { get; private set; } // nullable
-        public int? NumberOfActiveStreams { get; private set; } // nullable    
+        public int? NumberOfActiveStreams { get; private set; } // nullable
         public HttpStatusCode? StatusCode { get; private set; } // nullable
         public double? TimeRemaining { get; private set; }// nullable
         public bool IsBeingDownloaded => _ctsPaused != null;
-        public bool IsCompleted => File.Exists(this.Destination) && !File.Exists(_tempPath);
-        public bool IsPaused => File.Exists(_tempPath) && !File.Exists(this.Destination);
+        public bool IsCompleted => File.Exists(this.Destination) && !File.Exists(TempDestination);
+        public bool IsPaused => File.Exists(TempDestination) && !File.Exists(this.Destination);
         public bool IsQueued { get; private set; }
         public string Name { get; private set; }
         public string Extension => Path.GetExtension(this.Destination);
@@ -73,9 +86,11 @@ namespace AMDownloader.ObjectModel
         public long BytesDownloadedThisSession { get; private set; }
         public bool SupportsResume { get; private set; }
         public DateTime DateCreated { get; private set; }
-        #endregion // Properties
 
-        #region Constructors        
+        #endregion Properties
+
+        #region Constructors
+
         public DownloaderObjectModel(
             ref HttpClient httpClient,
             string url,
@@ -97,6 +112,7 @@ namespace AMDownloader.ObjectModel
                 destination,
                 enqueue,
                 totalBytesToDownload: null,
+                httpStatusCode: null,
                 downloadCreatedEventHandler,
                 downloadVerifyingEventHandler,
                 downloadVerifiedEventHandler,
@@ -116,6 +132,7 @@ namespace AMDownloader.ObjectModel
             string destination,
             bool enqueue,
             long? totalBytesToDownload,
+            HttpStatusCode? httpStatusCode,
             EventHandler downloadCreatedEventHandler,
             EventHandler downloadVerifyingEventHandler,
             EventHandler downloadVerifiedEventHandler,
@@ -132,7 +149,7 @@ namespace AMDownloader.ObjectModel
             _semaphoreDownloading = new SemaphoreSlim(1);
             _reportBytesProgress = bytesReporter;
             _requestThrottler = requestThrottler;
-            _tempPath = destination + AppConstants.DownloaderSplitedPartExtension;
+            TempDestination = destination + AppConstants.DownloaderSplitedPartExtension;
 
             PropertyChanged += propertyChangedEventHandler;
             DownloadCreated += downloadCreatedEventHandler;
@@ -150,10 +167,10 @@ namespace AMDownloader.ObjectModel
             this.Status = DownloadStatus.Ready;
             this.Progress = 0;
             this.TotalBytesCompleted = 0;
-            this.TotalBytesToDownload = totalBytesToDownload;
+            this.TotalBytesToDownload = null;
             this.BytesDownloadedThisSession = 0;
-            this.Speed = null;
             this.SupportsResume = false;
+            this.Speed = null;
             this.DateCreated = DateTime.Now;
             this.NumberOfActiveStreams = null;
             this.StatusCode = null;
@@ -165,26 +182,31 @@ namespace AMDownloader.ObjectModel
                 this.Enqueue();
             }
 
-            if (this.IsCompleted)
+            _semaphoreDownloading.Wait();
+            Task.Run(async () =>
             {
-                // if file exists and we know the final size, simply set finished instead of beginning a verification request
-                SetFinished();
-            }
-            else
-            {
-                _semaphoreDownloading.Wait();
-                Task.Run(async () =>
+                if (totalBytesToDownload > 0)
+                {
+                    var restore = new RequestModel();
+                    restore.TotalBytesToDownload = totalBytesToDownload;
+                    restore.StatusCode = httpStatusCode;
+                    restore.Url = url;
+                    await VerifyDownloadAsync(url, restore);
+                }
+                else
                 {
                     await VerifyDownloadAsync(url);
-                    _semaphoreDownloading.Release();
-                });
-            }
+                }
+                _semaphoreDownloading.Release();
+            });
 
             RaiseEvent(DownloadCreated);
         }
-        #endregion // Constructors
+
+        #endregion Constructors
 
         #region Private methods
+
         private void SetFinished()
         {
             this.IsQueued = false;
@@ -257,9 +279,9 @@ namespace AMDownloader.ObjectModel
             RaisePropertyChanged(nameof(this.Progress));
         }
 
-        private async Task VerifyDownloadAsync(string url)
+        private async Task VerifyDownloadAsync(string url, RequestModel? restore = null)
         {
-            // verifies the download; uses RequestThrottler to throttle multiple concurrent requests
+            // verifies the download; uses RequestThrottler to throttle multiple concurrent requests to the same url
             this.Status = DownloadStatus.Verifying;
             RaisePropertyChanged(nameof(this.Status));
             RaiseEvent(DownloadVerifying);
@@ -271,20 +293,29 @@ namespace AMDownloader.ObjectModel
             }
             else
             {
-                // check if we've seen this recently and throttle requests
-                RequestModel? requestModel = _requestThrottler.Has(url);
-                if (requestModel != null)
+                // are we restoring? only restore if we have a valid status code
+                if (restore != null && restore?.StatusCode != null)
                 {
-                    // we've seen this *recently*; just grab seen data
-                    this.TotalBytesToDownload = requestModel?.TotalBytesToDownload;
-                    this.StatusCode = requestModel?.StatusCode;
+                    this.TotalBytesToDownload = restore?.TotalBytesToDownload;
+                    this.StatusCode = restore?.StatusCode;
                 }
                 else
                 {
-                    // we haven't seen this before; verify actual url
-                    var downloadVerification = await VerifyUrlAsync(url);
-                    this.StatusCode = downloadVerification.StatusCode;
-                    this.TotalBytesToDownload = downloadVerification.TotalBytesToDownload;
+                    // check if we've seen this recently and throttle requests
+                    RequestModel? requestModel = _requestThrottler.Has(url);
+                    if (requestModel != null)
+                    {
+                        // we've seen this *recently*; just grab seen data
+                        this.TotalBytesToDownload = requestModel?.TotalBytesToDownload;
+                        this.StatusCode = requestModel?.StatusCode;
+                    }
+                    else
+                    {
+                        // we haven't seen this before; verify actual url
+                        var urlVerification = await VerifyUrlAsync(url);
+                        this.StatusCode = urlVerification.StatusCode;
+                        this.TotalBytesToDownload = urlVerification.TotalBytesToDownload;
+                    }
                 }
 
                 RaisePropertyChanged(nameof(this.StatusCode));
@@ -305,7 +336,6 @@ namespace AMDownloader.ObjectModel
                         break;
                 }
 
-
                 if (this.StatusCode != HttpStatusCode.OK && this.StatusCode != HttpStatusCode.PartialContent)
                 {
                     // invalid url
@@ -314,9 +344,9 @@ namespace AMDownloader.ObjectModel
                 else
                 {
                     // valid url
-                    if (File.Exists(_tempPath))
+                    if (File.Exists(TempDestination))
                     {
-                        this.TotalBytesCompleted = new FileInfo(_tempPath).Length;
+                        this.TotalBytesCompleted = new FileInfo(TempDestination).Length;
                     }
                     else
                     {
@@ -350,29 +380,29 @@ namespace AMDownloader.ObjectModel
         private async Task<UrlVerificationModel> VerifyUrlAsync(string url)
         {
             // force checks the url and returns TotalBytesToDownload
-            UrlVerificationModel downloadVerificationModel;
-            downloadVerificationModel.StatusCode = null;
-            downloadVerificationModel.TotalBytesToDownload = null;
+            UrlVerificationModel urlVerification;
+            urlVerification.StatusCode = null;
+            urlVerification.TotalBytesToDownload = null;
             try
             {
                 using (var request = new HttpRequestMessage(HttpMethod.Get, url))
                 {
                     using (HttpResponseMessage response = await this._httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
                     {
-                        downloadVerificationModel.StatusCode = response.StatusCode;
-                        downloadVerificationModel.TotalBytesToDownload = response.Content.Headers.ContentLength;
+                        urlVerification.StatusCode = response.StatusCode;
+                        urlVerification.TotalBytesToDownload = response.Content.Headers.ContentLength;
                     }
                 }
             }
             catch (HttpRequestException)
             {
-                downloadVerificationModel.StatusCode = HttpStatusCode.BadRequest;
+                urlVerification.StatusCode = HttpStatusCode.BadRequest;
             }
             catch
             {
-                downloadVerificationModel.StatusCode = null;
+                urlVerification.StatusCode = null;
             }
-            return downloadVerificationModel;
+            return urlVerification;
         }
 
         private bool CreateEmptyDownload(string filename)
@@ -504,12 +534,12 @@ namespace AMDownloader.ObjectModel
                     {
                         throw new AMDownloaderException("Destination directory does not exist.");
                     }
-                    if (!File.Exists(_tempPath) && File.Exists(this.Destination))
+                    if (!File.Exists(TempDestination) && File.Exists(this.Destination))
                     {
                         throw new AMDownloaderException("A new download has not been created.");
                     }
 
-                    using (var destinationStream = new FileStream(_tempPath, FileMode.Append, FileAccess.Write))
+                    using (var destinationStream = new FileStream(TempDestination, FileMode.Append, FileAccess.Write))
                     using (var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
                     using (var sourceStream = await response.Content.ReadAsStreamAsync())
                     using (var binaryWriter = new BinaryWriter(destinationStream))
@@ -678,9 +708,11 @@ namespace AMDownloader.ObjectModel
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
         }
-        #endregion // Private methods
+
+        #endregion Private methods
 
         #region Public methods
+
         public void Enqueue()
         {
             if (this.IsQueued || this.IsBeingDownloaded || this.IsCompleted) return;
@@ -732,7 +764,7 @@ namespace AMDownloader.ObjectModel
                         if (this.IsPaused)
                         {
                             // Download is paused; resume from specific point
-                            bytesAlreadyDownloaded = new FileInfo(_tempPath).Length;
+                            bytesAlreadyDownloaded = new FileInfo(TempDestination).Length;
                         }
                         else
                         {
@@ -777,7 +809,7 @@ namespace AMDownloader.ObjectModel
                         RaisePropertyChanged(nameof(this.Status));
                         try
                         {
-                            File.Move(_tempPath, this.Destination, true);
+                            File.Move(TempDestination, this.Destination, true);
                             SetFinished();
                         }
                         catch
@@ -845,12 +877,12 @@ namespace AMDownloader.ObjectModel
                 Task.Run(async () =>
                 {
                     int numRetries = 30;
-                    while (File.Exists(_tempPath) && numRetries-- > 0)
+                    while (File.Exists(TempDestination) && numRetries-- > 0)
                     {
                         // if deletion fails, retry 30 times with 1 sec interval
                         try
                         {
-                            File.Delete(_tempPath);
+                            File.Delete(TempDestination);
                             SetReady();
                         }
                         catch (IOException)
@@ -873,6 +905,7 @@ namespace AMDownloader.ObjectModel
             await Task.Run(() => this.Cancel());
             _taskCompletion?.Task.Wait();
         }
+
         public void SetCreationTime(DateTime newDateCreated)
         {
             this.DateCreated = newDateCreated;
@@ -886,6 +919,7 @@ namespace AMDownloader.ObjectModel
             await VerifyDownloadAsync(this.Url);
             _semaphoreDownloading.Release();
         }
-        #endregion // Public methods
+
+        #endregion Public methods
     }
 }

@@ -5,7 +5,7 @@ using System.Net;
 
 namespace AMDownloader.RequestThrottling.Model
 {
-    struct RequestModel
+    internal struct RequestModel
     {
         public string Url;
         public DateTime SeenAt;

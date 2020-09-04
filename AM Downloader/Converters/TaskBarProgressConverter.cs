@@ -6,13 +6,13 @@ using System.Windows.Data;
 
 namespace AMDownloader
 {
-    class TaskBarProgressConverter : IValueConverter
+    internal class TaskBarProgressConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             double d_progress;
             int.TryParse(value.ToString(), out int i_progress);
-            d_progress =(double) i_progress / 100;
+            d_progress = (double)i_progress / 100;
             return d_progress;
         }
 

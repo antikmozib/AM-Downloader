@@ -6,7 +6,6 @@
     <SolidColorBrush x:Key="StopButtonIconColor" Color="OrangeRed" />
     <SolidColorBrush x:Key="StartQueueButtonIconColor" Color="LightSeaGreen" />
     <SolidColorBrush x:Key="StopQueueButtonIconColor" Color="IndianRed" />
-
     <SolidColorBrush x:Key="CategoryAllColor" Color="DarkSlateBlue" />
     <SolidColorBrush x:Key="CategoryReadyColor" Color="LightSeaGreen" />
     <SolidColorBrush x:Key="CategoryQueuedColor" Color="SandyBrown" />
@@ -17,10 +16,8 @@
     <SolidColorBrush x:Key="CategoryVerifyingColor" Color="Yellow" />
     <!--<SolidColorBrush x:Key="CategorySelectedBackground" Color="{DynamicResource MahApps.Colors.Accent3}" />
     <SolidColorBrush x:Key="CategorySelectedForeground" Color="{DynamicResource MahApps.Colors.ThemeForeground}" />-->
-
     <SolidColorBrush x:Key="ColumnHeaderSortDirectionColor" Color="DarkGreen" />
     <SolidColorBrush x:Key="GridViewSelectedItemBackground" Color="PowderBlue" />
-    
     <SolidColorBrush x:Key="ProgressBarValueColor" Color="#f2f2f2" />
     <SolidColorBrush x:Key="ProgressBarValueShadowColor" Color="#4d4d4d" />
     <SolidColorBrush x:Key="ProgressBarFinishedForeground" Color="#669999" />
@@ -28,7 +25,6 @@
     <SolidColorBrush x:Key="ProgressBarForeground" Color="#00b300" />
     <SolidColorBrush x:Key="ProgressBarValueLightColor" Color="#ffffff" />
     <SolidColorBrush x:Key="ProgressBarValueDarkColor" Color="#000000" />
-
-    <SolidColorBrush x:Key="StausBarEllipseReadyColor" Color="MediumSeaGreen"/>
-    <SolidColorBrush x:Key="StausBarEllipseBusyColor" Color="DarkOrange"/>
+    <SolidColorBrush x:Key="StausBarEllipseReadyColor" Color="MediumSeaGreen" />
+    <SolidColorBrush x:Key="StausBarEllipseBusyColor" Color="DarkOrange" />
 </ResourceDictionary>

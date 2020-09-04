@@ -1,15 +1,13 @@
 ﻿// Copyright (C) 2020 Antik Mozib. Released under GNU GPLv3.
 
 using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Text;
 using System.Windows.Data;
 using System.Windows.Shell;
 
 namespace AMDownloader
 {
-    class TaskBarProgressStateConverter : IValueConverter
+    internal class TaskBarProgressStateConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {

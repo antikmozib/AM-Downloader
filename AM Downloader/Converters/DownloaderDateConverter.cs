@@ -6,7 +6,7 @@ using System.Windows.Data;
 
 namespace AMDownloader
 {
-    class DownloaderDateConverter : IValueConverter
+    internal class DownloaderDateConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {

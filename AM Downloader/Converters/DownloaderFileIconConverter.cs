@@ -9,7 +9,7 @@ using System.Windows.Media;
 
 namespace AMDownloader
 {
-    class DownloaderFileIconConverter : IValueConverter
+    internal class DownloaderFileIconConverter : IValueConverter
     {
         private Dictionary<string, ImageSource> _icons = new Dictionary<string, ImageSource>();
 

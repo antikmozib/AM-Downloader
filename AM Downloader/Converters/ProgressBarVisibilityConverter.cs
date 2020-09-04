@@ -8,7 +8,7 @@ using System.Windows.Data;
 
 namespace AMDownloader
 {
-    class ProgressBarVisibilityConverter : IValueConverter
+    internal class ProgressBarVisibilityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
@@ -27,5 +27,4 @@ namespace AMDownloader
             throw new NotImplementedException();
         }
     }
-
 }

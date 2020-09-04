@@ -1,19 +1,19 @@
 ﻿// Copyright (C) 2020 Antik Mozib. Released under GNU GPLv3.
 
+using AMDownloader.Common;
+using AMDownloader.ObjectModel.Serializable;
+using AMDownloader.Properties;
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
 using System.Xml.Serialization;
-using AMDownloader.Properties;
-using AMDownloader.Common;
-using AMDownloader.ObjectModel.Serializable;
 
 namespace AMDownloader
 {
     /// <summary>
     /// Interaction logic for AddDownloadWindow.xaml
     /// </summary>
-    /// 
+    ///
     public partial class AddDownloadWindow : Window
     {
         public AddDownloadWindow()

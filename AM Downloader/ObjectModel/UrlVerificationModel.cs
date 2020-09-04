@@ -4,7 +4,7 @@ using System.Net;
 
 namespace AMDownloader.ObjectModel
 {
-    struct UrlVerificationModel
+    internal struct UrlVerificationModel
     {
         public HttpStatusCode? StatusCode;
         public long? TotalBytesToDownload;

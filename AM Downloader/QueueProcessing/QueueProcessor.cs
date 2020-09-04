@@ -1,33 +1,39 @@
 ﻿// Copyright (C) 2020 Antik Mozib. Released under GNU GPLv3.
 
 using System;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Linq;
-using System.ComponentModel;
 
 namespace AMDownloader.QueueProcessing
 {
-    class QueueProcessor : INotifyPropertyChanged
+    internal class QueueProcessor : INotifyPropertyChanged
     {
         #region Fields
+
         private readonly SemaphoreSlim _semaphore;
         private readonly List<IQueueable> _itemsProcessing;
         private BlockingCollection<IQueueable> _queueList;
         private CancellationTokenSource _ctsCancel;
         private CancellationToken _ctCancel;
         private bool _hasItems;
-        #endregion // Fields
+
+        #endregion Fields
 
         #region Properties
+
         public event PropertyChangedEventHandler PropertyChanged;
+
         public bool IsBusy => _ctsCancel != null;
         public bool HasItems => _hasItems;
-        #endregion // Properties
+
+        #endregion Properties
 
         #region Constructors
+
         public QueueProcessor(int maxParallelDownloads, PropertyChangedEventHandler propertyChangedEventHandler)
         {
             _queueList = new BlockingCollection<IQueueable>();
@@ -36,9 +42,11 @@ namespace AMDownloader.QueueProcessing
             _hasItems = false;
             this.PropertyChanged += propertyChangedEventHandler;
         }
-        #endregion // Constructors
+
+        #endregion Constructors
 
         #region Private methods
+
         private async Task ProcessQueueAsync()
         {
             var tasks = new List<Task>();
@@ -92,9 +100,11 @@ namespace AMDownloader.QueueProcessing
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
         }
-        #endregion // Private methods
+
+        #endregion Private methods
 
         #region Public methods
+
         // Producer
         public bool Add(IQueueable item)
         {
@@ -150,14 +160,16 @@ namespace AMDownloader.QueueProcessing
             _ctsCancel?.Cancel();
             Parallel.ForEach(_itemsProcessing, (item) => item.Pause());
         }
-        #endregion // Public methods
+
+        #endregion Public methods
 
         #region Public functions
+
         public bool Contains(IQueueable value)
         {
             return _queueList.Contains(value);
         }
 
-        #endregion // Public functions
+        #endregion Public functions
     }
 }
