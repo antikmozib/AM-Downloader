@@ -20,3 +20,5 @@ dotnet restore
 dotnet build
 dotnet run
 ```
+
+Contributions, feedback and bug reports are always welcome.
