@@ -14,7 +14,7 @@ Prerequisites: [VS2019](https://visualstudio.microsoft.com/vs/) with [.NET Core 
 
 1. Run `git clone https://github.com/antikmozib/AM-Downloader.git`
 2. `cd` to 'AM-Downloader/AM Downloader/'
-3. Run 
+3. Run the following commands
 ```
 dotnet restore
 dotnet build
