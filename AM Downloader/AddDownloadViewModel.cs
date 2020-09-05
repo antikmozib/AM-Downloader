@@ -67,7 +67,7 @@ namespace AMDownloader
             }
             this.AddToQueue = Settings.Default.AddItemsToQueue;
             this.StartDownload = Settings.Default.StartDownloadingAddedItems;
-            this.Urls = String.Empty;
+            this.Urls = string.Empty;
             this.ShowPreview = showPreview;
 
             var clipText = _clipboardService.GetText();
@@ -80,27 +80,10 @@ namespace AMDownloader
             string output = String.Empty;
 
             if (urls.Length == 0) return;
-
-            if (urls.Length > 7)
+            foreach (var url in urls)
             {
-                for (int i = 0; i < 3; i++)
-                {
-                    output += urls[i] + "\n\n";
-                }
-                output += "... " + (urls.Length - 6).ToString() + " more files ...\n\n";
-                for (int i = urls.Length - 3; i < urls.Length; i++)
-                {
-                    output += urls[i] + "\n\n";
-                }
+                output += url + "\n\n";
             }
-            else
-            {
-                foreach (var url in urls)
-                {
-                    output += url + "\n\n";
-                }
-            }
-
             this.ShowPreview.Invoke(output);
         }
 
@@ -115,7 +98,7 @@ namespace AMDownloader
             if (Urls == null || SaveToFolder == null) return;
 
             if (SaveToFolder.LastIndexOf(Path.DirectorySeparatorChar) != SaveToFolder.Length - 1)
-                SaveToFolder = SaveToFolder + Path.DirectorySeparatorChar;
+                SaveToFolder += Path.DirectorySeparatorChar;
 
             Settings.Default.AddItemsToQueue = this.AddToQueue;
             Settings.Default.StartDownloadingAddedItems = this.StartDownload;
@@ -140,10 +123,8 @@ namespace AMDownloader
                 {
                     // url has patterns
                     string bounds = Regex.Match(url, pattern).Value;
-                    int lBound = 0, uBound = 0;
-
-                    int.TryParse(bounds.Substring(1, bounds.IndexOf(':') - 1), out lBound);
-                    int.TryParse(bounds.Substring(bounds.IndexOf(':') + 1, bounds.Length - bounds.IndexOf(':') - 2), out uBound);
+                    int.TryParse(bounds.Substring(1, bounds.IndexOf(':') - 1), out int lBound);
+                    int.TryParse(bounds.Substring(bounds.IndexOf(':') + 1, bounds.Length - bounds.IndexOf(':') - 2), out int uBound);
 
                     for (int i = lBound; i <= uBound; i++)
                     {

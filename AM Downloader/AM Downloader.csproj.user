@@ -15,9 +15,15 @@
     <Compile Update="OptionsWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="PreviewWindow.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Page Update="AddDownloadWindow.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="PreviewWindow.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Resource Update="MainWindow.xaml">

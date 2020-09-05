@@ -30,7 +30,7 @@ namespace AMDownloader
 
     internal delegate void ShowPreviewDelegate(string preview);
 
-    internal delegate void DisplayMessageDelegate(string message, string title = "", MessageBoxImage image = MessageBoxImage.Information);
+    internal delegate MessageBoxResult DisplayMessageDelegate(string message, string title = "", MessageBoxButton button = MessageBoxButton.OK, MessageBoxImage image = MessageBoxImage.Information, MessageBoxResult defaultResult = MessageBoxResult.OK);
 
     public enum Categories
     {
@@ -358,7 +358,7 @@ namespace AMDownloader
                 forceEnqueue = true;
             }
 
-            foreach (DownloaderObjectModel item in items)
+            foreach (var item in items)
             {
                 if (item.IsBeingDownloaded) continue;
                 if (forceEnqueue)
@@ -407,7 +407,7 @@ namespace AMDownloader
         {
             if (obj == null) return;
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
-            foreach (DownloaderObjectModel item in items)
+            foreach (var item in items)
             {
                 item.Pause();
             }
@@ -429,7 +429,7 @@ namespace AMDownloader
         {
             if (obj == null) return;
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
-            foreach (DownloaderObjectModel item in items)
+            foreach (var item in items)
             {
                 item.Cancel();
             }
@@ -532,7 +532,9 @@ namespace AMDownloader
                         RaisePropertyChanged(nameof(this.IsBackgroundWorking));
                         RaisePropertyChanged(nameof(this.FinishedCount));
                         RaisePropertyChanged(nameof(this.Status));
+
                         RefreshCollection();
+
                         this.Status = "Ready";
                         this.Progress = 0;
                         RaisePropertyChanged(nameof(this.Status));
@@ -549,7 +551,7 @@ namespace AMDownloader
         internal bool RemoveFromList_CanExecute(object obj)
         {
             if (obj == null) return false;
-            if (_ctsUpdatingList!=null) return false;
+            if (_ctsUpdatingList != null) return false;
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
             if (items.Count() == 0) return false;
             return true;
@@ -621,7 +623,7 @@ namespace AMDownloader
             {
                 var result = MessageBox.Show("You have selected to open " + items.Count + " folders.\n\n" +
                     "Opening too many folders at the same time may cause the system to crash.\n\nDo you wish to proceed?",
-                    "Open folder", MessageBoxButton.YesNo, MessageBoxImage.Exclamation, MessageBoxResult.No);
+                    "Open Folder", MessageBoxButton.YesNo, MessageBoxImage.Exclamation, MessageBoxResult.No);
 
                 if (result == MessageBoxResult.No)
                 {
@@ -686,7 +688,7 @@ namespace AMDownloader
 
             if (_ctsUpdatingList != null)
             {
-                if (MessageBox.Show("Background operation in progress. Cancel and exit program?", "Exit", MessageBoxButton.YesNo, MessageBoxImage.Exclamation, MessageBoxResult.No) == MessageBoxResult.No)
+                if (_displayMessage.Invoke("Background operation in progress. Cancel and exit program?", "Exit", MessageBoxButton.YesNo, MessageBoxImage.Exclamation, MessageBoxResult.No) == MessageBoxResult.No)
                 {
                     return;
                 }
@@ -710,15 +712,17 @@ namespace AMDownloader
                     {
                         if (item.IsBeingDownloaded) item.Pause();
                         if (item.Status == DownloadStatus.Finished && Settings.Default.ClearFinishedOnExit) return;
-                        var sItem = new SerializableDownloaderObjectModel();
-                        sItem.Index = index++;
-                        sItem.Url = item.Url;
-                        sItem.Destination = item.Destination;
-                        sItem.TotalBytesToDownload = item.TotalBytesToDownload;
-                        sItem.IsQueued = item.IsQueued;
-                        sItem.IsCompleted = item.IsCompleted;
-                        sItem.DateCreated = item.DateCreated;
-                        sItem.StatusCode = item.StatusCode;
+                        var sItem = new SerializableDownloaderObjectModel
+                        {
+                            Index = index++,
+                            Url = item.Url,
+                            Destination = item.Destination,
+                            TotalBytesToDownload = item.TotalBytesToDownload,
+                            IsQueued = item.IsQueued,
+                            IsCompleted = item.IsCompleted,
+                            DateCreated = item.DateCreated,
+                            StatusCode = item.StatusCode
+                        };
                         list.Objects.Add(sItem);
                     }
                     using (var streamWriter = new StreamWriter(AppPaths.DownloadsHistoryFile, false))
@@ -871,9 +875,9 @@ namespace AMDownloader
                         {
                             DownloadItemsList.Remove(item);
                             item.Dequeue();
-                            this.QueueProcessor.Remove(item);
                         }
                     });
+                    QueueProcessor.Remove(itemsDeleted.ToArray());
                 }
                 finally
                 {

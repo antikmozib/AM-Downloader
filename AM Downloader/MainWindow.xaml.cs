@@ -11,9 +11,10 @@ using System.Windows.Controls;
 using System.Windows.Data;
 
 namespace AMDownloader
-{/// <summary>
- /// Interaction logic for MainWindow.xaml
- /// </summary>
+{
+    /// <summary>
+    /// Interaction logic for MainWindow.xaml
+    /// </summary>
     public partial class MainWindow : Window
     {
         private ICollectionView _dataView = null;
@@ -50,7 +51,7 @@ namespace AMDownloader
             var description = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyDescriptionAttribute), false).OfType<AssemblyDescriptionAttribute>().FirstOrDefault()?.Description;
             var copyright = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyCopyrightAttribute), true).OfType<AssemblyCopyrightAttribute>().FirstOrDefault()?.Copyright;
             var funFact = "Total data transferred over lifetime: " + Math.Round((double)Settings.Default.BytesTransferredOverLifetime / (1024 * 1024 * 1024), 2) + " GB";
-            MessageBox.Show(name + "\nVersion " + version + "\n\n" + description + "\n\n" + copyright + "\n\n" + funFact, "About");
+            MessageBox.Show(name + "\nVersion " + version + "\n\n" + description + "\n\n" + copyright + "\n\n" + funFact, "About", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -173,10 +174,13 @@ namespace AMDownloader
             (tvCategories.ItemContainerGenerator.ContainerFromIndex(0) as TreeViewItem).IsSelected = true;
         }
 
-        internal void DisplayMessage(string message, string title = "", MessageBoxImage image = MessageBoxImage.Information)
+        internal MessageBoxResult DisplayMessage(string message, string title = "", MessageBoxButton button = MessageBoxButton.OK, MessageBoxImage image = MessageBoxImage.Information, MessageBoxResult defaultResult = MessageBoxResult.OK)
         {
-            if (title == "") title = Assembly.GetExecutingAssembly().GetName().Name;
-            Application.Current?.Dispatcher?.Invoke(() => MessageBox.Show(message, title));
+            if (title == "")
+            {
+                title = Assembly.GetExecutingAssembly().GetName().Name;
+            }
+            return Application.Current.Dispatcher.Invoke(() => MessageBox.Show(this, message, title, button, image, defaultResult));
         }
     }
 }

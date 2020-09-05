@@ -50,7 +50,6 @@
         <KeyBinding Command="{Binding OpenContainingFolderCommand}" CommandParameter="{Binding SelectedItems, ElementName=lvDownload}" Key="O" Modifiers="Alt" />
         <KeyBinding Command="{Binding CopyLinkToClipboardCommand}" CommandParameter="{Binding SelectedItems, ElementName=lvDownload}" Key="C" Modifiers="Ctrl" />
     </Window.InputBindings>
-
     <Window.TaskbarItemInfo>
         <TaskbarItemInfo ProgressState="{Binding Progress, Converter={StaticResource TaskBarProgressStateConverter}}" ProgressValue="{Binding Progress, Converter={StaticResource TaskBarProgressConverter}}" />
     </Window.TaskbarItemInfo>
@@ -159,18 +158,6 @@
                         <Setter Property="Height" Value="14" />
                     </Style>
                     <Style TargetType="{x:Type Button}">
-                        <!-- <Setter
-                                Property="Background"
-                                Value="{DynamicResource MahApps.Brushes.IdealForeground}" />
-                        <Setter
-                                Property="Foreground"
-                                Value="{DynamicResource MahApps.Brushes.AccentBase}" />
-                        <Setter
-                                Property="BorderBrush"
-                                Value="{DynamicResource MahApps.Brushes.Button.Border}" />
-                        <Setter
-                                Property="BorderThickness"
-                                Value="1" /> -->
                         <Setter Property="HorizontalContentAlignment" Value="Center" />
                         <Setter Property="VerticalContentAlignment" Value="Center" />
                         <Setter Property="Width" Value="14" />
@@ -179,32 +166,6 @@
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Visibility" Value="Collapsed" />
                             </Trigger>
-                            <!-- <Trigger
-                                    Property="IsMouseOver"
-                                    Value="True">
-                                <Setter
-                                        Property="Background"
-                                        Value="{DynamicResource MahApps.Brushes.AccentBase}" />
-                                <Setter
-                                        Property="Foreground"
-                                        Value="{DynamicResource MahApps.Brushes.IdealForeground}" />
-                                <Setter
-                                        Property="BorderBrush"
-                                        Value="{DynamicResource MahApps.Brushes.IdealForeground}" />
-                            </Trigger>
-                            <Trigger
-                                    Property="IsFocused"
-                                    Value="True">
-                                <Setter
-                                        Property="Background"
-                                        Value="{DynamicResource MahApps.Brushes.Gray}" />
-                                <Setter
-                                        Property="Foreground"
-                                        Value="{DynamicResource MahApps.Brushes.IdealForeground}" />
-                                <Setter
-                                        Property="BorderBrush"
-                                        Value="{DynamicResource MahApps.Brushes.Gray}" />
-                            </Trigger> -->
                         </Style.Triggers>
                     </Style>
                 </StatusBar.Resources>
@@ -253,8 +214,6 @@
                                                 <Ellipse Height="{TemplateBinding Height}" Width="{TemplateBinding Width}" Fill="{TemplateBinding Background}" Stroke="{TemplateBinding BorderBrush}" />
                                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                                             </Grid>
-                                            <!--<Border Background="{TemplateBinding Background}" BorderBrush="{StaticResource StausBarEllipseBusyColor}" BorderThickness="1">
-                                            </Border>-->
                                         </ControlTemplate>
                                     </Setter.Value>
                                 </Setter>
@@ -426,8 +385,7 @@
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
-                                            </TextBlock.Style>
-                                        </TextBlock>
+                                            </TextBlock.Style></TextBlock>
                                     </Grid>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsSelected" Value="True">
@@ -585,14 +543,7 @@
                                 <DataTemplate>
                                     <Grid>
                                         <ProgressBar x:Name="pbProgress" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Minimum="0" Maximum="100" Value="{Binding Progress, Mode=OneWay}" />
-                                        <!-- Background="{Binding Status, Converter={StaticResource ProgressBarBackgroundConverter}}" Foreground="{Binding Status, Converter={StaticResource ProgressBarForegroundConverter}}" Visibility="{Binding Status, Converter={StaticResource ProgressBarVisibilityConverter}}" -->
-                                        <TextBlock Text="{Binding Value, ElementName=pbProgress, StringFormat=\{0:0\}%}" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                            <!-- Foreground="{StaticResource ProgressBarValueColor}"> -->
-                                            <!-- <TextBlock.Effect>
-                                                <DropShadowEffect ShadowDepth="1" BlurRadius="2" />
-                                            </TextBlock.Effect> -->
-                                        </TextBlock>
-                                        <!--Foreground="{Binding Status, Converter={StaticResource ProgressBarValueColorConverter}}"-->
+                                        <TextBlock Text="{Binding Value, ElementName=pbProgress, StringFormat=\{0:0\}%}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
@@ -673,4 +624,4 @@
             </ListView>
         </Grid>
     </DockPanel>
-</Window>    
+</Window>
