@@ -10,10 +10,16 @@ A modern download manager for Windows.
 
 # Building
 
-Prerequisites: Visual Studio 2019 with .NET Core 3.0 + Windows Desktop SDK
+Prerequisites: [VS2019](https://visualstudio.microsoft.com/vs/) with [.NET Core 3.0 SDK](https://dotnet.microsoft.com/download/dotnet-core)
 
 1. Run `git clone https://github.com/antikmozib/AM-Downloader.git`
-2. Navigate to folder 'AM-Downloader/AM Downloader/'
-3. Execute `dotnet restore`
-4. Execute `dotnet build`
-5. Execute `dotnet run`
+2. `cd` to 'AM-Downloader/AM Downloader/'
+3. Run the following commands
+```
+dotnet restore
+dotnet build
+dotnet run
+```
+
+
+_Contributions, feedback and bug reports are always welcome._
