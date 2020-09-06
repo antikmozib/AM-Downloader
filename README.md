@@ -1,14 +1,16 @@
 # AM Downloader
+
 A modern download manager for Windows.
 
 ![Screenshot](https://github.com/antikmozib/AM-Downloader/blob/master/Screenshot.png?raw=true)
 
-# Features
-- Parallel downloads
-- Supports pausing, resuming and queueing
-- Supports URL patterns
+<h3>Features</h3>
 
-# Building
+* Parallel downloads
+* Supports pausing, resuming and queueing
+* Supports URL patterns
+
+<h3>Building</h3>
 
 Prerequisites: [VS2019](https://visualstudio.microsoft.com/vs/) with [.NET Core 3.0 SDK](https://dotnet.microsoft.com/download/dotnet-core)
 
