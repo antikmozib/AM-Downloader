@@ -385,7 +385,7 @@ namespace AMDownloader
             }
             else
             {
-                Task.Run(async () => await Task.WhenAll());
+                Task.Run(async () => await Task.WhenAll(tasks.ToArray()));
             }
         }
 
