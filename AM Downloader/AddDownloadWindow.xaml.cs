@@ -5,9 +5,7 @@ using AMDownloader.ObjectModel.Serializable;
 using AMDownloader.Properties;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Xml.Serialization;
 
@@ -155,9 +153,10 @@ namespace AMDownloader
 
         internal void Preview(string preview)
         {
-            var urls = from url in preview.Split('\n').ToList<string>() where url.Trim().Length > 0 select url;
+            var urls = (from url in preview.Split('\n').ToList<string>() where url.Trim().Length > 0 select url).ToList<string>();
+            var previewViewModel = new PreviewViewModel("Preview URL patterns:", urls);
             var previewWindow = new PreviewWindow();
-            previewWindow.listUrls.ItemsSource = urls;
+            previewWindow.DataContext = previewViewModel;
             previewWindow.Owner = this;
             previewWindow.ShowDialog();
         }

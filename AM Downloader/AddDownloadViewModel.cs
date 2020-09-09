@@ -17,10 +17,10 @@ namespace AMDownloader
 {
     internal class AddDownloadViewModel : INotifyPropertyChanged
     {
-        private AddItemsAsyncDelegate _addItemsAsync;
+        private readonly AddItemsAsyncDelegate _addItemsAsync;
         private bool _monitorClipboard;
         private CancellationTokenSource _ctsClipboard;
-        private ClipboardObserver _clipboardService;
+        private readonly ClipboardObserver _clipboardService;
 
         public event PropertyChangedEventHandler PropertyChanged;
 

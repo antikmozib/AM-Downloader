@@ -327,12 +327,12 @@ namespace AMDownloader.ObjectModel
                     RaisePropertyChanged(nameof(this.SupportsResume));
                 }
 
-                if (IsStatusValid(this.StatusCode) || IsStatusErrored(this.StatusCode))
+                if (IsValidStatus(this.StatusCode) || IsErroredStatus(this.StatusCode))
                 {
                     _requestThrottler.Keep(url, TotalBytesToDownload, StatusCode);
                 }
 
-                if (!IsStatusValid(this.StatusCode))
+                if (!IsValidStatus(this.StatusCode))
                 {
                     // invalid url
                     SetErrored();
@@ -391,8 +391,9 @@ namespace AMDownloader.ObjectModel
             {
                 if (retry > 0)
                 {
-                    await Task.Delay(1000);
-                    return await VerifyUrlAsync(url, --retry);
+                    --retry;
+                    await Task.Delay(1000 * (5 - retry));
+                    return await VerifyUrlAsync(url, retry);
                 }
                 else
                 {
@@ -707,7 +708,7 @@ namespace AMDownloader.ObjectModel
             }
         }
 
-        private bool IsStatusValid(HttpStatusCode? statusCode)
+        private bool IsValidStatus(HttpStatusCode? statusCode)
         {
             if (statusCode == null) return false;
 
@@ -721,7 +722,7 @@ namespace AMDownloader.ObjectModel
             return false;
         }
 
-        private bool IsStatusErrored(HttpStatusCode? statusCode)
+        private bool IsErroredStatus(HttpStatusCode? statusCode)
         {
             if (statusCode == null) return false;
 
@@ -783,7 +784,7 @@ namespace AMDownloader.ObjectModel
                         urlVerification = await VerifyUrlAsync(this.Url);
 
                         // Ensure url is valid for all downloads
-                        if (!IsStatusValid(urlVerification.StatusCode))
+                        if (!IsValidStatus(urlVerification.StatusCode))
                         {
                             SetErrored();
                             return;
@@ -835,15 +836,20 @@ namespace AMDownloader.ObjectModel
                     case DownloadStatus.Finished:
                         this.Status = DownloadStatus.Finishing;
                         RaisePropertyChanged(nameof(this.Status));
-                        try
+                        int retry = 5;
+                        while (retry-- > 0)
                         {
-                            File.Move(TempDestination, this.Destination, true);
-                            SetFinished();
-                        }
-                        catch
-                        {
-                            this.Cancel();
-                            SetErrored();
+                            try
+                            {
+                                File.Move(TempDestination, this.Destination, true);
+                                SetFinished();
+                                break;
+                            }
+                            catch
+                            {
+                                await Task.Delay(1000);
+                                continue;
+                            }
                         }
                         break;
 
@@ -865,12 +871,6 @@ namespace AMDownloader.ObjectModel
 
         public void Pause()
         {
-            /*if (this.IsCompleted || _taskCompletion == null)
-            {
-                // Nothing to pause
-                return;
-            }*/
-
             if (_ctsPaused != null)
             {
                 // Download in progress; request cancellation

@@ -2,6 +2,7 @@
 
 using AMDownloader.Properties;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
@@ -26,7 +27,7 @@ namespace AMDownloader
 
         public MainWindow()
         {
-            _primaryViewModel = new DownloaderViewModel(new DisplayMessageDelegate(DisplayMessage));
+            _primaryViewModel = new DownloaderViewModel(DisplayMessage, ShowUrlList);
 
             InitializeComponent();
             if (!_mutex.WaitOne(0, false))
@@ -181,6 +182,19 @@ namespace AMDownloader
                 title = Assembly.GetExecutingAssembly().GetName().Name;
             }
             return Application.Current.Dispatcher.Invoke(() => MessageBox.Show(this, message, title, button, image, defaultResult));
+        }
+
+        internal void ShowUrlList(List<string> urls, string caption, string message)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                var previewViewModel = new PreviewViewModel(message, urls);
+                var previewWindow = new PreviewWindow();
+                previewWindow.DataContext = previewViewModel;
+                previewWindow.Owner = this;
+                previewWindow.Title = caption;
+                previewWindow.ShowDialog();
+            });
         }
     }
 }

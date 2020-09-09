@@ -82,12 +82,22 @@ namespace AMDownloader.QueueProcessing
 
             await Task.WhenAll(tasks.ToArray());
 
-            foreach (var item in _itemsProcessing)
+            if (_ctCancel.IsCancellationRequested)
             {
-                if (!item.IsCompleted && !this.Contains(item) && item.IsQueued)
+                var newList = new BlockingCollection<IQueueable>();
+                foreach (var item in _itemsProcessing)
                 {
-                    this.Add(item);
+                    if (!item.IsCompleted && !_queueList.Contains(item) && item.IsQueued)
+                    {
+                        newList.Add(item);
+                    }
                 }
+                foreach (var item in _queueList)
+                {
+                    newList.Add(item);
+                }
+                _queueList.Dispose();
+                _queueList = newList;
             }
 
             _itemsProcessing.Clear();
