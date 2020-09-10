@@ -28,6 +28,6 @@ dotnet restore
 dotnet build
 dotnet run
 ```
+<h3>Bug Reports, Feedback and Contributions</h3>
 
-
-_Contributions, feedback and bug reports are always welcome._
+Bug reports, feedback and contributions are always welcome. Please use the repository's Issues section to report bugs.
