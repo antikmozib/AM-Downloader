@@ -30,4 +30,8 @@ dotnet run
 ```
 <h3>Bug Reports, Feedback and Contributions</h3>
 
-Bug reports, feedback and contributions are always welcome. Please use the repository's [Issues](https://github.com/antikmozib/AM-Downloader/issues) section to report bugs.
+Bug reports, feedback and contributions are always welcome. 
+
+Please use the repository's [Issues](https://github.com/antikmozib/AM-Downloader/issues) section to report bugs.
+
+The `master` branch contains the latest working code.
