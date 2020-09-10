@@ -19,7 +19,6 @@ namespace AMDownloader.QueueProcessing
         private BlockingCollection<IQueueable> _queueList;
         private CancellationTokenSource _ctsCancel;
         private CancellationToken _ctCancel;
-        private bool _hasItems;
 
         #endregion Fields
 
@@ -28,7 +27,7 @@ namespace AMDownloader.QueueProcessing
         public event PropertyChangedEventHandler PropertyChanged;
 
         public bool IsBusy => _ctsCancel != null;
-        public bool HasItems => _hasItems;
+        public bool HasItems { get; private set; }
 
         #endregion Properties
 
@@ -39,7 +38,7 @@ namespace AMDownloader.QueueProcessing
             _queueList = new BlockingCollection<IQueueable>();
             _semaphore = new SemaphoreSlim(maxParallelDownloads);
             _itemsProcessing = new List<IQueueable>();
-            _hasItems = false;
+            HasItems = false;
             this.PropertyChanged += propertyChangedEventHandler;
         }
 
@@ -121,9 +120,9 @@ namespace AMDownloader.QueueProcessing
             if (item.IsCompleted || _queueList.Contains(item)) return true;
             if (_queueList.TryAdd(item))
             {
-                if (!_hasItems)
+                if (!HasItems)
                 {
-                    _hasItems = true;
+                    HasItems = true;
                     RaisePropertyChanged(nameof(this.HasItems));
                 }
                 return true;
@@ -160,7 +159,7 @@ namespace AMDownloader.QueueProcessing
             await ProcessQueueAsync();
             if (_queueList.Count == 0)
             {
-                _hasItems = false;
+                HasItems = false;
                 RaisePropertyChanged(nameof(this.HasItems));
             }
         }

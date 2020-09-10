@@ -531,7 +531,7 @@ namespace AMDownloader
         {
             if (obj == null) return false;
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
-            var itemsFinished = from item in items where item.Status == DownloadStatus.Finished where new FileInfo(item.Destination).Exists select item;
+            var itemsFinished = from item in items where item.Status == DownloadStatus.Finished select item;
             if (itemsFinished.Count() > 0) return true;
             return false;
         }
@@ -633,7 +633,7 @@ namespace AMDownloader
                     foreach (var item in DownloadItemsList)
                     {
                         if (item.IsBeingDownloaded) item.Pause();
-                        if (item.Status == DownloadStatus.Finished && Settings.Default.ClearFinishedOnExit) return;
+                        if (item.Status == DownloadStatus.Finished && Settings.Default.ClearFinishedOnExit) continue;
                         var sItem = new SerializableDownloaderObjectModel
                         {
                             Index = index++,
@@ -695,7 +695,7 @@ namespace AMDownloader
         {
             if (obj == null) return false;
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
-            return (from item in items where !item.IsQueued where !item.IsBeingDownloaded where !item.IsCompleted select item).Count() > 0;
+            return (from item in items where !item.IsQueued where !item.IsBeingDownloaded where item.Status != DownloadStatus.Finished select item).Count() > 0;
         }
 
         internal void Dequeue(object obj)

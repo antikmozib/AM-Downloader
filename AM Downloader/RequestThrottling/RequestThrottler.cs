@@ -22,7 +22,7 @@ namespace AMDownloader.RequestThrottling
             _requestList = new ConcurrentQueue<RequestModel>();
             _interval = interval;
         }
-
+        
         public RequestModel? Has(string value)
         {
             if (_requestList.IsEmpty) return null;
