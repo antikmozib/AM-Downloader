@@ -627,9 +627,9 @@ namespace AMDownloader
                 try
                 {
                     Directory.CreateDirectory(AppPaths.LocalAppData);
-                    XmlSerializer writer = new XmlSerializer(typeof(SerializableDownloaderObjectModelList));
-                    SerializableDownloaderObjectModelList list = new SerializableDownloaderObjectModelList();
-                    int index = 0;
+                    var writer = new XmlSerializer(typeof(SerializableDownloaderObjectModelList));
+                    var list = new SerializableDownloaderObjectModelList();
+                    var index = 0;
                     foreach (var item in DownloadItemsList)
                     {
                         if (item.IsBeingDownloaded) item.Pause();
@@ -1207,12 +1207,11 @@ namespace AMDownloader
                 Monitor.Exit(_lockDownloadItemsList);
             });
 
-            this.Status = "Refreshing queue...";
-            RaisePropertyChanged(nameof(this.Status));
-            await Task.Delay(500);
-
             if (dequeueThese.Count > 0)
             {
+                this.Status = "Refreshing queue...";
+                RaisePropertyChanged(nameof(this.Status));
+                await Task.Delay(500);
                 QueueProcessor.Remove(dequeueThese.ToArray());
             }
 

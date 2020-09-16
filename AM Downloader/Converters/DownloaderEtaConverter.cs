@@ -17,7 +17,11 @@ namespace AMDownloader
                 if (remaining > 0 && !double.IsInfinity(remaining))
                 {
                     TimeSpan t = TimeSpan.FromMilliseconds(remaining);
-                    return t.Minutes + "m " + t.Seconds + "s";
+                    if ((int)t.TotalHours == 0)
+                    {
+                        return t.Minutes + "m " + t.Seconds + "s";
+                    }
+                    return (int)t.TotalHours + "h " + t.Minutes + "m " + t.Seconds + "s";
                 }
             }
             catch
