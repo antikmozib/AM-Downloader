@@ -38,7 +38,9 @@ namespace AMDownloader
                 _monitorClipboard = value;
 
                 if (value == true)
+                {
                     Task.Run(async () => await MonitorClipboardAsync());
+                }
                 else
                 {
                     if (_ctsClipboard != null) _ctsClipboard.Cancel();
