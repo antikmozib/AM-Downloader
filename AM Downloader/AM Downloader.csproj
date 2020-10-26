@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>AMDownloader</RootNamespace>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
@@ -10,13 +10,13 @@
     <Company>Antik Mozib</Company>
     <Description>A free, modern download manager for Windows.
 https://github.com/antikmozib/am-downloader</Description>
-    <Copyright>Developed by Antik Mozib. Released under GNU GPLv3.</Copyright>
+    <Copyright>(C) 2020 Antik Mozib. Released under GNU GPLv3.</Copyright>
     <StartupObject />
     <PackageIcon>app.ico</PackageIcon>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <AssemblyVersion>1.1.0.0</AssemblyVersion>
     <FileVersion>1.1.0.0</FileVersion>
-    <Version>1.1.0</Version>
+    <Version>1.1.0.0</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
