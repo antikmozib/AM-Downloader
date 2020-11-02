@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2020 Antik Mozib.
+﻿// Copyright (C) 2020 Antik Mozib. All Rights Reserved.
 
 using System;
 using System.Net;
