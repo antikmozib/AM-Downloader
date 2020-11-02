@@ -8,9 +8,8 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon>Icons\app.ico</ApplicationIcon>
     <Company>Antik Mozib</Company>
-    <Description>A free, modern download manager for Windows.
-https://github.com/antikmozib/am-downloader</Description>
-    <Copyright>(C) 2020 Antik Mozib. Released under GNU GPLv3.</Copyright>
+    <Description>A free, modern download manager for Windows.</Description>
+    <Copyright>© 2020 Antik Mozib.</Copyright>
     <StartupObject />
     <PackageIcon>app.ico</PackageIcon>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
