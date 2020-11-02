@@ -1,4 +1,6 @@
-﻿using AMDownloader.ClipboardObservation;
+﻿// Copyright (C) 2020 Antik Mozib.
+
+using AMDownloader.ClipboardObservation;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;

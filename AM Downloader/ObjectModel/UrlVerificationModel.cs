@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2020 Antik Mozib. Released under GNU GPLv3.
+﻿// Copyright (C) 2020 Antik Mozib.
 
 using System.Net;
 
