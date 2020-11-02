@@ -12,13 +12,13 @@ A modern download manager for Windows.
 
 <h3>Installing</h3>
 
-_System Requirements:_ Windows 7 SP1 or later with [.NET Core 3.0 runtime](https://dotnet.microsoft.com/download/dotnet-core/current/runtime)
+_System Requirements:_ Windows 7 SP1 or later with [.NET Core 3.1 runtime](https://dotnet.microsoft.com/download/dotnet-core/current/runtime)
 
 Simply download and run the `setup.msi` file. Follow instructions to complete installation.
 
 <h3>Building</h3>
 
-_Prerequisites:_ [VS2019+](https://visualstudio.microsoft.com/vs/) with [.NET Core 3.0 SDK](https://dotnet.microsoft.com/download/dotnet-core)
+_Prerequisites:_ [VS2019+](https://visualstudio.microsoft.com/vs/) with [.NET Core 3.1 SDK](https://dotnet.microsoft.com/download/dotnet-core)
 
 1. Run `git clone https://github.com/antikmozib/AM-Downloader.git`
 2. `cd` to `AM-Downloader/AM Downloader/`
