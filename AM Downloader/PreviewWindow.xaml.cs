@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2020 Antik Mozib. All Rights Reserved.
+﻿// Copyright (C) 2020 Antik Mozib. Released under CC BY-NC-SA 4.0.
 
 using System.Windows;
 using System.Windows.Controls;
