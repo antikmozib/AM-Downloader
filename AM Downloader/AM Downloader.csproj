@@ -8,8 +8,8 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon>Icons\app.ico</ApplicationIcon>
     <Company>Antik Mozib</Company>
-    <Description>A free, modern download manager for Windows.</Description>
-    <Copyright>© 2020 Antik Mozib.</Copyright>
+    <Description>A modern download manager for Windows.</Description>
+    <Copyright>© 2020 Antik Mozib</Copyright>
     <StartupObject />
     <PackageIcon>app.ico</PackageIcon>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>

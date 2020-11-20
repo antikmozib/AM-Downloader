@@ -103,6 +103,7 @@ namespace AMDownloader
         public ICommand DequeueCommand { get; private set; }
         public ICommand DeleteFileCommand { get; private set; }
         public ICommand RecheckCommand { get; private set; }
+        public ICommand RedownloadCommand { get; private set; }
         public ICommand CopyLinkToClipboardCommand { get; private set; }
         public ICommand ClearFinishedDownloadsCommand { get; private set; }
         public ICommand CancelBackgroundTaskCommand { get; private set; }
@@ -170,6 +171,7 @@ namespace AMDownloader
             DequeueCommand = new RelayCommand<object>(Dequeue, Dequeue_CanExecute);
             DeleteFileCommand = new RelayCommand<object>(DeleteFile, DeleteFile_CanExecute);
             RecheckCommand = new RelayCommand<object>(Recheck, Recheck_CanExecute);
+            RedownloadCommand = new RelayCommand<object>(Redownload, Redownload_CanExecute);
             CopyLinkToClipboardCommand = new RelayCommand<object>(CopyLinkToClipboard, CopyLinkToClipboard_CanExecute);
             ClearFinishedDownloadsCommand = new RelayCommand<object>(ClearFinishedDownloads);
             CancelBackgroundTaskCommand = new RelayCommand<object>(CancelBackgroundTask, CancelBackgroundTask_CanExecute);
@@ -763,6 +765,25 @@ namespace AMDownloader
             return false;
         }
 
+        private void Redownload(object obj)
+        {
+
+        }
+
+        private bool Redownload_CanExecute(object obj)
+        {
+            if (obj == null) return false;
+            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
+            foreach (var item in items)
+            {
+                if (item.IsCompleted)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         internal void CopyLinkToClipboard(object obj)
         {
             if (obj == null) return;
@@ -825,13 +846,11 @@ namespace AMDownloader
 
         internal void Download_Verified(object sender, EventArgs e)
         {
-            Debug.WriteLine("Verified: " + (sender as DownloaderObjectModel).Name);
             RefreshCollection();
         }
 
         internal void Download_Started(object sender, EventArgs e)
         {
-            Debug.WriteLine("Starting: " + (sender as DownloaderObjectModel).Name);
             RefreshCollection();
             StartReportingSpeed();
         }
