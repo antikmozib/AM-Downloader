@@ -20,6 +20,5 @@ Download and run the `setup.msi` file. Follow instructions to complete installat
 
 _Requirements:_ 
 * .NET Core 3.1 SDK
-* Windows Desktop SDK
 
 Clone the repository, `cd` into the root directory and run `dotnet build`.
