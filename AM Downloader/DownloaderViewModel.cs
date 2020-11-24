@@ -767,7 +767,50 @@ namespace AMDownloader
 
         private void Redownload(object obj)
         {
+            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
+            var tasks = new List<Task>();
+            var forceEnqueue = false;
+            var total = items.Count();
 
+            if (total > Settings.Default.MaxParallelDownloads)
+            {
+                forceEnqueue = true;
+            }
+
+            foreach (var item in items)
+            {
+                if (File.Exists(item.Destination))
+                {
+                    try
+                    {
+                        File.Delete(item.Destination);
+                    }
+                    catch (IOException)
+                    {
+                        continue;
+                    }
+                }
+                if (forceEnqueue)
+                {
+                    item.Enqueue();
+                    QueueProcessor.Add(item);
+                }
+                else
+                {
+                    item.Dequeue();
+                    QueueProcessor.Remove(item);
+                    tasks.Add(item.StartAsync());
+                }
+            }
+
+            if (forceEnqueue)
+            {
+                Task.Run(async () => await QueueProcessor.StartAsync());
+            }
+            else
+            {
+                Task.Run(async () => await Task.WhenAll(tasks.ToArray()));
+            }
         }
 
         private bool Redownload_CanExecute(object obj)
