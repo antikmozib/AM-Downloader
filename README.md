@@ -22,4 +22,4 @@ Download and run the `msi` file. Follow instructions to complete installation.
 
 _Requirements:_ VS2019 with .NET Core 3.1 SDK
 
-Clone the repository, `cd` into the root directory and run `dotnet build`.
+Clone the repository, `cd` into the root directory and run `dotnet build`. Ignore any warnings about missing project(s).
