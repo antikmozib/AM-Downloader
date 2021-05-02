@@ -51,7 +51,7 @@ namespace AMDownloader
             var version = Assembly.GetExecutingAssembly().GetName().Version;
             var description = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyDescriptionAttribute), false).OfType<AssemblyDescriptionAttribute>().FirstOrDefault()?.Description;
             var copyright = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyCopyrightAttribute), true).OfType<AssemblyCopyrightAttribute>().FirstOrDefault()?.Copyright;
-            var website = "https://mozibsoft.com/amdownloader";
+            var website = "https://mozib.io/amdownloader";
             var funFact = "Total data transferred over lifetime: " + Math.Round((double)Settings.Default.BytesTransferredOverLifetime / (1024 * 1024 * 1024), 2) + " GB";
             MessageBox.Show(name + "\nVersion " + version + "\n\n" + description + "\n\n" + copyright + "\n" + website + "\n\n" + funFact, "About", MessageBoxButton.OK, MessageBoxImage.Information);
         }

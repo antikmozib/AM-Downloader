@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using System.Windows.Input;
 
 namespace AMDownloader
@@ -18,6 +19,7 @@ namespace AMDownloader
     internal class AddDownloadViewModel : INotifyPropertyChanged
     {
         private readonly AddItemsAsyncDelegate _addItemsAsync;
+        private readonly DisplayMessageDelegate _displayMessage;
         private bool _monitorClipboard;
         private CancellationTokenSource _ctsClipboard;
         private readonly ClipboardObserver _clipboardService;
@@ -50,12 +52,15 @@ namespace AMDownloader
 
         public ICommand AddCommand { get; private set; }
         public ICommand PreviewCommand { get; private set; }
+        public ICommand HelpCommand { get; private set; }
 
-        public AddDownloadViewModel(AddItemsAsyncDelegate addItemsAsync, ShowPreviewDelegate showPreview)
+        public AddDownloadViewModel(AddItemsAsyncDelegate addItemsAsync, ShowPreviewDelegate showPreview, DisplayMessageDelegate displayMessage)
         {
             _addItemsAsync = addItemsAsync;
+            _displayMessage = displayMessage;
             AddCommand = new RelayCommand<object>(Add, Add_CanExecute);
             PreviewCommand = new RelayCommand<object>(Preview, Add_CanExecute);
+            HelpCommand = new RelayCommand<object>(ShowHelp);
 
             _clipboardService = new ClipboardObserver();
 
@@ -78,7 +83,7 @@ namespace AMDownloader
 
         internal void Preview(object obj)
         {
-            string[] urls = ListifyUrls().ToArray();
+            string[] urls = ProcessUrlPattern().ToArray();
             string output = String.Empty;
 
             if (urls.Length == 0) return;
@@ -89,13 +94,18 @@ namespace AMDownloader
             this.ShowPreview.Invoke(output);
         }
 
+        internal void ShowHelp(object obj)
+        {
+            MessageBox.Show("You can use patterns e.g. http://www.example.com/file[1:10]. Click on Preview to see the list of URLs that will be derived from the pattern.", "Help");
+        }
+
         private bool Add_CanExecute(object obj)
         {
             if (this.Urls.Trim().Length == 0) return false;
             return true;
         }
 
-        public void Add(object item)
+        internal void Add(object item)
         {
             if (Urls == null || SaveToFolder == null) return;
 
@@ -106,12 +116,13 @@ namespace AMDownloader
             Settings.Default.StartDownloadingAddedItems = this.StartDownload;
             Settings.Default.Save();
 
-            Task.Run(async () => await _addItemsAsync.Invoke(SaveToFolder, AddToQueue, StartDownload, ListifyUrls().ToArray()));
+            Task.Run(async () => await _addItemsAsync.Invoke(SaveToFolder, AddToQueue, StartDownload, ProcessUrlPattern().ToArray()));
         }
 
-        private List<string> ListifyUrls()
+        private List<string> ProcessUrlPattern()
         {
-            string pattern = @"[[]\d+[:]\d+[]]";
+            string pattern = @"(\[\d*:\d*\])";
+            var regex = new Regex(pattern);
             List<string> urlList = new List<string>();
 
             foreach (var url in Urls.Split('\n').ToList<string>())
@@ -121,17 +132,28 @@ namespace AMDownloader
                     // empty line
                     continue;
                 }
-                else if (Regex.Match(url, pattern).Success)
+                else if (regex.Match(url).Success)
                 {
                     // url has patterns
-                    string bounds = Regex.Match(url, pattern).Value;
+                    string bounds = regex.Match(url).Value;
+
+                    // patterns can be [1:20] or [01:20] - account for this difference
+                    int minLength = bounds.Substring(1, bounds.IndexOf(":") - 1).Length;
                     int.TryParse(bounds.Substring(1, bounds.IndexOf(':') - 1), out int lBound);
                     int.TryParse(bounds.Substring(bounds.IndexOf(':') + 1, bounds.Length - bounds.IndexOf(':') - 2), out int uBound);
 
                     for (int i = lBound; i <= uBound; i++)
                     {
-                        var newurl = url.Replace(bounds, i.ToString()).Trim();
-                        urlList.Add(newurl);
+                        var replacedData = "";
+                        if (i.ToString().Length < minLength)
+                        {
+                            for (int j = 0; j < (minLength - i.ToString().Length); j++)
+                            {
+                                replacedData += "0";
+                            }
+                        }
+                        replacedData += i.ToString();
+                        urlList.Add(regex.Replace(url, replacedData));
                     }
                 }
                 else

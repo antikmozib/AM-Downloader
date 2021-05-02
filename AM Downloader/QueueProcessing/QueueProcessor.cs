@@ -35,7 +35,7 @@ namespace AMDownloader.QueueProcessing
 
         public QueueProcessor(int maxParallelDownloads, PropertyChangedEventHandler propertyChangedEventHandler)
         {
-            _queueList = new BlockingCollection<IQueueable>();
+            _queueList = new BlockingCollection<IQueueable>(new ConcurrentQueue<IQueueable>());
             _semaphore = new SemaphoreSlim(maxParallelDownloads);
             _itemsProcessing = new List<IQueueable>();
             HasItems = false;
@@ -83,7 +83,7 @@ namespace AMDownloader.QueueProcessing
 
             if (_ctCancel.IsCancellationRequested)
             {
-                var newList = new BlockingCollection<IQueueable>();
+                var newList = new BlockingCollection<IQueueable>(new ConcurrentQueue<IQueueable>());
                 foreach (var item in _itemsProcessing)
                 {
                     if (!item.IsCompleted && !_queueList.Contains(item) && item.IsQueued)

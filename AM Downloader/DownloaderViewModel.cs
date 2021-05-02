@@ -155,24 +155,24 @@ namespace AMDownloader
                 }
             });
 
-            AddCommand = new RelayCommand<object>(Add, Add_CanExecute);
-            StartCommand = new RelayCommand<object>(Start, Start_CanExecute);
-            RemoveFromListCommand = new RelayCommand<object>(RemoveFromList, RemoveFromList_CanExecute);
-            CancelCommand = new RelayCommand<object>(Cancel, Cancel_CanExecute);
-            PauseCommand = new RelayCommand<object>(Pause, Pause_CanExecute);
-            OpenCommand = new RelayCommand<object>(Open, Open_CanExecute);
-            OpenContainingFolderCommand = new RelayCommand<object>(OpenContainingFolder, OpenContainingFolder_CanExecute);
-            StartQueueCommand = new RelayCommand<object>(StartQueue, StartQueue_CanExecute);
-            StopQueueCommand = new RelayCommand<object>(StopQueue, StopQueue_CanExecute);
+            AddCommand = new RelayCommand<object>(Add);
+            StartCommand = new RelayCommand<object>(Start);
+            RemoveFromListCommand = new RelayCommand<object>(RemoveFromList);
+            CancelCommand = new RelayCommand<object>(Cancel);
+            PauseCommand = new RelayCommand<object>(Pause);
+            OpenCommand = new RelayCommand<object>(Open);
+            OpenContainingFolderCommand = new RelayCommand<object>(OpenContainingFolder);
+            StartQueueCommand = new RelayCommand<object>(StartQueue);
+            StopQueueCommand = new RelayCommand<object>(StopQueue);
             CloseAppCommand = new RelayCommand<object>(CloseApp);
             CategoryChangedCommand = new RelayCommand<object>(CategoryChanged);
             OptionsCommand = new RelayCommand<object>(ShowOptions);
-            EnqueueCommand = new RelayCommand<object>(Enqueue, Enqueue_CanExecute);
-            DequeueCommand = new RelayCommand<object>(Dequeue, Dequeue_CanExecute);
-            DeleteFileCommand = new RelayCommand<object>(DeleteFile, DeleteFile_CanExecute);
-            RecheckCommand = new RelayCommand<object>(Recheck, Recheck_CanExecute);
-            RedownloadCommand = new RelayCommand<object>(Redownload, Redownload_CanExecute);
-            CopyLinkToClipboardCommand = new RelayCommand<object>(CopyLinkToClipboard, CopyLinkToClipboard_CanExecute);
+            EnqueueCommand = new RelayCommand<object>(Enqueue);
+            DequeueCommand = new RelayCommand<object>(Dequeue);
+            DeleteFileCommand = new RelayCommand<object>(DeleteFile);
+            RecheckCommand = new RelayCommand<object>(Recheck);
+            RedownloadCommand = new RelayCommand<object>(Redownload);
+            CopyLinkToClipboardCommand = new RelayCommand<object>(CopyLinkToClipboard);
             ClearFinishedDownloadsCommand = new RelayCommand<object>(ClearFinishedDownloads);
             CancelBackgroundTaskCommand = new RelayCommand<object>(CancelBackgroundTask, CancelBackgroundTask_CanExecute);
             foreach (Categories cat in (Categories[])Enum.GetValues(typeof(Categories)))
@@ -250,7 +250,6 @@ namespace AMDownloader
 
                     this.Status = "Listing...";
                     RaisePropertyChanged(nameof(this.Status));
-                    await Task.Delay(500);
 
                     AddObjects(finalObjects);
                 }
@@ -391,25 +390,6 @@ namespace AMDownloader
             }
         }
 
-        internal bool Start_CanExecute(object obj)
-        {
-            if (obj == null) return false;
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
-            if (items.Count() == 0) return false;
-            foreach (var item in items)
-            {
-                switch (item.Status)
-                {
-                    case DownloadStatus.Paused:
-                    case DownloadStatus.Ready:
-                    case DownloadStatus.Queued:
-                    case DownloadStatus.Error:
-                        return true;
-                }
-            }
-            return false;
-        }
-
         internal void Pause(object obj)
         {
             if (obj == null) return;
@@ -420,18 +400,6 @@ namespace AMDownloader
             }
         }
 
-        internal bool Pause_CanExecute(object obj)
-        {
-            if (obj == null) return false;
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
-            if (items.Count() == 0) return false;
-            foreach (var item in items)
-            {
-                if (item.Status == DownloadStatus.Downloading) return true;
-            }
-            return false;
-        }
-
         internal void Cancel(object obj)
         {
             if (obj == null) return;
@@ -440,23 +408,6 @@ namespace AMDownloader
             {
                 item.Cancel();
             }
-        }
-
-        internal bool Cancel_CanExecute(object obj)
-        {
-            if (obj == null) return false;
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
-            if (items.Count() == 0) return false;
-            foreach (var item in items)
-            {
-                switch (item.Status)
-                {
-                    case DownloadStatus.Downloading:
-                    case DownloadStatus.Paused:
-                        return true;
-                }
-            }
-            return false;
         }
 
         internal void RemoveFromList(object obj)
@@ -472,14 +423,6 @@ namespace AMDownloader
             Task.Run(async () => await RemoveObjectsAsync(false, items)).ContinueWith(t => RefreshCollection());
         }
 
-        internal bool RemoveFromList_CanExecute(object obj)
-        {
-            if (obj == null) return false;
-            if (_ctsUpdatingList != null) return false;
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
-            if (items.Count() == 0) return false;
-            return true;
-        }
 
         internal void Add(object obj)
         {
@@ -492,7 +435,7 @@ namespace AMDownloader
             try
             {
                 var win = new AddDownloadWindow();
-                var vm = new AddDownloadViewModel(AddItemsAsync, win.Preview);
+                var vm = new AddDownloadViewModel(AddItemsAsync, win.Preview, _displayMessage);
                 win.DataContext = vm;
                 win.Owner = obj as Window;
                 win.ShowDialog();
@@ -501,12 +444,6 @@ namespace AMDownloader
             {
                 Monitor.Exit(_lockDownloadItemsList);
             }
-        }
-
-        internal bool Add_CanExecute(object obj)
-        {
-            if (_ctsUpdatingList != null) return false;
-            return true;
         }
 
         internal void Open(object obj)
@@ -529,14 +466,6 @@ namespace AMDownloader
             }
         }
 
-        internal bool Open_CanExecute(object obj)
-        {
-            if (obj == null) return false;
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
-            var itemsFinished = from item in items where item.Status == DownloadStatus.Finished select item;
-            if (itemsFinished.Count() > 0) return true;
-            return false;
-        }
 
         internal void OpenContainingFolder(object obj)
         {
@@ -567,19 +496,6 @@ namespace AMDownloader
             }
         }
 
-        internal bool OpenContainingFolder_CanExecute(object obj)
-        {
-            if (obj == null) return false;
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
-            foreach (var item in items)
-            {
-                if (Directory.Exists(Path.GetDirectoryName(item.Destination)))
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
 
         internal void StartQueue(object obj)
         {
@@ -591,20 +507,12 @@ namespace AMDownloader
             });
         }
 
-        internal bool StartQueue_CanExecute(object obj)
-        {
-            return !QueueProcessor.IsBusy && QueueProcessor.HasItems && this.QueuedCount > 0 && _ctsUpdatingList == null;
-        }
 
         internal void StopQueue(object obj)
         {
             QueueProcessor.Stop();
         }
 
-        internal bool StopQueue_CanExecute(object obj)
-        {
-            return QueueProcessor.IsBusy;
-        }
 
         internal void CloseApp(object obj)
         {
@@ -693,12 +601,6 @@ namespace AMDownloader
             }
         }
 
-        internal bool Enqueue_CanExecute(object obj)
-        {
-            if (obj == null) return false;
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
-            return (from item in items where !item.IsQueued where !item.IsBeingDownloaded where item.Status != DownloadStatus.Finished select item).Count() > 0;
-        }
 
         internal void Dequeue(object obj)
         {
@@ -711,16 +613,6 @@ namespace AMDownloader
             QueueProcessor.Remove(items);
         }
 
-        internal bool Dequeue_CanExecute(object obj)
-        {
-            if (obj == null) return false;
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
-            foreach (var item in items)
-            {
-                if (item.IsQueued && !item.IsBeingDownloaded) return true;
-            }
-            return false;
-        }
 
         internal void DeleteFile(object obj)
         {
@@ -736,14 +628,6 @@ namespace AMDownloader
             Task.Run(async () => await RemoveObjectsAsync(true, items)).ContinueWith(t => RefreshCollection());
         }
 
-        internal bool DeleteFile_CanExecute(object obj)
-        {
-            if (obj == null) return false;
-            if (_semaphoreUpdatingList.CurrentCount == 0) return false;
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
-            return items.Count > 0;
-        }
-
         private void Recheck(object obj)
         {
             if (obj == null) return;
@@ -752,17 +636,6 @@ namespace AMDownloader
             {
                 Task.Run(async () => await item.ForceReCheckAsync());
             }
-        }
-
-        private bool Recheck_CanExecute(object obj)
-        {
-            if (obj == null) return false;
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
-            foreach (var item in items)
-            {
-                if (!item.IsBeingDownloaded) return true;
-            }
-            return false;
         }
 
         private void Redownload(object obj)
@@ -813,20 +686,6 @@ namespace AMDownloader
             }
         }
 
-        private bool Redownload_CanExecute(object obj)
-        {
-            if (obj == null) return false;
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
-            foreach (var item in items)
-            {
-                if (item.IsCompleted)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
         internal void CopyLinkToClipboard(object obj)
         {
             if (obj == null) return;
@@ -845,12 +704,6 @@ namespace AMDownloader
             _clipboardService.SetText(clipText);
         }
 
-        internal bool CopyLinkToClipboard_CanExecute(object obj)
-        {
-            if (obj == null) return false;
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
-            return items.Count() > 0;
-        }
 
         internal void ClearFinishedDownloads(object obj)
         {
@@ -862,11 +715,6 @@ namespace AMDownloader
 
             var items = (from item in DownloadItemsList where item.IsCompleted select item).ToArray();
             Task.Run(async () => await RemoveObjectsAsync(false, items)).ContinueWith(t => RefreshCollection());
-        }
-
-        internal bool ClearFinishedDownloads_CanExecute(object obj)
-        {
-            return _semaphoreUpdatingList.CurrentCount > 0;
         }
 
         internal void QueueProcessor_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -1131,7 +979,6 @@ namespace AMDownloader
             {
                 this.Status = "Listing...";
                 RaisePropertyChanged(nameof(this.Status));
-                await Task.Delay(500);
 
                 AddObjects(items);
             }
@@ -1257,7 +1104,6 @@ namespace AMDownloader
 
             this.Status = "Delisting...";
             RaisePropertyChanged(nameof(this.Status));
-            await Task.Delay(500);
 
             Application.Current.Dispatcher.Invoke(() =>
             {
@@ -1273,7 +1119,6 @@ namespace AMDownloader
             {
                 this.Status = "Refreshing queue...";
                 RaisePropertyChanged(nameof(this.Status));
-                await Task.Delay(500);
                 QueueProcessor.Remove(dequeueThese.ToArray());
             }
 
