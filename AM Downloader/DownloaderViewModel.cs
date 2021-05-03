@@ -453,7 +453,7 @@ namespace AMDownloader
             var itemsFinished = from item in items where item.Status == DownloadStatus.Finished where new FileInfo(item.Destination).Exists select item;
             if (itemsFinished.Count() > 1)
             {
-                MessageBoxResult r = MessageBox.Show(
+                var r = _displayMessage.Invoke(
                     "You have selected to open " + itemsFinished.Count() + " files.\n\n" +
                     "Opening too many files at the same file may cause the system to crash.\n\nDo you wish to proceed?",
                     "Open", MessageBoxButton.YesNo, MessageBoxImage.Exclamation, MessageBoxResult.No);
@@ -474,7 +474,7 @@ namespace AMDownloader
             var itemsOpenable = from item in items where File.Exists(item.Destination) || Directory.Exists(Path.GetDirectoryName(item.Destination)) select item;
             if (itemsOpenable.Count() > 1)
             {
-                var result = MessageBox.Show("You have selected to open " + items.Count + " folders.\n\n" +
+                var result = _displayMessage.Invoke("You have selected to open " + items.Count + " folders.\n\n" +
                     "Opening too many folders at the same time may cause the system to crash.\n\nDo you wish to proceed?",
                     "Open Folder", MessageBoxButton.YesNo, MessageBoxImage.Exclamation, MessageBoxResult.No);
 

@@ -233,7 +233,6 @@ namespace AMDownloader
 
         private void WindowMain_Loaded(object sender, RoutedEventArgs e)
         {
-
             if (Settings.Default.SelectedColumnHeader != null)
             {
                 GridViewColumn gridViewColumn = ((GridView)lvDownload.View).Columns.FirstOrDefault(x => (string)x.Header == Settings.Default.SelectedColumnHeader);

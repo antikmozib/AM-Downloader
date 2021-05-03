@@ -96,7 +96,7 @@ namespace AMDownloader
 
         internal void ShowHelp(object obj)
         {
-            MessageBox.Show("You can use patterns e.g. http://www.example.com/file[1:10]. Click on Preview to see the list of URLs that will be derived from the pattern.", "Help");
+            _displayMessage.Invoke("You can use patterns e.g. http://www.example.com/file[1:10]. Click on Preview to see the list of URLs that will be derived from the pattern.", "Help");
         }
 
         private bool Add_CanExecute(object obj)

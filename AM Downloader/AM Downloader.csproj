@@ -213,4 +213,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Page>
   </ItemGroup>
+
+    <Import Project="..\cleanup.targets"/>
 </Project>
