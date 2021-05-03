@@ -153,7 +153,7 @@ namespace AMDownloader
                             }
                         }
                         replacedData += i.ToString();
-                        urlList.Add(regex.Replace(url, replacedData));
+                        urlList.Add(regex.Replace(url, replacedData).Trim());
                     }
                 }
                 else
