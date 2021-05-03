@@ -50,14 +50,14 @@
     <Setting Name="MainWindowState" Type="System.Windows.WindowState" Scope="User">
       <Value Profile="(Default)">Normal</Value>
     </Setting>
-    <Setting Name="LastColumnClicked" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
-    </Setting>
-    <Setting Name="LastColumnSorting" Type="System.ComponentModel.ListSortDirection" Scope="User">
-      <Value Profile="(Default)" />
-    </Setting>
     <Setting Name="AddDownloadWindowFontSize" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">14</Value>
+    </Setting>
+    <Setting Name="SelectedColumnHeader" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="SelectedColumnHeaderDirection" Type="System.ComponentModel.ListSortDirection" Scope="User">
+      <Value Profile="(Default)">Ascending</Value>
     </Setting>
   </Settings>
 </SettingsFile>

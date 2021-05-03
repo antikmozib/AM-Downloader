@@ -83,7 +83,7 @@ namespace AMDownloader
 
         internal void Preview(object obj)
         {
-            string[] urls = ProcessUrlPattern().ToArray();
+            string[] urls = ProcessUrlPatterns().ToArray();
             string output = String.Empty;
 
             if (urls.Length == 0) return;
@@ -116,10 +116,10 @@ namespace AMDownloader
             Settings.Default.StartDownloadingAddedItems = this.StartDownload;
             Settings.Default.Save();
 
-            Task.Run(async () => await _addItemsAsync.Invoke(SaveToFolder, AddToQueue, StartDownload, ProcessUrlPattern().ToArray()));
+            Task.Run(async () => await _addItemsAsync.Invoke(SaveToFolder, AddToQueue, StartDownload, ProcessUrlPatterns().ToArray()));
         }
 
-        private List<string> ProcessUrlPattern()
+        private List<string> ProcessUrlPatterns()
         {
             string pattern = @"(\[\d*:\d*\])";
             var regex = new Regex(pattern);
