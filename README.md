@@ -16,7 +16,7 @@ A modern download manager for Windows.
 
 _System Requirements:_ Windows 7 SP1 or later with [.NET Core 3.1 Desktop x64 runtime](https://dotnet.microsoft.com/download/dotnet-core/current/runtime)
 
-Download and run the `msi` file. Follow instructions to complete installation.
+Download and run the setup program and follow its instructions.
 
 <h3>Building</h3>
 
