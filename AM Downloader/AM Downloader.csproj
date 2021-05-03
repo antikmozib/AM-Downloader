@@ -13,11 +13,11 @@
     <StartupObject />
     <PackageIcon>app.ico</PackageIcon>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <AssemblyVersion>1.2.0.0</AssemblyVersion>    
-    <Version>1.2</Version>
+    <AssemblyVersion>1.2.1.0</AssemblyVersion>    
+    <Version>1.2.1</Version>
     <Platforms>AnyCPU;x86;x64</Platforms>
     <Authors>Antik Mozib</Authors>
-	<FileVersion>1.2.0.0</FileVersion>
+	<FileVersion>1.2.1.0</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -214,5 +214,5 @@
     </Page>
   </ItemGroup>
 
-    <Import Project="..\cleanup.targets"/>
+    <Import Project="..\cleanup.targets" />
 </Project>
