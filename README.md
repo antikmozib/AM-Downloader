@@ -14,12 +14,12 @@ A modern download manager for Windows.
 
 <h3>Installing</h3>
 
-_System Requirements:_ Windows 7 SP1 (64-bit) or later with [.NET Core 3.1 Desktop runtime](https://dotnet.microsoft.com/download/dotnet-core/current/runtime)
+_System Requirements:_ Windows 7 SP1 (64-bit) or later with [.NET Core 3.1 Desktop runtime](https://dotnet.microsoft.com/download/dotnet)
 
 Download and run the setup program and follow its instructions.
 
 <h3>Building</h3>
 
-_Requirements:_ VS2019 with .NET Core 3.1 SDK
+_Requirements:_ VS2019 with [.NET Core 3.1 SDK](https://dotnet.microsoft.com/download/dotnet)
 
 `clone` the repository, `cd` into the root directory and run `dotnet restore`.
