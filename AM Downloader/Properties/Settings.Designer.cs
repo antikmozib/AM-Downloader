@@ -250,5 +250,17 @@ namespace AMDownloader.Properties {
                 this["SelectedColumnHeaderDirection"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool AutoCheckForUpdates {
+            get {
+                return ((bool)(this["AutoCheckForUpdates"]));
+            }
+            set {
+                this["AutoCheckForUpdates"] = value;
+            }
+        }
     }
 }

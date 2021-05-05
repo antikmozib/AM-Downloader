@@ -59,5 +59,8 @@
     <Setting Name="SelectedColumnHeaderDirection" Type="System.ComponentModel.ListSortDirection" Scope="User">
       <Value Profile="(Default)">Ascending</Value>
     </Setting>
+    <Setting Name="AutoCheckForUpdates" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
