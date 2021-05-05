@@ -16,6 +16,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -107,6 +108,7 @@ namespace AMDownloader
         public ICommand CopyLinkToClipboardCommand { get; private set; }
         public ICommand ClearFinishedDownloadsCommand { get; private set; }
         public ICommand CancelBackgroundTaskCommand { get; private set; }
+        public ICommand CheckForUpdatesCommand { get; private set; }
 
         #endregion Commands
 
@@ -175,6 +177,7 @@ namespace AMDownloader
             CopyLinkToClipboardCommand = new RelayCommand<object>(CopyLinkToClipboard);
             ClearFinishedDownloadsCommand = new RelayCommand<object>(ClearFinishedDownloads);
             CancelBackgroundTaskCommand = new RelayCommand<object>(CancelBackgroundTask, CancelBackgroundTask_CanExecute);
+            CheckForUpdatesCommand = new RelayCommand<object>(CheckForUpdates);
             foreach (Categories cat in (Categories[])Enum.GetValues(typeof(Categories)))
             {
                 CategoriesList.Add(cat);
@@ -1179,6 +1182,30 @@ namespace AMDownloader
         internal bool CancelBackgroundTask_CanExecute(object obj)
         {
             return this.IsBackgroundWorking;
+        }
+
+        internal void CheckForUpdates(object obj)
+        {
+            Task.Run(async () =>
+            {
+                string url = await Common.CheckForUpdates.GetUpdateUrl(
+                    _client, @"https://mozib.io/downloads/update.php",
+                    Assembly.GetExecutingAssembly().GetName().Name,
+                    Assembly.GetExecutingAssembly().GetName().Version.ToString());
+
+                if (string.IsNullOrEmpty(url))
+                {
+                    _displayMessage.Invoke("No new updates are available.", "Check For Updates", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+
+                if (_displayMessage.Invoke(
+                    "An update is available.\nWould you like to download it now?", "Check For Updates",
+                    MessageBoxButton.YesNo, MessageBoxImage.Information, MessageBoxResult.Yes) == MessageBoxResult.Yes)
+                {
+                    Process.Start("explorer.exe", url);
+                }
+            });
         }
 
         #endregion Methods

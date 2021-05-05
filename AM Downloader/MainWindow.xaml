@@ -17,7 +17,7 @@
         Left="{Binding MainWindowLeft, Mode=TwoWay, Source={x:Static properties:Settings.Default}}"
         WindowState="{Binding MainWindowState, Mode=TwoWay, Source={x:Static properties:Settings.Default}}"
         Closing="Window_Closing"
-        Icon="pack://application:,,,/Icons/app.ico" Loaded="WindowMain_Loaded">
+        Icon="pack://application:,,,/Icons/app.ico" Loaded="Window_Loaded">
     <Window.Resources>
         <local:ProgressBarVisibilityConverter x:Key="ProgressBarVisibilityConverter" />
         <local:ProgressBarForegroundConverter x:Key="ProgressBarForegroundConverter" />
@@ -133,6 +133,11 @@
             </MenuItem>
             <MenuItem Header="_Help"
                       TabIndex="10">
+                <MenuItem x:Name="menuCheckForUpdates"
+                          Header="Check For _Updates"
+                          Command="{Binding CheckForUpdatesCommand}">
+                </MenuItem>
+                <Separator/>
                 <MenuItem x:Name="menuAbout"
                           Header="_About"
                           Click="menuAbout_Click">

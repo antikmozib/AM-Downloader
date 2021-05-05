@@ -34,11 +34,49 @@ namespace AMDownloader
             if (!_mutex.WaitOne(0, false))
             {
                 var name = Assembly.GetExecutingAssembly().GetName().Name;
-                MessageBox.Show("Another instance of " + name + " is already running.", name, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(
+                    "Another instance of " + name + " is already running.",
+                    name, MessageBoxButton.OK, MessageBoxImage.Error);
                 Application.Current.Shutdown();
             }
 
             DataContext = _primaryViewModel;
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            e.Cancel = true;
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (Settings.Default.SelectedColumnHeader != null)
+            {
+                GridViewColumn gridViewColumn =
+                    ((GridView)lvDownload.View).Columns.FirstOrDefault(x => (string)x.Header == Settings.Default.SelectedColumnHeader);
+                if (gridViewColumn != null)
+                {
+                    List<GridViewColumnHeader> headers = GetVisualChildren<GridViewColumnHeader>(lvDownload).ToList();
+                    GridViewColumnHeader gridViewColumnHeader = null;
+
+                    foreach (GridViewColumnHeader header in headers)
+                    {
+                        if (header.Column == null || header.Column.Header == null) continue;
+
+                        if ((header.Column.Header as string).Equals(gridViewColumn.Header as string))
+                        {
+                            gridViewColumnHeader = header;
+                            break;
+                        }
+                    }
+
+                    if (gridViewColumnHeader != null)
+                    {
+                        Sort(gridViewColumnHeader, Settings.Default.SelectedColumnHeaderDirection);
+                    }
+
+                }
+            }
         }
 
         private void menuExit_Click(object sender, RoutedEventArgs e)
@@ -50,15 +88,19 @@ namespace AMDownloader
         {
             var name = Assembly.GetExecutingAssembly().GetName().Name;
             var version = Assembly.GetExecutingAssembly().GetName().Version;
-            var description = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyDescriptionAttribute), false).OfType<AssemblyDescriptionAttribute>().FirstOrDefault()?.Description;
-            var copyright = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyCopyrightAttribute), true).OfType<AssemblyCopyrightAttribute>().FirstOrDefault()?.Copyright;
+            var copyright = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(
+                AssemblyCopyrightAttribute), true).OfType<AssemblyCopyrightAttribute>().FirstOrDefault()?.Copyright;
             var website = "https://mozib.io/amdownloader";
-            MessageBox.Show(name + "\nVersion " + version + "\n\n" + description + "\n\n" + copyright + "\n" + website, "About", MessageBoxButton.OK, MessageBoxImage.Information);
+            
+            MessageBox.Show(
+                name + "\nVersion " + version + "\n\n" + copyright + "\n" + website + "\n\n" +
+                "DISCLAIMER: There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
+                "About", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void tvCategories_Loaded(object sender, RoutedEventArgs e)
         {
-            e.Cancel = true;
+            (tvCategories.ItemContainerGenerator.ContainerFromIndex(0) as TreeViewItem).IsSelected = true;
         }
 
         private void lvDownload_HeaderClick(object sender, RoutedEventArgs e)
@@ -190,18 +232,24 @@ namespace AMDownloader
             Settings.Default.Save();
         }
 
-        private void tvCategories_Loaded(object sender, RoutedEventArgs e)
-        {
-            (tvCategories.ItemContainerGenerator.ContainerFromIndex(0) as TreeViewItem).IsSelected = true;
-        }
-
-        internal MessageBoxResult DisplayMessage(string message, string title = "", MessageBoxButton button = MessageBoxButton.OK, MessageBoxImage image = MessageBoxImage.Information, MessageBoxResult defaultResult = MessageBoxResult.OK)
+        internal MessageBoxResult DisplayMessage(
+            string message,
+            string title = "",
+            MessageBoxButton button = MessageBoxButton.OK,
+            MessageBoxImage image = MessageBoxImage.Information,
+            MessageBoxResult defaultResult = MessageBoxResult.OK)
         {
             if (title == "")
             {
                 title = Assembly.GetExecutingAssembly().GetName().Name;
             }
-            return Application.Current.Dispatcher.Invoke(() => MessageBox.Show(this, message, title, button, image, defaultResult));
+            return Application.Current.Dispatcher.Invoke(() => MessageBox.Show(
+                this,
+                message,
+                title,
+                button,
+                image,
+                defaultResult));
         }
 
         internal void ShowUrlList(List<string> urls, string caption, string message)
@@ -217,7 +265,7 @@ namespace AMDownloader
             });
         }
 
-        internal static IEnumerable<T> GetVisualChildren<T>(DependencyObject parent) where T : DependencyObject
+        private static IEnumerable<T> GetVisualChildren<T>(DependencyObject parent) where T : DependencyObject
         {
             int childrenCount = VisualTreeHelper.GetChildrenCount(parent);
             for (int i = 0; i < childrenCount; i++)
@@ -228,36 +276,6 @@ namespace AMDownloader
 
                 foreach (var descendant in GetVisualChildren<T>(child))
                     yield return descendant;
-            }
-        }
-
-        private void WindowMain_Loaded(object sender, RoutedEventArgs e)
-        {
-            if (Settings.Default.SelectedColumnHeader != null)
-            {
-                GridViewColumn gridViewColumn = ((GridView)lvDownload.View).Columns.FirstOrDefault(x => (string)x.Header == Settings.Default.SelectedColumnHeader);
-                if (gridViewColumn != null)
-                {
-                    List<GridViewColumnHeader> headers = GetVisualChildren<GridViewColumnHeader>(lvDownload).ToList();
-                    GridViewColumnHeader gridViewColumnHeader = null;
-
-                    foreach (GridViewColumnHeader header in headers)
-                    {
-                        if (header.Column == null || header.Column.Header == null) continue;
-
-                        if ((header.Column.Header as string).Equals(gridViewColumn.Header as string))
-                        {
-                            gridViewColumnHeader = header;
-                            break;
-                        }
-                    }
-
-                    if (gridViewColumnHeader != null)
-                    {
-                        Sort(gridViewColumnHeader, Settings.Default.SelectedColumnHeaderDirection);
-                    }
-
-                }
             }
         }
     }

@@ -1,8 +1,11 @@
 ﻿// Copyright (C) 2020 Antik Mozib.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Net.Http;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace AMDownloader.Common
 {
@@ -86,6 +89,29 @@ namespace AMDownloader.Common
             }
 
             return string.Empty;
+        }
+    }
+    internal static class CheckForUpdates
+    {
+        public static async Task<string> GetUpdateUrl(HttpClient client, string url, string appName, string appVersion)
+        {
+            client.BaseAddress = new Uri(url);
+
+            var content = new FormUrlEncodedContent(new[]
+            {
+                    new KeyValuePair<string,string>("appname",appName),
+                    new KeyValuePair<string, string>("version",appVersion)
+                });
+
+            var response = await client.PostAsync("", content);
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                return string.Empty;
+            }
+            
+            string result = await response.Content.ReadAsStringAsync();
+            return result;
         }
     }
 }
