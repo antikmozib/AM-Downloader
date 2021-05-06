@@ -136,16 +136,16 @@
                 <MenuItem x:Name="menuCheckForUpdates"
                           Header="Check For _Updates"
                           Command="{Binding CheckForUpdatesCommand}">
+                    <MenuItem.Icon>
+                        <Viewbox>
+                            <Frame Source="pack://application:,,,/Icons/GetWebSite_16x.xaml" />
+                        </Viewbox>
+                    </MenuItem.Icon>
                 </MenuItem>
                 <Separator/>
                 <MenuItem x:Name="menuAbout"
                           Header="_About"
                           Click="menuAbout_Click">
-                    <MenuItem.Icon>
-                        <Viewbox>
-                            <Frame Source="pack://application:,,,/Icons/StatusInformation_16x.xaml" />
-                        </Viewbox>
-                    </MenuItem.Icon>
                 </MenuItem>
             </MenuItem>
         </Menu>

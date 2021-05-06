@@ -462,11 +462,17 @@ namespace AMDownloader.ObjectModel
             IProgress<int> streamProgress = new Progress<int>(async (value) =>
             {
                 await semaphoreProgress.WaitAsync();
+
                 this.BytesDownloadedThisSession += value;
                 this.TotalBytesCompleted = this.BytesDownloadedThisSession + bytesDownloadedPreviously;
+
                 if (!this.SupportsResume) this.TotalBytesToDownload = this.TotalBytesCompleted;
+
                 _reportBytesProgress.Report(value);
-                if (this.SupportsResume && (this.TotalBytesCompleted >= nextProgressReportAt || this.TotalBytesCompleted > this.TotalBytesToDownload - progressReportingFrequency))
+
+                if (this.SupportsResume &&
+                (this.TotalBytesCompleted >= nextProgressReportAt ||
+                this.TotalBytesCompleted > this.TotalBytesToDownload - progressReportingFrequency))
                 {
                     double progress = (double)this.TotalBytesCompleted / (double)this.TotalBytesToDownload * 100;
                     this.Progress = (int)progress;
@@ -479,6 +485,7 @@ namespace AMDownloader.ObjectModel
                     RaisePropertyChanged(nameof(this.TotalBytesCompleted));
                     RaisePropertyChanged(nameof(this.TotalBytesToDownload));
                 }
+
                 semaphoreProgress.Release();
             });
 

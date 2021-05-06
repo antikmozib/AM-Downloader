@@ -53,7 +53,8 @@ namespace AMDownloader
             if (Settings.Default.SelectedColumnHeader != null)
             {
                 GridViewColumn gridViewColumn =
-                    ((GridView)lvDownload.View).Columns.FirstOrDefault(x => (string)x.Header == Settings.Default.SelectedColumnHeader);
+                    ((GridView)lvDownload.View).Columns.FirstOrDefault(
+                        x => (string)x.Header == Settings.Default.SelectedColumnHeader);
                 if (gridViewColumn != null)
                 {
                     List<GridViewColumnHeader> headers = GetVisualChildren<GridViewColumnHeader>(lvDownload).ToList();
@@ -91,10 +92,11 @@ namespace AMDownloader
             var copyright = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(
                 AssemblyCopyrightAttribute), true).OfType<AssemblyCopyrightAttribute>().FirstOrDefault()?.Copyright;
             var website = "https://mozib.io/amdownloader";
-            
+
             MessageBox.Show(
                 name + "\nVersion " + version + "\n\n" + copyright + "\n" + website + "\n\n" +
-                "DISCLAIMER: There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
+                "DISCLAIMER: This is free software. There is NO warranty; "+
+                "not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
                 "About", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 

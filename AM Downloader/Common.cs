@@ -30,7 +30,8 @@ namespace AMDownloader.Common
 
     internal static class AppPaths
     {
-        public static string LocalAppData => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Assembly.GetExecutingAssembly().GetName().Name);
+        public static string LocalAppData => 
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Assembly.GetExecutingAssembly().GetName().Name);
         public static string DownloadsHistoryFile => Path.Combine(LocalAppData, "History.xml");
         public static string SavedLocationsFile => Path.Combine(LocalAppData, "SavedLocations.xml");
         public static string DownloadsFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
@@ -47,7 +48,8 @@ namespace AMDownloader.Common
 
             while (File.Exists(result) || File.Exists(result + AppConstants.DownloaderSplitedPartExtension))
             {
-                result = dirName + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(fileName) + " (" + ++i + ")" + Path.GetExtension(fileName);
+                result = dirName + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(fileName) + 
+                    " (" + ++i + ")" + Path.GetExtension(fileName);
             };
 
             return result;
@@ -91,27 +93,33 @@ namespace AMDownloader.Common
             return string.Empty;
         }
     }
-    internal static class CheckForUpdates
-    {
-        public static async Task<string> GetUpdateUrl(HttpClient client, string url, string appName, string appVersion)
-        {
-            client.BaseAddress = new Uri(url);
 
+    internal static class AppUpdateService
+    {
+        public static async Task<string> GetUpdateUrl(string url, string appName, string appVersion)
+        {
             var content = new FormUrlEncodedContent(new[]
             {
-                    new KeyValuePair<string,string>("appname",appName),
-                    new KeyValuePair<string, string>("version",appVersion)
-                });
-
-            var response = await client.PostAsync("", content);
-            
-            if (!response.IsSuccessStatusCode)
+                new KeyValuePair<string,string>("appname",appName),
+                new KeyValuePair<string, string>("version",appVersion)
+            });
+            using (var c = new HttpClient())
             {
-                return string.Empty;
+                try
+                {
+                    c.BaseAddress = new Uri(url);
+                    var response = await c.PostAsync("", content);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        return await response.Content.ReadAsStringAsync();
+                    }
+                    return string.Empty;
+                }
+                catch (Exception)
+                {
+                    return string.Empty;
+                }
             }
-            
-            string result = await response.Content.ReadAsStringAsync();
-            return result;
         }
     }
 }

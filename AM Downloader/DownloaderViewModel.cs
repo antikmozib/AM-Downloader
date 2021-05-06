@@ -30,7 +30,11 @@ namespace AMDownloader
 
     internal delegate void ShowPreviewDelegate(string preview);
 
-    internal delegate MessageBoxResult DisplayMessageDelegate(string message, string title = "", MessageBoxButton button = MessageBoxButton.OK, MessageBoxImage image = MessageBoxImage.Information, MessageBoxResult defaultResult = MessageBoxResult.OK);
+    internal delegate MessageBoxResult DisplayMessageDelegate(
+        string message, string title = "", 
+        MessageBoxButton button = MessageBoxButton.OK, 
+        MessageBoxImage image = MessageBoxImage.Information, 
+        MessageBoxResult defaultResult = MessageBoxResult.OK);
 
     internal delegate void ShowUrlsDelegate(List<string> urls, string caption, string infoLabel);
 
@@ -176,8 +180,9 @@ namespace AMDownloader
             RedownloadCommand = new RelayCommand<object>(Redownload);
             CopyLinkToClipboardCommand = new RelayCommand<object>(CopyLinkToClipboard);
             ClearFinishedDownloadsCommand = new RelayCommand<object>(ClearFinishedDownloads);
-            CancelBackgroundTaskCommand = new RelayCommand<object>(CancelBackgroundTask, CancelBackgroundTask_CanExecute);
-            CheckForUpdatesCommand = new RelayCommand<object>(TriggerUpdateCheck);
+            CancelBackgroundTaskCommand = new RelayCommand<object>(
+                CancelBackgroundTask, CancelBackgroundTask_CanExecute);
+            CheckForUpdatesCommand = new RelayCommand<object>(CheckForUpdates);
             foreach (Categories cat in (Categories[])Enum.GetValues(typeof(Categories)))
             {
                 CategoriesList.Add(cat);
@@ -186,7 +191,7 @@ namespace AMDownloader
             // Check for updates
             if (Settings.Default.AutoCheckForUpdates)
             {
-                Task.Run(async () => await CheckForUpdatesAsync(silent: true));
+                Task.Run(async () => await TriggerUpdateCheckAsync(true));
             }
 
             // Populate history
@@ -459,7 +464,10 @@ namespace AMDownloader
         {
             if (obj == null) return;
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
-            var itemsFinished = from item in items where item.Status == DownloadStatus.Finished where new FileInfo(item.Destination).Exists select item;
+            var itemsFinished = from item in items
+                                where item.Status == DownloadStatus.Finished
+                                where new FileInfo(item.Destination).Exists
+                                select item;
             if (itemsFinished.Count() > 1)
             {
                 var r = _displayMessage.Invoke(
@@ -480,12 +488,17 @@ namespace AMDownloader
         {
             if (obj == null) return;
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
-            var itemsOpenable = from item in items where File.Exists(item.Destination) || Directory.Exists(Path.GetDirectoryName(item.Destination)) select item;
+            var itemsOpenable = from item in items
+                                where File.Exists(item.Destination) ||
+                                Directory.Exists(Path.GetDirectoryName(item.Destination))
+                                select item;
             if (itemsOpenable.Count() > 1)
             {
-                var result = _displayMessage.Invoke("You have selected to open " + items.Count + " folders.\n\n" +
-                    "Opening too many folders at the same time may cause the system to crash.\n\nDo you wish to proceed?",
-                    "Open Folder", MessageBoxButton.YesNo, MessageBoxImage.Exclamation, MessageBoxResult.No);
+                var result = _displayMessage.Invoke(
+                    "You have selected to open " + items.Count + " folders.\n\n" +
+                    "Opening too many folders at the same time may cause the system to crash.\n\n" +
+                    "Do you wish to proceed?", "Open Folder",
+                    MessageBoxButton.YesNo, MessageBoxImage.Exclamation, MessageBoxResult.No);
 
                 if (result == MessageBoxResult.No)
                 {
@@ -529,7 +542,9 @@ namespace AMDownloader
 
             if (_ctsUpdatingList != null)
             {
-                if (_displayMessage.Invoke("Background operation in progress. Cancel and exit program?", "Exit", MessageBoxButton.YesNo, MessageBoxImage.Exclamation, MessageBoxResult.No) == MessageBoxResult.No)
+                if (_displayMessage.Invoke(
+                    "Background operation in progress. Cancel and exit program?", "Exit",
+                    MessageBoxButton.YesNo, MessageBoxImage.Exclamation, MessageBoxResult.No) == MessageBoxResult.No)
                 {
                     return;
                 }
@@ -773,7 +788,8 @@ namespace AMDownloader
             Monitor.Enter(_lockBytesTransferredOverLifetime);
             try
             {
-                Settings.Default.BytesTransferredOverLifetime += (ulong)(sender as DownloaderObjectModel).BytesDownloadedThisSession;
+                Settings.Default.BytesTransferredOverLifetime +=
+                    (ulong)(sender as DownloaderObjectModel).BytesDownloadedThisSession;
             }
             finally
             {
@@ -965,11 +981,41 @@ namespace AMDownloader
                 DownloaderObjectModel item;
                 if (forceEnqueue || enqueue)
                 {
-                    item = new DownloaderObjectModel(ref _client, urls[i], fileName, enqueue: true, Download_Created, Download_Verifying, Download_Verified, Download_Started, Download_Stopped, Download_Enqueued, Download_Dequeued, Download_Finished, Download_PropertyChanged, ProgressReporter, ref _requestThrottler);
+                    item = new DownloaderObjectModel(
+                        ref _client,
+                        urls[i],
+                        fileName,
+                        enqueue: true,
+                        Download_Created,
+                        Download_Verifying,
+                        Download_Verified,
+                        Download_Started,
+                        Download_Stopped,
+                        Download_Enqueued,
+                        Download_Dequeued,
+                        Download_Finished,
+                        Download_PropertyChanged,
+                        ProgressReporter,
+                        ref _requestThrottler);
                 }
                 else
                 {
-                    item = new DownloaderObjectModel(ref _client, urls[i], fileName, enqueue: false, Download_Created, Download_Verifying, Download_Verified, Download_Started, Download_Stopped, Download_Enqueued, Download_Dequeued, Download_Finished, Download_PropertyChanged, ProgressReporter, ref _requestThrottler);
+                    item = new DownloaderObjectModel(
+                        ref _client,
+                        urls[i],
+                        fileName,
+                        enqueue: false,
+                        Download_Created,
+                        Download_Verifying,
+                        Download_Verified,
+                        Download_Started,
+                        Download_Stopped,
+                        Download_Enqueued,
+                        Download_Dequeued,
+                        Download_Finished,
+                        Download_PropertyChanged,
+                        ProgressReporter,
+                        ref _requestThrottler);
                     if (start)
                     {
                         tasks.Add(item.StartAsync());
@@ -1008,7 +1054,9 @@ namespace AMDownloader
             {
                 if (skipping.Count > 0)
                 {
-                    _showUrls(skipping, "Duplicate Entries", "The following URLs were not added because they are already in the list:");
+                    _showUrls(
+                        skipping, "Duplicate Entries",
+                        "The following URLs were not added because they are already in the list:");
                 }
 
                 if ((enqueue && start) || forceEnqueue)
@@ -1092,7 +1140,10 @@ namespace AMDownloader
                         {
                             if (objects[i].Status == DownloadStatus.Finished)
                             {
-                                FileSystem.DeleteFile(objects[i].Destination, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
+                                FileSystem.DeleteFile(
+                                    objects[i].Destination, 
+                                    UIOption.OnlyErrorDialogs, 
+                                    RecycleOption.SendToRecycleBin);
                             }
                             else
                             {
@@ -1190,18 +1241,15 @@ namespace AMDownloader
             return this.IsBackgroundWorking;
         }
 
-        internal void TriggerUpdateCheck(object obj)
+        internal void CheckForUpdates(object obj)
         {
-            Task.Run(async () =>
-            {
-                await CheckForUpdatesAsync();
-            });
+            Task.Run(async () => await TriggerUpdateCheckAsync());
         }
 
-        private async Task CheckForUpdatesAsync(bool silent = false)
+        private async Task TriggerUpdateCheckAsync(bool silent = false)
         {
-            string url = await Common.CheckForUpdates.GetUpdateUrl(
-                    _client, @"https://mozib.io/downloads/update.php",
+            string url = await AppUpdateService.GetUpdateUrl(
+                    @"https://mozib.io/downloads/update.php",
                     Assembly.GetExecutingAssembly().GetName().Name,
                     Assembly.GetExecutingAssembly().GetName().Version.ToString());
 
@@ -1209,13 +1257,14 @@ namespace AMDownloader
             {
                 if (!silent)
                 {
-                    _displayMessage.Invoke("No new updates are available.", "Check For Updates", MessageBoxButton.OK, MessageBoxImage.Information);
+                    _displayMessage.Invoke(
+                        "No new updates are available.", "Update", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 return;
             }
 
             if (_displayMessage.Invoke(
-                "An update is available.\n\nWould you like to download it now?", "Check For Updates",
+                "An update is available.\n\nWould you like to download it now?", "Update",
                 MessageBoxButton.YesNo, MessageBoxImage.Information, MessageBoxResult.Yes) == MessageBoxResult.Yes)
             {
                 Process.Start("explorer.exe", url);

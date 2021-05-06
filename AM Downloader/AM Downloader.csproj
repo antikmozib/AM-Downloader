@@ -9,15 +9,13 @@
     <ApplicationIcon>Icons\app.ico</ApplicationIcon>
     <Company>Antik Mozib</Company>
     <Description>A modern download manager for Windows.</Description>
-    <Copyright>Copyright © Antik Mozib.</Copyright>
+    <Copyright>Copyright © 2021 Antik Mozib. All Rights Reserved.</Copyright>
     <StartupObject />
     <PackageIcon>app.ico</PackageIcon>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <AssemblyVersion>1.3.0.0</AssemblyVersion>    
-    <Version>1.3</Version>
+    <AssemblyVersion>1.3.0.0</AssemblyVersion>
     <Platforms>AnyCPU;x86;x64</Platforms>
     <Authors>Antik Mozib</Authors>
-	<FileVersion>1.3.0.0</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -72,9 +70,11 @@
   <ItemGroup>
     <Page Remove="Converters.xaml" />
     <Page Remove="Icons\AddRow_16x.xaml" />
+    <Page Remove="Icons\ASPWebSite_16x.xaml" />
     <Page Remove="Icons\Cancel_16x.xaml" />
     <Page Remove="Icons\Checklist_16x.xaml" />
     <Page Remove="Icons\CopyLongTextToClipboard_16x.xaml" />
+    <Page Remove="Icons\GetWebSite_16x.xaml" />
     <Page Remove="Icons\OpenFolder_16x.xaml" />
     <Page Remove="Icons\Open_16x.xaml" />
     <Page Remove="Icons\Pause_16x.xaml" />
@@ -84,7 +84,6 @@
     <Page Remove="Icons\Run_16x.xaml" />
     <Page Remove="Icons\Settings_16x.xaml" />
     <Page Remove="Icons\ShutDown_16x.xaml" />
-    <Page Remove="Icons\StatusInformation_16x.xaml" />
     <Page Remove="Icons\StatusNotStarted_16x.xaml" />
     <Page Remove="Icons\StatusNo_16x.xaml" />
     <Page Remove="Icons\StatusOK_16x.xaml" />
@@ -124,6 +123,9 @@
     <Resource Include="Icons\CopyLongTextToClipboard_16x.xaml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
+    <Resource Include="Icons\GetWebSite_16x.xaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
     <Resource Include="Icons\OpenFolder_16x.xaml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
@@ -149,9 +151,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Icons\ShutDown_16x.xaml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Icons\StatusInformation_16x.xaml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Icons\StatusNotStarted_16x.xaml">
