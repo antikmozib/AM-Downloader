@@ -470,7 +470,10 @@ namespace AMDownloader.ObjectModel
 
                 _reportBytesProgress.Report(value);
 
-                if (this.SupportsResume &&
+                double progress = (double)this.TotalBytesCompleted / (double)this.TotalBytesToDownload * 100;
+                this.Progress = (int)progress;
+
+                /*if (this.SupportsResume &&
                 (this.TotalBytesCompleted >= nextProgressReportAt ||
                 this.TotalBytesCompleted > this.TotalBytesToDownload - progressReportingFrequency))
                 {
@@ -484,7 +487,7 @@ namespace AMDownloader.ObjectModel
                 {
                     RaisePropertyChanged(nameof(this.TotalBytesCompleted));
                     RaisePropertyChanged(nameof(this.TotalBytesToDownload));
-                }
+                }*/
 
                 semaphoreProgress.Release();
             });
@@ -603,7 +606,7 @@ namespace AMDownloader.ObjectModel
                 }
             });
 
-            StartMeasuringSpeed();
+            StartReportingProgress();
             StartMeasuringEta();
 
             try
@@ -650,7 +653,7 @@ namespace AMDownloader.ObjectModel
             return status;
         }
 
-        private void StartMeasuringSpeed()
+        private void StartReportingProgress()
         {
             long fromBytes;
             long toBytes;
@@ -667,6 +670,15 @@ namespace AMDownloader.ObjectModel
                     {
                         this.Speed = bytesCaptured;
                         RaisePropertyChanged(nameof(this.Speed));
+                    }
+                    RaisePropertyChanged(nameof(this.TotalBytesCompleted));
+                    if (this.SupportsResume)
+                    {
+                        RaisePropertyChanged(nameof(this.Progress));
+                    }
+                    else
+                    {
+                        RaisePropertyChanged(nameof(this.TotalBytesToDownload));
                     }
                 }
             }).ContinueWith(t =>

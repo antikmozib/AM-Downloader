@@ -262,5 +262,17 @@ namespace AMDownloader.Properties {
                 this["AutoCheckForUpdates"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LastSelectedCatagory {
+            get {
+                return ((string)(this["LastSelectedCatagory"]));
+            }
+            set {
+                this["LastSelectedCatagory"] = value;
+            }
+        }
     }
 }

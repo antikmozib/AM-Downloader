@@ -671,6 +671,12 @@
                       SelectionMode="Extended"
                       ScrollViewer.HorizontalScrollBarVisibility="Auto"
                       ScrollViewer.VerticalScrollBarVisibility="Auto">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="MouseDoubleClick">
+                        <i:InvokeCommandAction Command="{Binding OpenCommand}" 
+                                               CommandParameter="{Binding Path=SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ListView}}}"/>
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
                 <ListView.Resources>
                     <Style x:Key="LeftAligned"
                            TargetType="{x:Type GridViewColumnHeader}">

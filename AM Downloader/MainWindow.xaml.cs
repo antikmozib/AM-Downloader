@@ -95,14 +95,22 @@ namespace AMDownloader
 
             MessageBox.Show(
                 name + "\nVersion " + version + "\n\n" + copyright + "\n" + website + "\n\n" +
-                "DISCLAIMER: This is free software. There is NO warranty; "+
+                "DISCLAIMER: This is free software. There is NO warranty; " +
                 "not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
                 "About", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void tvCategories_Loaded(object sender, RoutedEventArgs e)
         {
-            (tvCategories.ItemContainerGenerator.ContainerFromIndex(0) as TreeViewItem).IsSelected = true;
+            if (string.IsNullOrEmpty(Settings.Default.LastSelectedCatagory))
+            {
+                (tvCategories.ItemContainerGenerator.ContainerFromIndex(0) as TreeViewItem).IsSelected = true;
+            }
+            else
+            {
+                (tvCategories.ItemContainerGenerator.ContainerFromIndex(
+                    (int)(Categories)Enum.Parse(typeof(Categories), Settings.Default.LastSelectedCatagory)) as TreeViewItem).IsSelected = true;
+            }
         }
 
         private void lvDownload_HeaderClick(object sender, RoutedEventArgs e)

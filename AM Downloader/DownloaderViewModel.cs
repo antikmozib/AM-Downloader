@@ -31,9 +31,9 @@ namespace AMDownloader
     internal delegate void ShowPreviewDelegate(string preview);
 
     internal delegate MessageBoxResult DisplayMessageDelegate(
-        string message, string title = "", 
-        MessageBoxButton button = MessageBoxButton.OK, 
-        MessageBoxImage image = MessageBoxImage.Information, 
+        string message, string title = "",
+        MessageBoxButton button = MessageBoxButton.OK,
+        MessageBoxImage image = MessageBoxImage.Information,
         MessageBoxResult defaultResult = MessageBoxResult.OK);
 
     internal delegate void ShowUrlsDelegate(List<string> urls, string caption, string infoLabel);
@@ -188,6 +188,16 @@ namespace AMDownloader
                 CategoriesList.Add(cat);
             }
 
+            // Load last selected category
+            if (string.IsNullOrEmpty(Settings.Default.LastSelectedCatagory))
+            {
+                SwitchCategory(Categories.All);
+            }
+            else
+            {
+                SwitchCategory((Categories)Enum.Parse(typeof(Categories), Settings.Default.LastSelectedCatagory));
+            }
+            
             // Check for updates
             if (Settings.Default.AutoCheckForUpdates)
             {
@@ -292,9 +302,8 @@ namespace AMDownloader
 
         #region Methods
 
-        internal void CategoryChanged(object obj)
+        private void SwitchCategory(Categories category)
         {
-            var category = (Categories)obj;
             switch (category)
             {
                 case Categories.All:
@@ -364,6 +373,13 @@ namespace AMDownloader
                     });
                     break;
             }
+
+            Settings.Default.LastSelectedCatagory = category.ToString();
+        }
+
+        internal void CategoryChanged(object obj)
+        {
+            SwitchCategory((Categories)obj);
         }
 
         internal void Start(object obj)
@@ -1141,8 +1157,8 @@ namespace AMDownloader
                             if (objects[i].Status == DownloadStatus.Finished)
                             {
                                 FileSystem.DeleteFile(
-                                    objects[i].Destination, 
-                                    UIOption.OnlyErrorDialogs, 
+                                    objects[i].Destination,
+                                    UIOption.OnlyErrorDialogs,
                                     RecycleOption.SendToRecycleBin);
                             }
                             else
