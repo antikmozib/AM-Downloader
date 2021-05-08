@@ -91,6 +91,9 @@
                     CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
                     Key="C"
                     Modifiers="Ctrl" />
+        <KeyBinding Command="{Binding ShowHelpTopicsCommand}"
+                    Key="F1"
+                    Modifiers="" />
     </Window.InputBindings>
     <Window.TaskbarItemInfo>
         <TaskbarItemInfo ProgressState="{Binding Progress, Converter={StaticResource TaskBarProgressStateConverter}}"
@@ -133,6 +136,16 @@
             </MenuItem>
             <MenuItem Header="_Help"
                       TabIndex="10">
+                <MenuItem x:Name="menuHelpTopics"
+                          Header="Help _Topics"
+                          InputGestureText="F1"
+                          Command="{Binding ShowHelpTopicsCommand}">
+                    <MenuItem.Icon>
+                        <Viewbox>
+                            <Frame Source="pack://application:,,,/Icons/MSHelpTableOfContent_16x.xaml" />
+                        </Viewbox>
+                    </MenuItem.Icon>
+                </MenuItem>
                 <MenuItem x:Name="menuCheckForUpdates"
                           Header="Check For _Updates"
                           Command="{Binding CheckForUpdatesCommand}">
@@ -142,7 +155,7 @@
                         </Viewbox>
                     </MenuItem.Icon>
                 </MenuItem>
-                <Separator/>
+                <Separator />
                 <MenuItem x:Name="menuAbout"
                           Header="_About"
                           Click="menuAbout_Click">
@@ -673,8 +686,8 @@
                       ScrollViewer.VerticalScrollBarVisibility="Auto">
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="MouseDoubleClick">
-                        <i:InvokeCommandAction Command="{Binding OpenCommand}" 
-                                               CommandParameter="{Binding Path=SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ListView}}}"/>
+                        <i:InvokeCommandAction Command="{Binding OpenCommand}"
+                                               CommandParameter="{Binding Path=SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ListView}}}" />
                     </i:EventTrigger>
                 </i:Interaction.Triggers>
                 <ListView.Resources>

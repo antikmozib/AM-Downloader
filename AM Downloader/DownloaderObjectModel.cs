@@ -455,40 +455,20 @@ namespace AMDownloader.ObjectModel
             var status = DownloadStatus.Error;
             Task<bool> streamTask;
             HttpRequestMessage request;
-            long progressReportingFrequency = AppConstants.DownloaderStreamBufferLength;
-            long nextProgressReportAt = AppConstants.DownloaderStreamBufferLength;
             long maxDownloadSpeed = Settings.Default.MaxDownloadSpeed * 1024;
             SemaphoreSlim semaphoreProgress = new SemaphoreSlim(1);
             IProgress<int> streamProgress = new Progress<int>(async (value) =>
             {
                 await semaphoreProgress.WaitAsync();
-
                 this.BytesDownloadedThisSession += value;
                 this.TotalBytesCompleted = this.BytesDownloadedThisSession + bytesDownloadedPreviously;
-
-                if (!this.SupportsResume) this.TotalBytesToDownload = this.TotalBytesCompleted;
-
+                if (!this.SupportsResume)
+                {
+                    this.TotalBytesToDownload = this.TotalBytesCompleted;
+                }
                 _reportBytesProgress.Report(value);
-
                 double progress = (double)this.TotalBytesCompleted / (double)this.TotalBytesToDownload * 100;
                 this.Progress = (int)progress;
-
-                /*if (this.SupportsResume &&
-                (this.TotalBytesCompleted >= nextProgressReportAt ||
-                this.TotalBytesCompleted > this.TotalBytesToDownload - progressReportingFrequency))
-                {
-                    double progress = (double)this.TotalBytesCompleted / (double)this.TotalBytesToDownload * 100;
-                    this.Progress = (int)progress;
-                    RaisePropertyChanged(nameof(this.Progress));
-                    RaisePropertyChanged(nameof(this.TotalBytesCompleted));
-                    nextProgressReportAt += progressReportingFrequency;
-                }
-                else if (!this.SupportsResume)
-                {
-                    RaisePropertyChanged(nameof(this.TotalBytesCompleted));
-                    RaisePropertyChanged(nameof(this.TotalBytesToDownload));
-                }*/
-
                 semaphoreProgress.Release();
             });
 
@@ -510,29 +490,6 @@ namespace AMDownloader.ObjectModel
                     Method = HttpMethod.Get,
                     Headers = { Range = new RangeHeaderValue(bytesDownloadedPreviously, this.TotalBytesToDownload) }
                 };
-            }
-
-            if (this.SupportsResume)
-            {
-                if (this.TotalBytesToDownload <= (long)ByteConstants.KILOBYTE)
-                {
-                    progressReportingFrequency = (this.TotalBytesToDownload ?? 0) / 1;
-                }
-                else if (this.TotalBytesToDownload <= (long)ByteConstants.MEGABYTE)
-                {
-                    progressReportingFrequency = (this.TotalBytesToDownload ?? 0) / 10;
-                }
-                else
-                {
-                    progressReportingFrequency = (this.TotalBytesToDownload ?? 0) / 100;
-                }
-
-                if (progressReportingFrequency < 1)
-                    progressReportingFrequency = 1;
-                else if (progressReportingFrequency > 512 * (long)ByteConstants.KILOBYTE)
-                    progressReportingFrequency = 512 * (long)ByteConstants.KILOBYTE;
-
-                nextProgressReportAt = progressReportingFrequency;
             }
 
             _ctsPaused = new CancellationTokenSource();
@@ -712,7 +669,8 @@ namespace AMDownloader.ObjectModel
                         bytesCaptured = bytesTo - bytesFrom;
                         stopWatch.Stop();
 
-                        double eta = ((this.TotalBytesToDownload ?? 0) - this.TotalBytesCompleted) * ((double)stopWatch.ElapsedMilliseconds / bytesCaptured);
+                        double eta = ((this.TotalBytesToDownload ?? 0) - this.TotalBytesCompleted) *
+                                        ((double)stopWatch.ElapsedMilliseconds / bytesCaptured);
                         if (eta >= 0)
                         {
                             this.TimeRemaining = eta;

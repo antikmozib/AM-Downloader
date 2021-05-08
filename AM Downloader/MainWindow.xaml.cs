@@ -75,7 +75,6 @@ namespace AMDownloader
                     {
                         Sort(gridViewColumnHeader, Settings.Default.SelectedColumnHeaderDirection);
                     }
-
                 }
             }
         }
@@ -109,7 +108,7 @@ namespace AMDownloader
             else
             {
                 (tvCategories.ItemContainerGenerator.ContainerFromIndex(
-                    (int)(Categories)Enum.Parse(typeof(Categories), Settings.Default.LastSelectedCatagory)) as TreeViewItem).IsSelected = true;
+                    (int)(Category)Enum.Parse(typeof(Category), Settings.Default.LastSelectedCatagory)) as TreeViewItem).IsSelected = true;
             }
         }
 
@@ -145,7 +144,6 @@ namespace AMDownloader
 
         private void Sort(GridViewColumnHeader columnHeader, ListSortDirection? direction)
         {
-
             if (columnHeader == null)
             {
                 return;
@@ -236,10 +234,8 @@ namespace AMDownloader
             _lastHeaderClicked = columnHeader;
             _lastDirection = direction;
 
-
             Settings.Default.SelectedColumnHeader = columnHeader.Column.Header.ToString();
             Settings.Default.SelectedColumnHeaderDirection = direction ?? ListSortDirection.Ascending;
-            Settings.Default.Save();
         }
 
         internal MessageBoxResult DisplayMessage(

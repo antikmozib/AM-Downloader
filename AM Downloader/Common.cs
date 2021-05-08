@@ -1,7 +1,6 @@
 ﻿// Copyright (C) 2020 Antik Mozib.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Reflection;
@@ -26,12 +25,14 @@ namespace AMDownloader.Common
         public const string DownloaderFileMagicString = "[AMDownload-Paused]";
         public const int ParallelDownloadsLimit = 10;
         public const int ParallelStreamsLimit = 5;
+        public const string DocsSite = @"https://mozib.io/resources/docs/amdownloader";
     }
 
     internal static class AppPaths
     {
-        public static string LocalAppData => 
+        public static string LocalAppData =>
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Assembly.GetExecutingAssembly().GetName().Name);
+
         public static string DownloadsHistoryFile => Path.Combine(LocalAppData, "History.xml");
         public static string SavedLocationsFile => Path.Combine(LocalAppData, "SavedLocations.xml");
         public static string DownloadsFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
@@ -48,7 +49,7 @@ namespace AMDownloader.Common
 
             while (File.Exists(result) || File.Exists(result + AppConstants.DownloaderSplitedPartExtension))
             {
-                result = dirName + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(fileName) + 
+                result = dirName + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(fileName) +
                     " (" + ++i + ")" + Path.GetExtension(fileName);
             };
 
@@ -98,27 +99,20 @@ namespace AMDownloader.Common
     {
         public static async Task<string> GetUpdateUrl(string url, string appName, string appVersion)
         {
-            var content = new FormUrlEncodedContent(new[]
+            using var c = new HttpClient();
+            appName = appName.Replace(" ", ""); // replace spaces in url
+            try
             {
-                new KeyValuePair<string,string>("appname",appName),
-                new KeyValuePair<string, string>("version",appVersion)
-            });
-            using (var c = new HttpClient())
+                var response = await c.GetAsync(url + "?appname=" + appName + "&version=" + appVersion);
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadAsStringAsync();
+                }
+                return string.Empty;
+            }
+            catch (Exception)
             {
-                try
-                {
-                    c.BaseAddress = new Uri(url);
-                    var response = await c.PostAsync("", content);
-                    if (response.IsSuccessStatusCode)
-                    {
-                        return await response.Content.ReadAsStringAsync();
-                    }
-                    return string.Empty;
-                }
-                catch (Exception)
-                {
-                    return string.Empty;
-                }
+                return string.Empty;
             }
         }
     }

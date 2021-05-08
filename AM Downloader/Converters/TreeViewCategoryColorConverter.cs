@@ -12,31 +12,31 @@ namespace AMDownloader
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            var status = (Categories)value;
+            var status = (Category)value;
             switch (status)
             {
-                case Categories.All:
+                case Category.All:
                     return Application.Current.Resources["CategoryAllColor"];
 
-                case Categories.Downloading:
+                case Category.Downloading:
                     return Application.Current.Resources["CategoryDownloadingColor"];
 
-                case Categories.Queued:
+                case Category.Queued:
                     return Application.Current.Resources["CategoryQueuedColor"];
 
-                case Categories.Finished:
+                case Category.Finished:
                     return Application.Current.Resources["CategoryFinishedColor"];
 
-                case Categories.Ready:
+                case Category.Ready:
                     return Application.Current.Resources["CategoryReadyColor"];
 
-                case Categories.Errored:
+                case Category.Errored:
                     return Application.Current.Resources["CategoryErroredColor"];
 
-                case Categories.Verifying:
+                case Category.Verifying:
                     return Application.Current.Resources["CategoryVerifyingColor"];
 
-                case Categories.Paused:
+                case Category.Paused:
                     return Application.Current.Resources["CategoryPausedColor"];
             }
             return new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));

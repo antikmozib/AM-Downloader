@@ -11,7 +11,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Windows.Input;
 
 namespace AMDownloader
@@ -52,7 +51,6 @@ namespace AMDownloader
 
         public ICommand AddCommand { get; private set; }
         public ICommand PreviewCommand { get; private set; }
-        public ICommand HelpCommand { get; private set; }
 
         public AddDownloadViewModel(AddItemsAsyncDelegate addItemsAsync, ShowPreviewDelegate showPreview, DisplayMessageDelegate displayMessage)
         {
@@ -60,7 +58,6 @@ namespace AMDownloader
             _displayMessage = displayMessage;
             AddCommand = new RelayCommand<object>(Add, Add_CanExecute);
             PreviewCommand = new RelayCommand<object>(Preview, Add_CanExecute);
-            HelpCommand = new RelayCommand<object>(ShowHelp);
 
             _clipboardService = new ClipboardObserver();
 
@@ -92,11 +89,6 @@ namespace AMDownloader
                 output += url + "\n\n";
             }
             this.ShowPreview.Invoke(output);
-        }
-
-        internal void ShowHelp(object obj)
-        {
-            _displayMessage.Invoke("You can use patterns e.g. http://www.example.com/file[1:10]. Click on Preview to see the list of URLs that will be derived from the pattern.", "Help");
         }
 
         private bool Add_CanExecute(object obj)

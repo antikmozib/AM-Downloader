@@ -75,6 +75,7 @@
     <Page Remove="Icons\Checklist_16x.xaml" />
     <Page Remove="Icons\CopyLongTextToClipboard_16x.xaml" />
     <Page Remove="Icons\GetWebSite_16x.xaml" />
+    <Page Remove="Icons\MSHelpTableOfContent_16x.xaml" />
     <Page Remove="Icons\OpenFolder_16x.xaml" />
     <Page Remove="Icons\Open_16x.xaml" />
     <Page Remove="Icons\Pause_16x.xaml" />
@@ -124,6 +125,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Icons\GetWebSite_16x.xaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\MSHelpTableOfContent_16x.xaml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Icons\OpenFolder_16x.xaml">

@@ -14,11 +14,13 @@ namespace AMDownloader
         public struct UrlListType
         {
             public string Url { get; set; }
+
             public override string ToString()
             {
                 return Url;
             }
         }
+
         private ClipboardObserver _clipboard;
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -33,7 +35,7 @@ namespace AMDownloader
             _clipboard = new ClipboardObserver();
             this.Message = message;
             this.Urls = new ObservableCollection<UrlListType>();
-            foreach (var url in urls)               
+            foreach (var url in urls)
             {
                 var urlListType = new UrlListType();
                 urlListType.Url = url;

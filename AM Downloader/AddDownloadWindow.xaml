@@ -1,9 +1,9 @@
 ﻿<Window x:Class="AMDownloader.AddDownloadWindow"
-        xmlns:local="clr-namespace:AMDownloader"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:AMDownloader"
         xmlns:properties="clr-namespace:AMDownloader.Properties"
         mc:Ignorable="d"
         Title="Add"
@@ -14,7 +14,7 @@
         Width="{Binding Source={x:Static properties:Settings.Default}, Path=AddWindowWidth, Mode=TwoWay}"
         MinWidth="650"
         MinHeight="250"
-        WindowStyle="ToolWindow"
+        WindowStyle="SingleBorderWindow"
         Closing="Window_Closing">
     <Window.Resources>
         <local:DownloaderDestinationFolderNameConverter x:Key="DownloaderDestinationConverter" />
@@ -35,7 +35,7 @@
         </Grid.RowDefinitions>
         <DockPanel>
             <TextBlock VerticalAlignment="Bottom"
-                       Text="Enter URL or pattern to add. You can enter multiple URLs on separate lines."/>
+                       Text="Enter URL or pattern to add. You can enter multiple entries on separate lines." />
             <CheckBox DockPanel.Dock="Right"
                       x:Name="cbMonitorClipboard"
                       Content="Monitor clipboard"
@@ -67,7 +67,7 @@
                     Content="Browse"
                     Click="btnBrowse_Click" />
             <ComboBox x:Name="cboDestination"
-                      Margin="0 0 10 0"
+                      Margin="0 0 5 0"
                       Width="auto"
                       HorizontalAlignment="Stretch"
                       VerticalContentAlignment="Center"
@@ -89,29 +89,22 @@
                       VerticalAlignment="Center"
                       Margin="0 0 20 0" />
             <Button x:Name="btnAdd"
-                    Margin="0 0 10 0"
+                    Margin="0 0 5 0"
                     Content="Add"
                     Command="{Binding AddCommand}"
                     IsDefault="True"
                     TabIndex="1"
                     Click="btnAdd_Click" />
             <Button x:Name="btnCancel"
-                    Margin="0 0 10 0"
+                    Margin="0 0 5 0"
                     Content="Cancel"
                     IsCancel="True"
                     TabIndex="2"
                     Click="btnCancel_Click" />
             <Button Command="{Binding PreviewCommand}"
-                    Margin="0 0 10 0"
+                    Margin="0 0 0 0"
                     Content="Preview"
                     TabIndex="3" />
-            <Button Width="40"
-                Command="{Binding HelpCommand}"
-                    TabIndex="4">
-                <TextBlock Text="&#xf059;"
-                           FontFamily="{StaticResource FontAwesomeSolid}" 
-                           FontSize="18"/>
-            </Button>
         </StackPanel>
     </Grid>
 </Window>

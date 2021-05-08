@@ -38,7 +38,7 @@ namespace AMDownloader
 
     internal delegate void ShowUrlsDelegate(List<string> urls, string caption, string infoLabel);
 
-    public enum Categories
+    public enum Category
     {
         All, Ready, Queued, Downloading, Paused, Finished, Errored, Verifying
     }
@@ -66,7 +66,7 @@ namespace AMDownloader
         #region Properties
 
         public ObservableCollection<DownloaderObjectModel> DownloadItemsList { get; }
-        public ObservableCollection<Categories> CategoriesList { get; }
+        public ObservableCollection<Category> CategoriesList { get; }
         public ICollectionView CollectionView { get; }
         public QueueProcessor QueueProcessor { get; }
         public int Progress { get; private set; }
@@ -113,6 +113,7 @@ namespace AMDownloader
         public ICommand ClearFinishedDownloadsCommand { get; private set; }
         public ICommand CancelBackgroundTaskCommand { get; private set; }
         public ICommand CheckForUpdatesCommand { get; private set; }
+        public ICommand ShowHelpTopicsCommand { get; private set; }
 
         #endregion Commands
 
@@ -122,7 +123,7 @@ namespace AMDownloader
         {
             _client = new HttpClient();
             DownloadItemsList = new ObservableCollection<DownloaderObjectModel>();
-            CategoriesList = new ObservableCollection<Categories>();
+            CategoriesList = new ObservableCollection<Category>();
             QueueProcessor = new QueueProcessor(Settings.Default.MaxParallelDownloads, QueueProcessor_PropertyChanged);
             _requestThrottler = new RequestThrottler(AppConstants.RequestThrottlerInterval);
             CollectionView = CollectionViewSource.GetDefaultView(DownloadItemsList);
@@ -183,7 +184,9 @@ namespace AMDownloader
             CancelBackgroundTaskCommand = new RelayCommand<object>(
                 CancelBackgroundTask, CancelBackgroundTask_CanExecute);
             CheckForUpdatesCommand = new RelayCommand<object>(CheckForUpdates);
-            foreach (Categories cat in (Categories[])Enum.GetValues(typeof(Categories)))
+            ShowHelpTopicsCommand = new RelayCommand<object>(ShowHelpTopics);
+
+            foreach (Category cat in (Category[])Enum.GetValues(typeof(Category)))
             {
                 CategoriesList.Add(cat);
             }
@@ -191,13 +194,13 @@ namespace AMDownloader
             // Load last selected category
             if (string.IsNullOrEmpty(Settings.Default.LastSelectedCatagory))
             {
-                SwitchCategory(Categories.All);
+                SwitchCategory(Category.All);
             }
             else
             {
-                SwitchCategory((Categories)Enum.Parse(typeof(Categories), Settings.Default.LastSelectedCatagory));
+                SwitchCategory((Category)Enum.Parse(typeof(Category), Settings.Default.LastSelectedCatagory));
             }
-            
+
             // Check for updates
             if (Settings.Default.AutoCheckForUpdates)
             {
@@ -302,15 +305,15 @@ namespace AMDownloader
 
         #region Methods
 
-        private void SwitchCategory(Categories category)
+        private void SwitchCategory(Category category)
         {
             switch (category)
             {
-                case Categories.All:
+                case Category.All:
                     CollectionView.Filter = new Predicate<object>((o) => { return true; });
                     break;
 
-                case Categories.Downloading:
+                case Category.Downloading:
                     CollectionView.Filter = new Predicate<object>((o) =>
                     {
                         var item = o as DownloaderObjectModel;
@@ -319,7 +322,7 @@ namespace AMDownloader
                     });
                     break;
 
-                case Categories.Finished:
+                case Category.Finished:
                     CollectionView.Filter = new Predicate<object>((o) =>
                     {
                         var item = o as DownloaderObjectModel;
@@ -328,7 +331,7 @@ namespace AMDownloader
                     });
                     break;
 
-                case Categories.Paused:
+                case Category.Paused:
                     CollectionView.Filter = new Predicate<object>((o) =>
                     {
                         var item = o as DownloaderObjectModel;
@@ -337,7 +340,7 @@ namespace AMDownloader
                     });
                     break;
 
-                case Categories.Queued:
+                case Category.Queued:
                     CollectionView.Filter = new Predicate<object>((o) =>
                     {
                         var item = o as DownloaderObjectModel;
@@ -346,7 +349,7 @@ namespace AMDownloader
                     });
                     break;
 
-                case Categories.Ready:
+                case Category.Ready:
                     CollectionView.Filter = new Predicate<object>((o) =>
                     {
                         var item = o as DownloaderObjectModel;
@@ -355,7 +358,7 @@ namespace AMDownloader
                     });
                     break;
 
-                case Categories.Errored:
+                case Category.Errored:
                     CollectionView.Filter = new Predicate<object>((o) =>
                     {
                         var item = o as DownloaderObjectModel;
@@ -364,7 +367,7 @@ namespace AMDownloader
                     });
                     break;
 
-                case Categories.Verifying:
+                case Category.Verifying:
                     CollectionView.Filter = new Predicate<object>((o) =>
                     {
                         var item = o as DownloaderObjectModel;
@@ -379,7 +382,8 @@ namespace AMDownloader
 
         internal void CategoryChanged(object obj)
         {
-            SwitchCategory((Categories)obj);
+            if (obj == null) return;
+            SwitchCategory((Category)obj);
         }
 
         internal void Start(object obj)
@@ -453,7 +457,6 @@ namespace AMDownloader
             Task.Run(async () => await RemoveObjectsAsync(false, items)).ContinueWith(t => RefreshCollection());
         }
 
-
         internal void Add(object obj)
         {
             if (_ctsUpdatingList != null)
@@ -499,7 +502,6 @@ namespace AMDownloader
             }
         }
 
-
         internal void OpenContainingFolder(object obj)
         {
             if (obj == null) return;
@@ -534,7 +536,6 @@ namespace AMDownloader
             }
         }
 
-
         internal void StartQueue(object obj)
         {
             Task.Run(async () =>
@@ -545,12 +546,10 @@ namespace AMDownloader
             });
         }
 
-
         internal void StopQueue(object obj)
         {
             QueueProcessor.Stop();
         }
-
 
         internal void CloseApp(object obj)
         {
@@ -641,7 +640,6 @@ namespace AMDownloader
             }
         }
 
-
         internal void Dequeue(object obj)
         {
             if (obj == null) return;
@@ -652,7 +650,6 @@ namespace AMDownloader
             }
             QueueProcessor.Remove(items);
         }
-
 
         internal void DeleteFile(object obj)
         {
@@ -743,7 +740,6 @@ namespace AMDownloader
             }
             _clipboardService.SetText(clipText);
         }
-
 
         internal void ClearFinishedDownloads(object obj)
         {
@@ -1285,6 +1281,11 @@ namespace AMDownloader
             {
                 Process.Start("explorer.exe", url);
             }
+        }
+
+        internal void ShowHelpTopics(object obj)
+        {
+            Process.Start("explorer.exe", AppConstants.DocsSite);
         }
 
         #endregion Methods
