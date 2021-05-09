@@ -83,7 +83,7 @@ namespace AMDownloader
             if (msg == WM_SYSCOMMAND &&
                     ((int)wParam & 0xFFF0) == SC_CONTEXTHELP)
             {
-                Process.Start("explorer.exe", AppConstants.DocsSite);
+                Process.Start("explorer.exe", AppConstants.DocLink);
                 handled = true;
             }
             return IntPtr.Zero;

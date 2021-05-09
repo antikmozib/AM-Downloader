@@ -25,7 +25,8 @@ namespace AMDownloader.Common
         public const string DownloaderFileMagicString = "[AMDownload-Paused]";
         public const int ParallelDownloadsLimit = 10;
         public const int ParallelStreamsLimit = 5;
-        public const string DocsSite = @"https://mozib.io/resources/docs/amdownloader";
+        public const string DocLink = "AM Downloader Help.chm";
+        public const string UpdateLink = @"https://mozib.io/downloads/update.php";
     }
 
     internal static class AppPaths

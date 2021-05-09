@@ -1261,7 +1261,7 @@ namespace AMDownloader
         private async Task TriggerUpdateCheckAsync(bool silent = false)
         {
             string url = await AppUpdateService.GetUpdateUrl(
-                    @"https://mozib.io/downloads/update.php",
+                   AppConstants.UpdateLink,
                     Assembly.GetExecutingAssembly().GetName().Name,
                     Assembly.GetExecutingAssembly().GetName().Version.ToString());
 
@@ -1285,7 +1285,7 @@ namespace AMDownloader
 
         internal void ShowHelpTopics(object obj)
         {
-            Process.Start("explorer.exe", AppConstants.DocsSite);
+            Process.Start("explorer.exe", AppConstants.DocLink);
         }
 
         #endregion Methods
