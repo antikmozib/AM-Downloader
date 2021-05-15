@@ -8,7 +8,7 @@ A modern download manager for Windows.
 
 * Support for parallel downloading of many items
 * Pause and resume downloads
-* Add download items using URL patterns
+* Batch download items using URL patterns
 * Throttle speed to reduce network pressure
 * Easy-to-use and modern interface
 
