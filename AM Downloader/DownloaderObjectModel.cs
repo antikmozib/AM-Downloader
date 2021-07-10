@@ -71,7 +71,7 @@ namespace AMDownloader.ObjectModel
         public long? Speed { get; private set; } // nullable
         public int? NumberOfActiveStreams { get; private set; } // nullable
         public HttpStatusCode? StatusCode { get; private set; } // nullable
-        public double? TimeRemaining { get; private set; }// nullable
+        public double? TimeRemaining { get; private set; } // nullable
         public bool IsBeingDownloaded => _ctsPaused != null;
         public bool IsCompleted => File.Exists(this.Destination) && !File.Exists(TempDestination);
         public bool IsPaused => File.Exists(TempDestination) && !File.Exists(this.Destination);

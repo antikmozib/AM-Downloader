@@ -1,0 +1,9 @@
+.vs
+Docs/
+Setup/
+.editorconfig
+cleanup.targets
+bin/
+obj/
+output/
+*.user

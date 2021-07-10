@@ -68,25 +68,18 @@ namespace AMDownloader
             SetWindowLong(hwnd, GWL_EXSTYLE, styles);
 
             SetWindowPos(hwnd, IntPtr.Zero, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
-            ((HwndSource)PresentationSource.FromVisual(this)).AddHook(HelpButtonHook);
+            ((HwndSource)PresentationSource.FromVisual(this)).AddHook((IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) =>
+            {
+                if (msg == WM_SYSCOMMAND && ((int)wParam & 0xFFF0) == SC_CONTEXTHELP)
+                {
+                    Process.Start("explorer.exe", AppConstants.DocLink);
+                    handled = true;
+                }
+                return IntPtr.Zero;
+            });
 
             SendMessage(hwnd, WM_SETICON, new IntPtr(1), IntPtr.Zero);
             SendMessage(hwnd, WM_SETICON, IntPtr.Zero, IntPtr.Zero);
-        }
-
-        private IntPtr HelpButtonHook(IntPtr hwnd,
-                int msg,
-                IntPtr wParam,
-                IntPtr lParam,
-                ref bool handled)
-        {
-            if (msg == WM_SYSCOMMAND &&
-                    ((int)wParam & 0xFFF0) == SC_CONTEXTHELP)
-            {
-                Process.Start("explorer.exe", AppConstants.DocLink);
-                handled = true;
-            }
-            return IntPtr.Zero;
         }
 
         #endregion Native code for hiding the icon and showing the "?" button
