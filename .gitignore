@@ -1,9 +1,7 @@
-.vs
 Docs/
-Setup/
+Setup/*.*
+!Setup/AM Downloader.iss
 .editorconfig
 cleanup.targets
-bin/
 obj/
-output/
 *.user
