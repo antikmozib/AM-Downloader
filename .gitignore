@@ -1,5 +1,5 @@
 Docs/
-Setup/*.*
+Setup/*
 !Setup/AM Downloader.iss
 .editorconfig
 cleanup.targets
