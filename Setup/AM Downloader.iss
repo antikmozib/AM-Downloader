@@ -1,5 +1,5 @@
 #define MyAppName "AM Downloader"
-#define MyAppVersion GetVersionNumbersString("..\AM Downloader\bin\x64\Release\netcoreapp3.1\win-x64\AM Downloader.exe")
+#define MyAppVersion GetVersionNumbersString("..\AM Downloader\bin\Release\net6.0-windows\AM Downloader.exe")
 #define MyAppPublisher "Antik Mozib"
 #define MyAppURL "https://mozib.io/amdownloader"
 #define MyAppExeName "AM Downloader.exe"
@@ -36,12 +36,11 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: 
 
 [Files]
-Source: "{#SourcePath}\..\AM Downloader\bin\x64\Release\netcoreapp3.1\win-x64\AM Downloader.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#SourcePath}\..\AM Downloader\bin\x64\Release\netcoreapp3.1\win-x64\AM Downloader.deps.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#SourcePath}\..\AM Downloader\bin\x64\Release\netcoreapp3.1\win-x64\AM Downloader.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#SourcePath}\..\AM Downloader\bin\x64\Release\netcoreapp3.1\win-x64\AM Downloader.runtimeconfig.dev.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#SourcePath}\..\AM Downloader\bin\x64\Release\netcoreapp3.1\win-x64\AM Downloader.runtimeconfig.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#SourcePath}\..\AM Downloader\bin\x64\Release\netcoreapp3.1\win-x64\Microsoft.Xaml.Behaviors.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#SourcePath}\..\AM Downloader\bin\Release\net6.0-windows\AM Downloader.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#SourcePath}\..\AM Downloader\bin\Release\net6.0-windows\AM Downloader.deps.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#SourcePath}\..\AM Downloader\bin\Release\net6.0-windows\AM Downloader.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#SourcePath}\..\AM Downloader\bin\Release\net6.0-windows\AM Downloader.runtimeconfig.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#SourcePath}\..\AM Downloader\bin\Release\net6.0-windows\Microsoft.Xaml.Behaviors.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SourcePath}\..\Docs\AM Downloader Help.chm"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
