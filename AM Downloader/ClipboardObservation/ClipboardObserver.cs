@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2020-2021 Antik Mozib.
+﻿// Copyright (C) 2020-2022 Antik Mozib. All rights reserved.
 
 using System;
 using System.Threading;
