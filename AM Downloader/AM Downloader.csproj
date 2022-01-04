@@ -9,7 +9,7 @@
     <ApplicationIcon>Icons\app.ico</ApplicationIcon>
     <Company>Antik Mozib</Company>
     <Description>A modern download manager for Windows.</Description>
-    <Copyright>Copyright © 2021 Antik Mozib. All Rights Reserved.</Copyright>
+    <Copyright>Copyright © Antik Mozib. All rights reserved.</Copyright>
     <StartupObject />
     <PackageIcon>app.ico</PackageIcon>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
