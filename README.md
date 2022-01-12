@@ -20,6 +20,6 @@ Download and run the setup program and follow its instructions.
 
 <h3>Building</h3>
 
-_Requirements:_ VS2019+ with [.NET 6 SDK](https://dotnet.microsoft.com/download/dotnet)
+_Requirements:_ VS2019+ with [.NET 6.0 SDK](https://dotnet.microsoft.com/download/dotnet)
 
 `clone` the repository, `cd` into the root directory and run `dotnet restore`.
