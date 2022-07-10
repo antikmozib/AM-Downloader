@@ -72,7 +72,13 @@ namespace AMDownloader
             {
                 if (msg == WM_SYSCOMMAND && ((int)wParam & 0xFFF0) == SC_CONTEXTHELP)
                 {
-                    Process.Start("explorer.exe", AppConstants.DocLink);
+                    MessageBox.Show(
+                        "You can use patterns to download multiple files from a single URL. For example, entering the following pattern" +
+                        "\n\n" + "http://www.example.com/file[1:10].txt" +
+                        "\n\n" + "will download the following ten files" +
+                        "\n\n" + "file1.txt" + "\n" + "file2.txt" + "\n" + "..." + "\n\n" + "file10.txt",
+                        "Help", MessageBoxButton.OK, MessageBoxImage.Information);
+                    // Process.Start("explorer.exe", AppConstants.DocLink);
                     handled = true;
                 }
                 return IntPtr.Zero;

@@ -1285,7 +1285,7 @@ namespace AMDownloader
 
         internal void ShowHelpTopics(object obj)
         {
-            Process.Start("explorer.exe", AppConstants.DocLink);
+            // Process.Start("explorer.exe", AppConstants.DocLink);
         }
 
         #endregion Methods

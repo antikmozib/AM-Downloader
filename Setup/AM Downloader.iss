@@ -41,7 +41,7 @@ Source: "{#SourcePath}\..\AM Downloader\bin\Release\net6.0-windows\AM Downloader
 Source: "{#SourcePath}\..\AM Downloader\bin\Release\net6.0-windows\AM Downloader.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SourcePath}\..\AM Downloader\bin\Release\net6.0-windows\AM Downloader.runtimeconfig.json"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SourcePath}\..\AM Downloader\bin\Release\net6.0-windows\Microsoft.Xaml.Behaviors.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#SourcePath}\..\Docs\AM Downloader Help.chm"; DestDir: "{app}"; Flags: ignoreversion
+; Source: "{#SourcePath}\..\Docs\AM Downloader Help.chm"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
