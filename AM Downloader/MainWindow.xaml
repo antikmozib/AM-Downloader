@@ -136,7 +136,7 @@
             </MenuItem>
             <MenuItem Header="_Help"
                       TabIndex="10">
-                <MenuItem x:Name="menuHelpTopics"
+                <!--<MenuItem x:Name="menuHelpTopics"
                           Header="Help _Topics"
                           InputGestureText="F1"
                           Command="{Binding ShowHelpTopicsCommand}">
@@ -145,7 +145,7 @@
                             <Frame Source="pack://application:,,,/Icons/MSHelpTableOfContent_16x.xaml" />
                         </Viewbox>
                     </MenuItem.Icon>
-                </MenuItem>
+                </MenuItem>-->
                 <MenuItem x:Name="menuCheckForUpdates"
                           Header="Check For _Updates"
                           Command="{Binding CheckForUpdatesCommand}">
@@ -440,7 +440,7 @@
                                      Width="100" />
                     </Grid>
                 </StatusBarItem>
-                <StatusBarItem Margin="20 0 0 0"
+                <!--<StatusBarItem Margin="20 0 0 0"
                                Grid.Column="2"
                                Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=tbVerifyingCount}">
                     <TextBlock>
@@ -451,8 +451,8 @@
                         <TextBlock x:Name="tbVerifyingCount"
                                    Text="{Binding VerifyingCount, Converter={StaticResource TreeViewCountConverter}}" />
                     </TextBlock>
-                </StatusBarItem>
-                <StatusBarItem Margin="20 0 0 0"
+                </StatusBarItem>-->
+                <!--<StatusBarItem Margin="20 0 0 0"
                                Grid.Column="3"
                                Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=tbQueuedCount}">
                     <TextBlock>
@@ -463,8 +463,8 @@
                         <TextBlock x:Name="tbQueuedCount"
                                    Text="{Binding QueuedCount, Converter={StaticResource TreeViewCountConverter}}" />
                     </TextBlock>
-                </StatusBarItem>
-                <StatusBarItem Margin="20 0 0 0"
+                </StatusBarItem>-->
+                <!--<StatusBarItem Margin="20 0 0 0"
                                Grid.Column="4"
                                Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=tbPausedCount}">
                     <TextBlock>
@@ -475,8 +475,8 @@
                         <TextBlock x:Name="tbPausedCount"
                                    Text="{Binding PausedCount, Converter={StaticResource TreeViewCountConverter}}" />
                     </TextBlock>
-                </StatusBarItem>
-                <StatusBarItem Margin="20 0 0 0"
+                </StatusBarItem>-->
+                <!--<StatusBarItem Margin="20 0 0 0"
                                Grid.Column="5"
                                Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=tbFinishedCount}">
                     <TextBlock>
@@ -487,21 +487,9 @@
                         <TextBlock x:Name="tbFinishedCount"
                                    Text="{Binding FinishedCount, Converter={StaticResource TreeViewCountConverter}}" />
                     </TextBlock>
-                </StatusBarItem>
+                </StatusBarItem>-->
                 <StatusBarItem Margin="20 0 0 0"
                                Grid.Column="6"
-                               Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=tbBytesDownloaded}">
-                    <TextBlock>
-                        <TextBlock Margin="0 0 4 0"
-                                   Text="&#xF019;"
-                                   FontFamily="{StaticResource FontAwesomeSolid}" />
-                        <TextBlock x:Name="tbBytesDownloaded"
-                                   Text="{Binding BytesDownloaded, Converter={StaticResource DownloaderSizeConverter}}"
-                                   ToolTip="Data transferred this session" />
-                    </TextBlock>
-                </StatusBarItem>
-                <StatusBarItem Margin="20 0 0 0"
-                               Grid.Column="7"
                                Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=tbSpeed}"
                                HorizontalAlignment="Right">
                     <TextBlock>
@@ -514,6 +502,18 @@
                                    ToolTip="Current data transfer rate" />
                     </TextBlock>
                 </StatusBarItem>
+                <StatusBarItem Margin="20 0 0 0"
+                               Grid.Column="7"
+                               Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=tbBytesDownloaded}">
+                    <TextBlock>
+                        <TextBlock Margin="0 0 4 0"
+                                   Text="&#xF019;"
+                                   FontFamily="{StaticResource FontAwesomeSolid}" />
+                        <TextBlock x:Name="tbBytesDownloaded"
+                                   Text="{Binding BytesDownloaded, Converter={StaticResource DownloaderSizeConverter}}"
+                                   ToolTip="Data transferred this session" />
+                    </TextBlock>
+                </StatusBarItem>                
             </StatusBar>
         </DockPanel>
         <!--#endregion STATUSBAR-->
@@ -671,6 +671,9 @@
                         </Setter>
                     </Style>
                 </TreeView.ItemContainerStyle>
+                <!--<TreeView.ContextMenu>
+                    
+                </TreeView.ContextMenu>-->
             </TreeView>
             <!--endregion CategoryList-->
             <GridSplitter Grid.Column="1"
