@@ -1,4 +1,4 @@
-﻿// Copyright (C) Antik Mozib. All rights reserved.
+﻿// Copyright (C) 2020-2023 Antik Mozib. All rights reserved.
 
 using AMDownloader.Common;
 using AMDownloader.Properties;
