@@ -4,7 +4,6 @@ using AMDownloader.Common;
 using AMDownloader.ObjectModel.Serializable;
 using AMDownloader.Properties;
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
