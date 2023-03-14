@@ -1,3 +1,4 @@
+.vscode/
 Docs/
 Setup/*
 !Setup/AM Downloader.iss
