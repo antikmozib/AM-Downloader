@@ -47,6 +47,7 @@
                 DockPanel.Dock="Right"
                 Content="OK"
                 IsDefault="True"
+                IsCancel="True"
                 Click="Button_Click" />
             <Separator
                 Background="Transparent"
