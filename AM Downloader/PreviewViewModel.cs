@@ -43,7 +43,7 @@ namespace AMDownloader
             }
         }
 
-        internal void Copy(object obj)
+        private void Copy(object obj)
         {
             var urls = (obj as ObservableCollection<object>).Cast<UrlListType>();
             string output = "";

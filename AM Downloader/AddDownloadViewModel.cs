@@ -78,7 +78,7 @@ namespace AMDownloader
             if (clipText.Contains("http") || clipText.Contains("ftp")) this.Urls += clipText.Trim() + "\n";
         }
 
-        internal void Preview(object obj)
+        private void Preview(object obj)
         {
             string[] urls = ProcessUrlPatterns().ToArray();
             string output = String.Empty;
@@ -97,7 +97,7 @@ namespace AMDownloader
             return true;
         }
 
-        internal void Add(object item)
+        private void Add(object item)
         {
             if (Urls == null || SaveToFolder == null) return;
 

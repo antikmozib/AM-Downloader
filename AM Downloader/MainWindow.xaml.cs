@@ -238,7 +238,7 @@ namespace AMDownloader
             Settings.Default.SelectedColumnHeaderDirection = direction ?? ListSortDirection.Ascending;
         }
 
-        internal MessageBoxResult DisplayMessage(
+        private MessageBoxResult DisplayMessage(
             string message,
             string title = "",
             MessageBoxButton button = MessageBoxButton.OK,
@@ -258,7 +258,7 @@ namespace AMDownloader
                 defaultResult));
         }
 
-        internal void ShowUrlList(List<string> urls, string caption, string message)
+        private void ShowUrlList(List<string> urls, string caption, string message)
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
