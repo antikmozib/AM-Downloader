@@ -55,11 +55,12 @@ namespace AMDownloader
         private readonly object _lockDownloadItemsList;
         private readonly object _lockBytesDownloaded;
         private readonly object _lockBytesTransferredOverLifetime;
+        private readonly object _lockCtsRefreshViewList;
         private readonly SemaphoreSlim _semaphoreMeasuringSpeed;
         private readonly SemaphoreSlim _semaphoreUpdatingList;
         private readonly SemaphoreSlim _semaphoreRefreshingView;
         private CancellationTokenSource _ctsUpdatingList;
-        private CancellationTokenSource _ctsRefreshView;
+        private List<CancellationTokenSource> _ctsRefreshViewList;
         private RequestThrottler _requestThrottler;
         private HttpClient _client;
         private readonly ShowUrlsDelegate _showUrls;
@@ -159,11 +160,12 @@ namespace AMDownloader
             _semaphoreUpdatingList = new SemaphoreSlim(1);
             _semaphoreRefreshingView = new SemaphoreSlim(1);
             _ctsUpdatingList = null;
-            _ctsRefreshView = null;
+            _ctsRefreshViewList = new();
             _displayMessage = displayMessage;
             _lockDownloadItemsList = DownloadItemsList;
             _lockBytesDownloaded = this.BytesDownloaded;
             _lockBytesTransferredOverLifetime = Settings.Default.BytesTransferredOverLifetime;
+            _lockCtsRefreshViewList = _ctsRefreshViewList;
             _showUrls = showUrls;
 
             AddCommand = new RelayCommand<object>(Add);
@@ -1008,15 +1010,18 @@ namespace AMDownloader
                 return;
             }
 
-            var prevCts = _ctsRefreshView;
-            var newCts = CancellationTokenSource.CreateLinkedTokenSource(new CancellationToken());
-
-            _ctsRefreshView = newCts;
-            prevCts?.Cancel();
+            Monitor.Enter(_lockCtsRefreshViewList);
+            foreach (var oldCts in _ctsRefreshViewList)
+            {
+                oldCts.Cancel();
+            }
+            var newCts = new CancellationTokenSource();
+            _ctsRefreshViewList.Add(newCts);
+            Monitor.Exit(_lockCtsRefreshViewList);
 
             Task.Run(async () =>
             {
-                var semTask = _semaphoreRefreshingView.WaitAsync(_ctsRefreshView.Token);
+                var semTask = _semaphoreRefreshingView.WaitAsync(newCts.Token);
                 try
                 {
                     await semTask;
