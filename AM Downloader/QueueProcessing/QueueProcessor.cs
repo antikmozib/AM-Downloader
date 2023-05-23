@@ -62,18 +62,21 @@ namespace AMDownloader.QueueProcessing
                 _itemsProcessing.Add(item);
                 Task t = Task.Run(async () =>
                 {
+                    var semTask = _semaphore.WaitAsync(_ctCancel);
                     try
                     {
-                        await _semaphore.WaitAsync(_ctCancel);
+                        await semTask;
                         if (item.IsQueued && !_ctCancel.IsCancellationRequested)
                         {
                             await item.StartAsync();
                         }
-                        _semaphore.Release();
                     }
-                    catch (OperationCanceledException)
+                    finally
                     {
-                        return;
+                        if (semTask.IsCompletedSuccessfully)
+                        {
+                            _semaphore.Release();
+                        }
                     }
                 });
                 tasks.Add(t);

@@ -18,7 +18,7 @@ using System.Threading.Tasks;
 
 namespace AMDownloader.ObjectModel
 {
-    public enum DownloadStatus
+    internal enum DownloadStatus
     {
         Ready, Queued, Downloading, Paused, Pausing, Finishing, Finished, Error, Cancelling, Connecting, Merging, Verifying
     }
@@ -29,11 +29,11 @@ namespace AMDownloader.ObjectModel
 
         private CancellationTokenSource _ctsPaused, _ctsCanceled;
         private CancellationToken _ctPause, _ctCancel;
-        private HttpClient _httpClient;
         private TaskCompletionSource<DownloadStatus> _taskCompletion;
+        private readonly HttpClient _httpClient;
         private readonly SemaphoreSlim _semaphoreDownloading;
-        private IProgress<long> _reportBytesProgress;
-        private RequestThrottler _requestThrottler;
+        private readonly IProgress<long> _reportBytesProgress;
+        private readonly RequestThrottler _requestThrottler;
 
         #endregion Fields
 
@@ -182,9 +182,9 @@ namespace AMDownloader.ObjectModel
                 this.Enqueue();
             }
 
-            _semaphoreDownloading.Wait();
             Task.Run(async () =>
             {
+                _semaphoreDownloading.Wait();
                 if (totalBytesToDownload > 0)
                 {
                     var restore = new RequestModel();

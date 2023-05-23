@@ -7,15 +7,18 @@ using AMDownloader.ObjectModel.Serializable;
 using AMDownloader.Properties;
 using AMDownloader.QueueProcessing;
 using AMDownloader.RequestThrottling;
+using DynamicData;
 using Microsoft.VisualBasic.FileIO;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Reactive.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -38,7 +41,7 @@ namespace AMDownloader
 
     internal delegate void ShowUrlsDelegate(List<string> urls, string caption, string infoLabel);
 
-    public enum Category
+    internal enum Category
     {
         All, Ready, Queued, Downloading, Paused, Finished, Errored, Verifying
     }
@@ -64,7 +67,6 @@ namespace AMDownloader
         #endregion Fields
 
         #region Properties
-
         public ObservableCollection<DownloaderObjectModel> DownloadItemsList { get; }
         public ObservableCollection<Category> CategoriesList { get; }
         public ICollectionView CollectionView { get; }
@@ -121,24 +123,12 @@ namespace AMDownloader
 
         public DownloaderViewModel(DisplayMessageDelegate displayMessage, ShowUrlsDelegate showUrls)
         {
-            _client = new HttpClient();
-            DownloadItemsList = new ObservableCollection<DownloaderObjectModel>();
+            DownloadItemsList = new();
+            DownloadItemsList.CollectionChanged += DownloadItemsList_CollectionChanged;
             CategoriesList = new ObservableCollection<Category>();
             QueueProcessor = new QueueProcessor(Settings.Default.MaxParallelDownloads, QueueProcessor_PropertyChanged);
-            _requestThrottler = new RequestThrottler(AppConstants.RequestThrottlerInterval);
             CollectionView = CollectionViewSource.GetDefaultView(DownloadItemsList);
             CollectionView.CurrentChanged += CollectionView_CurrentChanged;
-            _clipboardService = new ClipboardObserver();
-            _semaphoreMeasuringSpeed = new SemaphoreSlim(1);
-            _semaphoreUpdatingList = new SemaphoreSlim(1);
-            _semaphoreRefreshingView = new SemaphoreSlim(1);
-            _ctsUpdatingList = null;
-            _ctsRefreshView = null;
-            _displayMessage = displayMessage;
-            _lockDownloadItemsList = DownloadItemsList;
-            _lockBytesDownloaded = this.BytesDownloaded;
-            _lockBytesTransferredOverLifetime = Settings.Default.BytesTransferredOverLifetime;
-            _showUrls = showUrls;
             this.Count = 0;
             this.DownloadingCount = 0;
             this.ErroredCount = 0;
@@ -161,6 +151,20 @@ namespace AMDownloader
                     Monitor.Exit(_lockBytesDownloaded);
                 }
             });
+
+            _client = new HttpClient();
+            _requestThrottler = new RequestThrottler(AppConstants.RequestThrottlerInterval);
+            _clipboardService = new ClipboardObserver();
+            _semaphoreMeasuringSpeed = new SemaphoreSlim(1);
+            _semaphoreUpdatingList = new SemaphoreSlim(1);
+            _semaphoreRefreshingView = new SemaphoreSlim(1);
+            _ctsUpdatingList = null;
+            _ctsRefreshView = null;
+            _displayMessage = displayMessage;
+            _lockDownloadItemsList = DownloadItemsList;
+            _lockBytesDownloaded = this.BytesDownloaded;
+            _lockBytesTransferredOverLifetime = Settings.Default.BytesTransferredOverLifetime;
+            _showUrls = showUrls;
 
             AddCommand = new RelayCommand<object>(Add);
             StartCommand = new RelayCommand<object>(Start);
@@ -280,10 +284,6 @@ namespace AMDownloader
 
                     AddObjects(finalObjects);
                 }
-                catch
-                {
-                    return;
-                }
                 finally
                 {
                     _ctsUpdatingList = null;
@@ -380,13 +380,13 @@ namespace AMDownloader
             Settings.Default.LastSelectedCatagory = category.ToString();
         }
 
-        internal void CategoryChanged(object obj)
+        private void CategoryChanged(object obj)
         {
             if (obj == null) return;
             SwitchCategory((Category)obj);
         }
 
-        internal void Start(object obj)
+        private void Start(object obj)
         {
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
             var tasks = new List<Task>();
@@ -424,7 +424,7 @@ namespace AMDownloader
             }
         }
 
-        internal void Pause(object obj)
+        private void Pause(object obj)
         {
             if (obj == null) return;
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
@@ -434,7 +434,7 @@ namespace AMDownloader
             }
         }
 
-        internal void Cancel(object obj)
+        private void Cancel(object obj)
         {
             if (obj == null) return;
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
@@ -444,7 +444,7 @@ namespace AMDownloader
             }
         }
 
-        internal void RemoveFromList(object obj)
+        private void RemoveFromList(object obj)
         {
             if (obj == null) return;
             if (_ctsUpdatingList != null)
@@ -457,7 +457,7 @@ namespace AMDownloader
             Task.Run(async () => await RemoveObjectsAsync(false, items)).ContinueWith(t => RefreshCollection());
         }
 
-        internal void Add(object obj)
+        private void Add(object obj)
         {
             if (_ctsUpdatingList != null)
             {
@@ -479,7 +479,7 @@ namespace AMDownloader
             }
         }
 
-        internal void Open(object obj)
+        private void Open(object obj)
         {
             if (obj == null) return;
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
@@ -502,7 +502,7 @@ namespace AMDownloader
             }
         }
 
-        internal void OpenContainingFolder(object obj)
+        private void OpenContainingFolder(object obj)
         {
             if (obj == null) return;
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
@@ -536,7 +536,7 @@ namespace AMDownloader
             }
         }
 
-        internal void StartQueue(object obj)
+        private void StartQueue(object obj)
         {
             Task.Run(async () =>
             {
@@ -546,12 +546,12 @@ namespace AMDownloader
             });
         }
 
-        internal void StopQueue(object obj)
+        private void StopQueue(object obj)
         {
             QueueProcessor.Stop();
         }
 
-        internal void CloseApp(object obj)
+        private void CloseApp(object obj)
         {
             var window = (Window)obj;
 
@@ -601,10 +601,6 @@ namespace AMDownloader
                         writer.Serialize(streamWriter, list);
                     }
                 }
-                catch
-                {
-                    return;
-                }
                 finally
                 {
                     _semaphoreUpdatingList.Release();
@@ -622,14 +618,14 @@ namespace AMDownloader
             });
         }
 
-        internal void ShowOptions(object obj)
+        private void ShowOptions(object obj)
         {
             var win = new OptionsWindow();
             win.Owner = obj as Window;
             win.ShowDialog();
         }
 
-        internal void Enqueue(object obj)
+        private void Enqueue(object obj)
         {
             if (obj == null) return;
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
@@ -640,7 +636,7 @@ namespace AMDownloader
             }
         }
 
-        internal void Dequeue(object obj)
+        private void Dequeue(object obj)
         {
             if (obj == null) return;
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
@@ -651,7 +647,7 @@ namespace AMDownloader
             QueueProcessor.Remove(items);
         }
 
-        internal void DeleteFile(object obj)
+        private void DeleteFile(object obj)
         {
             if (obj == null) return;
 
@@ -723,7 +719,7 @@ namespace AMDownloader
             }
         }
 
-        internal void CopyLinkToClipboard(object obj)
+        private void CopyLinkToClipboard(object obj)
         {
             if (obj == null) return;
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
@@ -741,7 +737,7 @@ namespace AMDownloader
             _clipboardService.SetText(clipText);
         }
 
-        internal void ClearFinishedDownloads(object obj)
+        private void ClearFinishedDownloads(object obj)
         {
             if (_ctsUpdatingList != null)
             {
@@ -753,36 +749,36 @@ namespace AMDownloader
             Task.Run(async () => await RemoveObjectsAsync(false, items)).ContinueWith(t => RefreshCollection());
         }
 
-        internal void QueueProcessor_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        private void QueueProcessor_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
         }
 
-        internal void Download_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        private void Download_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
         }
 
-        internal void Download_Created(object sender, EventArgs e)
-        {
-            RefreshCollection();
-        }
-
-        internal void Download_Verifying(object sender, EventArgs e)
+        private void Download_Created(object sender, EventArgs e)
         {
             RefreshCollection();
         }
 
-        internal void Download_Verified(object sender, EventArgs e)
+        private void Download_Verifying(object sender, EventArgs e)
         {
             RefreshCollection();
         }
 
-        internal void Download_Started(object sender, EventArgs e)
+        private void Download_Verified(object sender, EventArgs e)
+        {
+            RefreshCollection();
+        }
+
+        private void Download_Started(object sender, EventArgs e)
         {
             RefreshCollection();
             StartReportingSpeed();
         }
 
-        internal void Download_Stopped(object sender, EventArgs e)
+        private void Download_Stopped(object sender, EventArgs e)
         {
             if (this.DownloadingCount == 0)
             {
@@ -809,19 +805,126 @@ namespace AMDownloader
             }
         }
 
-        internal void Download_Enqueued(object sender, EventArgs e)
+        private void Download_Enqueued(object sender, EventArgs e)
         {
             RefreshCollection();
         }
 
-        internal void Download_Dequeued(object sender, EventArgs e)
+        private void Download_Dequeued(object sender, EventArgs e)
         {
             RefreshCollection();
         }
 
-        internal void Download_Finished(object sender, EventArgs e)
+        private void Download_Finished(object sender, EventArgs e)
         {
             RefreshCollection();
+        }
+
+        private void DownloadItemsList_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            // Observe and subscribe to events
+
+            /*IObservable<EventPattern<EventArgs>> downloadCreatedObserver = DownloadItemsList
+                .ToObservable()
+                .SelectMany(x =>
+                    Observable
+                        .FromEventPattern<EventHandler, EventArgs>(
+                            h => x.DownloadCreated += h,
+                            h => x.DownloadCreated -= h))
+                .Sample(TimeSpan.FromSeconds(0.5))
+                .ObserveOnDispatcher();
+            IDisposable downloadCreatedSubscription = downloadCreatedObserver.Subscribe(x => CollectionView.Refresh());
+
+            IObservable<EventPattern<EventArgs>> downloadVerifyingObserver = DownloadItemsList
+                .ToObservable()
+                .SelectMany(x =>
+                    Observable
+                        .FromEventPattern<EventHandler, EventArgs>(
+                            h => x.DownloadVerifying += h,
+                            h => x.DownloadVerifying -= h))
+                .Sample(TimeSpan.FromSeconds(0.5))
+                .ObserveOnDispatcher();
+
+            IObservable<EventPattern<EventArgs>> downloadVerifiedObserver = DownloadItemsList
+                .ToObservable()
+                .SelectMany(x =>
+                    Observable
+                        .FromEventPattern<EventHandler, EventArgs>(
+                            h => x.DownloadVerified += h,
+                            h => x.DownloadVerified -= h))
+                .Sample(TimeSpan.FromSeconds(0.5))
+                .ObserveOnDispatcher();
+
+            IObservable<EventPattern<EventArgs>> downloadStartedObserver = DownloadItemsList
+                .ToObservable()
+                .SelectMany(x =>
+                    Observable
+                        .FromEventPattern<EventHandler, EventArgs>(
+                            h => x.DownloadStarted += h,
+                            h => x.DownloadStarted -= h))
+                .Sample(TimeSpan.FromSeconds(0.5))
+                .ObserveOnDispatcher();
+
+            IObservable<EventPattern<EventArgs>> downloadStoppedObserver = DownloadItemsList
+                .ToObservable()
+                .SelectMany(x =>
+                    Observable
+                        .FromEventPattern<EventHandler, EventArgs>(
+                            h => x.DownloadStopped += h,
+                            h => x.DownloadStopped -= h))
+                .Sample(TimeSpan.FromSeconds(0.5))
+                .ObserveOnDispatcher();
+
+            IObservable<EventPattern<EventArgs>> downloadEnqueuedObserver = DownloadItemsList
+                .ToObservable()
+                .SelectMany(x =>
+                    Observable
+                        .FromEventPattern<EventHandler, EventArgs>(
+                            h => x.DownloadEnqueued += h,
+                            h => x.DownloadEnqueued -= h))
+                .Sample(TimeSpan.FromSeconds(0.5))
+                .ObserveOnDispatcher();
+
+            IObservable<EventPattern<EventArgs>> downloadDequeuedObserver = DownloadItemsList
+                .ToObservable()
+                .SelectMany(x =>
+                    Observable
+                        .FromEventPattern<EventHandler, EventArgs>(
+                            h => x.DownloadDequeued += h,
+                            h => x.DownloadDequeued -= h))
+                .Sample(TimeSpan.FromSeconds(0.5))
+                .ObserveOnDispatcher();
+
+            IObservable<EventPattern<EventArgs>> downloadFinishedObserver = DownloadItemsList
+                .ToObservable()
+                .SelectMany(x =>
+                    Observable
+                        .FromEventPattern<EventHandler, EventArgs>(
+                            h => x.DownloadFinished += h,
+                            h => x.DownloadFinished -= h))
+                .Sample(TimeSpan.FromSeconds(0.5))
+                .ObserveOnDispatcher();
+
+            IObservable<EventPattern<PropertyChangedEventArgs>> downloadPropertyChangedObserver = DownloadItemsList
+                .ToObservable()
+                .SelectMany(x =>
+                    Observable
+                        .FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(
+                            h => x.PropertyChanged += h,
+                            h => x.PropertyChanged -= h))
+                .Sample(TimeSpan.FromSeconds(0.5))
+                .ObserveOnDispatcher();
+
+            Observable.Merge(
+                downloadCreatedObserver,
+                downloadVerifyingObserver,
+                downloadVerifiedObserver,
+                downloadStartedObserver,
+                downloadStoppedObserver,
+                downloadEnqueuedObserver,
+                downloadDequeuedObserver,
+                downloadFinishedObserver
+                ).Subscribe(x => CollectionView.Refresh());*/
         }
 
         private void CollectionView_CurrentChanged(object sender, EventArgs e)
@@ -906,38 +1009,41 @@ namespace AMDownloader
             }
         }
 
-        internal void RefreshCollection()
+        private void RefreshCollection()
         {
             if (_semaphoreUpdatingList.CurrentCount == 0)
             {
                 return;
             }
 
-            _ctsRefreshView?.Cancel();
+            var prevCts = _ctsRefreshView;
+            var newCts = CancellationTokenSource.CreateLinkedTokenSource(new CancellationToken());
+
+            _ctsRefreshView = newCts;
+            prevCts?.Cancel();
 
             Task.Run(async () =>
             {
-                _ctsRefreshView = new CancellationTokenSource();
+                var semTask = _semaphoreRefreshingView.WaitAsync(_ctsRefreshView.Token);
                 try
                 {
-                    var ct = _ctsRefreshView.Token;
-                    await _semaphoreRefreshingView.WaitAsync(ct);
-                    var throttler = Task.Delay(1000);
+                    await semTask;
                     Application.Current?.Dispatcher?.Invoke(() =>
                     {
                         CollectionView.Refresh();
                         CommandManager.InvalidateRequerySuggested();
                     });
-                    await throttler;
-                    _semaphoreRefreshingView.Release();
                 }
                 catch (OperationCanceledException)
                 {
-                    return;
+
                 }
                 finally
                 {
-                    _ctsRefreshView = null;
+                    if (semTask.IsCompletedSuccessfully)
+                    {
+                        _semaphoreRefreshingView.Release();
+                    }
                 }
             });
         }
@@ -1085,7 +1191,7 @@ namespace AMDownloader
         private void AddObjects(params DownloaderObjectModel[] objects)
         {
             Monitor.Enter(_lockDownloadItemsList);
-            int total = objects.Count();
+            int total = objects.Length;
             try
             {
                 Application.Current.Dispatcher.Invoke(() =>
@@ -1243,17 +1349,17 @@ namespace AMDownloader
             _displayMessage.Invoke("Operation in progress. Please wait.");
         }
 
-        internal void CancelBackgroundTask(object obj)
+        private void CancelBackgroundTask(object obj)
         {
             _ctsUpdatingList?.Cancel();
         }
 
-        internal bool CancelBackgroundTask_CanExecute(object obj)
+        private bool CancelBackgroundTask_CanExecute(object obj)
         {
             return this.IsBackgroundWorking;
         }
 
-        internal void CheckForUpdates(object obj)
+        private void CheckForUpdates(object obj)
         {
             Task.Run(async () => await TriggerUpdateCheckAsync());
         }
@@ -1283,7 +1389,7 @@ namespace AMDownloader
             }
         }
 
-        internal void ShowHelpTopics(object obj)
+        private void ShowHelpTopics(object obj)
         {
             // Process.Start("explorer.exe", AppConstants.DocLink);
         }
