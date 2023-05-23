@@ -464,19 +464,11 @@ namespace AMDownloader
                 ShowBusyMessage();
                 return;
             }
-            Monitor.Enter(_lockDownloadItemsList);
-            try
-            {
-                var win = new AddDownloadWindow();
-                var vm = new AddDownloadViewModel(AddItemsAsync, win.Preview, _displayMessage);
-                win.DataContext = vm;
-                win.Owner = obj as Window;
-                win.ShowDialog();
-            }
-            finally
-            {
-                Monitor.Exit(_lockDownloadItemsList);
-            }
+            var win = new AddDownloadWindow();
+            var vm = new AddDownloadViewModel(AddItemsAsync, win.Preview, _displayMessage);
+            win.DataContext = vm;
+            win.Owner = obj as Window;
+            win.ShowDialog();
         }
 
         private void Open(object obj)
