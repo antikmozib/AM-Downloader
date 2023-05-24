@@ -58,7 +58,7 @@ namespace AMDownloader
         private readonly SemaphoreSlim _semaphoreUpdatingList;
         private readonly SemaphoreSlim _semaphoreRefreshingView;
         private CancellationTokenSource _ctsUpdatingList;
-        private List<CancellationTokenSource> _ctsRefreshViewList;
+        private readonly List<CancellationTokenSource> _ctsRefreshViewList;
         private RequestThrottler _requestThrottler;
         private HttpClient _client;
         private readonly ShowUrlsDelegate _showUrls;
@@ -907,10 +907,17 @@ namespace AMDownloader
                 return;
             }
 
+            // cancel all pending refreshes
             Monitor.Enter(_lockCtsRefreshViewList);
+            var removeCtsList = new List<CancellationTokenSource>();
             foreach (var oldCts in _ctsRefreshViewList)
             {
                 oldCts.Cancel();
+                removeCtsList.Add(oldCts);
+            }
+            foreach (var oldCts in removeCtsList)
+            {
+                _ctsRefreshViewList.Remove(oldCts);
             }
             var newCts = new CancellationTokenSource();
             _ctsRefreshViewList.Add(newCts);
@@ -919,16 +926,16 @@ namespace AMDownloader
             Task.Run(async () =>
             {
                 var semTask = _semaphoreRefreshingView.WaitAsync(newCts.Token);
+                var throttle = Task.Delay(1000);
                 try
                 {
                     await semTask;
-                    var throttle = Task.Delay(1000);
                     Application.Current?.Dispatcher?.Invoke(() =>
                     {
                         CollectionView.Refresh();
                         CommandManager.InvalidateRequerySuggested();
                     });
-                    await throttle; // provide max 1 refresh per sec
+                   await throttle; // provide max 1 refresh per sec
                 }
                 catch (OperationCanceledException)
                 {
