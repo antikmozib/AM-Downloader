@@ -72,7 +72,7 @@
         <KeyBinding Command="{Binding ClearFinishedDownloadsCommand}"
                     Key="Delete"
                     Modifiers="Alt" />
-        <KeyBinding Command="{Binding RemoveFromListCommand}"
+        <KeyBinding Command="{Binding RemoveCommand}"
                     CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
                     Key="Delete" />
         <KeyBinding Command="{Binding DeleteFileCommand}"
@@ -193,7 +193,7 @@
                     </StackPanel>
                 </Button>
                 <Button CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
-                        Command="{Binding RemoveFromListCommand}"
+                        Command="{Binding RemoveCommand}"
                         Padding="5"
                         x:Name="btnRemove"
                         TabIndex="3">
@@ -804,7 +804,7 @@
                                   CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}" />
                         <Separator />
                         <MenuItem Header="Remove From List"
-                                  Command="{Binding RemoveFromListCommand}"
+                                  Command="{Binding RemoveCommand}"
                                   CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
                                   InputGestureText="Del">
                             <MenuItem.Icon>

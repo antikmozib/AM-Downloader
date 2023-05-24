@@ -7,7 +7,6 @@ using AMDownloader.ObjectModel.Serializable;
 using AMDownloader.Properties;
 using AMDownloader.QueueProcessing;
 using AMDownloader.RequestThrottling;
-using DynamicData;
 using Microsoft.VisualBasic.FileIO;
 using System;
 using System.Collections.Generic;
@@ -18,7 +17,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Reactive.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -68,6 +66,7 @@ namespace AMDownloader
         #endregion Fields
 
         #region Properties
+
         public ObservableCollection<DownloaderObjectModel> DownloadItemsList { get; }
         public ObservableCollection<Category> CategoriesList { get; }
         public ICollectionView CollectionView { get; }
@@ -97,7 +96,7 @@ namespace AMDownloader
 
         public ICommand AddCommand { get; private set; }
         public ICommand StartCommand { get; private set; }
-        public ICommand RemoveFromListCommand { private get; set; }
+        public ICommand RemoveCommand { private get; set; }
         public ICommand CancelCommand { private get; set; }
         public ICommand PauseCommand { get; private set; }
         public ICommand OpenCommand { get; private set; }
@@ -170,7 +169,7 @@ namespace AMDownloader
 
             AddCommand = new RelayCommand<object>(Add);
             StartCommand = new RelayCommand<object>(Start);
-            RemoveFromListCommand = new RelayCommand<object>(RemoveFromList);
+            RemoveCommand = new RelayCommand<object>(Remove);
             CancelCommand = new RelayCommand<object>(Cancel);
             PauseCommand = new RelayCommand<object>(Pause);
             OpenCommand = new RelayCommand<object>(Open);
@@ -446,7 +445,7 @@ namespace AMDownloader
             }
         }
 
-        private void RemoveFromList(object obj)
+        private void Remove(object obj)
         {
             if (obj == null) return;
             if (_ctsUpdatingList != null)
@@ -816,109 +815,7 @@ namespace AMDownloader
 
         private void DownloadItemsList_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            // Observe and subscribe to events
 
-            /*IObservable<EventPattern<EventArgs>> downloadCreatedObserver = DownloadItemsList
-                .ToObservable()
-                .SelectMany(x =>
-                    Observable
-                        .FromEventPattern<EventHandler, EventArgs>(
-                            h => x.DownloadCreated += h,
-                            h => x.DownloadCreated -= h))
-                .Sample(TimeSpan.FromSeconds(0.5))
-                .ObserveOnDispatcher();
-            IDisposable downloadCreatedSubscription = downloadCreatedObserver.Subscribe(x => CollectionView.Refresh());
-
-            IObservable<EventPattern<EventArgs>> downloadVerifyingObserver = DownloadItemsList
-                .ToObservable()
-                .SelectMany(x =>
-                    Observable
-                        .FromEventPattern<EventHandler, EventArgs>(
-                            h => x.DownloadVerifying += h,
-                            h => x.DownloadVerifying -= h))
-                .Sample(TimeSpan.FromSeconds(0.5))
-                .ObserveOnDispatcher();
-
-            IObservable<EventPattern<EventArgs>> downloadVerifiedObserver = DownloadItemsList
-                .ToObservable()
-                .SelectMany(x =>
-                    Observable
-                        .FromEventPattern<EventHandler, EventArgs>(
-                            h => x.DownloadVerified += h,
-                            h => x.DownloadVerified -= h))
-                .Sample(TimeSpan.FromSeconds(0.5))
-                .ObserveOnDispatcher();
-
-            IObservable<EventPattern<EventArgs>> downloadStartedObserver = DownloadItemsList
-                .ToObservable()
-                .SelectMany(x =>
-                    Observable
-                        .FromEventPattern<EventHandler, EventArgs>(
-                            h => x.DownloadStarted += h,
-                            h => x.DownloadStarted -= h))
-                .Sample(TimeSpan.FromSeconds(0.5))
-                .ObserveOnDispatcher();
-
-            IObservable<EventPattern<EventArgs>> downloadStoppedObserver = DownloadItemsList
-                .ToObservable()
-                .SelectMany(x =>
-                    Observable
-                        .FromEventPattern<EventHandler, EventArgs>(
-                            h => x.DownloadStopped += h,
-                            h => x.DownloadStopped -= h))
-                .Sample(TimeSpan.FromSeconds(0.5))
-                .ObserveOnDispatcher();
-
-            IObservable<EventPattern<EventArgs>> downloadEnqueuedObserver = DownloadItemsList
-                .ToObservable()
-                .SelectMany(x =>
-                    Observable
-                        .FromEventPattern<EventHandler, EventArgs>(
-                            h => x.DownloadEnqueued += h,
-                            h => x.DownloadEnqueued -= h))
-                .Sample(TimeSpan.FromSeconds(0.5))
-                .ObserveOnDispatcher();
-
-            IObservable<EventPattern<EventArgs>> downloadDequeuedObserver = DownloadItemsList
-                .ToObservable()
-                .SelectMany(x =>
-                    Observable
-                        .FromEventPattern<EventHandler, EventArgs>(
-                            h => x.DownloadDequeued += h,
-                            h => x.DownloadDequeued -= h))
-                .Sample(TimeSpan.FromSeconds(0.5))
-                .ObserveOnDispatcher();
-
-            IObservable<EventPattern<EventArgs>> downloadFinishedObserver = DownloadItemsList
-                .ToObservable()
-                .SelectMany(x =>
-                    Observable
-                        .FromEventPattern<EventHandler, EventArgs>(
-                            h => x.DownloadFinished += h,
-                            h => x.DownloadFinished -= h))
-                .Sample(TimeSpan.FromSeconds(0.5))
-                .ObserveOnDispatcher();
-
-            IObservable<EventPattern<PropertyChangedEventArgs>> downloadPropertyChangedObserver = DownloadItemsList
-                .ToObservable()
-                .SelectMany(x =>
-                    Observable
-                        .FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(
-                            h => x.PropertyChanged += h,
-                            h => x.PropertyChanged -= h))
-                .Sample(TimeSpan.FromSeconds(0.5))
-                .ObserveOnDispatcher();
-
-            Observable.Merge(
-                downloadCreatedObserver,
-                downloadVerifyingObserver,
-                downloadVerifiedObserver,
-                downloadStartedObserver,
-                downloadStoppedObserver,
-                downloadEnqueuedObserver,
-                downloadDequeuedObserver,
-                downloadFinishedObserver
-                ).Subscribe(x => CollectionView.Refresh());*/
         }
 
         private void CollectionView_CurrentChanged(object sender, EventArgs e)
@@ -1025,11 +922,13 @@ namespace AMDownloader
                 try
                 {
                     await semTask;
+                    var throttle = Task.Delay(1000);
                     Application.Current?.Dispatcher?.Invoke(() =>
                     {
                         CollectionView.Refresh();
                         CommandManager.InvalidateRequerySuggested();
                     });
+                    await throttle; // provide max 1 refresh per sec
                 }
                 catch (OperationCanceledException)
                 {
