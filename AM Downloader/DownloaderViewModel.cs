@@ -2,6 +2,7 @@
 
 using AMDownloader.ClipboardObservation;
 using AMDownloader.Common;
+using AMDownloader.Helpers;
 using AMDownloader.ObjectModel;
 using AMDownloader.ObjectModel.Serializable;
 using AMDownloader.Properties;
@@ -44,7 +45,7 @@ namespace AMDownloader
         All, Ready, Queued, Downloading, Paused, Finished, Errored, Verifying
     }
 
-    internal class DownloaderViewModel : INotifyPropertyChanged
+    internal class DownloaderViewModel : INotifyPropertyChanged, IClosing
     {
         #region Fields
 
@@ -103,7 +104,6 @@ namespace AMDownloader
         public ICommand OpenContainingFolderCommand { get; private set; }
         public ICommand StartQueueCommand { get; private set; }
         public ICommand StopQueueCommand { get; private set; }
-        public ICommand CloseAppCommand { get; private set; }
         public ICommand CategoryChangedCommand { get; private set; }
         public ICommand OptionsCommand { get; private set; }
         public ICommand EnqueueCommand { get; private set; }
@@ -176,7 +176,6 @@ namespace AMDownloader
             OpenContainingFolderCommand = new RelayCommand<object>(OpenContainingFolder);
             StartQueueCommand = new RelayCommand<object>(StartQueue);
             StopQueueCommand = new RelayCommand<object>(StopQueue);
-            CloseAppCommand = new RelayCommand<object>(CloseApp);
             CategoryChangedCommand = new RelayCommand<object>(CategoryChanged);
             OptionsCommand = new RelayCommand<object>(ShowOptions);
             EnqueueCommand = new RelayCommand<object>(Enqueue);
@@ -243,10 +242,10 @@ namespace AMDownloader
                     }
 
                     var sourceObjects = source.Objects.ToArray();
-                    var finalObjects = new DownloaderObjectModel[sourceObjects.Count()];
-                    var total = sourceObjects.Count();
+                    var finalObjects = new DownloaderObjectModel[sourceObjects.Length];
+                    var total = sourceObjects.Length;
 
-                    for (int i = 0; i < sourceObjects.Count(); i++)
+                    for (int i = 0; i < sourceObjects.Length; i++)
                     {
                         if (ct.IsCancellationRequested) break;
                         if (sourceObjects[i] == null) continue;
@@ -311,15 +310,17 @@ namespace AMDownloader
             switch (category)
             {
                 case Category.All:
-                    CollectionView.Filter = new Predicate<object>((o) => { return true; });
+                    CollectionView.Filter = new Predicate<object>((o) =>
+                    {
+                        return true;
+                    });
                     break;
 
                 case Category.Downloading:
                     CollectionView.Filter = new Predicate<object>((o) =>
                     {
                         var item = o as DownloaderObjectModel;
-                        if (item.IsBeingDownloaded) return true;
-                        return false;
+                        return item.IsBeingDownloaded;
                     });
                     break;
 
@@ -327,8 +328,7 @@ namespace AMDownloader
                     CollectionView.Filter = new Predicate<object>((o) =>
                     {
                         var item = o as DownloaderObjectModel;
-                        if (item.Status == DownloadStatus.Finished) return true;
-                        return false;
+                        return item.Status == DownloadStatus.Finished;
                     });
                     break;
 
@@ -336,8 +336,7 @@ namespace AMDownloader
                     CollectionView.Filter = new Predicate<object>((o) =>
                     {
                         var item = o as DownloaderObjectModel;
-                        if (item.Status == DownloadStatus.Paused) return true;
-                        return false;
+                        return item.Status == DownloadStatus.Paused;
                     });
                     break;
 
@@ -345,8 +344,7 @@ namespace AMDownloader
                     CollectionView.Filter = new Predicate<object>((o) =>
                     {
                         var item = o as DownloaderObjectModel;
-                        if (item.IsQueued) return true;
-                        return false;
+                        return item.IsQueued;
                     });
                     break;
 
@@ -354,8 +352,7 @@ namespace AMDownloader
                     CollectionView.Filter = new Predicate<object>((o) =>
                     {
                         var item = o as DownloaderObjectModel;
-                        if (item.Status == DownloadStatus.Ready) return true;
-                        return false;
+                        return item.Status == DownloadStatus.Ready;
                     });
                     break;
 
@@ -363,8 +360,7 @@ namespace AMDownloader
                     CollectionView.Filter = new Predicate<object>((o) =>
                     {
                         var item = o as DownloaderObjectModel;
-                        if (item.Status == DownloadStatus.Error) return true;
-                        return false;
+                        return item.Status == DownloadStatus.Error;
                     });
                     break;
 
@@ -372,8 +368,7 @@ namespace AMDownloader
                     CollectionView.Filter = new Predicate<object>((o) =>
                     {
                         var item = o as DownloaderObjectModel;
-                        if (item.Status == DownloadStatus.Verifying) return true;
-                        return false;
+                        return item.Status == DownloadStatus.Verifying;
                     });
                     break;
             }
@@ -392,7 +387,7 @@ namespace AMDownloader
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
             var tasks = new List<Task>();
             var forceEnqueue = false;
-            var total = items.Count();
+            var total = items.Length;
 
             if (total > Settings.Default.MaxParallelDownloads)
             {
@@ -544,73 +539,6 @@ namespace AMDownloader
             QueueProcessor.Stop();
         }
 
-        private void CloseApp(object obj)
-        {
-            var window = (Window)obj;
-
-            if (_ctsUpdatingList != null)
-            {
-                if (_displayMessage.Invoke(
-                    "Background operation in progress. Cancel and exit program?", "Exit",
-                    MessageBoxButton.YesNo, MessageBoxImage.Exclamation, MessageBoxResult.No) == MessageBoxResult.No)
-                {
-                    return;
-                }
-                window.IsEnabled = false;
-                window.Title = "Quitting, please wait...";
-                _ctsUpdatingList.Cancel();
-            }
-            this.Status = "Saving data...";
-            RaisePropertyChanged(nameof(this.Status));
-            if (QueueProcessor.IsBusy) QueueProcessor.Stop();
-            Task t = Task.Run(async () =>
-            {
-                await _semaphoreUpdatingList.WaitAsync();
-                try
-                {
-                    Directory.CreateDirectory(AppPaths.LocalAppData);
-                    var writer = new XmlSerializer(typeof(SerializableDownloaderObjectModelList));
-                    var list = new SerializableDownloaderObjectModelList();
-                    var index = 0;
-                    foreach (var item in DownloadItemsList)
-                    {
-                        if (item.IsBeingDownloaded) item.Pause();
-                        if (item.Status == DownloadStatus.Finished && Settings.Default.ClearFinishedOnExit) continue;
-                        var sItem = new SerializableDownloaderObjectModel
-                        {
-                            Index = index++,
-                            Url = item.Url,
-                            Destination = item.Destination,
-                            TotalBytesToDownload = item.TotalBytesToDownload,
-                            IsQueued = item.IsQueued,
-                            IsCompleted = item.IsCompleted,
-                            DateCreated = item.DateCreated,
-                            StatusCode = item.StatusCode
-                        };
-                        list.Objects.Add(sItem);
-                    }
-                    using (var streamWriter = new StreamWriter(AppPaths.DownloadsHistoryFile, false))
-                    {
-                        writer.Serialize(streamWriter, list);
-                    }
-                }
-                finally
-                {
-                    _semaphoreUpdatingList.Release();
-                }
-            }).ContinueWith(t =>
-            {
-                Settings.Default.Save();
-                try
-                {
-                    Application.Current?.Dispatcher.Invoke(Application.Current.Shutdown);
-                }
-                catch
-                {
-                }
-            });
-        }
-
         private void ShowOptions(object obj)
         {
             var win = new OptionsWindow();
@@ -669,7 +597,7 @@ namespace AMDownloader
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
             var tasks = new List<Task>();
             var forceEnqueue = false;
-            var total = items.Count();
+            var total = items.Length;
 
             if (total > Settings.Default.MaxParallelDownloads)
             {
@@ -828,7 +756,7 @@ namespace AMDownloader
             int verifying = 0;
             int paused = 0;
             int downloading = 0;
-            int total = items.Count();
+            int total = items.Length;
             foreach (var item in items)
             {
                 switch (item.Status)
@@ -918,6 +846,7 @@ namespace AMDownloader
             foreach (var oldCts in removeCtsList)
             {
                 _ctsRefreshViewList.Remove(oldCts);
+                oldCts.Dispose();
             }
             var newCts = new CancellationTokenSource();
             _ctsRefreshViewList.Add(newCts);
@@ -935,7 +864,7 @@ namespace AMDownloader
                         CollectionView.Refresh();
                         CommandManager.InvalidateRequerySuggested();
                     });
-                   await throttle; // provide max 1 refresh per sec
+                    await throttle; // provide max 1 refresh per sec
                 }
                 catch (OperationCanceledException)
                 {
@@ -964,9 +893,9 @@ namespace AMDownloader
             var ct = _ctsUpdatingList.Token;
             RaisePropertyChanged(nameof(this.IsBackgroundWorking));
 
-            int total = urls.Count();
+            int total = urls.Length;
             int maxParallelDownloads = Settings.Default.MaxParallelDownloads;
-            var items = new DownloaderObjectModel[urls.Count()];
+            var items = new DownloaderObjectModel[urls.Length];
             var tasks = new List<Task>();
             var forceEnqueue = false;
             var existingUrls = (from di in DownloadItemsList select di.Url).ToArray();
@@ -974,7 +903,7 @@ namespace AMDownloader
             List<string> skipping = new List<string>();
             var wasCanceled = false;
 
-            if (start && !enqueue && urls.Count() > Settings.Default.MaxParallelDownloads)
+            if (start && !enqueue && urls.Length > Settings.Default.MaxParallelDownloads)
             {
                 forceEnqueue = true;
             }
@@ -1125,7 +1054,7 @@ namespace AMDownloader
 
             var dequeueThese = new List<IQueueable>();
             var itemsProcessed = new List<DownloaderObjectModel>();
-            var total = objects.Count();
+            var total = objects.Length;
             _ctsUpdatingList = new CancellationTokenSource();
             var ct = _ctsUpdatingList.Token;
             RaisePropertyChanged(nameof(this.IsBackgroundWorking));
@@ -1189,7 +1118,7 @@ namespace AMDownloader
             Application.Current.Dispatcher.Invoke(() =>
             {
                 Monitor.Enter(_lockDownloadItemsList);
-                for (int i = 0; i < itemsProcessed.Count(); i++)
+                for (int i = 0; i < itemsProcessed.Count; i++)
                 {
                     DownloadItemsList.Remove(itemsProcessed[i]);
                 }
@@ -1209,6 +1138,13 @@ namespace AMDownloader
             RaisePropertyChanged(nameof(this.Status));
             RaisePropertyChanged(nameof(this.Progress));
             RaisePropertyChanged(nameof(this.IsBackgroundWorking));
+
+            // free up memory
+            for (int i = 0; i < objects.Length; i++)
+            {
+                objects[i] = null;
+            }
+
             _semaphoreUpdatingList.Release();
         }
 
@@ -1295,6 +1231,73 @@ namespace AMDownloader
         private void ShowHelpTopics(object obj)
         {
             // Process.Start("explorer.exe", AppConstants.DocLink);
+        }
+
+        public bool OnClosing()
+        {
+            if (_ctsUpdatingList != null)
+            {
+                if (_displayMessage.Invoke(
+                    "Background operation in progress. Cancel and exit program?", "Exit",
+                    MessageBoxButton.YesNo, MessageBoxImage.Exclamation, MessageBoxResult.No) == MessageBoxResult.No)
+                {
+                    return false;
+                }
+                _ctsUpdatingList.Cancel();
+            }
+
+            this.Status = "Saving data...";
+            RaisePropertyChanged(nameof(this.Status));
+            if (QueueProcessor.IsBusy) QueueProcessor.Stop();
+
+            Task<bool> closingTask = Task.Run(async () =>
+            {
+                await _semaphoreUpdatingList.WaitAsync();
+                try
+                {
+                    Directory.CreateDirectory(AppPaths.LocalAppData);
+                    var writer = new XmlSerializer(typeof(SerializableDownloaderObjectModelList));
+                    var list = new SerializableDownloaderObjectModelList();
+                    var index = 0;
+                    foreach (var item in DownloadItemsList)
+                    {
+                        if (item.IsBeingDownloaded) item.Pause();
+                        if (item.Status == DownloadStatus.Finished && Settings.Default.ClearFinishedOnExit) continue;
+                        var sItem = new SerializableDownloaderObjectModel
+                        {
+                            Index = index++,
+                            Url = item.Url,
+                            Destination = item.Destination,
+                            TotalBytesToDownload = item.TotalBytesToDownload,
+                            IsQueued = item.IsQueued,
+                            IsCompleted = item.IsCompleted,
+                            DateCreated = item.DateCreated,
+                            StatusCode = item.StatusCode
+                        };
+                        list.Objects.Add(sItem);
+                    }
+                    using (var streamWriter = new StreamWriter(AppPaths.DownloadsHistoryFile, false))
+                    {
+                        writer.Serialize(streamWriter, list);
+                    }
+                    
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
+                finally
+                {
+                    _semaphoreUpdatingList.Release();
+                }
+            }).ContinueWith(t =>
+            {
+                Settings.Default.Save();
+                return t.Result;
+            });
+
+            return closingTask.GetAwaiter().GetResult();
         }
 
         #endregion Methods

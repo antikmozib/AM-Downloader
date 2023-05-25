@@ -1,5 +1,6 @@
 ﻿// Copyright (C) 2020-2023 Antik Mozib. All rights reserved.
 
+using AMDownloader.Helpers;
 using AMDownloader.Properties;
 using System;
 using System.Collections.Generic;
@@ -43,9 +44,21 @@ namespace AMDownloader
             DataContext = _primaryViewModel;
         }
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void Window_Closing(object sender, CancelEventArgs e)
         {
-            e.Cancel = true;
+            this.IsEnabled = false;
+            var cancel = false;
+
+            if (DataContext is IClosing context)
+            {
+                cancel = !context.OnClosing();
+            }
+
+            if (cancel)
+            {
+                e.Cancel = true;
+                this.IsEnabled = true;
+            }
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)

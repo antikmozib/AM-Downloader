@@ -62,12 +62,12 @@
         <CollectionViewSource x:Key="CategoriesList"
                               Source="{Binding CategoriesList}" />
     </Window.Resources>
-    <i:Interaction.Triggers>
+    <!--<i:Interaction.Triggers>
         <i:EventTrigger EventName="Closing">
             <i:InvokeCommandAction Command="{Binding CloseAppCommand, Mode=OneTime}"
                                    CommandParameter="{Binding ElementName=WindowMain}" />
         </i:EventTrigger>
-    </i:Interaction.Triggers>
+    </i:Interaction.Triggers>-->
     <Window.InputBindings>
         <KeyBinding Command="{Binding ClearFinishedDownloadsCommand}"
                     Key="Delete"
@@ -686,7 +686,8 @@
                       ButtonBase.Click="lvDownload_HeaderClick"
                       SelectionMode="Extended"
                       ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                      ScrollViewer.VerticalScrollBarVisibility="Auto">
+                      ScrollViewer.VerticalScrollBarVisibility="Auto"
+                      VirtualizingPanel.VirtualizationMode="Recycling">
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="MouseDoubleClick">
                         <i:InvokeCommandAction Command="{Binding OpenCommand}"
