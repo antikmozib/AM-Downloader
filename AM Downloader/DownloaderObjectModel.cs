@@ -20,7 +20,7 @@ namespace AMDownloader.ObjectModel
 {
     internal enum DownloadStatus
     {
-        Ready, Queued, Downloading, Paused, Pausing, Finishing, Finished, Error, Cancelling, Connecting, Merging, Verifying
+        Ready, Queued, Downloading, Paused, Finishing, Finished, Error, Cancelling, Connecting, Verifying
     }
 
     internal class DownloaderObjectModel : INotifyPropertyChanged, IQueueable
@@ -513,8 +513,8 @@ namespace AMDownloader.ObjectModel
                     }
 
                     using var destinationStream = new FileStream(TempDestination, FileMode.Append, FileAccess.Write);
-                    using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
-                    using var sourceStream = await response.Content.ReadAsStreamAsync();
+                    using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, linkedToken);
+                    using var sourceStream = await response.Content.ReadAsStreamAsync(linkedToken);
                     using var binaryWriter = new BinaryWriter(destinationStream);
                     byte[] buffer = new byte[AppConstants.DownloaderStreamBufferLength];
                     int s_bytesReceived = 0;
