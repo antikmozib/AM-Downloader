@@ -40,11 +40,12 @@ namespace AMDownloader
 
                 if (value == true)
                 {
+                    _ctsClipboard = new CancellationTokenSource();
                     Task.Run(async () => await MonitorClipboardAsync());
                 }
                 else
                 {
-                    if (_ctsClipboard != null) _ctsClipboard.Cancel();
+                    _ctsClipboard?.Cancel();
                 }
             }
         }
@@ -81,7 +82,7 @@ namespace AMDownloader
         private void Preview(object obj)
         {
             string[] urls = ProcessUrlPatterns().ToArray();
-            string output = String.Empty;
+            string output = string.Empty;
 
             if (urls.Length == 0) return;
             foreach (var url in urls)
@@ -160,26 +161,23 @@ namespace AMDownloader
 
         private async Task MonitorClipboardAsync()
         {
-            _ctsClipboard = new CancellationTokenSource();
-
-            while (!_ctsClipboard.Token.IsCancellationRequested)
+            while (!_ctsClipboard.IsCancellationRequested)
             {
+                var delay = Task.Delay(1000);
                 List<string> source = Regex.Replace(_clipboardService.GetText(), @"\t|\r", "").Split('\n').ToList();
-                List<string> dest = Regex.Replace(this.Urls, @"\r|\t", "").Split('\n').ToList();
+                List<string> dest = Regex.Replace(this.Urls, @"\r|\t", "").ToLower().Split('\n').ToList();
                 foreach (var url in source)
                 {
                     var f_url = Regex.Replace(url, @"\n", "");
-                    if ((f_url.Contains("http") || f_url.Contains("ftp")) && !dest.Contains(f_url))
+                    if ((f_url.ToLower().StartsWith("http") || f_url.ToLower().StartsWith("ftp") || f_url.ToLower().StartsWith("www.")) && !dest.Contains(f_url.ToLower()))
                     {
                         this.Urls += f_url + '\n';
-                        _clipboardService.Clear();
+                        //_clipboardService.Clear();
                     }
                 }
                 RaisePropertyChanged(nameof(this.Urls));
-                await Task.Delay(1000);
+                await delay;
             }
-
-            _ctsClipboard = null;
         }
 
         protected void RaisePropertyChanged(string prop)
