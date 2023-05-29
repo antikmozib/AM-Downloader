@@ -10,7 +10,7 @@ namespace AMDownloader
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value == null) return String.Empty;
+            if (value == null) return string.Empty;
             return value.ToString();
         }
 

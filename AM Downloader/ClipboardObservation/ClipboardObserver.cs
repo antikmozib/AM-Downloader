@@ -22,7 +22,7 @@ namespace AMDownloader.ClipboardObservation
 
         public string GetText()
         {
-            string val = String.Empty;
+            string val = string.Empty;
 
             Thread t = new Thread(() =>
             {

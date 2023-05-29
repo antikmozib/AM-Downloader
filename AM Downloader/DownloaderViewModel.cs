@@ -644,7 +644,7 @@ namespace AMDownloader
         {
             if (obj == null) return;
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
-            string clipText = String.Empty;
+            string clipText = string.Empty;
             int counter = 0;
             foreach (var item in items)
             {

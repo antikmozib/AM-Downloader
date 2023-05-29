@@ -11,7 +11,7 @@ namespace AMDownloader
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value == null) return String.Empty;
+            if (value == null) return string.Empty;
 
             long? speed = (long)value;
 
@@ -23,7 +23,7 @@ namespace AMDownloader
             {
                 if (speed == null)
                 {
-                    return String.Empty;
+                    return string.Empty;
                 }
                 else
                 {

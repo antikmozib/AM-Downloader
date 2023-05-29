@@ -11,7 +11,7 @@ namespace AMDownloader
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             int.TryParse(value.ToString(), out int count);
-            if (count == 0) return String.Empty;
+            if (count == 0) return string.Empty;
             return count.ToString();
         }
 

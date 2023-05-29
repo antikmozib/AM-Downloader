@@ -11,7 +11,7 @@ namespace AMDownloader
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return IconExtractor.Extract(Path.GetDirectoryName(value.ToString()), String.Empty, true);
+            return IconExtractor.Extract(Path.GetDirectoryName(value.ToString()), string.Empty, true);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
