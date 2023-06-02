@@ -877,7 +877,7 @@ namespace AMDownloader
                         _semaphoreRefreshingView.Release();
                     }
                 }
-            });
+            }, newCts.Token);
         }
 
         protected void RaisePropertyChanged(string prop)
@@ -1280,7 +1280,7 @@ namespace AMDownloader
                     {
                         writer.Serialize(streamWriter, list);
                     }
-                    
+
                     return true;
                 }
                 catch
