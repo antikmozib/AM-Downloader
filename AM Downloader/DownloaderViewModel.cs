@@ -303,7 +303,12 @@ namespace AMDownloader
 
         #endregion Constructors
 
-        #region Methods
+        #region Private methods
+        
+        protected void RaisePropertyChanged(string prop)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
+        }
 
         private void SwitchCategory(Category category)
         {
@@ -440,19 +445,6 @@ namespace AMDownloader
             }
         }
 
-        private void Remove(object obj)
-        {
-            if (obj == null) return;
-            if (_ctsUpdatingList != null)
-            {
-                ShowBusyMessage();
-                return;
-            }
-
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
-            Task.Run(async () => await RemoveObjectsAsync(false, items)).ContinueWith(t => RefreshCollection());
-        }
-
         private void Add(object obj)
         {
             if (_ctsUpdatingList != null)
@@ -465,6 +457,19 @@ namespace AMDownloader
             win.DataContext = vm;
             win.Owner = obj as Window;
             win.ShowDialog();
+        }
+
+        private void Remove(object obj)
+        {
+            if (obj == null) return;
+            if (_ctsUpdatingList != null)
+            {
+                ShowBusyMessage();
+                return;
+            }
+
+            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
+            Task.Run(async () => await RemoveObjectsAsync(false, items)).ContinueWith(t => RefreshCollection());
         }
 
         private void Open(object obj)
@@ -670,164 +675,6 @@ namespace AMDownloader
             Task.Run(async () => await RemoveObjectsAsync(false, items)).ContinueWith(t => RefreshCollection());
         }
 
-        private void QueueProcessor_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-        }
-
-        private void Download_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-        }
-
-        private void Download_Created(object sender, EventArgs e)
-        {
-            RefreshCollection();
-        }
-
-        private void Download_Verifying(object sender, EventArgs e)
-        {
-            RefreshCollection();
-        }
-
-        private void Download_Verified(object sender, EventArgs e)
-        {
-            RefreshCollection();
-        }
-
-        private void Download_Started(object sender, EventArgs e)
-        {
-            RefreshCollection();
-            StartReportingSpeed();
-        }
-
-        private void Download_Stopped(object sender, EventArgs e)
-        {
-            if (this.DownloadingCount == 0)
-            {
-                this.Status = "Ready";
-                RaisePropertyChanged(nameof(this.Status));
-
-                if (this.QueuedCount == 0)
-                {
-                    this.QueueProcessor.Stop();
-                }
-            }
-
-            RefreshCollection();
-
-            Monitor.Enter(_lockBytesTransferredOverLifetime);
-            try
-            {
-                Settings.Default.BytesTransferredOverLifetime +=
-                    (ulong)(sender as DownloaderObjectModel).BytesDownloadedThisSession;
-            }
-            finally
-            {
-                Monitor.Exit(_lockBytesTransferredOverLifetime);
-            }
-        }
-
-        private void Download_Enqueued(object sender, EventArgs e)
-        {
-            RefreshCollection();
-        }
-
-        private void Download_Dequeued(object sender, EventArgs e)
-        {
-            RefreshCollection();
-        }
-
-        private void Download_Finished(object sender, EventArgs e)
-        {
-            RefreshCollection();
-        }
-
-        private void DownloadItemsList_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-
-        }
-
-        private void CollectionView_CurrentChanged(object sender, EventArgs e)
-        {
-            var items = DownloadItemsList.ToArray();
-            int finished = 0;
-            int queued = 0;
-            int errored = 0;
-            int ready = 0;
-            int verifying = 0;
-            int paused = 0;
-            int downloading = 0;
-            int total = items.Length;
-            foreach (var item in items)
-            {
-                switch (item.Status)
-                {
-                    case DownloadStatus.Downloading:
-                        downloading++;
-                        break;
-
-                    case DownloadStatus.Error:
-                        errored++;
-                        break;
-
-                    case DownloadStatus.Finished:
-                        finished++;
-                        break;
-
-                    case DownloadStatus.Paused:
-                        paused++;
-                        if (item.IsQueued)
-                        {
-                            queued++;
-                        }
-                        break;
-
-                    case DownloadStatus.Queued:
-                        queued++;
-                        break;
-
-                    case DownloadStatus.Ready:
-                        ready++;
-                        break;
-
-                    case DownloadStatus.Verifying:
-                        verifying++;
-                        break;
-                }
-            }
-            this.Count = total;
-            this.DownloadingCount = downloading;
-            this.ErroredCount = errored;
-            this.FinishedCount = finished;
-            this.PausedCount = paused;
-            this.QueuedCount = queued;
-            this.ReadyCount = ready;
-            this.VerifyingCount = verifying;
-            RaisePropertyChanged(nameof(this.Count));
-            RaisePropertyChanged(nameof(this.DownloadingCount));
-            RaisePropertyChanged(nameof(this.ErroredCount));
-            RaisePropertyChanged(nameof(this.FinishedCount));
-            RaisePropertyChanged(nameof(this.PausedCount));
-            RaisePropertyChanged(nameof(this.QueuedCount));
-            RaisePropertyChanged(nameof(this.ReadyCount));
-            RaisePropertyChanged(nameof(this.VerifyingCount));
-            RaisePropertyChanged(nameof(this.IsDownloading));
-            if (!this.IsBackgroundWorking)
-            {
-                if (downloading > 0)
-                {
-                    this.Status = downloading + " item(s) downloading";
-                }
-                else
-                {
-                    if (_semaphoreUpdatingList.CurrentCount > 0)
-                    {
-                        this.Status = "Ready";
-                    }
-                }
-                RaisePropertyChanged(nameof(this.Status));
-            }
-        }
-
         private void RefreshCollection()
         {
             if (_semaphoreUpdatingList.CurrentCount == 0)
@@ -878,11 +725,6 @@ namespace AMDownloader
                     }
                 }
             }, newCts.Token);
-        }
-
-        protected void RaisePropertyChanged(string prop)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
         }
 
         private async Task AddItemsAsync(string destination, bool enqueue, bool start = false, params string[] urls)
@@ -1233,6 +1075,10 @@ namespace AMDownloader
             // Process.Start("explorer.exe", AppConstants.DocLink);
         }
 
+        #endregion Private methods
+
+        #region Public methods
+
         public bool OnClosing()
         {
             if (_ctsUpdatingList != null)
@@ -1300,6 +1146,168 @@ namespace AMDownloader
             return closingTask.GetAwaiter().GetResult();
         }
 
-        #endregion Methods
+        #endregion
+
+        #region Event handlers
+
+        private void QueueProcessor_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+        }
+
+        private void Download_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+        }
+
+        private void Download_Created(object sender, EventArgs e)
+        {
+            RefreshCollection();
+        }
+
+        private void Download_Verifying(object sender, EventArgs e)
+        {
+            RefreshCollection();
+        }
+
+        private void Download_Verified(object sender, EventArgs e)
+        {
+            RefreshCollection();
+        }
+
+        private void Download_Started(object sender, EventArgs e)
+        {
+            RefreshCollection();
+            StartReportingSpeed();
+        }
+
+        private void Download_Stopped(object sender, EventArgs e)
+        {
+            if (this.DownloadingCount == 0)
+            {
+                this.Status = "Ready";
+                RaisePropertyChanged(nameof(this.Status));
+
+                if (this.QueuedCount == 0)
+                {
+                    this.QueueProcessor.Stop();
+                }
+            }
+
+            RefreshCollection();
+
+            Monitor.Enter(_lockBytesTransferredOverLifetime);
+            try
+            {
+                Settings.Default.BytesTransferredOverLifetime +=
+                    (ulong)(sender as DownloaderObjectModel).BytesDownloadedThisSession;
+            }
+            finally
+            {
+                Monitor.Exit(_lockBytesTransferredOverLifetime);
+            }
+        }
+
+        private void Download_Enqueued(object sender, EventArgs e)
+        {
+            RefreshCollection();
+        }
+
+        private void Download_Dequeued(object sender, EventArgs e)
+        {
+            RefreshCollection();
+        }
+
+        private void Download_Finished(object sender, EventArgs e)
+        {
+            RefreshCollection();
+        }
+
+        private void DownloadItemsList_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+
+        }
+
+        private void CollectionView_CurrentChanged(object sender, EventArgs e)
+        {
+            var items = DownloadItemsList.ToArray();
+            int finished = 0;
+            int queued = 0;
+            int errored = 0;
+            int ready = 0;
+            int verifying = 0;
+            int paused = 0;
+            int downloading = 0;
+            int total = items.Length;
+            foreach (var item in items)
+            {
+                switch (item.Status)
+                {
+                    case DownloadStatus.Downloading:
+                        downloading++;
+                        break;
+
+                    case DownloadStatus.Error:
+                        errored++;
+                        break;
+
+                    case DownloadStatus.Finished:
+                        finished++;
+                        break;
+
+                    case DownloadStatus.Paused:
+                        paused++;
+                        if (item.IsQueued)
+                        {
+                            queued++;
+                        }
+                        break;
+
+                    case DownloadStatus.Queued:
+                        queued++;
+                        break;
+
+                    case DownloadStatus.Ready:
+                        ready++;
+                        break;
+
+                    case DownloadStatus.Verifying:
+                        verifying++;
+                        break;
+                }
+            }
+            this.Count = total;
+            this.DownloadingCount = downloading;
+            this.ErroredCount = errored;
+            this.FinishedCount = finished;
+            this.PausedCount = paused;
+            this.QueuedCount = queued;
+            this.ReadyCount = ready;
+            this.VerifyingCount = verifying;
+            RaisePropertyChanged(nameof(this.Count));
+            RaisePropertyChanged(nameof(this.DownloadingCount));
+            RaisePropertyChanged(nameof(this.ErroredCount));
+            RaisePropertyChanged(nameof(this.FinishedCount));
+            RaisePropertyChanged(nameof(this.PausedCount));
+            RaisePropertyChanged(nameof(this.QueuedCount));
+            RaisePropertyChanged(nameof(this.ReadyCount));
+            RaisePropertyChanged(nameof(this.VerifyingCount));
+            RaisePropertyChanged(nameof(this.IsDownloading));
+            if (!this.IsBackgroundWorking)
+            {
+                if (downloading > 0)
+                {
+                    this.Status = downloading + " item(s) downloading";
+                }
+                else
+                {
+                    if (_semaphoreUpdatingList.CurrentCount > 0)
+                    {
+                        this.Status = "Ready";
+                    }
+                }
+                RaisePropertyChanged(nameof(this.Status));
+            }
+        }
+
+        #endregion
     }
 }
