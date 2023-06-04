@@ -20,6 +20,7 @@
         <AssemblyOriginatorKeyFile>AM.snk</AssemblyOriginatorKeyFile>
         <DelaySign>true</DelaySign>
         <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+        <ApplicationManifest>app.manifest</ApplicationManifest>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
