@@ -166,7 +166,7 @@ namespace AMDownloader
             else if (!isDirectory && !File.Exists(destination))
             {
                 ext = Path.GetExtension(destination).ToLower();
-                alternatePath = Path.GetTempPath() + Path.DirectorySeparatorChar + "AMDownloader" + DateTime.Now.ToFileTimeUtc() + "." + ext;
+                alternatePath = Path.Combine(Path.GetTempPath(), "AMDownloader" + DateTime.Now.ToFileTimeUtc() + ext);
                 File.Create(alternatePath).Close();
                 deleteFile = true;
             }
