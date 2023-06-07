@@ -3,6 +3,7 @@
 using AMDownloader.ClipboardObservation;
 using AMDownloader.Common;
 using AMDownloader.Properties;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -17,7 +18,6 @@ namespace AMDownloader
     internal class AddDownloadViewModel : INotifyPropertyChanged
     {
         private readonly BuildUrlsFromPatternsDelegate _buildUrlsFromPatterns;
-        private readonly DisplayMessageDelegate _displayMessage;
         private bool _monitorClipboard;
         private CancellationTokenSource _ctsClipboard;
         private readonly ClipboardObserver _clipboardService;
@@ -44,7 +44,15 @@ namespace AMDownloader
                 }
                 else
                 {
-                    _ctsClipboard?.Cancel();
+                    try
+                    {
+                        _ctsClipboard?.Cancel();
+                        _ctsClipboard.Dispose();
+                    }
+                    catch (ObjectDisposedException)
+                    {
+
+                    }
                 }
             }
         }
@@ -54,11 +62,9 @@ namespace AMDownloader
 
         public AddDownloadViewModel(
             BuildUrlsFromPatternsDelegate buildUrlsFromPatterns,
-            ShowPreviewDelegate showPreview,
-            DisplayMessageDelegate displayMessage)
+            ShowPreviewDelegate showPreview)
         {
             _buildUrlsFromPatterns = buildUrlsFromPatterns;
-            _displayMessage = displayMessage;
             _clipboardService = new ClipboardObserver();
 
             AddCommand = new RelayCommand<object>(Add, Add_CanExecute);
@@ -70,7 +76,7 @@ namespace AMDownloader
             }
             else
             {
-                this.SaveToFolder = AppPaths.DownloadsFolder;
+                this.SaveToFolder = AppPaths.UserDownloadsFolder;
             }
             this.Enqueue = Settings.Default.EnqueueAddedItems;
             this.StartDownload = Settings.Default.StartDownloadingAddedItems;
