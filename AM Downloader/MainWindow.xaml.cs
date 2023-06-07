@@ -9,16 +9,19 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.Common;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks.Sources;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Media;
+using System.Xml.Schema;
 using System.Xml.Serialization;
 
 namespace AMDownloader
@@ -37,6 +40,10 @@ namespace AMDownloader
 
         public MainWindow()
         {
+            _primaryViewModel = new DownloaderViewModel(DisplayMessage, ShowUrlList);
+            InitializeComponent();
+            DataContext = _primaryViewModel;
+
             if (!_mutex.WaitOne(0, false))
             {
                 var name = Assembly.GetExecutingAssembly().GetName().Name;
@@ -45,12 +52,6 @@ namespace AMDownloader
                     name, MessageBoxButton.OK, MessageBoxImage.Error);
                 Application.Current.Shutdown();
             }
-
-            _primaryViewModel = new DownloaderViewModel(DisplayMessage, ShowUrlList);
-
-            InitializeComponent();
-
-            DataContext = _primaryViewModel;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -90,22 +91,38 @@ namespace AMDownloader
 
             try
             {
-                SerializableUIColumnOrderList columnOrderList;
+                SerializableUIColumnOrderList restoreCols;
                 var xmlReader = new XmlSerializer(typeof(SerializableUIColumnOrderList));
 
                 using (var streamReader = new StreamReader(AppPaths.UIColumnOrderFile))
                 {
-                    columnOrderList = (SerializableUIColumnOrderList)xmlReader.Deserialize(streamReader);
+                    restoreCols = (SerializableUIColumnOrderList)xmlReader.Deserialize(streamReader);
                 }
 
-                var columns = ((GridView)lvDownload.View).Columns;
+                var gridCols = ((GridView)lvDownload.View).Columns;
 
-                for (int i = 0; i < columns.Count; i++)
+                for (int i = 0; i < restoreCols.Objects.Count; i++)
                 {
-                    columns.Move(i, columnOrderList.Objects.FirstOrDefault(o => o.ColumnName == columns[i].Header.ToString()).ColumnIndex);
+                    var restoreCol = restoreCols.Objects[i];
+
+                    for (int j = 0; j < gridCols.Count; j++)
+                    {
+                        var gridCol = gridCols[j];
+
+                        if (gridCol.Header.ToString() == restoreCol.ColumnName)
+                        {
+                            if (gridCols.IndexOf(gridCol) != restoreCol.ColumnIndex)
+                            {
+                                var swapCol = gridCols[restoreCol.ColumnIndex];
+                                gridCols.Move(j, restoreCol.ColumnIndex);
+                                gridCols.Move(gridCols.IndexOf(swapCol), j);
+                            }
+                            break;
+                        }
+                    }
                 }
             }
-            catch
+            catch (FileNotFoundException)
             {
             }
         }
@@ -143,17 +160,18 @@ namespace AMDownloader
 
                 try
                 {
-                    Directory.CreateDirectory(AppPaths.LocalAppData);
+                    Directory.CreateDirectory(AppPaths.LocalAppDataFolder);
                     var writer = new XmlSerializer(typeof(SerializableUIColumnOrderList));
                     using var streamWriter = new StreamWriter(AppPaths.UIColumnOrderFile, false);
                     writer.Serialize(streamWriter, columnOrderList);
                 }
                 catch
                 {
+
                 }
             }
         }
-        
+
         private void menuExit_Click(object sender, RoutedEventArgs e)
         {
             this.Close();

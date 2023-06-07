@@ -20,14 +20,11 @@
         Icon="pack://application:,,,/Icons/app.ico" Loaded="Window_Loaded">
     <Window.Resources>
         <local:ProgressBarVisibilityConverter x:Key="ProgressBarVisibilityConverter" />
-        <local:ProgressBarForegroundConverter x:Key="ProgressBarForegroundConverter" />
-        <local:ProgressBarBackgroundConverter x:Key="ProgressBarBackgroundConverter" />
-        <local:ProgressBarValueColorConverter x:Key="ProgressBarValueColorConverter" />
         <local:DownloaderSizeConverter x:Key="DownloaderSizeConverter" />
         <local:DownloaderSpeedConverter x:Key="DownloaderSpeedConverter" />
-        <local:DownloaderStatusConverter x:Key="DownloaderStatusConverter" />
+        <local:ProgramStatusConverter x:Key="ProgramStatusConverter" />
         <local:StatusBarItemVisibilityConverter x:Key="StatusBarItemVisibilityConverter" />
-        <local:StatusBarBusyIconVisibilityConverter x:Key="StatusBarBusyIconVisibilityConverter" />
+        <local:DownloaderStatusConverter x:Key="DownloaderStatusConverter" />
         <local:DownloaderDateConverter x:Key="DownloaderDateConverter" />
         <local:DownloaderDestinationFolderNameConverter x:Key="DownloaderDestinationConverter" />
         <local:DownloaderDestinationPathConverter x:Key="DownloaderDestinationPathConverter" />
@@ -38,7 +35,6 @@
         <local:TaskBarProgressConverter x:Key="TaskBarProgressConverter" />
         <local:TaskBarProgressStateConverter x:Key="TaskBarProgressStateConverter" />
         <local:TreeViewCountConverter x:Key="TreeViewCountConverter" />
-        <local:TreeViewCategoryColorConverter x:Key="TreeViewCategoryColorConverter" />
         <DataTemplate x:Key="HeaderTemplate">
             <TextBlock Padding="5"
                        Text="{Binding}" />
@@ -62,12 +58,12 @@
         <CollectionViewSource x:Key="CategoriesList"
                               Source="{Binding CategoriesList}" />
     </Window.Resources>
-    <!--<i:Interaction.Triggers>
-        <i:EventTrigger EventName="Closing">
-            <i:InvokeCommandAction Command="{Binding CloseAppCommand, Mode=OneTime}"
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Closed">
+            <i:InvokeCommandAction Command="{Binding UIClosedCommand, Mode=OneTime}"
                                    CommandParameter="{Binding ElementName=WindowMain}" />
         </i:EventTrigger>
-    </i:Interaction.Triggers>-->
+    </i:Interaction.Triggers>
     <Window.InputBindings>
         <KeyBinding Command="{Binding ClearFinishedDownloadsCommand}"
                     Key="Delete"
@@ -91,16 +87,13 @@
                     CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
                     Key="C"
                     Modifiers="Ctrl" />
-        <KeyBinding Command="{Binding ShowHelpTopicsCommand}"
-                    Key="F1"
-                    Modifiers="" />
     </Window.InputBindings>
     <Window.TaskbarItemInfo>
         <TaskbarItemInfo ProgressState="{Binding Progress, Converter={StaticResource TaskBarProgressStateConverter}}"
                          ProgressValue="{Binding Progress, Converter={StaticResource TaskBarProgressConverter}}" />
     </Window.TaskbarItemInfo>
     <DockPanel>
-        <!--#region MENU-->
+        <!--#region MENU -->
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File"
                       TabIndex="9">
@@ -136,16 +129,6 @@
             </MenuItem>
             <MenuItem Header="_Help"
                       TabIndex="10">
-                <!--<MenuItem x:Name="menuHelpTopics"
-                          Header="Help _Topics"
-                          InputGestureText="F1"
-                          Command="{Binding ShowHelpTopicsCommand}">
-                    <MenuItem.Icon>
-                        <Viewbox>
-                            <Frame Source="pack://application:,,,/Icons/MSHelpTableOfContent_16x.xaml" />
-                        </Viewbox>
-                    </MenuItem.Icon>
-                </MenuItem>-->
                 <MenuItem x:Name="menuCheckForUpdates"
                           Header="Check For _Updates"
                           Command="{Binding CheckForUpdatesCommand}">
@@ -162,7 +145,7 @@
                 </MenuItem>
             </MenuItem>
         </Menu>
-        <!--#endregion MENU-->
+        <!--#endregion-->
         <!--#region TOOLBAR -->
         <ToolBarTray DockPanel.Dock="Top">
             <ToolBar TabIndex="3">
@@ -285,7 +268,7 @@
                 </Button>
             </ToolBar>
         </ToolBarTray>
-        <!--#endregion TOOLBAR-->
+        <!--#endregion-->
         <!--#region STATUSBAR -->
         <DockPanel DockPanel.Dock="Bottom">
             <StatusBar Padding="5">
@@ -419,7 +402,7 @@
                         <TextBlock x:Name="tbPriamryStatus"
                                    TextTrimming="CharacterEllipsis"
                                    Grid.Column="2"
-                                   Text="{Binding Status, Converter={StaticResource DownloaderStatusConverter}}"
+                                   Text="{Binding Status, Converter={StaticResource ProgramStatusConverter}}"
                                    VerticalAlignment="Center" />
                     </Grid>
                 </StatusBarItem>
@@ -440,54 +423,6 @@
                                      Width="100" />
                     </Grid>
                 </StatusBarItem>
-                <!--<StatusBarItem Margin="20 0 0 0"
-                               Grid.Column="2"
-                               Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=tbVerifyingCount}">
-                    <TextBlock>
-                        <TextBlock Margin="0 0 4 0"
-                                   Text="&#xF021;"
-                                   FontFamily="{StaticResource FontAwesomeSolid}" />
-                        <TextBlock Text="Verifiying:" />
-                        <TextBlock x:Name="tbVerifyingCount"
-                                   Text="{Binding VerifyingCount, Converter={StaticResource TreeViewCountConverter}}" />
-                    </TextBlock>
-                </StatusBarItem>-->
-                <!--<StatusBarItem Margin="20 0 0 0"
-                               Grid.Column="3"
-                               Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=tbQueuedCount}">
-                    <TextBlock>
-                        <TextBlock Margin="0 0 4 0"
-                                   Text="&#xF0AE;"
-                                   FontFamily="{StaticResource FontAwesomeSolid}" />
-                        <TextBlock Text="Queued:" />
-                        <TextBlock x:Name="tbQueuedCount"
-                                   Text="{Binding QueuedCount, Converter={StaticResource TreeViewCountConverter}}" />
-                    </TextBlock>
-                </StatusBarItem>-->
-                <!--<StatusBarItem Margin="20 0 0 0"
-                               Grid.Column="4"
-                               Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=tbPausedCount}">
-                    <TextBlock>
-                        <TextBlock Margin="0 0 4 0"
-                                   Text="&#xF04C;"
-                                   FontFamily="{StaticResource FontAwesomeSolid}" />
-                        <TextBlock Text="Paused:" />
-                        <TextBlock x:Name="tbPausedCount"
-                                   Text="{Binding PausedCount, Converter={StaticResource TreeViewCountConverter}}" />
-                    </TextBlock>
-                </StatusBarItem>-->
-                <!--<StatusBarItem Margin="20 0 0 0"
-                               Grid.Column="5"
-                               Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=tbFinishedCount}">
-                    <TextBlock>
-                        <TextBlock Margin="0 0 4 0"
-                                   Text="&#xF00C;"
-                                   FontFamily="{StaticResource FontAwesomeSolid}" />
-                        <TextBlock Text="Finished:" />
-                        <TextBlock x:Name="tbFinishedCount"
-                                   Text="{Binding FinishedCount, Converter={StaticResource TreeViewCountConverter}}" />
-                    </TextBlock>
-                </StatusBarItem>-->
                 <StatusBarItem Margin="20 0 0 0"
                                Grid.Column="6"
                                Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=tbSpeed}"
@@ -510,21 +445,20 @@
                                    Text="&#xF019;"
                                    FontFamily="{StaticResource FontAwesomeSolid}" />
                         <TextBlock x:Name="tbBytesDownloaded"
-                                   Text="{Binding BytesDownloaded, Converter={StaticResource DownloaderSizeConverter}}"
+                                   Text="{Binding BytesDownloadedThisSession, Converter={StaticResource DownloaderSizeConverter}}"
                                    ToolTip="Data transferred this session" />
                     </TextBlock>
                 </StatusBarItem>                
             </StatusBar>
         </DockPanel>
-        <!--#endregion STATUSBAR-->
+        <!--#endregion-->
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="{Binding LeftPaneWidth, Mode=TwoWay, Source={x:Static properties:Settings.Default}}" />
                 <ColumnDefinition Width="1.25" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <!--#endregion DOWNLOADLIST-->
-            <!--region CATEGORYLIST-->
+            <!--#region CATEGORYLIST -->
             <TreeView ItemsSource="{Binding CategoriesList}"
                       x:Name="tvCategories"
                       TabIndex="1"
@@ -671,14 +605,11 @@
                         </Setter>
                     </Style>
                 </TreeView.ItemContainerStyle>
-                <!--<TreeView.ContextMenu>
-                    
-                </TreeView.ContextMenu>-->
             </TreeView>
-            <!--endregion CategoryList-->
+            <!--#endregion-->
             <GridSplitter Grid.Column="1"
                           HorizontalAlignment="Stretch" />
-            <!--#region DOWNLOADLIST-->
+            <!--#region DOWNLOADLIST -->
             <ListView ItemsSource="{Binding CollectionView}"
                       x:Name="lvDownload"
                       TabIndex="0"
@@ -877,8 +808,15 @@
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <TextBlock TextTrimming="CharacterEllipsis"
-                                                   Text="{Binding Status}" />
+                                        <TextBlock TextTrimming="CharacterEllipsis">
+                                            <TextBlock.Text>
+                                                <MultiBinding Converter="{StaticResource DownloaderStatusConverter}">
+                                                    <Binding Path="DataContext.QueueProcessor"
+                                                             RelativeSource="{RelativeSource AncestorType=ListView}" />
+                                                    <Binding />
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
@@ -911,7 +849,7 @@
                                 <DataTemplate>
                                     <Grid>
                                         <TextBlock TextTrimming="CharacterEllipsis"
-                                                   Text="{Binding TotalBytesCompleted, Converter={StaticResource DownloaderSizeConverter}}"
+                                                   Text="{Binding BytesDownloaded, Converter={StaticResource DownloaderSizeConverter}}"
                                                    HorizontalAlignment="Right" />
                                     </Grid>
                                 </DataTemplate>
@@ -1024,6 +962,7 @@
                     </GridView>
                 </ListView.View>
             </ListView>
+            <!--#endregion-->
         </Grid>
     </DockPanel>
 </Window>
