@@ -100,16 +100,16 @@ namespace AMDownloader
                 }
                 else
                 {
-                    cboDestination.Text = AppPaths.DownloadsFolder;
+                    cboDestination.Text = AppPaths.UserDownloadsFolder;
                 }
             }
             else
             {
-                cboDestination.Text = AppPaths.DownloadsFolder;
+                cboDestination.Text = AppPaths.UserDownloadsFolder;
             }
-            if (!cboDestination.Items.Contains(AppPaths.DownloadsFolder)) cboDestination.Items.Add(AppPaths.DownloadsFolder);
+            if (!cboDestination.Items.Contains(AppPaths.UserDownloadsFolder)) cboDestination.Items.Add(AppPaths.UserDownloadsFolder);
 
-            if (Directory.Exists(AppPaths.LocalAppData))
+            if (Directory.Exists(AppPaths.LocalAppDataFolder))
             {
                 try
                 {
@@ -149,7 +149,7 @@ namespace AMDownloader
             }
             else
             {
-                dlg.SelectedPath = AppPaths.DownloadsFolder;
+                dlg.SelectedPath = AppPaths.UserDownloadsFolder;
             }
 
             if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)

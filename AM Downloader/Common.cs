@@ -18,14 +18,11 @@ namespace AMDownloader.Common
 
     internal static class AppConstants
     {
-        public const int CollectionRefreshInterval = 1000; // 1 sec
         public const int RequestThrottlerInterval = 60000; // 1 min
         public const int DownloaderStreamBufferLength = (int)ByteConstants.KILOBYTE;
         public const int RemovingFileBytesBufferLength = (int)(ByteConstants.MEGABYTE);
         public const string DownloaderSplitedPartExtension = ".AMDownload";
-        public const string DownloaderFileMagicString = "[AMDownload-Paused]";
         public const int ParallelDownloadsLimit = 10;
-        public const int ParallelStreamsLimit = 5;
         public const string UpdateLink = @"https://mozib.io/downloads/update.php";
     }
 
@@ -34,13 +31,12 @@ namespace AMDownloader.Common
         /// <summary>
         /// Gets the path to the folder where to save the user-specific settings.
         /// </summary>
-        public static string LocalAppData =>
+        public static string LocalAppDataFolder =>
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Assembly.GetExecutingAssembly().GetName().Name);
-
-        public static string DownloadsHistoryFile => Path.Combine(LocalAppData, "History.xml");
-        public static string SavedLocationsFile => Path.Combine(LocalAppData, "SavedLocations.xml");
-        public static string UIColumnOrderFile => Path.Combine(LocalAppData, "UIColumnOrder.xml");
-        public static string DownloadsFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+        public static string DownloadsHistoryFile => Path.Combine(LocalAppDataFolder, "History.xml");
+        public static string SavedLocationsFile => Path.Combine(LocalAppDataFolder, "SavedLocations.xml");
+        public static string UIColumnOrderFile => Path.Combine(LocalAppDataFolder, "UIColumnOrder.xml");
+        public static string UserDownloadsFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
     }
 
     internal static class CommonFunctions
@@ -102,7 +98,7 @@ namespace AMDownloader.Common
         public static void ResetAllSettings()
         {
             Settings.Default.Reset();
-            if (Directory.Exists(AppPaths.LocalAppData))
+            if (Directory.Exists(AppPaths.LocalAppDataFolder))
             {
                 try
                 {
