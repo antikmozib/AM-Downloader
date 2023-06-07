@@ -25,6 +25,10 @@ namespace AMDownloader
     {
         #region Fields
 
+        /// <summary>
+        /// Gets the interval between providing download progression updates.
+        /// </summary>
+        private const int _reportingDelay = 1000;
         private readonly HttpClient _httpClient;
         private readonly IProgress<long> _reportProgressBytes;
         private CancellationTokenSource _ctsPause, _ctsCancel, _ctsLinked;
@@ -264,20 +268,19 @@ namespace AMDownloader
             long fromBytes;
             long toBytes;
             long bytesCaptured;
-            int delay = 500;
 
             Task.Run(async () =>
             {
                 while (IsDownloading)
                 {
                     fromBytes = BytesDownloaded;
-                    await Task.Delay(delay);
+                    await Task.Delay(_reportingDelay);
                     toBytes = BytesDownloaded;
                     bytesCaptured = toBytes - fromBytes;
 
                     if (bytesCaptured >= 0)
                     {
-                        Speed = (long)((double)bytesCaptured / delay * 1000);
+                        Speed = (long)((double)bytesCaptured / _reportingDelay * 1000);
                         RaisePropertyChanged(nameof(Speed));
                     }
 
@@ -319,12 +322,15 @@ namespace AMDownloader
                     {
                         fromBytes = BytesDownloaded;
                         stopWatch.Restart();
-                        await Task.Delay(1000);
+                        await Task.Delay(_reportingDelay);
                         toBytes = BytesDownloaded;
                         bytesCaptured = toBytes - fromBytes;
                         stopWatch.Stop();
 
-                        double timeRemaining = (double)(stopWatch.ElapsedMilliseconds / (double)bytesCaptured) * ((TotalBytesToDownload ?? 0) - BytesDownloaded);
+                        double timeRemaining = (double)(
+                        stopWatch.ElapsedMilliseconds
+                            / (double)bytesCaptured
+                            * ((TotalBytesToDownload ?? 0) - BytesDownloaded));
 
                         if (timeRemaining >= 0 && timeRemaining != TimeRemaining)
                         {
