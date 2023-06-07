@@ -31,10 +31,7 @@ namespace AMDownloader
                     return Application.Current.Resources["CategoryReadyColor"];
 
                 case Category.Errored:
-                    return Application.Current.Resources["CategoryErroredColor"];
-
-                case Category.Verifying:
-                    return Application.Current.Resources["CategoryVerifyingColor"];
+                    return Application.Current.Resources["CategoryErroredColor"];                
 
                 case Category.Paused:
                     return Application.Current.Resources["CategoryPausedColor"];
