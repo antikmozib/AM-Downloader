@@ -380,301 +380,7 @@ namespace AMDownloader
 
             Settings.Default.LastSelectedCatagory = category.ToString();
         }
-
-        private void CategoryChanged(object obj)
-        {
-            if (obj == null) return;
-            SwitchCategory((Category)obj);
-        }
-
-        private void Start(object obj)
-        {
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
-            var tasks = new List<Task>();
-            var forceEnqueue = false;
-            var total = items.Length;
-
-            if (total > Settings.Default.MaxParallelDownloads)
-            {
-                forceEnqueue = true;
-            }
-
-            foreach (var item in items)
-            {
-                if (item.IsBeingDownloaded) continue;
-                if (forceEnqueue)
-                {
-                    item.Enqueue();
-                    QueueProcessor.Add(item);
-                }
-                else
-                {
-                    item.Dequeue();
-                    QueueProcessor.Remove(item);
-                    tasks.Add(item.StartAsync());
-                }
-            }
-
-            if (forceEnqueue)
-            {
-                Task.Run(async () => await QueueProcessor.StartAsync());
-            }
-            else
-            {
-                Task.Run(async () => await Task.WhenAll(tasks.ToArray()));
-            }
-        }
-
-        private void Pause(object obj)
-        {
-            if (obj == null) return;
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
-            foreach (var item in items)
-            {
-                item.Pause();
-            }
-        }
-
-        private void Cancel(object obj)
-        {
-            if (obj == null) return;
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
-            foreach (var item in items)
-            {
-                item.Cancel();
-            }
-        }
-
-        private void Add(object obj)
-        {
-            if (_ctsUpdatingList != null)
-            {
-                ShowBusyMessage();
-                return;
-            }
-            var win = new AddDownloadWindow();
-            var vm = new AddDownloadViewModel(AddItemsAsync, win.Preview, _displayMessage);
-            win.DataContext = vm;
-            win.Owner = obj as Window;
-            win.ShowDialog();
-        }
-
-        private void Remove(object obj)
-        {
-            if (obj == null) return;
-            if (_ctsUpdatingList != null)
-            {
-                ShowBusyMessage();
-                return;
-            }
-
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
-            Task.Run(async () => await RemoveObjectsAsync(false, items)).ContinueWith(t => RefreshCollection());
-        }
-
-        private void Open(object obj)
-        {
-            if (obj == null) return;
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
-            var itemsFinished = from item in items
-                                where item.Status == DownloadStatus.Finished
-                                where new FileInfo(item.Destination).Exists
-                                select item;
-            if (itemsFinished.Count() > 1)
-            {
-                var r = _displayMessage.Invoke(
-                    "You have selected to open " + itemsFinished.Count() + " files.\n\n" +
-                    "Opening too many files at the same file may cause the system to crash.\n\nDo you wish to proceed?",
-                    "Open", MessageBoxButton.YesNo, MessageBoxImage.Exclamation, MessageBoxResult.No);
-
-                if (r == MessageBoxResult.No) return;
-            }
-            foreach (var item in itemsFinished)
-            {
-                Process.Start("explorer.exe", "\"" + item.Destination + "\"");
-            }
-        }
-
-        private void OpenContainingFolder(object obj)
-        {
-            if (obj == null) return;
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
-            var itemsOpenable = from item in items
-                                where File.Exists(item.Destination) ||
-                                Directory.Exists(Path.GetDirectoryName(item.Destination))
-                                select item;
-            if (itemsOpenable.Count() > 1)
-            {
-                var result = _displayMessage.Invoke(
-                    "You have selected to open " + items.Count + " folders.\n\n" +
-                    "Opening too many folders at the same time may cause the system to crash.\n\n" +
-                    "Do you wish to proceed?", "Open Folder",
-                    MessageBoxButton.YesNo, MessageBoxImage.Exclamation, MessageBoxResult.No);
-
-                if (result == MessageBoxResult.No)
-                {
-                    return;
-                }
-            }
-            foreach (var item in itemsOpenable)
-            {
-                if (File.Exists(item.Destination))
-                {
-                    Process.Start("explorer.exe", "/select, \"\"" + item.Destination + "\"\"");
-                }
-                else if (Directory.Exists(Path.GetDirectoryName(item.Destination)))
-                {
-                    Process.Start("explorer.exe", Path.GetDirectoryName(item.Destination));
-                }
-            }
-        }
-
-        private void StartQueue(object obj)
-        {
-            Task.Run(async () =>
-            {
-                await QueueProcessor.StartAsync();
-                this.Status = "Ready";
-                RaisePropertyChanged(nameof(this.Status));
-            });
-        }
-
-        private void StopQueue(object obj)
-        {
-            QueueProcessor.Stop();
-        }
-
-        private void ShowOptions(object obj)
-        {
-            var win = new OptionsWindow();
-            win.Owner = obj as Window;
-            win.ShowDialog();
-        }
-
-        private void Enqueue(object obj)
-        {
-            if (obj == null) return;
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
-            foreach (var item in items)
-            {
-                item.Enqueue();
-                QueueProcessor.Add(item);
-            }
-        }
-
-        private void Dequeue(object obj)
-        {
-            if (obj == null) return;
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
-            foreach (var item in items)
-            {
-                item.Dequeue();
-            }
-            QueueProcessor.Remove(items);
-        }
-
-        private void DeleteFile(object obj)
-        {
-            if (obj == null) return;
-
-            if (_ctsUpdatingList != null)
-            {
-                ShowBusyMessage();
-                return;
-            }
-
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
-            Task.Run(async () => await RemoveObjectsAsync(true, items)).ContinueWith(t => RefreshCollection());
-        }
-
-        private void Recheck(object obj)
-        {
-            if (obj == null) return;
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
-            foreach (var item in items)
-            {
-                Task.Run(async () => await item.ForceReCheckAsync());
-            }
-        }
-
-        private void Redownload(object obj)
-        {
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
-            var tasks = new List<Task>();
-            var forceEnqueue = false;
-            var total = items.Length;
-
-            if (total > Settings.Default.MaxParallelDownloads)
-            {
-                forceEnqueue = true;
-            }
-
-            foreach (var item in items)
-            {
-                if (File.Exists(item.Destination))
-                {
-                    try
-                    {
-                        File.Delete(item.Destination);
-                    }
-                    catch (IOException)
-                    {
-                        continue;
-                    }
-                }
-                if (forceEnqueue)
-                {
-                    item.Enqueue();
-                    QueueProcessor.Add(item);
-                }
-                else
-                {
-                    item.Dequeue();
-                    QueueProcessor.Remove(item);
-                    tasks.Add(item.StartAsync());
-                }
-            }
-
-            if (forceEnqueue)
-            {
-                Task.Run(async () => await QueueProcessor.StartAsync());
-            }
-            else
-            {
-                Task.Run(async () => await Task.WhenAll(tasks.ToArray()));
-            }
-        }
-
-        private void CopyLinkToClipboard(object obj)
-        {
-            if (obj == null) return;
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
-            string clipText = string.Empty;
-            int counter = 0;
-            foreach (var item in items)
-            {
-                clipText += item.Url;
-                if (counter < items.Count - 1)
-                {
-                    clipText += '\n';
-                }
-                counter++;
-            }
-            _clipboardService.SetText(clipText);
-        }
-
-        private void ClearFinishedDownloads(object obj)
-        {
-            if (_ctsUpdatingList != null)
-            {
-                ShowBusyMessage();
-                return;
-            }
-
-            var items = (from item in DownloadItemsList where item.IsCompleted select item).ToArray();
-            Task.Run(async () => await RemoveObjectsAsync(false, items)).ContinueWith(t => RefreshCollection());
-        }
-
+        
         private void RefreshCollection()
         {
             if (_semaphoreUpdatingList.CurrentCount == 0)
@@ -1030,6 +736,304 @@ namespace AMDownloader
             _displayMessage.Invoke("Operation in progress. Please wait.");
         }
 
+        #endregion Private methods
+
+        #region Command methods
+
+        private void CategoryChanged(object obj)
+        {
+            if (obj == null) return;
+            SwitchCategory((Category)obj);
+        }
+
+        private void Start(object obj)
+        {
+            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
+            var tasks = new List<Task>();
+            var forceEnqueue = false;
+            var total = items.Length;
+
+            if (total > Settings.Default.MaxParallelDownloads)
+            {
+                forceEnqueue = true;
+            }
+
+            foreach (var item in items)
+            {
+                if (item.IsBeingDownloaded) continue;
+                if (forceEnqueue)
+                {
+                    item.Enqueue();
+                    QueueProcessor.Add(item);
+                }
+                else
+                {
+                    item.Dequeue();
+                    QueueProcessor.Remove(item);
+                    tasks.Add(item.StartAsync());
+                }
+            }
+
+            if (forceEnqueue)
+            {
+                Task.Run(async () => await QueueProcessor.StartAsync());
+            }
+            else
+            {
+                Task.Run(async () => await Task.WhenAll(tasks.ToArray()));
+            }
+        }
+
+        private void Pause(object obj)
+        {
+            if (obj == null) return;
+            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
+            foreach (var item in items)
+            {
+                item.Pause();
+            }
+        }
+
+        private void Cancel(object obj)
+        {
+            if (obj == null) return;
+            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
+            foreach (var item in items)
+            {
+                item.Cancel();
+            }
+        }
+
+        private void Add(object obj)
+        {
+            if (_ctsUpdatingList != null)
+            {
+                ShowBusyMessage();
+                return;
+            }
+            var win = new AddDownloadWindow();
+            var vm = new AddDownloadViewModel(AddItemsAsync, win.Preview, _displayMessage);
+            win.DataContext = vm;
+            win.Owner = obj as Window;
+            win.ShowDialog();
+        }
+
+        private void Remove(object obj)
+        {
+            if (obj == null) return;
+            if (_ctsUpdatingList != null)
+            {
+                ShowBusyMessage();
+                return;
+            }
+
+            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
+            Task.Run(async () => await RemoveObjectsAsync(false, items)).ContinueWith(t => RefreshCollection());
+        }
+
+        private void Open(object obj)
+        {
+            if (obj == null) return;
+            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
+            var itemsFinished = from item in items
+                                where item.Status == DownloadStatus.Finished
+                                where new FileInfo(item.Destination).Exists
+                                select item;
+            if (itemsFinished.Count() > 1)
+            {
+                var r = _displayMessage.Invoke(
+                    "You have selected to open " + itemsFinished.Count() + " files.\n\n" +
+                    "Opening too many files at the same file may cause the system to crash.\n\nDo you wish to proceed?",
+                    "Open", MessageBoxButton.YesNo, MessageBoxImage.Exclamation, MessageBoxResult.No);
+
+                if (r == MessageBoxResult.No) return;
+            }
+            foreach (var item in itemsFinished)
+            {
+                Process.Start("explorer.exe", "\"" + item.Destination + "\"");
+            }
+        }
+
+        private void OpenContainingFolder(object obj)
+        {
+            if (obj == null) return;
+            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
+            var itemsOpenable = from item in items
+                                where File.Exists(item.Destination) ||
+                                Directory.Exists(Path.GetDirectoryName(item.Destination))
+                                select item;
+            if (itemsOpenable.Count() > 1)
+            {
+                var result = _displayMessage.Invoke(
+                    "You have selected to open " + items.Count + " folders.\n\n" +
+                    "Opening too many folders at the same time may cause the system to crash.\n\n" +
+                    "Do you wish to proceed?", "Open Folder",
+                    MessageBoxButton.YesNo, MessageBoxImage.Exclamation, MessageBoxResult.No);
+
+                if (result == MessageBoxResult.No)
+                {
+                    return;
+                }
+            }
+            foreach (var item in itemsOpenable)
+            {
+                if (File.Exists(item.Destination))
+                {
+                    Process.Start("explorer.exe", "/select, \"\"" + item.Destination + "\"\"");
+                }
+                else if (Directory.Exists(Path.GetDirectoryName(item.Destination)))
+                {
+                    Process.Start("explorer.exe", Path.GetDirectoryName(item.Destination));
+                }
+            }
+        }
+
+        private void StartQueue(object obj)
+        {
+            Task.Run(async () =>
+            {
+                await QueueProcessor.StartAsync();
+                this.Status = "Ready";
+                RaisePropertyChanged(nameof(this.Status));
+            });
+        }
+
+        private void StopQueue(object obj)
+        {
+            QueueProcessor.Stop();
+        }
+
+        private void ShowOptions(object obj)
+        {
+            var win = new OptionsWindow();
+            win.Owner = obj as Window;
+            win.ShowDialog();
+        }
+
+        private void Enqueue(object obj)
+        {
+            if (obj == null) return;
+            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
+            foreach (var item in items)
+            {
+                item.Enqueue();
+                QueueProcessor.Add(item);
+            }
+        }
+
+        private void Dequeue(object obj)
+        {
+            if (obj == null) return;
+            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
+            foreach (var item in items)
+            {
+                item.Dequeue();
+            }
+            QueueProcessor.Remove(items);
+        }
+
+        private void DeleteFile(object obj)
+        {
+            if (obj == null) return;
+
+            if (_ctsUpdatingList != null)
+            {
+                ShowBusyMessage();
+                return;
+            }
+
+            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
+            Task.Run(async () => await RemoveObjectsAsync(true, items)).ContinueWith(t => RefreshCollection());
+        }
+
+        private void Recheck(object obj)
+        {
+            if (obj == null) return;
+            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
+            foreach (var item in items)
+            {
+                Task.Run(async () => await item.ForceReCheckAsync());
+            }
+        }
+
+        private void Redownload(object obj)
+        {
+            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
+            var tasks = new List<Task>();
+            var forceEnqueue = false;
+            var total = items.Length;
+
+            if (total > Settings.Default.MaxParallelDownloads)
+            {
+                forceEnqueue = true;
+            }
+
+            foreach (var item in items)
+            {
+                if (File.Exists(item.Destination))
+                {
+                    try
+                    {
+                        File.Delete(item.Destination);
+                    }
+                    catch (IOException)
+                    {
+                        continue;
+                    }
+                }
+                if (forceEnqueue)
+                {
+                    item.Enqueue();
+                    QueueProcessor.Add(item);
+                }
+                else
+                {
+                    item.Dequeue();
+                    QueueProcessor.Remove(item);
+                    tasks.Add(item.StartAsync());
+                }
+            }
+
+            if (forceEnqueue)
+            {
+                Task.Run(async () => await QueueProcessor.StartAsync());
+            }
+            else
+            {
+                Task.Run(async () => await Task.WhenAll(tasks.ToArray()));
+            }
+        }
+
+        private void CopyLinkToClipboard(object obj)
+        {
+            if (obj == null) return;
+            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
+            string clipText = string.Empty;
+            int counter = 0;
+            foreach (var item in items)
+            {
+                clipText += item.Url;
+                if (counter < items.Count - 1)
+                {
+                    clipText += '\n';
+                }
+                counter++;
+            }
+            _clipboardService.SetText(clipText);
+        }
+
+        private void ClearFinishedDownloads(object obj)
+        {
+            if (_ctsUpdatingList != null)
+            {
+                ShowBusyMessage();
+                return;
+            }
+
+            var items = (from item in DownloadItemsList where item.IsCompleted select item).ToArray();
+            Task.Run(async () => await RemoveObjectsAsync(false, items)).ContinueWith(t => RefreshCollection());
+        }
+
         private void CancelBackgroundTask(object obj)
         {
             _ctsUpdatingList?.Cancel();
@@ -1075,7 +1079,7 @@ namespace AMDownloader
             // Process.Start("explorer.exe", AppConstants.DocLink);
         }
 
-        #endregion Private methods
+        #endregion
 
         #region Public methods
 
@@ -1149,77 +1153,6 @@ namespace AMDownloader
         #endregion
 
         #region Event handlers
-
-        private void QueueProcessor_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-        }
-
-        private void Download_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-        }
-
-        private void Download_Created(object sender, EventArgs e)
-        {
-            RefreshCollection();
-        }
-
-        private void Download_Verifying(object sender, EventArgs e)
-        {
-            RefreshCollection();
-        }
-
-        private void Download_Verified(object sender, EventArgs e)
-        {
-            RefreshCollection();
-        }
-
-        private void Download_Started(object sender, EventArgs e)
-        {
-            RefreshCollection();
-            StartReportingSpeed();
-        }
-
-        private void Download_Stopped(object sender, EventArgs e)
-        {
-            if (this.DownloadingCount == 0)
-            {
-                this.Status = "Ready";
-                RaisePropertyChanged(nameof(this.Status));
-
-                if (this.QueuedCount == 0)
-                {
-                    this.QueueProcessor.Stop();
-                }
-            }
-
-            RefreshCollection();
-
-            Monitor.Enter(_lockBytesTransferredOverLifetime);
-            try
-            {
-                Settings.Default.BytesTransferredOverLifetime +=
-                    (ulong)(sender as DownloaderObjectModel).BytesDownloadedThisSession;
-            }
-            finally
-            {
-                Monitor.Exit(_lockBytesTransferredOverLifetime);
-            }
-        }
-
-        private void Download_Enqueued(object sender, EventArgs e)
-        {
-            RefreshCollection();
-        }
-
-        private void Download_Dequeued(object sender, EventArgs e)
-        {
-            RefreshCollection();
-        }
-
-        private void Download_Finished(object sender, EventArgs e)
-        {
-            RefreshCollection();
-        }
 
         private void DownloadItemsList_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
@@ -1306,6 +1239,77 @@ namespace AMDownloader
                 }
                 RaisePropertyChanged(nameof(this.Status));
             }
+        }
+
+        private void QueueProcessor_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+        }
+
+        private void Download_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+        }
+
+        private void Download_Created(object sender, EventArgs e)
+        {
+            RefreshCollection();
+        }
+
+        private void Download_Verifying(object sender, EventArgs e)
+        {
+            RefreshCollection();
+        }
+
+        private void Download_Verified(object sender, EventArgs e)
+        {
+            RefreshCollection();
+        }
+
+        private void Download_Started(object sender, EventArgs e)
+        {
+            RefreshCollection();
+            StartReportingSpeed();
+        }
+
+        private void Download_Stopped(object sender, EventArgs e)
+        {
+            if (this.DownloadingCount == 0)
+            {
+                this.Status = "Ready";
+                RaisePropertyChanged(nameof(this.Status));
+
+                if (this.QueuedCount == 0)
+                {
+                    this.QueueProcessor.Stop();
+                }
+            }
+
+            RefreshCollection();
+
+            Monitor.Enter(_lockBytesTransferredOverLifetime);
+            try
+            {
+                Settings.Default.BytesTransferredOverLifetime +=
+                    (ulong)(sender as DownloaderObjectModel).BytesDownloadedThisSession;
+            }
+            finally
+            {
+                Monitor.Exit(_lockBytesTransferredOverLifetime);
+            }
+        }
+
+        private void Download_Enqueued(object sender, EventArgs e)
+        {
+            RefreshCollection();
+        }
+
+        private void Download_Dequeued(object sender, EventArgs e)
+        {
+            RefreshCollection();
+        }
+
+        private void Download_Finished(object sender, EventArgs e)
+        {
+            RefreshCollection();
         }
 
         #endregion
