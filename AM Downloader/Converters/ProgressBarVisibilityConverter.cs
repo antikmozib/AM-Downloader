@@ -15,7 +15,6 @@ namespace AMDownloader
             DownloadStatus status = (DownloadStatus)value;
             switch (status)
             {
-                case DownloadStatus.Queued:
                 case DownloadStatus.Ready:
                     return Visibility.Collapsed;
             }
