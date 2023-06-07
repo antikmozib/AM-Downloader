@@ -1,17 +1,25 @@
 ﻿// Copyright (C) 2020-2023 Antik Mozib. All rights reserved.
 
+using AMDownloader.Common;
 using AMDownloader.Helpers;
+using AMDownloader.ObjectModel;
+using AMDownloader.ObjectModel.Serializable;
 using AMDownloader.Properties;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data.Common;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Documents;
 using System.Windows.Media;
+using System.Xml.Serialization;
 
 namespace AMDownloader
 {
@@ -29,9 +37,6 @@ namespace AMDownloader
 
         public MainWindow()
         {
-            _primaryViewModel = new DownloaderViewModel(DisplayMessage, ShowUrlList);
-
-            InitializeComponent();
             if (!_mutex.WaitOne(0, false))
             {
                 var name = Assembly.GetExecutingAssembly().GetName().Name;
@@ -41,33 +46,23 @@ namespace AMDownloader
                 Application.Current.Shutdown();
             }
 
+            _primaryViewModel = new DownloaderViewModel(DisplayMessage, ShowUrlList);
+
+            InitializeComponent();
+
             DataContext = _primaryViewModel;
-        }
-
-        private void Window_Closing(object sender, CancelEventArgs e)
-        {
-            this.IsEnabled = false;
-            var cancel = false;
-
-            if (DataContext is IClosing context)
-            {
-                cancel = !context.OnClosing();
-            }
-
-            if (cancel)
-            {
-                e.Cancel = true;
-                this.IsEnabled = true;
-            }
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            // restore column sort direction
+
             if (Settings.Default.SelectedColumnHeader != null)
             {
                 GridViewColumn gridViewColumn =
                     ((GridView)lvDownload.View).Columns.FirstOrDefault(
                         x => (string)x.Header == Settings.Default.SelectedColumnHeader);
+
                 if (gridViewColumn != null)
                 {
                     List<GridViewColumnHeader> headers = GetVisualChildren<GridViewColumnHeader>(lvDownload).ToList();
@@ -90,8 +85,75 @@ namespace AMDownloader
                     }
                 }
             }
+
+            // restore column order
+
+            try
+            {
+                SerializableUIColumnOrderList columnOrderList;
+                var xmlReader = new XmlSerializer(typeof(SerializableUIColumnOrderList));
+
+                using (var streamReader = new StreamReader(AppPaths.UIColumnOrderFile))
+                {
+                    columnOrderList = (SerializableUIColumnOrderList)xmlReader.Deserialize(streamReader);
+                }
+
+                var columns = ((GridView)lvDownload.View).Columns;
+
+                for (int i = 0; i < columns.Count; i++)
+                {
+                    columns.Move(i, columnOrderList.Objects.FirstOrDefault(o => o.ColumnName == columns[i].Header.ToString()).ColumnIndex);
+                }
+            }
+            catch
+            {
+            }
         }
 
+        private void Window_Closing(object sender, CancelEventArgs e)
+        {
+            this.IsEnabled = false;
+            var cancel = false;
+
+            if (DataContext is IClosing context)
+            {
+                cancel = !context.OnClosing();
+            }
+
+            if (cancel)
+            {
+                e.Cancel = true;
+                this.IsEnabled = true;
+            }
+            else
+            {
+                // save column order
+
+                var columnOrderList = new SerializableUIColumnOrderList();
+
+                foreach (var column in ((GridView)lvDownload.View).Columns)
+                {
+                    SerializableUIColumnOrder serializableUIColumnOrder = new()
+                    {
+                        ColumnName = column.Header.ToString(),
+                        ColumnIndex = ((GridView)lvDownload.View).Columns.IndexOf(column)
+                    };
+                    columnOrderList.Objects.Add(serializableUIColumnOrder);
+                }
+
+                try
+                {
+                    Directory.CreateDirectory(AppPaths.LocalAppData);
+                    var writer = new XmlSerializer(typeof(SerializableUIColumnOrderList));
+                    using var streamWriter = new StreamWriter(AppPaths.UIColumnOrderFile, false);
+                    writer.Serialize(streamWriter, columnOrderList);
+                }
+                catch
+                {
+                }
+            }
+        }
+        
         private void menuExit_Click(object sender, RoutedEventArgs e)
         {
             this.Close();
@@ -99,6 +161,7 @@ namespace AMDownloader
 
         private void menuAbout_Click(object sender, RoutedEventArgs e)
         {
+            var cultureInfo = CultureInfo.CurrentCulture;
             var name = Assembly.GetExecutingAssembly().GetName().Name;
             var version = Assembly.GetExecutingAssembly().GetName().Version;
             var copyright = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(
@@ -106,10 +169,13 @@ namespace AMDownloader
             var website = "https://mozib.io/amdownloader";
 
             MessageBox.Show(
-                name + "\nVersion " + version + "\n\n" + copyright + "\n" + website + "\n\n" +
-                "DISCLAIMER: This is free software. There is NO warranty; " +
-                "not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
-                "About", MessageBoxButton.OK, MessageBoxImage.Information);
+                $"{name}\nVersion {version}\n\n{copyright}\n\n{website}\n\n"
+                + "DISCLAIMER: This is free software. There is NO warranty; "
+                + "not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+                + $"Total downloaded since install: {(Settings.Default.BytesTransferredOverLifetime / (1024 * 1024)).ToString("n", cultureInfo)} MB",
+                "About",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
         }
 
         private void tvCategories_Loaded(object sender, RoutedEventArgs e)
