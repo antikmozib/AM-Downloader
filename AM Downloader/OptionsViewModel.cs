@@ -9,11 +9,15 @@ namespace AMDownloader
 {
     internal class OptionsViewModel
     {
+        public bool ResetSettingsOnClose;
+
         public ICommand SaveSettingsCommand { get; private set; }
         public ICommand ResetSettingsCommand { get; private set; }
 
         public OptionsViewModel()
         {
+            ResetSettingsOnClose = false;
+
             SaveSettingsCommand = new RelayCommand<object>(SaveSettings);
             ResetSettingsCommand = new RelayCommand<object>(ResetSettings);
         }
@@ -30,14 +34,7 @@ namespace AMDownloader
         private void ResetSettings(object obj)
         {
             Settings.Default.Reset();
-            if (Directory.Exists(Common.AppPaths.LocalAppData))
-            {
-                try
-                {
-                    Directory.Delete(Common.AppPaths.LocalAppData, true);
-                }
-                catch { }
-            }
+            ResetSettingsOnClose = true;
         }
     }
 }

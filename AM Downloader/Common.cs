@@ -1,5 +1,6 @@
 ﻿// Copyright (C) 2020-2023 Antik Mozib. All rights reserved.
 
+using AMDownloader.Properties;
 using System;
 using System.IO;
 using System.Net.Http;
@@ -25,17 +26,20 @@ namespace AMDownloader.Common
         public const string DownloaderFileMagicString = "[AMDownload-Paused]";
         public const int ParallelDownloadsLimit = 10;
         public const int ParallelStreamsLimit = 5;
-        public const string DocLink = "AM Downloader Help.chm";
         public const string UpdateLink = @"https://mozib.io/downloads/update.php";
     }
 
     internal static class AppPaths
     {
+        /// <summary>
+        /// Gets the path to the folder where to save the user-specific settings.
+        /// </summary>
         public static string LocalAppData =>
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Assembly.GetExecutingAssembly().GetName().Name);
 
         public static string DownloadsHistoryFile => Path.Combine(LocalAppData, "History.xml");
         public static string SavedLocationsFile => Path.Combine(LocalAppData, "SavedLocations.xml");
+        public static string UIColumnOrderFile => Path.Combine(LocalAppData, "UIColumnOrder.xml");
         public static string DownloadsFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
     }
 
@@ -93,6 +97,22 @@ namespace AMDownloader.Common
             }
 
             return string.Empty;
+        }
+
+        public static void ResetAllSettings()
+        {
+            Settings.Default.Reset();
+            if (Directory.Exists(AppPaths.LocalAppData))
+            {
+                try
+                {
+                    File.Delete(AppPaths.SavedLocationsFile);
+                    File.Delete(AppPaths.UIColumnOrderFile);
+                }
+                catch
+                {
+                }
+            }
         }
     }
 
