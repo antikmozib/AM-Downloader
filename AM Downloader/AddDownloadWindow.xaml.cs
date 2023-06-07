@@ -20,7 +20,7 @@ namespace AMDownloader
     ///
     public partial class AddDownloadWindow : Window
     {
-        #region Native code for hiding the icon and showing the "?" button
+        #region Native
 
         private const uint WS_EX_CONTEXTHELP = 0x00000400;
         private const uint WS_MINIMIZEBOX = 0x00020000;
@@ -77,7 +77,6 @@ namespace AMDownloader
                         "\n\n" + "will download the following ten files" +
                         "\n\n" + "file1.txt" + "\n" + "file2.txt" + "\n" + "..." + "\n\n" + "file10.txt",
                         "Help", MessageBoxButton.OK, MessageBoxImage.Information);
-                    // Process.Start("explorer.exe", AppConstants.DocLink);
                     handled = true;
                 }
                 return IntPtr.Zero;
@@ -87,7 +86,7 @@ namespace AMDownloader
             SendMessage(hwnd, WM_SETICON, IntPtr.Zero, IntPtr.Zero);
         }
 
-        #endregion Native code for hiding the icon and showing the "?" button
+        #endregion
 
         public AddDownloadWindow()
         {
@@ -137,7 +136,7 @@ namespace AMDownloader
 
         private void btnAdd_Click(object sender, RoutedEventArgs e)
         {
-            this.Close();
+            DialogResult = true;
         }
 
         private void btnBrowse_Click(object sender, RoutedEventArgs e)
@@ -159,11 +158,6 @@ namespace AMDownloader
                     cboDestination.Items.Add(dlg.SelectedPath);
                 cboDestination.Text = dlg.SelectedPath;
             }
-        }
-
-        private void btnCancel_Click(object sender, RoutedEventArgs e)
-        {
-            this.Close();
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)

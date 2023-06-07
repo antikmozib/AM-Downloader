@@ -80,7 +80,7 @@
                     HorizontalAlignment="Right">
             <CheckBox x:Name="cbAddToQueue"
                       Content="Add to queue"
-                      IsChecked="{Binding Path=AddToQueue, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                      IsChecked="{Binding Path=Enqueue, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
                       VerticalAlignment="Center"
                       Margin="0 0 10 0" TabIndex="3" />
             <CheckBox x:Name="cbStartDownloadingImmediately"
@@ -99,8 +99,7 @@
                     Margin="0 0 5 0"
                     Content="Cancel"
                     IsCancel="True"
-                    TabIndex="6"
-                    Click="btnCancel_Click" />
+                    TabIndex="6" />
             <Button Command="{Binding PreviewCommand}"
                     Margin="0 0 0 0"
                     Content="Preview"
