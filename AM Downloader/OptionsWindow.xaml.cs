@@ -18,5 +18,10 @@ namespace AMDownloader
         {
             this.Close();
         }
+
+        private void btnOK_Click(object sender, RoutedEventArgs e)
+        {
+            DialogResult = true;
+        }
     }
 }
