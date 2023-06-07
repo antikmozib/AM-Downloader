@@ -7,10 +7,7 @@ namespace AMDownloader.QueueProcessing
     internal interface IQueueable
     {
         Task StartAsync();
-
         void Pause();
-
-        bool IsQueued { get; }
         bool IsCompleted { get; }
     }
 }
