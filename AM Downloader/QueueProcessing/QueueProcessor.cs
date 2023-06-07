@@ -4,6 +4,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,14 +18,13 @@ namespace AMDownloader.QueueProcessing
         private readonly SemaphoreSlim _semaphore;
         private readonly object _lockQueueList;
         private readonly List<IQueueable> _queueList;
-        private CancellationTokenSource _ctsCancelProcessingQueue;
-        private CancellationToken _ctCancelProcessingQueue;
+        private CancellationTokenSource _cts;
 
         #endregion
 
         #region Properties
 
-        public bool IsBusy => _ctCancelProcessingQueue != default;
+        public bool IsBusy { get; private set; }
         public int Count => _queueList.Count;
 
         #endregion
@@ -33,6 +34,8 @@ namespace AMDownloader.QueueProcessing
         public event PropertyChangedEventHandler PropertyChanged;
         public event EventHandler ItemEnqueued;
         public event EventHandler ItemDequeued;
+        public event EventHandler QueueProcessorStarted;
+        public event EventHandler QueueProcessorStopped;
 
         #endregion
 
@@ -41,17 +44,23 @@ namespace AMDownloader.QueueProcessing
         public QueueProcessor(
             int maxParallelDownloads,
             PropertyChangedEventHandler propertyChangedEventHandler,
+            EventHandler queueProcessorStarted,
+            EventHandler queueProcessorStopped,
             EventHandler itemEnqueuedEventHandler,
             EventHandler itemDequeuedEventHandler)
         {
             _semaphore = new SemaphoreSlim(maxParallelDownloads);
             _queueList = new();
             _lockQueueList = _queueList;
-            _ctsCancelProcessingQueue = null;
+            _cts = null;
 
-            this.PropertyChanged += propertyChangedEventHandler;
-            this.ItemEnqueued += itemEnqueuedEventHandler;
-            this.ItemDequeued += itemDequeuedEventHandler;
+            IsBusy = false;
+
+            PropertyChanged += propertyChangedEventHandler;
+            QueueProcessorStarted += queueProcessorStarted;
+            QueueProcessorStopped += queueProcessorStopped;
+            ItemEnqueued += itemEnqueuedEventHandler;
+            ItemDequeued += itemDequeuedEventHandler;
         }
 
         #endregion
@@ -63,54 +72,6 @@ namespace AMDownloader.QueueProcessing
             handler?.Invoke(this, null);
         }
 
-        private async Task ProcessQueueAsync()
-        {
-            var tasks = new List<Task>();
-
-            foreach (var item in _queueList)
-            {
-                Task t = Task.Run(async () =>
-                {
-                    var semTask = _semaphore.WaitAsync(_ctCancelProcessingQueue);
-                    try
-                    {
-                        await semTask;
-                        await item.StartAsync();
-
-                        // remove completed items from the queue
-                        if (item.IsCompleted)
-                        {
-                            Monitor.Enter(_lockQueueList);
-                            _queueList.Remove(item);
-                            Monitor.Exit(_lockQueueList);
-                        }
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        _ctCancelProcessingQueue.ThrowIfCancellationRequested();
-                    }
-                    finally
-                    {
-                        if (semTask.IsCompletedSuccessfully)
-                        {
-                            _semaphore.Release();
-                        }
-                    }
-                }, _ctCancelProcessingQueue);
-
-                tasks.Add(t);
-            }
-
-            try
-            {
-                await Task.WhenAll(tasks.ToArray());
-            }
-            catch (OperationCanceledException)
-            {
-                _ctCancelProcessingQueue.ThrowIfCancellationRequested();
-            }
-        }
-
         protected void RaisePropertyChanged(string prop)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
@@ -119,8 +80,6 @@ namespace AMDownloader.QueueProcessing
         #endregion
 
         #region Public methods
-
-        // Producer
 
         /// <summary>
         /// Adds items to the QueueProcessor.
@@ -168,42 +127,87 @@ namespace AMDownloader.QueueProcessing
             }
         }
 
-        // Consumer
-
         public async Task StartAsync()
         {
-            if (this.IsBusy) return;
+            if (IsBusy) return;
 
-            _ctsCancelProcessingQueue = new CancellationTokenSource();
-            _ctCancelProcessingQueue = _ctsCancelProcessingQueue.Token;
+            IsBusy = true;
+            RaisePropertyChanged(nameof(IsBusy));
+            RaiseEvent(QueueProcessorStarted);
 
-            try
+            _cts = new();
+            var _ct = _cts.Token;
+
+            await Task.Run(async () =>
             {
-                await ProcessQueueAsync();
-            }
-            catch (OperationCanceledException)
-            {
-            }
-            finally
-            {
-                _ctsCancelProcessingQueue.Dispose();
-                _ctsCancelProcessingQueue = null;
-                _ctCancelProcessingQueue = default;
-            }
+                List<Task> tasks = new();
+
+                foreach (var item in _queueList)
+                {
+                    if (item.IsCompleted)
+                    {
+                        continue;
+                    }
+
+                    var t = Task.Run(async () =>
+                    {
+                        var semTask = _semaphore.WaitAsync(_ct);
+                        try
+                        {
+                            await semTask;
+
+                            _ct.ThrowIfCancellationRequested();
+
+                            await item.StartAsync();
+
+                            if (item.IsCompleted)
+                            {
+                                Monitor.Enter(_lockQueueList);
+                                _queueList.Remove(item);
+                                Monitor.Exit(_lockQueueList);
+                            }
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            _ct.ThrowIfCancellationRequested();
+                        }
+                        finally
+                        {
+                            if (semTask.IsCompletedSuccessfully)
+                            {
+                                _semaphore.Release();
+                            }
+                        }
+                    }, _ct);
+
+                    tasks.Add(t);
+                }
+
+                try
+                {
+                    await Task.WhenAll(tasks);
+                }
+                catch
+                {
+                
+                }
+            });
+
+            _cts.Dispose();
+
+            IsBusy = false;
+            RaisePropertyChanged(nameof(IsBusy));
+            RaiseEvent(QueueProcessorStopped);
         }
 
         public void Stop()
         {
-            try
-            {
-                _ctsCancelProcessingQueue?.Cancel();
+            if (!IsBusy) return;
 
-                // pause items being downloaded
-                Parallel.ForEach(_queueList, (item) => item.Pause());
-            }
-            catch (ObjectDisposedException)
-            {
-            }
+            _cts?.Cancel();
+
+            // pause items being downloaded
+            Parallel.ForEach(_queueList, (item) => item.Pause());
         }
 
         public bool IsQueued(IQueueable value)

@@ -51,6 +51,10 @@ namespace AMDownloader
     {
         #region Fields
 
+        /// <summary>
+        /// Gets the interval between refreshing the CollectionView.
+        /// </summary>
+        private const int _collectionRefreshDelay = 1000;
         private readonly DisplayMessageDelegate _displayMessage;
         private readonly ClipboardObserver _clipboardService;
         private readonly object _lockDownloadItemsList;
@@ -133,6 +137,8 @@ namespace AMDownloader
             QueueProcessor = new QueueProcessor(
                 Settings.Default.MaxParallelDownloads,
                 QueueProcessor_PropertyChanged,
+                QueueProcessor_Started,
+                QueueProcessor_Stopped,
                 QueueProcessor_ItemEnqueued,
                 QueueProcessor_ItemDequeued);
 
@@ -406,7 +412,7 @@ namespace AMDownloader
             Task.Run(async () =>
             {
                 var semTask = _semaphoreRefreshingView.WaitAsync(newCts.Token);
-                var throttle = Task.Delay(1000);
+                var throttle = Task.Delay(_collectionRefreshDelay);
                 try
                 {
                     await semTask;
@@ -415,7 +421,7 @@ namespace AMDownloader
                         CollectionView.Refresh();
                         CommandManager.InvalidateRequerySuggested();
                     });
-                    await throttle; // provide max 1 refresh per sec
+                    await throttle;
                 }
                 catch (OperationCanceledException)
                 {
@@ -952,8 +958,6 @@ namespace AMDownloader
             Task.Run(async () =>
             {
                 await QueueProcessor.StartAsync();
-                this.Status = "Ready";
-                RaisePropertyChanged(nameof(this.Status));
             });
         }
 
@@ -1198,6 +1202,14 @@ namespace AMDownloader
         #region Event handlers
 
         private void QueueProcessor_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+        }
+
+        private void QueueProcessor_Stopped(object sender, EventArgs e)
+        { 
+        }
+
+        private void QueueProcessor_Started(object sender, EventArgs e)
         {
         }
 
