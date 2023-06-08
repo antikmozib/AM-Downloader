@@ -40,8 +40,6 @@ namespace AMDownloader
 
     internal delegate void ShowUrlsDelegate(List<string> urls, string caption, string infoLabel);
 
-    internal delegate List<string> BuildUrlsFromPatternsDelegate(params string[] urls);
-
     internal enum Category
     {
         All, Ready, Queued, Downloading, Paused, Finished, Errored
