@@ -114,7 +114,6 @@ namespace AMDownloader
 
             Settings.Default.EnqueueAddedItems = this.Enqueue;
             Settings.Default.StartDownloadingAddedItems = this.StartDownload;
-            Settings.Default.Save();
         }
 
         private async Task MonitorClipboardAsync()

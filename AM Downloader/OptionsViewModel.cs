@@ -28,7 +28,6 @@ namespace AMDownloader
             {
                 Settings.Default.MaxParallelDownloads = AppConstants.ParallelDownloadsLimit;
             }
-            Settings.Default.Save();
         }
 
         private void ResetSettings(object obj)

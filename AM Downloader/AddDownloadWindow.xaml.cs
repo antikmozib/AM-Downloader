@@ -192,8 +192,6 @@ namespace AMDownloader
             {
                 Settings.Default.LastSavedLocation = cboDestination.Text;
             }
-
-            Settings.Default.Save();
         }
 
         private void txtUrl_PreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
