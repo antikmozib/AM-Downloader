@@ -241,7 +241,7 @@ namespace AMDownloader.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Ascending")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Descending")]
         public global::System.ComponentModel.ListSortDirection SelectedColumnHeaderDirection {
             get {
                 return ((global::System.ComponentModel.ListSortDirection)(this["SelectedColumnHeaderDirection"]));
