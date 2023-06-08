@@ -120,9 +120,9 @@ namespace AMDownloader
                         list = (SerializableDownloadPathHistoryList)writer.Deserialize(streamReader);
                         foreach (var item in list.Objects)
                         {
-                            if (item.path.Trim().Length > 0 && !cboDestination.Items.Contains(item.path))
+                            if (item.FolderPath.Trim().Length > 0 && !cboDestination.Items.Contains(item.FolderPath))
                             {
-                                cboDestination.Items.Add(item.path);
+                                cboDestination.Items.Add(item.FolderPath);
                             }
                         }
                     }
@@ -172,7 +172,7 @@ namespace AMDownloader
                 var path = item.ToString();
                 if (path.Trim().Length == 0) continue;
                 var model = new SerializableDownloadPathHistory();
-                model.path = path;
+                model.FolderPath = path;
                 list.Objects.Add(model);
             }
             try

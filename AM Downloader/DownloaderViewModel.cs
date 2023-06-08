@@ -70,6 +70,7 @@ namespace AMDownloader
         private readonly HttpClient _client;
         private readonly ShowUrlsDelegate _showUrls;
         private bool _resetAllSettingsOnClose;
+        private readonly IProgress<long> _progressReporter;
 
         #endregion
 
@@ -89,13 +90,28 @@ namespace AMDownloader
         public int FinishedCount { get; private set; }
         public int ErroredCount { get; private set; }
         public int PausedCount { get; private set; }
-        public bool IsBackgroundWorking => _ctsUpdatingList != null;
+        public bool IsBackgroundWorking
+        {
+            get
+            {
+                try
+                {
+                    return _ctsUpdatingList != null;
+                }
+                catch (ObjectDisposedException)
+                {
+                    return false;
+                }
+            }
+        }
         public bool IsDownloading => DownloadingCount > 0;
         public string Status { get; private set; }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        #endregion
 
-        public IProgress<long> ProgressReporter;
+        #region Events
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         #endregion
 
@@ -156,7 +172,7 @@ namespace AMDownloader
             this.ErroredCount = 0;
             this.PausedCount = 0;
             this.Status = "Ready";
-            this.ProgressReporter = new Progress<long>(value =>
+            this._progressReporter = new Progress<long>(value =>
             {
                 Monitor.Enter(_lockBytesDownloaded);
                 try
@@ -286,7 +302,7 @@ namespace AMDownloader
                             Download_Started,
                             Download_Stopped,
                             Download_PropertyChanged,
-                            ProgressReporter);
+                            _progressReporter);
 
                         if (sourceObjects[i].IsQueued)
                         {
@@ -490,7 +506,7 @@ namespace AMDownloader
                         Download_Started,
                         Download_Stopped,
                         Download_PropertyChanged,
-                        ProgressReporter);
+                        _progressReporter);
 
                 if (forceEnqueue || enqueue)
                 {
@@ -739,50 +755,6 @@ namespace AMDownloader
             }
         }
 
-        private List<string> BuildUrlsFromPatterns(params string[] urls)
-        {
-            var filteredUrls = urls.Select(o => o.Trim()).Where(o => o.Length > 0); // trim and discard empty
-            List<string> fullUrls = new();
-            string pattern = @"(\[\d*:\d*\])";
-            var regex = new Regex(pattern);
-
-            foreach (var url in filteredUrls)
-            {
-                if (regex.Match(url).Success)
-                {
-                    // url has patterns
-
-                    string bounds = regex.Match(url).Value;
-
-                    // patterns can be [1:20] or [01:20] - account for this difference
-                    int minLength = bounds.Substring(1, bounds.IndexOf(":") - 1).Length;
-                    int.TryParse(bounds.Substring(1, bounds.IndexOf(':') - 1), out int lBound);
-                    int.TryParse(bounds.Substring(bounds.IndexOf(':') + 1, bounds.Length - bounds.IndexOf(':') - 2), out int uBound);
-
-                    for (int i = lBound; i <= uBound; i++)
-                    {
-                        var replacedData = "";
-                        if (i.ToString().Length < minLength)
-                        {
-                            for (int j = 0; j < (minLength - i.ToString().Length); j++)
-                            {
-                                replacedData += "0";
-                            }
-                        }
-                        replacedData += i.ToString();
-                        fullUrls.Add(regex.Replace(url, replacedData));
-                    }
-                }
-                else
-                {
-                    // normal url
-                    fullUrls.Add(url);
-                }
-            }
-
-            return fullUrls;
-        }
-
         #endregion
 
         #region Command methods
@@ -863,7 +835,7 @@ namespace AMDownloader
             }
 
             var win = new AddDownloadWindow();
-            var vm = new AddDownloadViewModel(BuildUrlsFromPatterns, win.Preview);
+            var vm = new AddDownloadViewModel(win.Preview);
 
             win.DataContext = vm;
             win.Owner = obj as Window;
@@ -876,7 +848,7 @@ namespace AMDownloader
                     vm.SaveToFolder,
                     vm.Enqueue,
                     vm.StartDownload,
-                    BuildUrlsFromPatterns(vm.Urls.Split('\n').ToArray()).ToArray()));
+                    vm.GeneratedUrls.ToArray()));
             }
         }
 

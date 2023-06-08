@@ -136,7 +136,7 @@ namespace AMDownloader.QueueProcessing
             RaiseEvent(QueueProcessorStarted);
 
             _cts = new();
-            var _ct = _cts.Token;
+            var ct = _cts.Token;
 
             await Task.Run(async () =>
             {
@@ -151,12 +151,12 @@ namespace AMDownloader.QueueProcessing
 
                     var t = Task.Run(async () =>
                     {
-                        var semTask = _semaphore.WaitAsync(_ct);
+                        var semTask = _semaphore.WaitAsync(ct);
                         try
                         {
                             await semTask;
 
-                            _ct.ThrowIfCancellationRequested();
+                            ct.ThrowIfCancellationRequested();
 
                             await item.StartAsync();
 
@@ -169,7 +169,7 @@ namespace AMDownloader.QueueProcessing
                         }
                         catch (OperationCanceledException)
                         {
-                            _ct.ThrowIfCancellationRequested();
+                            ct.ThrowIfCancellationRequested();
                         }
                         finally
                         {
@@ -178,7 +178,7 @@ namespace AMDownloader.QueueProcessing
                                 _semaphore.Release();
                             }
                         }
-                    }, _ct);
+                    }, ct);
 
                     tasks.Add(t);
                 }

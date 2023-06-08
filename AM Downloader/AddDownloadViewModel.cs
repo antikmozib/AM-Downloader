@@ -17,7 +17,6 @@ namespace AMDownloader
 {
     internal class AddDownloadViewModel : INotifyPropertyChanged
     {
-        private readonly BuildUrlsFromPatternsDelegate _buildUrlsFromPatterns;
         private bool _monitorClipboard;
         private CancellationTokenSource _ctsClipboard;
         private readonly ClipboardObserver _clipboardService;
@@ -26,10 +25,13 @@ namespace AMDownloader
 
         public ShowPreviewDelegate ShowPreview { get; private set; }
         public string Urls { get; set; }
+        /// <summary>
+        /// Returns the list of full URLs generated from the URL patterns.
+        /// </summary>
+        public List<string> GeneratedUrls => BuildUrlsFromPatterns(Urls.Split('\n').ToArray());
         public string SaveToFolder { get; set; }
         public bool StartDownload { get; set; }
         public bool Enqueue { get; set; }
-
         public bool MonitorClipboard
         {
             get { return _monitorClipboard; }
@@ -60,11 +62,8 @@ namespace AMDownloader
         public ICommand AddCommand { get; private set; }
         public ICommand PreviewCommand { get; private set; }
 
-        public AddDownloadViewModel(
-            BuildUrlsFromPatternsDelegate buildUrlsFromPatterns,
-            ShowPreviewDelegate showPreview)
+        public AddDownloadViewModel(ShowPreviewDelegate showPreview)
         {
-            _buildUrlsFromPatterns = buildUrlsFromPatterns;
             _clipboardService = new ClipboardObserver();
 
             AddCommand = new RelayCommand<object>(Add, Add_CanExecute);
@@ -89,7 +88,7 @@ namespace AMDownloader
 
         private void Preview(object obj)
         {
-            string[] urls = _buildUrlsFromPatterns(Urls.Split('\n').ToArray()).ToArray();
+            string[] urls = GeneratedUrls.ToArray();
             string output = string.Empty;
 
             foreach (var url in urls)
@@ -114,6 +113,50 @@ namespace AMDownloader
 
             Settings.Default.EnqueueAddedItems = this.Enqueue;
             Settings.Default.StartDownloadingAddedItems = this.StartDownload;
+        }
+
+        private List<string> BuildUrlsFromPatterns(params string[] urls)
+        {
+            var filteredUrls = urls.Select(o => o.Trim()).Where(o => o.Length > 0); // trim and discard empty
+            List<string> fullUrls = new();
+            string pattern = @"(\[\d*:\d*\])";
+            var regex = new Regex(pattern);
+
+            foreach (var url in filteredUrls)
+            {
+                if (regex.Match(url).Success)
+                {
+                    // url has patterns
+
+                    string bounds = regex.Match(url).Value;
+
+                    // patterns can be [1:20] or [01:20] - account for this difference
+                    int minLength = bounds.Substring(1, bounds.IndexOf(":") - 1).Length;
+                    int.TryParse(bounds.Substring(1, bounds.IndexOf(':') - 1), out int lBound);
+                    int.TryParse(bounds.Substring(bounds.IndexOf(':') + 1, bounds.Length - bounds.IndexOf(':') - 2), out int uBound);
+
+                    for (int i = lBound; i <= uBound; i++)
+                    {
+                        var replacedData = "";
+                        if (i.ToString().Length < minLength)
+                        {
+                            for (int j = 0; j < (minLength - i.ToString().Length); j++)
+                            {
+                                replacedData += "0";
+                            }
+                        }
+                        replacedData += i.ToString();
+                        fullUrls.Add(regex.Replace(url, replacedData));
+                    }
+                }
+                else
+                {
+                    // normal url
+                    fullUrls.Add(url);
+                }
+            }
+
+            return fullUrls;
         }
 
         private async Task MonitorClipboardAsync()

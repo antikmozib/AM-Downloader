@@ -8,7 +8,7 @@ namespace AMDownloader.ObjectModel.Serializable
     [Serializable]
     public class SerializableDownloadPathHistory
     {
-        public string path { get; set; }
+        public string FolderPath { get; set; }
     }
 
     [Serializable]
