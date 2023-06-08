@@ -31,10 +31,10 @@ namespace AMDownloader
     /// </summary>
     public partial class MainWindow : Window
     {
-        private ICollectionView _dataView = null;
-        private readonly DownloaderViewModel _primaryViewModel;
         private static readonly string _appGuid = "20d3be33-cd45-4c69-b038-e95bc434e09c";
-        private static readonly Mutex _mutex = new Mutex(false, "Global\\" + _appGuid);
+        private static readonly Mutex _mutex = new(false, "Global\\" + _appGuid);
+        private readonly DownloaderViewModel _primaryViewModel;
+        private ICollectionView _dataView = null;
         private GridViewColumnHeader _lastHeaderClicked = null;
         private ListSortDirection? _lastDirection = null;
 
@@ -60,6 +60,7 @@ namespace AMDownloader
 
             if (Settings.Default.SelectedColumnHeader != null)
             {
+                // get the column to sort
                 GridViewColumn gridViewColumn =
                     ((GridView)lvDownload.View).Columns.FirstOrDefault(
                         x => (string)x.Header == Settings.Default.SelectedColumnHeader);
@@ -69,6 +70,7 @@ namespace AMDownloader
                     List<GridViewColumnHeader> headers = GetVisualChildren<GridViewColumnHeader>(lvDownload).ToList();
                     GridViewColumnHeader gridViewColumnHeader = null;
 
+                    // get the header of the column to sort
                     foreach (GridViewColumnHeader header in headers)
                     {
                         if (header.Column == null || header.Column.Header == null) continue;
@@ -80,10 +82,7 @@ namespace AMDownloader
                         }
                     }
 
-                    if (gridViewColumnHeader != null)
-                    {
-                        Sort(gridViewColumnHeader, Settings.Default.SelectedColumnHeaderDirection);
-                    }
+                    Sort(gridViewColumnHeader, Settings.Default.SelectedColumnHeaderDirection);
                 }
             }
 
@@ -211,7 +210,8 @@ namespace AMDownloader
 
         private void lvDownload_HeaderClick(object sender, RoutedEventArgs e)
         {
-            ListSortDirection? direction = ListSortDirection.Ascending;
+            // default sorting direction for a previously unsorted column
+            ListSortDirection? direction = ListSortDirection.Descending;
 
             var headerClicked = e.OriginalSource as GridViewColumnHeader;
 
@@ -220,19 +220,20 @@ namespace AMDownloader
                 return;
             }
 
+            // change the sorting direction if the column is already sorted
             if (headerClicked == _lastHeaderClicked)
             {
-                if (_lastDirection == ListSortDirection.Ascending)
+                if (_lastDirection == ListSortDirection.Descending)
                 {
-                    direction = ListSortDirection.Descending;
+                    direction = ListSortDirection.Ascending;
                 }
-                else if (_lastDirection == ListSortDirection.Descending)
+                else if (_lastDirection == ListSortDirection.Ascending)
                 {
                     direction = null;
                 }
                 else
                 {
-                    direction = ListSortDirection.Ascending;
+                    direction = ListSortDirection.Descending;
                 }
             }
 
@@ -241,60 +242,47 @@ namespace AMDownloader
 
         private void Sort(GridViewColumnHeader columnHeader, ListSortDirection? direction)
         {
-            if (columnHeader == null)
-            {
-                return;
-            }
-
             if (_dataView == null)
             {
                 _dataView = CollectionViewSource.GetDefaultView(lvDownload.ItemsSource);
             }
 
             var columnBinding = columnHeader.Column.DisplayMemberBinding as Binding;
-            var sortBy = columnBinding?.Path.Path ?? columnHeader.Column.Header as string;
+            var columnToSort = columnBinding?.Path.Path ?? columnHeader.Column.Header as string;
 
-            switch (sortBy.ToLower())
+            // link the column header string value to the prop of the binded obj
+            switch (columnToSort.ToLower())
             {
-                case null:
-                    Settings.Default.SelectedColumnHeader = null;
-                    Settings.Default.Save();
-                    return;
-
                 case "downloaded":
-                    sortBy = "TotalBytesCompleted";
+                    columnToSort = "BytesDownloaded";
                     break;
 
                 case "size":
-                    sortBy = "TotalBytesToDownload";
+                    columnToSort = "TotalBytesToDownload";
                     break;
 
                 case "location":
-                    sortBy = "Destination";
+                    columnToSort = "Destination";
                     break;
 
                 case "url":
-                    sortBy = "Url";
+                    columnToSort = "Url";
                     break;
 
                 case "created":
-                    sortBy = "DateCreated";
+                    columnToSort = "DateCreated";
                     break;
 
                 case "http status":
-                    sortBy = "StatusCode";
+                    columnToSort = "StatusCode";
                     break;
 
                 case "eta":
-                    sortBy = "TimeRemaining";
+                    columnToSort = "TimeRemaining";
                     break;
 
                 case "type":
-                    sortBy = "Extension";
-                    break;
-
-                case "connections":
-                    sortBy = "NumberOfActiveStreams";
+                    columnToSort = "Extension";
                     break;
             }
 
@@ -302,37 +290,43 @@ namespace AMDownloader
 
             if (direction != null)
             {
-                SortDescription sd = new SortDescription(sortBy, direction ?? ListSortDirection.Ascending);
+                SortDescription sd = new(columnToSort, direction ?? ListSortDirection.Descending);
                 _dataView.SortDescriptions.Add(sd);
+
+                Settings.Default.SelectedColumnHeader = columnHeader.Column.Header.ToString();
+            }
+            else
+            {
+                // if we're unsorting, store the selected column header as null
+                // so that sorting isn't applied incorrectly when the app is relaunched
+                Settings.Default.SelectedColumnHeader = null;
             }
 
+            // remove the arrow from the previously sorted column
             if (_lastHeaderClicked != null)
             {
                 _lastHeaderClicked.Column.HeaderTemplate = Resources["HeaderTemplate"] as DataTemplate;
             }
 
-            if (direction == ListSortDirection.Ascending)
+            // apply the arrow to the newly sorted column
+            if (direction == ListSortDirection.Descending)
             {
-                columnHeader.Column.HeaderTemplate =
-                  Resources["HeaderTemplateArrowDown"] as DataTemplate;
+                columnHeader.Column.HeaderTemplate = Resources["HeaderTemplateArrowUp"] as DataTemplate;
             }
-            else if (direction == ListSortDirection.Descending)
+            else if (direction == ListSortDirection.Ascending)
             {
-                columnHeader.Column.HeaderTemplate =
-                  Resources["HeaderTemplateArrowUp"] as DataTemplate;
+                columnHeader.Column.HeaderTemplate = Resources["HeaderTemplateArrowDown"] as DataTemplate;
             }
             else
             {
-                columnHeader.Column.HeaderTemplate =
-                  Resources["HeaderTemplate"] as DataTemplate;
+                columnHeader.Column.HeaderTemplate = Resources["HeaderTemplate"] as DataTemplate;
             }
 
             _dataView.Refresh();
             _lastHeaderClicked = columnHeader;
             _lastDirection = direction;
 
-            Settings.Default.SelectedColumnHeader = columnHeader.Column.Header.ToString();
-            Settings.Default.SelectedColumnHeaderDirection = direction ?? ListSortDirection.Ascending;
+            Settings.Default.SelectedColumnHeaderDirection = direction ?? ListSortDirection.Descending;
         }
 
         private MessageBoxResult DisplayMessage(
