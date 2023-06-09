@@ -161,6 +161,123 @@ namespace AMDownloader
 
         #endregion
 
+        #region Public methods
+
+        public async Task StartAsync()
+        {
+            if (Status == DownloadStatus.Downloading || Status == DownloadStatus.Finished)
+            {
+                return;
+            }
+
+            _ctsPause = new CancellationTokenSource();
+            _ctPause = _ctsPause.Token;
+            _ctsCancel = new CancellationTokenSource();
+            _ctCancel = _ctsCancel.Token;
+            _ctsLinked = CancellationTokenSource.CreateLinkedTokenSource(_ctPause, _ctCancel);
+            _ctLinked = _ctsLinked.Token;
+
+            Status = DownloadStatus.Downloading;
+            RaisePropertyChanged(nameof(Status));
+            RaiseEvent(DownloadStarted);
+
+            try
+            {
+                if (!SupportsResume)
+                {
+                    // creating a new download
+
+                    if (!Directory.Exists(Path.GetDirectoryName(_tempPath)))
+                    {
+                        Directory.CreateDirectory(Path.GetDirectoryName(_tempPath));
+                    }
+
+                    if (File.Exists(_tempPath))
+                    {
+                        File.Delete(_tempPath);
+                    }
+
+                    File.Create(_tempPath).Close();
+                }
+
+                await DownloadAsync();
+
+                File.Move(_tempPath, Destination, true);
+
+                TotalBytesToDownload = BytesDownloaded;
+                Progress = 100;
+                Status = DownloadStatus.Finished;
+
+                RaisePropertyChanged(nameof(TotalBytesToDownload));
+                RaisePropertyChanged(nameof(Progress));
+            }
+            catch (OperationCanceledException)
+            {
+                if (_ctPause.IsCancellationRequested)
+                {
+                    Status = DownloadStatus.Paused;
+                }
+                else if (_ctCancel.IsCancellationRequested)
+                {
+                    // delete all temporary files
+
+                    if (File.Exists(_tempPath))
+                    {
+                        File.Delete(_tempPath);
+                    }
+                    if (File.Exists(Destination))
+                    {
+                        File.Delete(Destination);
+                    }
+
+                    BytesDownloaded = 0;
+                    Progress = 0;
+                    Status = DownloadStatus.Ready;
+
+                    RaisePropertyChanged(nameof(BytesDownloaded));
+                    RaisePropertyChanged(nameof(Progress));
+                }
+            }
+            finally
+            {
+                _ctsLinked.Dispose();
+                _ctsPause.Dispose();
+                _ctsCancel.Dispose();
+                _ctLinked = default;
+                _ctPause = default;
+                _ctCancel = default;
+            }
+
+            RaisePropertyChanged(nameof(Status));
+            RaiseEvent(DownloadStopped);
+        }
+
+        public void Pause()
+        {
+            try
+            {
+                _ctsPause?.Cancel();
+            }
+            catch (ObjectDisposedException)
+            {
+                // not downloading
+            }
+        }
+
+        public void Cancel()
+        {
+            try
+            {
+                _ctsCancel?.Cancel();
+            }
+            catch (ObjectDisposedException)
+            {
+                // not downloading
+            }
+        }
+
+        #endregion
+
         #region Private methods
 
         protected void RaisePropertyChanged(string prop)
@@ -342,123 +459,6 @@ namespace AMDownloader
                     TimeRemaining = null;
                     RaisePropertyChanged(nameof(TimeRemaining));
                 });
-            }
-        }
-
-        #endregion
-
-        #region Public methods
-
-        public async Task StartAsync()
-        {
-            if (Status == DownloadStatus.Downloading || Status == DownloadStatus.Finished)
-            {
-                return;
-            }
-
-            _ctsPause = new CancellationTokenSource();
-            _ctPause = _ctsPause.Token;
-            _ctsCancel = new CancellationTokenSource();
-            _ctCancel = _ctsCancel.Token;
-            _ctsLinked = CancellationTokenSource.CreateLinkedTokenSource(_ctPause, _ctCancel);
-            _ctLinked = _ctsLinked.Token;
-
-            Status = DownloadStatus.Downloading;
-            RaisePropertyChanged(nameof(Status));
-            RaiseEvent(DownloadStarted);
-
-            try
-            {
-                if (!SupportsResume)
-                {
-                    // creating a new download
-
-                    if (!Directory.Exists(Path.GetDirectoryName(_tempPath)))
-                    {
-                        Directory.CreateDirectory(Path.GetDirectoryName(_tempPath));
-                    }
-
-                    if (File.Exists(_tempPath))
-                    {
-                        File.Delete(_tempPath);
-                    }
-
-                    File.Create(_tempPath).Close();
-                }
-
-                await DownloadAsync();
-
-                File.Move(_tempPath, Destination, true);
-
-                TotalBytesToDownload = BytesDownloaded;
-                Progress = 100;
-                Status = DownloadStatus.Finished;
-
-                RaisePropertyChanged(nameof(TotalBytesToDownload));
-                RaisePropertyChanged(nameof(Progress));
-            }
-            catch (OperationCanceledException)
-            {
-                if (_ctPause.IsCancellationRequested)
-                {
-                    Status = DownloadStatus.Paused;
-                }
-                else if (_ctCancel.IsCancellationRequested)
-                {
-                    // delete all temporary files
-
-                    if (File.Exists(_tempPath))
-                    {
-                        File.Delete(_tempPath);
-                    }
-                    if (File.Exists(Destination))
-                    {
-                        File.Delete(Destination);
-                    }
-
-                    BytesDownloaded = 0;
-                    Progress = 0;
-                    Status = DownloadStatus.Ready;
-
-                    RaisePropertyChanged(nameof(BytesDownloaded));
-                    RaisePropertyChanged(nameof(Progress));
-                }
-            }
-            finally
-            {
-                _ctsLinked.Dispose();
-                _ctsPause.Dispose();
-                _ctsCancel.Dispose();
-                _ctLinked = default;
-                _ctPause = default;
-                _ctCancel = default;
-            }
-
-            RaisePropertyChanged(nameof(Status));
-            RaiseEvent(DownloadStopped);
-        }
-
-        public void Pause()
-        {
-            try
-            {
-                _ctsPause?.Cancel();
-            }
-            catch (ObjectDisposedException)
-            {
-                // not downloading
-            }
-        }
-
-        public void Cancel()
-        {
-            try
-            {
-                _ctsCancel?.Cancel();
-            }
-            catch (ObjectDisposedException)
-            {
-                // not downloading
             }
         }
 

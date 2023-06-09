@@ -63,20 +63,6 @@ namespace AMDownloader.QueueProcessing
 
         #endregion
 
-        #region Private methods
-
-        protected virtual void RaiseEvent(EventHandler handler)
-        {
-            handler?.Invoke(this, null);
-        }
-
-        protected void RaisePropertyChanged(string prop)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
-        }
-
-        #endregion
-
         #region Public methods
 
         /// <summary>
@@ -187,7 +173,7 @@ namespace AMDownloader.QueueProcessing
                 }
                 catch
                 {
-                
+
                 }
             });
 
@@ -221,6 +207,20 @@ namespace AMDownloader.QueueProcessing
         public QueueEnumerator GetEnumerator()
         {
             return new QueueEnumerator(_queueList.ToArray());
+        }
+
+        #endregion
+
+        #region Private methods
+
+        protected virtual void RaiseEvent(EventHandler handler)
+        {
+            handler?.Invoke(this, null);
+        }
+
+        protected void RaisePropertyChanged(string prop)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
         }
 
         #endregion
