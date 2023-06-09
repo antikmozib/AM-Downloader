@@ -2,7 +2,6 @@
 
 using AMDownloader.Common;
 using AMDownloader.Properties;
-using System.IO;
 using System.Windows.Input;
 
 namespace AMDownloader

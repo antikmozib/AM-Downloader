@@ -2,26 +2,20 @@
 
 using AMDownloader.Common;
 using AMDownloader.Helpers;
-using AMDownloader.ObjectModel;
 using AMDownloader.ObjectModel.Serializable;
 using AMDownloader.Properties;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data.Common;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
-using System.Threading.Tasks.Sources;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Media;
-using System.Xml.Schema;
 using System.Xml.Serialization;
 
 namespace AMDownloader
