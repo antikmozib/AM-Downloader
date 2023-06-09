@@ -24,6 +24,7 @@ namespace AMDownloader.QueueProcessing
 
         public bool IsBusy { get; private set; }
         public int Count => _queueList.Count;
+        public IQueueable[] Items => _queueList.ToArray();
 
         #endregion
 
@@ -66,10 +67,10 @@ namespace AMDownloader.QueueProcessing
         #region Public methods
 
         /// <summary>
-        /// Adds items to the QueueProcessor.
+        /// Add and enqueue items to the QueueProcessor.
         /// </summary>
-        /// <param name="items">The items to add.</param>
-        public void Add(params IQueueable[] items)
+        /// <param name="items">The items to add and enqueue.</param>
+        public void Enqueue(params IQueueable[] items)
         {
             bool itemsAdded = false;
 
@@ -89,10 +90,10 @@ namespace AMDownloader.QueueProcessing
         }
 
         /// <summary>
-        /// Removes items from the QueueProcessor.
+        /// Dequeue and remove items from the QueueProcessor.
         /// </summary>
-        /// <param name="items">The items to remove.</param>
-        public void Remove(params IQueueable[] items)
+        /// <param name="items">The items to dequeue and remove.</param>
+        public void Dequeue(params IQueueable[] items)
         {
             bool itemsRemoved = false;
 
@@ -113,6 +114,8 @@ namespace AMDownloader.QueueProcessing
 
         public async Task StartAsync()
         {
+            bool cancellationRequested;
+
             if (IsBusy) return;
 
             IsBusy = true;
@@ -141,6 +144,12 @@ namespace AMDownloader.QueueProcessing
                             await semTask;
 
                             ct.ThrowIfCancellationRequested();
+
+                            // ensure the item is still in the queue list before commencing download
+                            if (!_queueList.Contains(item))
+                            {
+                                return;
+                            }
 
                             await item.StartAsync();
 
@@ -177,9 +186,18 @@ namespace AMDownloader.QueueProcessing
                 }
             });
 
-            _cts.Dispose();
+            cancellationRequested = ct.IsCancellationRequested;
 
             IsBusy = false;
+            _cts.Dispose();
+
+            // refresh the queue and keep running until there are
+            // no more queued items or cancellation is requested
+            if (_queueList.Count > 0 && !cancellationRequested)
+            {
+                await StartAsync();
+            }
+
             RaisePropertyChanged(nameof(IsBusy));
             RaiseEvent(QueueProcessorStopped);
         }
@@ -194,6 +212,11 @@ namespace AMDownloader.QueueProcessing
             Parallel.ForEach(_queueList, (item) => item.Pause());
         }
 
+        /// <summary>
+        /// Determines if an item is enqueued.
+        /// </summary>
+        /// <param name="value">The item to check.</param>
+        /// <returns></returns>
         public bool IsQueued(IQueueable value)
         {
             return _queueList.Contains(value);

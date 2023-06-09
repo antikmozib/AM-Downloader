@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace AMDownloader
 {
-    internal enum DownloadStatus
+    public enum DownloadStatus
     {
         Ready, Downloading, Paused, Finished, Errored
     }
@@ -94,9 +94,10 @@ namespace AMDownloader
                 httpClient,
                 url,
                 destination,
-                null,
                 DateTime.Now,
                 null,
+                null,
+                DownloadStatus.Ready,
                 downloadCreated,
                 downloadStarted,
                 downloadStopped,
@@ -108,9 +109,10 @@ namespace AMDownloader
             HttpClient httpClient,
             string url,
             string destination,
-            long? bytesToDownload,
             DateTime dateCreated,
+            long? bytesToDownload,
             HttpStatusCode? httpStatusCode,
+            DownloadStatus status,
             EventHandler downloadCreated,
             EventHandler downloadStarted,
             EventHandler downloadStopped,
@@ -131,24 +133,26 @@ namespace AMDownloader
             TimeRemaining = null;
             Speed = null;
             StatusCode = httpStatusCode;
-            Status = DownloadStatus.Ready;
+            Status = status;
 
             // are we restoring an existing download?
-            if (bytesToDownload != null && bytesToDownload > 0)
+            if ((status == DownloadStatus.Paused || status == DownloadStatus.Downloading) && File.Exists(_tempPath) && !File.Exists(destination))
             {
-                // is the download paused or finished?
-                if (File.Exists(_tempPath) && !File.Exists(destination))
-                {
-                    BytesDownloaded = new FileInfo(_tempPath).Length;
-                    Progress = (int)(BytesDownloaded / (double)bytesToDownload * 100);
-                    Status = DownloadStatus.Paused;
-                }
-                else if (!File.Exists(_tempPath) && File.Exists(destination))
-                {
-                    BytesDownloaded = new FileInfo(destination).Length;
-                    Progress = 100;
-                    Status = DownloadStatus.Finished;
-                }
+                BytesDownloaded = new FileInfo(_tempPath).Length;
+                Progress = (int)(BytesDownloaded / (double)bytesToDownload * 100);
+                Status = DownloadStatus.Paused;
+            }
+            else if (status == DownloadStatus.Finished && !File.Exists(_tempPath) && File.Exists(destination))
+            {
+                BytesDownloaded = new FileInfo(destination).Length;
+                Progress = 100;
+                Status = DownloadStatus.Finished;
+            }
+            else
+            {
+                BytesDownloaded = 0;
+                Progress = 0;
+                Status = DownloadStatus.Ready;
             }
 
             DownloadCreated += downloadCreated;
@@ -237,6 +241,11 @@ namespace AMDownloader
                     RaisePropertyChanged(nameof(BytesDownloaded));
                     RaisePropertyChanged(nameof(Progress));
                 }
+            }
+            catch (Exception ex)
+            when (ex is AMDownloaderUrlException || ex is IOException)
+            {
+                Status = DownloadStatus.Errored;
             }
             finally
             {
@@ -337,7 +346,7 @@ namespace AMDownloader
                 StatusCode = response.StatusCode;
                 if (StatusCode != HttpStatusCode.OK && StatusCode != HttpStatusCode.PartialContent)
                 {
-                    throw new AMDownloaderException("Cannot fetch remote file: " + StatusCode);
+                    throw new AMDownloaderUrlException(Url);
                 }
 
                 // get the size of the download

@@ -14,7 +14,7 @@ namespace AMDownloader.ObjectModel.Serializable
         public string Destination { get; set; }
         public long? TotalBytesToDownload { get; set; }
         public bool IsQueued { get; set; }
-        public bool IsCompleted { get; set; }
+        public DownloadStatus Status { get;set; }
         public DateTime DateCreated { get; set; }
         public HttpStatusCode? StatusCode { get; set; }
     }
