@@ -115,7 +115,7 @@ namespace AMDownloader
             Settings.Default.StartDownloadingAddedItems = this.StartDownload;
         }
 
-        private List<string> BuildUrlsFromPatterns(params string[] urls)
+        private static List<string> BuildUrlsFromPatterns(params string[] urls)
         {
             var filteredUrls = urls.Select(o => o.Trim()).Where(o => o.Length > 0); // trim and discard empty
             List<string> fullUrls = new();

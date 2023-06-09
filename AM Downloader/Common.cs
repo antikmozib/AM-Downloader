@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using System.Net.Http;
 using System.Reflection;
+using System.Security.Policy;
 using System.Threading.Tasks;
 
 namespace AMDownloader.Common
@@ -55,6 +56,12 @@ namespace AMDownloader.Common
             };
 
             return result;
+        }
+
+        public static string GetFilenameFromUrl(string url)
+        {
+            Uri.TryCreate(url, UriKind.Absolute, out Uri uri);
+            return Path.GetFileName(uri.LocalPath);
         }
 
         public static string DriveLetterToName(string rootPath)

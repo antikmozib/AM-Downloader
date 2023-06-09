@@ -876,7 +876,7 @@ namespace AMDownloader
                     skipping.Add(urls[i]);
                     continue;
                 }
-                var fileName = CommonFunctions.GetFreshFilename(destination + Path.GetFileName(urls[i]));
+                var fileName = CommonFunctions.GetFreshFilename(destination + CommonFunctions.GetFilenameFromUrl(urls[i]));
                 if (existingDestinations.Contains(fileName))
                 {
                     skipping.Add(urls[i]);
