@@ -316,6 +316,9 @@ namespace AMDownloader
                     AddObjects(itemsToAdd);
                     QueueProcessor.Enqueue(itemsToEnqueue.ToArray());
                 }
+                catch
+                {
+                }
                 finally
                 {
                     _ctsUpdatingList = null;

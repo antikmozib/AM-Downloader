@@ -209,7 +209,13 @@ namespace AMDownloader.QueueProcessing
             _cts?.Cancel();
 
             // pause items being downloaded
-            Parallel.ForEach(_queueList, (item) => item.Pause());
+            try
+            {
+                Parallel.ForEach(_queueList, (item) => item.Pause());
+            }
+            catch
+            {
+            }
         }
 
         /// <summary>

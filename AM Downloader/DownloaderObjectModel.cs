@@ -136,20 +136,23 @@ namespace AMDownloader
             Status = status;
 
             // are we restoring an existing download?
-            if ((status == DownloadStatus.Paused || status == DownloadStatus.Downloading) && File.Exists(_tempPath) && !File.Exists(destination))
+            if (status == DownloadStatus.Paused && File.Exists(_tempPath) && !File.Exists(destination))
             {
+                // paused
                 BytesDownloaded = new FileInfo(_tempPath).Length;
                 Progress = (int)(BytesDownloaded / (double)bytesToDownload * 100);
                 Status = DownloadStatus.Paused;
             }
             else if (status == DownloadStatus.Finished && !File.Exists(_tempPath) && File.Exists(destination))
             {
+                // finished
                 BytesDownloaded = new FileInfo(destination).Length;
                 Progress = 100;
                 Status = DownloadStatus.Finished;
             }
             else
             {
+                // new or errored download
                 BytesDownloaded = 0;
                 Progress = 0;
                 Status = DownloadStatus.Ready;
@@ -217,29 +220,35 @@ namespace AMDownloader
             }
             catch (OperationCanceledException)
             {
-                if (_ctPause.IsCancellationRequested)
+                if (_ctLinked.IsCancellationRequested)
                 {
-                    Status = DownloadStatus.Paused;
-                }
-                else if (_ctCancel.IsCancellationRequested)
-                {
-                    // delete all temporary files
-
-                    if (File.Exists(_tempPath))
-                    {
-                        File.Delete(_tempPath);
+                    // if the paused signal was given after creating the temp file
+                    // but before getting the content length, simply cancel the
+                    // download instead of pausing it
+                    if (_ctPause.IsCancellationRequested && SupportsResume)
+                    {   
+                        Status = DownloadStatus.Paused;
                     }
-                    if (File.Exists(Destination))
+                    else
                     {
-                        File.Delete(Destination);
+                        // delete all temporary files
+
+                        if (File.Exists(_tempPath))
+                        {
+                            File.Delete(_tempPath);
+                        }
+                        if (File.Exists(Destination))
+                        {
+                            File.Delete(Destination);
+                        }
+
+                        BytesDownloaded = 0;
+                        Progress = 0;
+                        Status = DownloadStatus.Ready;
+
+                        RaisePropertyChanged(nameof(BytesDownloaded));
+                        RaisePropertyChanged(nameof(Progress));
                     }
-
-                    BytesDownloaded = 0;
-                    Progress = 0;
-                    Status = DownloadStatus.Ready;
-
-                    RaisePropertyChanged(nameof(BytesDownloaded));
-                    RaisePropertyChanged(nameof(Progress));
                 }
             }
             catch (Exception ex)
