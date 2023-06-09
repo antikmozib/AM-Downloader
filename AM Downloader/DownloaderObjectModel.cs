@@ -31,6 +31,7 @@ namespace AMDownloader
         private const int _reportingDelay = 1000;
         private readonly HttpClient _httpClient;
         private readonly IProgress<long> _reportProgressBytes;
+        private TaskCompletionSource _tcs;
         private CancellationTokenSource _ctsPause, _ctsCancel, _ctsLinked;
         private CancellationToken _ctPause, _ctCancel, _ctLinked;
         private readonly string _tempPath;
@@ -40,7 +41,7 @@ namespace AMDownloader
         #region Properties
 
         /// <summary>
-        /// True if the download can be resumed after pausing.
+        /// <see langword="true"/> if the download can be resumed after pausing.
         /// </summary>
         private bool SupportsResume => TotalBytesToDownload != null && TotalBytesToDownload > 0;
         public string Url { get; }
@@ -63,13 +64,16 @@ namespace AMDownloader
         /// Gets the number of bytes of the file downloaded in the current session only.
         /// </summary>
         public long BytesDownloadedThisSession { get; private set; }
-        public int Progress { get; private set; }
+        public int Progress => SupportsResume 
+            ? (int)(BytesDownloaded / (double)TotalBytesToDownload * 100) 
+            : 0;
         public double? TimeRemaining { get; private set; }
         public long? Speed { get; private set; }
         public HttpStatusCode? StatusCode { get; private set; }
         public DownloadStatus Status { get; private set; }
         public bool IsDownloading => Status == DownloadStatus.Downloading;
         public bool IsCompleted => Status == DownloadStatus.Finished;
+        public bool IsErrored => Status == DownloadStatus.Errored;
 
         #endregion
 
@@ -129,7 +133,6 @@ namespace AMDownloader
             TotalBytesToDownload = bytesToDownload;
             BytesDownloaded = 0;
             BytesDownloadedThisSession = 0;
-            Progress = 0;
             TimeRemaining = null;
             Speed = null;
             StatusCode = httpStatusCode;
@@ -140,22 +143,16 @@ namespace AMDownloader
             {
                 // paused
                 BytesDownloaded = new FileInfo(_tempPath).Length;
-                Progress = (int)(BytesDownloaded / (double)bytesToDownload * 100);
-                Status = DownloadStatus.Paused;
             }
             else if (status == DownloadStatus.Finished && !File.Exists(_tempPath) && File.Exists(destination))
             {
                 // finished
                 BytesDownloaded = new FileInfo(destination).Length;
-                Progress = 100;
-                Status = DownloadStatus.Finished;
             }
             else
             {
                 // new or errored download
                 BytesDownloaded = 0;
-                Progress = 0;
-                Status = DownloadStatus.Ready;
             }
 
             DownloadCreated += downloadCreated;
@@ -177,6 +174,7 @@ namespace AMDownloader
                 return;
             }
 
+            _tcs = new TaskCompletionSource();
             _ctsPause = new CancellationTokenSource();
             _ctPause = _ctsPause.Token;
             _ctsCancel = new CancellationTokenSource();
@@ -212,7 +210,6 @@ namespace AMDownloader
                 File.Move(_tempPath, Destination, true);
 
                 TotalBytesToDownload = BytesDownloaded;
-                Progress = 100;
                 Status = DownloadStatus.Finished;
 
                 RaisePropertyChanged(nameof(TotalBytesToDownload));
@@ -226,24 +223,18 @@ namespace AMDownloader
                     // but before getting the content length, simply cancel the
                     // download instead of pausing it
                     if (_ctPause.IsCancellationRequested && SupportsResume)
-                    {   
+                    {
                         Status = DownloadStatus.Paused;
                     }
                     else
                     {
-                        // delete all temporary files
-
+                        // delete the temporary file
                         if (File.Exists(_tempPath))
                         {
                             File.Delete(_tempPath);
                         }
-                        if (File.Exists(Destination))
-                        {
-                            File.Delete(Destination);
-                        }
 
                         BytesDownloaded = 0;
-                        Progress = 0;
                         Status = DownloadStatus.Ready;
 
                         RaisePropertyChanged(nameof(BytesDownloaded));
@@ -254,10 +245,17 @@ namespace AMDownloader
             catch (Exception ex)
             when (ex is AMDownloaderUrlException || ex is IOException)
             {
+                // delete the temporary file
+                if (File.Exists(_tempPath))
+                {
+                    File.Delete(_tempPath);
+                }
+
                 Status = DownloadStatus.Errored;
             }
             finally
             {
+                _tcs.SetResult();
                 _ctsLinked.Dispose();
                 _ctsPause.Dispose();
                 _ctsCancel.Dispose();
@@ -282,6 +280,12 @@ namespace AMDownloader
             }
         }
 
+        public async Task PauseAsync()
+        {
+            Pause();
+            await _tcs.Task;
+        }
+
         public void Cancel()
         {
             try
@@ -292,6 +296,12 @@ namespace AMDownloader
             {
                 // not downloading
             }
+        }
+
+        public async Task CancelAsync()
+        {
+            Cancel();
+            await _tcs.Task;
         }
 
         #endregion
@@ -314,16 +324,8 @@ namespace AMDownloader
             // reports the lifetime number of bytes
             IProgress<int> progressReporter = new Progress<int>((value) =>
             {
-                double progress = 0;
                 BytesDownloaded += value;
                 BytesDownloadedThisSession += value;
-
-                if (SupportsResume)
-                {
-                    progress = BytesDownloaded / (double)TotalBytesToDownload * 100;
-                }
-
-                Progress = (int)progress;
                 _reportProgressBytes.Report(value);
             });
 

@@ -690,7 +690,7 @@ namespace AMDownloader
                     {
                         if (item.IsDownloading)
                         {
-                            item.Pause();
+                            await item.PauseAsync();
                         }
                         else if (item.IsCompleted && Settings.Default.ClearFinishedOnExit)
                         {
@@ -1032,7 +1032,7 @@ namespace AMDownloader
 
                 if (items[i].IsDownloading)
                 {
-                    items[i].Cancel();
+                    await items[i].CancelAsync();
                 }
                 else if (delete && items[i].IsCompleted)
                 {

@@ -9,5 +9,6 @@ namespace AMDownloader.QueueProcessing
         Task StartAsync();
         void Pause();
         bool IsCompleted { get; }
+        bool IsErrored { get; }
     }
 }

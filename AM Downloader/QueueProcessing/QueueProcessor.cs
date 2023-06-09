@@ -153,7 +153,7 @@ namespace AMDownloader.QueueProcessing
 
                             await item.StartAsync();
 
-                            if (item.IsCompleted)
+                            if (item.IsCompleted || item.IsErrored)
                             {
                                 Monitor.Enter(_lockQueueList);
                                 _queueList.Remove(item);
