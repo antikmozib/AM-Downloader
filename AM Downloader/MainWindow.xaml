@@ -722,19 +722,6 @@
                             </MenuItem.Icon>
                         </MenuItem>
                         <Separator />
-                        <MenuItem Header="Recheck"
-                                  Command="{Binding RecheckCommand}"
-                                  CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}">
-                            <MenuItem.Icon>
-                                <Viewbox>
-                                    <Frame Source="pack://application:,,,/Icons/Refresh_16x.xaml" />
-                                </Viewbox>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem Header="Redownload"
-                                  Command="{Binding RedownloadCommand}"
-                                  CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}" />
-                        <Separator />
                         <MenuItem Header="Remove From List"
                                   Command="{Binding RemoveCommand}"
                                   CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
