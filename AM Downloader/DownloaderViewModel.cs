@@ -206,9 +206,9 @@ namespace AMDownloader
             _showUrls = showUrls;
             _resetAllSettingsOnClose = false;
 
-            AddCommand = new RelayCommand<object>(Add);
+            AddCommand = new RelayCommand<object>(Add, Add_CanExecute);
             StartCommand = new RelayCommand<object>(Start);
-            RemoveCommand = new RelayCommand<object>(Remove);
+            RemoveCommand = new RelayCommand<object>(Remove, Remove_CanExecute);
             CancelCommand = new RelayCommand<object>(Cancel);
             PauseCommand = new RelayCommand<object>(Pause);
             OpenCommand = new RelayCommand<object>(Open);
@@ -219,9 +219,9 @@ namespace AMDownloader
             OptionsCommand = new RelayCommand<object>(ShowOptions);
             EnqueueCommand = new RelayCommand<object>(Enqueue);
             DequeueCommand = new RelayCommand<object>(Dequeue);
-            DeleteFileCommand = new RelayCommand<object>(DeleteFile);
+            DeleteFileCommand = new RelayCommand<object>(DeleteFile, DeleteFile_CanExecute);
             CopyLinkToClipboardCommand = new RelayCommand<object>(CopyLinkToClipboard);
-            ClearFinishedDownloadsCommand = new RelayCommand<object>(ClearFinishedDownloads);
+            ClearFinishedDownloadsCommand = new RelayCommand<object>(ClearFinishedDownloads, ClearFinishedDownloads_CanExecute);
             CancelBackgroundTaskCommand = new RelayCommand<object>(
                 CancelBackgroundTask, CancelBackgroundTask_CanExecute);
             CheckForUpdatesCommand = new RelayCommand<object>(CheckForUpdates);
@@ -382,12 +382,6 @@ namespace AMDownloader
 
         private void Add(object obj)
         {
-            if (IsBackgroundWorking)
-            {
-                ShowBusyMessage();
-                return;
-            }
-
             AddDownloadWindow win = new();
             AddDownloadViewModel vm = new(win.Preview);
             DownloaderObjectModel[] itemsAdded = null;
@@ -419,16 +413,15 @@ namespace AMDownloader
             }
         }
 
+        private bool Add_CanExecute(object obj)
+        {
+            return !this.IsBackgroundWorking;
+        }
+
         private void Remove(object obj)
         {
             if (obj == null) return;
-
-            if (this.IsBackgroundWorking)
-            {
-                ShowBusyMessage();
-                return;
-            }
-
+            
             _ctsUpdatingList = new CancellationTokenSource();
             RaisePropertyChanged(nameof(IsBackgroundWorking));
 
@@ -440,6 +433,11 @@ namespace AMDownloader
 
                 RefreshCollectionView();
             });
+        }
+
+        private bool Remove_CanExecute(object obj)
+        {
+            return !this.IsBackgroundWorking;
         }
 
         private void Open(object obj)
@@ -548,13 +546,7 @@ namespace AMDownloader
         private void DeleteFile(object obj)
         {
             if (obj == null) return;
-
-            if (this.IsBackgroundWorking)
-            {
-                ShowBusyMessage();
-                return;
-            }
-
+            
             _ctsUpdatingList = new CancellationTokenSource();
             RaisePropertyChanged(nameof(this.IsBackgroundWorking));
 
@@ -566,6 +558,11 @@ namespace AMDownloader
 
                 RefreshCollectionView();
             });
+        }
+
+        private bool DeleteFile_CanExecute(object obj)
+        {
+            return !this.IsBackgroundWorking;
         }
 
         private void CopyLinkToClipboard(object obj)
@@ -588,12 +585,6 @@ namespace AMDownloader
 
         private void ClearFinishedDownloads(object obj)
         {
-            if (this.IsBackgroundWorking)
-            {
-                ShowBusyMessage();
-                return;
-            }
-
             _ctsUpdatingList = new CancellationTokenSource();
             RaisePropertyChanged(nameof(this.IsBackgroundWorking));
 
@@ -605,6 +596,11 @@ namespace AMDownloader
 
                 RefreshCollectionView();
             });
+        }
+
+        private bool ClearFinishedDownloads_CanExecute(object obj)
+        {
+            return !this.IsBackgroundWorking;
         }
 
         private void CancelBackgroundTask(object obj)
@@ -1109,12 +1105,7 @@ namespace AMDownloader
                 _semaphoreMeasuringSpeed.Release();
             });
         }
-
-        private void ShowBusyMessage()
-        {
-            _displayMessage.Invoke("Operation in progress. Please wait.");
-        }
-
+        
         private async Task TriggerUpdateCheckAsync(bool silent = false)
         {
             string url = await AppUpdateService.GetUpdateUrl(
