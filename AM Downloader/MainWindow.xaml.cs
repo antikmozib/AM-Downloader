@@ -83,44 +83,44 @@ namespace AMDownloader
 
             // restore column order
 
-            try
+            if (File.Exists(AppPaths.UIColumnOrderFile))
             {
-                SerializableUIColumnOrderList restoreCols;
-                var xmlReader = new XmlSerializer(typeof(SerializableUIColumnOrderList));
-
-                using (var streamReader = new StreamReader(AppPaths.UIColumnOrderFile))
+                try
                 {
-                    restoreCols = (SerializableUIColumnOrderList)xmlReader.Deserialize(streamReader);
-                }
+                    SerializableUIColumnOrderList restoreCols;
+                    var xmlReader = new XmlSerializer(typeof(SerializableUIColumnOrderList));
 
-                var gridCols = ((GridView)lvDownload.View).Columns;
-
-                for (int i = 0; i < restoreCols.Objects.Count; i++)
-                {
-                    var restoreCol = restoreCols.Objects[i];
-
-                    for (int j = 0; j < gridCols.Count; j++)
+                    using (var streamReader = new StreamReader(AppPaths.UIColumnOrderFile))
                     {
-                        var gridCol = gridCols[j];
+                        restoreCols = (SerializableUIColumnOrderList)xmlReader.Deserialize(streamReader);
+                    }
 
-                        if (gridCol.Header.ToString() == restoreCol.ColumnName)
+                    var gridCols = ((GridView)lvDownload.View).Columns;
+
+                    for (int i = 0; i < restoreCols.Objects.Count; i++)
+                    {
+                        var restoreCol = restoreCols.Objects[i];
+
+                        for (int j = 0; j < gridCols.Count; j++)
                         {
-                            if (gridCols.IndexOf(gridCol) != restoreCol.ColumnIndex)
+                            var gridCol = gridCols[j];
+
+                            if (gridCol.Header.ToString() == restoreCol.ColumnName)
                             {
-                                var swapCol = gridCols[restoreCol.ColumnIndex];
-                                gridCols.Move(j, restoreCol.ColumnIndex);
-                                gridCols.Move(gridCols.IndexOf(swapCol), j);
+                                if (gridCols.IndexOf(gridCol) != restoreCol.ColumnIndex)
+                                {
+                                    var swapCol = gridCols[restoreCol.ColumnIndex];
+                                    gridCols.Move(j, restoreCol.ColumnIndex);
+                                    gridCols.Move(gridCols.IndexOf(swapCol), j);
+                                }
+                                break;
                             }
-                            break;
                         }
                     }
                 }
-            }
-            catch (Exception ex)
-            when (ex is FileNotFoundException
-            || ex is DirectoryNotFoundException
-            || ex is XmlException)
-            {
+                catch (XmlException)
+                {
+                }
             }
         }
 
@@ -157,8 +157,10 @@ namespace AMDownloader
 
                 try
                 {
-                    Directory.CreateDirectory(AppPaths.LocalAppDataFolder);
                     var writer = new XmlSerializer(typeof(SerializableUIColumnOrderList));
+
+                    Directory.CreateDirectory(AppPaths.LocalAppDataFolder);
+
                     using var streamWriter = new StreamWriter(AppPaths.UIColumnOrderFile, false);
                     writer.Serialize(streamWriter, columnOrderList);
                 }

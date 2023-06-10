@@ -193,10 +193,7 @@ namespace AMDownloader
                 {
                     // creating a new download
 
-                    if (!Directory.Exists(Path.GetDirectoryName(_tempPath)))
-                    {
-                        Directory.CreateDirectory(Path.GetDirectoryName(_tempPath));
-                    }
+                    Directory.CreateDirectory(Path.GetDirectoryName(_tempPath));
 
                     if (File.Exists(_tempPath))
                     {

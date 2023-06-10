@@ -15,7 +15,7 @@
         MinWidth="650"
         MinHeight="250"
         WindowStyle="SingleBorderWindow"
-        Closing="Window_Closing">
+        Closing="Window_Closing" Loaded="Window_Loaded">
     <Window.Resources>
         <local:DownloaderDestinationFolderNameConverter x:Key="DownloaderDestinationConverter" />
         <Style TargetType="MenuItem">
