@@ -16,6 +16,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media;
+using System.Xml;
 using System.Xml.Serialization;
 
 namespace AMDownloader
@@ -115,7 +116,10 @@ namespace AMDownloader
                     }
                 }
             }
-            catch (FileNotFoundException)
+            catch (Exception ex)
+            when (ex is FileNotFoundException
+            || ex is DirectoryNotFoundException
+            || ex is XmlException)
             {
             }
         }

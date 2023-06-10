@@ -5,7 +5,6 @@ using System;
 using System.IO;
 using System.Net.Http;
 using System.Reflection;
-using System.Security.Policy;
 using System.Threading.Tasks;
 
 namespace AMDownloader.Common
@@ -42,10 +41,10 @@ namespace AMDownloader.Common
 
     internal static class CommonFunctions
     {
-        public static string GetFreshFilename(string path)
+        public static string GetFreshFilename(string fullPath)
         {
-            string dirName = Path.GetDirectoryName(path);
-            string fileName = Path.GetFileName(path);
+            string dirName = Path.GetDirectoryName(fullPath);
+            string fileName = Path.GetFileName(fullPath);
             string result = dirName + Path.DirectorySeparatorChar + fileName;
             int i = 0;
 

@@ -119,7 +119,7 @@ namespace AMDownloader
         {
             var filteredUrls = urls.Select(o => o.Trim()).Where(o => o.Length > 0); // trim and discard empty
             List<string> fullUrls = new();
-            string pattern = @"(\[\d*:\d*\])";
+            string pattern = @"(\[\d+:\d+\])";
             var regex = new Regex(pattern);
 
             foreach (var url in filteredUrls)
