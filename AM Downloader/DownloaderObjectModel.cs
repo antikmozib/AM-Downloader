@@ -64,14 +64,15 @@ namespace AMDownloader
         /// Gets the number of bytes of the file downloaded in the current session only.
         /// </summary>
         public long BytesDownloadedThisSession { get; private set; }
-        public int Progress => SupportsResume 
-            ? (int)(BytesDownloaded / (double)TotalBytesToDownload * 100) 
+        public int Progress => SupportsResume
+            ? (int)(BytesDownloaded / (double)TotalBytesToDownload * 100)
             : 0;
         public double? TimeRemaining { get; private set; }
         public long? Speed { get; private set; }
         public HttpStatusCode? StatusCode { get; private set; }
         public DownloadStatus Status { get; private set; }
         public bool IsDownloading => Status == DownloadStatus.Downloading;
+        public bool IsPaused => Status == DownloadStatus.Paused;
         public bool IsCompleted => Status == DownloadStatus.Finished;
         public bool IsErrored => Status == DownloadStatus.Errored;
 
@@ -169,7 +170,7 @@ namespace AMDownloader
 
         public async Task StartAsync()
         {
-            if (Status == DownloadStatus.Downloading || Status == DownloadStatus.Finished)
+            if (IsDownloading || IsCompleted)
             {
                 return;
             }
@@ -228,15 +229,9 @@ namespace AMDownloader
                     }
                     else
                     {
-                        // delete the temporary file
-                        if (File.Exists(_tempPath))
-                        {
-                            File.Delete(_tempPath);
-                        }
+                        CleanupTempDownload();
 
-                        BytesDownloaded = 0;
                         Status = DownloadStatus.Ready;
-
                         RaisePropertyChanged(nameof(BytesDownloaded));
                         RaisePropertyChanged(nameof(Progress));
                     }
@@ -245,24 +240,18 @@ namespace AMDownloader
             catch (Exception ex)
             when (ex is AMDownloaderUrlException || ex is IOException)
             {
-                // delete the temporary file
-                if (File.Exists(_tempPath))
-                {
-                    File.Delete(_tempPath);
-                }
+                CleanupTempDownload();
 
                 Status = DownloadStatus.Errored;
             }
-            finally
-            {
-                _tcs.SetResult();
-                _ctsLinked.Dispose();
-                _ctsPause.Dispose();
-                _ctsCancel.Dispose();
-                _ctLinked = default;
-                _ctPause = default;
-                _ctCancel = default;
-            }
+
+            _tcs.SetResult();
+            _ctsLinked.Dispose();
+            _ctsPause.Dispose();
+            _ctsCancel.Dispose();
+            _ctLinked = default;
+            _ctPause = default;
+            _ctCancel = default;
 
             RaisePropertyChanged(nameof(Status));
             RaiseEvent(DownloadStopped);
@@ -283,7 +272,11 @@ namespace AMDownloader
         public async Task PauseAsync()
         {
             Pause();
-            await _tcs.Task;
+
+            if (_tcs != null)
+            {
+                await _tcs.Task;
+            }
         }
 
         public void Cancel()
@@ -295,13 +288,22 @@ namespace AMDownloader
             catch (ObjectDisposedException)
             {
                 // not downloading
+
+                if (IsPaused)
+                {
+                    CleanupTempDownload();
+                }
             }
         }
 
         public async Task CancelAsync()
         {
             Cancel();
-            await _tcs.Task;
+
+            if (_tcs != null)
+            {
+                await _tcs.Task;
+            }
         }
 
         #endregion
@@ -479,6 +481,15 @@ namespace AMDownloader
                     TimeRemaining = null;
                     RaisePropertyChanged(nameof(TimeRemaining));
                 });
+            }
+        }
+
+        private void CleanupTempDownload()
+        {
+            if (File.Exists(_tempPath))
+            {
+                File.Delete(_tempPath);
+                BytesDownloaded = 0;
             }
         }
 

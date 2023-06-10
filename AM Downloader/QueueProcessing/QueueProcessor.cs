@@ -16,6 +16,7 @@ namespace AMDownloader.QueueProcessing
         private readonly SemaphoreSlim _semaphore;
         private readonly object _lockQueueList;
         private readonly List<IQueueable> _queueList;
+        private TaskCompletionSource _tcs;
         private CancellationTokenSource _cts;
 
         #endregion
@@ -51,7 +52,6 @@ namespace AMDownloader.QueueProcessing
             _semaphore = new SemaphoreSlim(maxParallelDownloads);
             _queueList = new();
             _lockQueueList = _queueList;
-            _cts = null;
 
             IsBusy = false;
 
@@ -122,6 +122,7 @@ namespace AMDownloader.QueueProcessing
             RaisePropertyChanged(nameof(IsBusy));
             RaiseEvent(QueueProcessorStarted);
 
+            _tcs = new();
             _cts = new();
             var ct = _cts.Token;
 
@@ -187,17 +188,17 @@ namespace AMDownloader.QueueProcessing
             });
 
             cancellationRequested = ct.IsCancellationRequested;
-
-            IsBusy = false;
+            _tcs.SetResult();
             _cts.Dispose();
 
-            // refresh the queue and keep running until there are
+            // keep running the queue recursively until there are
             // no more queued items or cancellation is requested
             if (_queueList.Count > 0 && !cancellationRequested)
             {
                 await StartAsync();
             }
 
+            IsBusy = false;
             RaisePropertyChanged(nameof(IsBusy));
             RaiseEvent(QueueProcessorStopped);
         }
@@ -216,6 +217,12 @@ namespace AMDownloader.QueueProcessing
             catch
             {
             }
+        }
+
+        public async Task StopAsync()
+        {
+            Stop();
+            await _tcs.Task;
         }
 
         /// <summary>
