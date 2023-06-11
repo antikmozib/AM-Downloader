@@ -20,7 +20,7 @@
         </Grid.RowDefinitions>
         <Label
             Grid.Row="0"
-            Content="{Binding Message}" />
+            Content="{Binding Description}" />
         <ListBox
             ItemsSource="{Binding Urls}"
             Name="listUrls"

@@ -50,6 +50,7 @@ namespace AMDownloader
         /// Gets the full local path to the file.
         /// </summary>
         public string Destination { get; }
+        public string TempDestination => _tempPath;
         public string Extension => Path.GetExtension(Destination);
         public DateTime DateCreated { get; }
         /// <summary>

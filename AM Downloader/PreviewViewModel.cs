@@ -26,14 +26,14 @@ namespace AMDownloader
         public event PropertyChangedEventHandler PropertyChanged;
 
         public ICommand CopyCommand { get; private set; }
-        public string Message { get; set; }
+        public string Description { get; set; }
         public ObservableCollection<UrlListType> Urls { get; set; }
 
-        public PreviewViewModel(string message, List<string> urls)
+        public PreviewViewModel(string description, List<string> urls)
         {
             CopyCommand = new RelayCommand<object>(Copy);
             _clipboard = new ClipboardObserver();
-            this.Message = message;
+            this.Description = description;
             this.Urls = new ObservableCollection<UrlListType>();
             foreach (var url in urls)
             {

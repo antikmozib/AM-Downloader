@@ -349,15 +349,15 @@ namespace AMDownloader
                 defaultResult));
         }
 
-        private void ShowUrlList(List<string> urls, string caption, string message)
+        private void ShowUrlList(List<string> urls, string title, string description)
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
-                var previewViewModel = new PreviewViewModel(message, urls);
+                var previewViewModel = new PreviewViewModel(description, urls);
                 var previewWindow = new PreviewWindow();
                 previewWindow.DataContext = previewViewModel;
                 previewWindow.Owner = this;
-                previewWindow.Title = caption;
+                previewWindow.Title = title;
                 previewWindow.ShowDialog();
             });
         }
