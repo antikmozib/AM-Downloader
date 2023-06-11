@@ -81,18 +81,18 @@ namespace AMDownloader
                 }
             }
 
-            // restore column order
+            // restore column order and widths
 
             if (File.Exists(Paths.UIColumnOrderFile))
             {
                 try
                 {
-                    SerializableUIColumnOrderList restoreCols;
-                    var xmlReader = new XmlSerializer(typeof(SerializableUIColumnOrderList));
+                    SerializableUIColumnList restoreCols;
+                    var xmlReader = new XmlSerializer(typeof(SerializableUIColumnList));
 
                     using (var streamReader = new StreamReader(Paths.UIColumnOrderFile))
                     {
-                        restoreCols = (SerializableUIColumnOrderList)xmlReader.Deserialize(streamReader);
+                        restoreCols = (SerializableUIColumnList)xmlReader.Deserialize(streamReader);
                     }
 
                     var gridCols = ((GridView)lvDownload.View).Columns;
@@ -105,20 +105,22 @@ namespace AMDownloader
                         {
                             var gridCol = gridCols[j];
 
-                            if (gridCol.Header.ToString() == restoreCol.ColumnName)
+                            if (gridCol.Header.ToString() == restoreCol.Name)
                             {
-                                if (gridCols.IndexOf(gridCol) != restoreCol.ColumnIndex)
+                                gridCol.Width = restoreCol.Width;
+
+                                if (gridCols.IndexOf(gridCol) != restoreCol.Index)
                                 {
-                                    var swapCol = gridCols[restoreCol.ColumnIndex];
-                                    gridCols.Move(j, restoreCol.ColumnIndex);
+                                    var swapCol = gridCols[restoreCol.Index];
+                                    gridCols.Move(j, restoreCol.Index);
                                     gridCols.Move(gridCols.IndexOf(swapCol), j);
                                 }
-                                break;
                             }
                         }
                     }
                 }
-                catch (XmlException)
+                catch (Exception ex)
+                when (ex is XmlException || ex is InvalidOperationException)
                 {
                 }
             }
@@ -141,23 +143,24 @@ namespace AMDownloader
             }
             else
             {
-                // save column order
+                // save column order and widths
 
-                var columnOrderList = new SerializableUIColumnOrderList();
+                var columnOrderList = new SerializableUIColumnList();
 
                 foreach (var column in ((GridView)lvDownload.View).Columns)
                 {
-                    SerializableUIColumnOrder serializableUIColumnOrder = new()
+                    SerializableUIColumn serializableUIColumnOrder = new()
                     {
-                        ColumnName = column.Header.ToString(),
-                        ColumnIndex = ((GridView)lvDownload.View).Columns.IndexOf(column)
+                        Index = ((GridView)lvDownload.View).Columns.IndexOf(column),
+                        Name = column.Header.ToString(),
+                        Width = column.Width
                     };
                     columnOrderList.Objects.Add(serializableUIColumnOrder);
                 }
 
                 try
                 {
-                    var writer = new XmlSerializer(typeof(SerializableUIColumnOrderList));
+                    var writer = new XmlSerializer(typeof(SerializableUIColumnList));
 
                     Directory.CreateDirectory(Paths.LocalAppDataFolder);
 
