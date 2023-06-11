@@ -95,8 +95,7 @@
     <DockPanel>
         <!--#region MENU -->
         <Menu DockPanel.Dock="Top">
-            <MenuItem Header="_File"
-                      TabIndex="9">
+            <MenuItem Header="_File">
                 <MenuItem Command="{Binding ClearFinishedDownloadsCommand}"
                           Header="Clear Finished Downloads"
                           InputGestureText="Alt+Del">
@@ -127,8 +126,7 @@
                     </MenuItem.Icon>
                 </MenuItem>
             </MenuItem>
-            <MenuItem Header="_Help"
-                      TabIndex="10">
+            <MenuItem Header="_Help">
                 <MenuItem x:Name="menuCheckForUpdates"
                           Header="Check For _Updates"
                           Command="{Binding CheckForUpdatesCommand}">
@@ -149,7 +147,7 @@
         <!--#region TOOLBAR -->
         <ToolBarTray DockPanel.Dock="Top"
                      IsLocked="True">
-            <ToolBar TabIndex="3">
+            <ToolBar>
                 <ToolBar.Resources>
                     <Style TargetType="{x:Type TextBlock}">
                         <Style.Triggers>
@@ -164,8 +162,7 @@
                 <Button Padding="5"
                         x:Name="btnAdd"
                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
-                        Command="{Binding AddCommand}"
-                        TabIndex="2">
+                        Command="{Binding AddCommand}">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock FontSize="18"
                                    Text="&#xF055;"
@@ -179,8 +176,7 @@
                 <Button CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
                         Command="{Binding RemoveCommand}"
                         Padding="5"
-                        x:Name="btnRemove"
-                        TabIndex="3">
+                        x:Name="btnRemove">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock FontSize="18"
                                    Text="&#xF056;"
@@ -195,8 +191,7 @@
                 <Button Padding="5"
                         x:Name="btnStart"
                         CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
-                        Command="{Binding StartCommand}"
-                        TabIndex="4">
+                        Command="{Binding StartCommand}">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock FontSize="18"
                                    Text="&#xF144;"
@@ -210,8 +205,7 @@
                 <Button Padding="5"
                         x:Name="btnPause"
                         CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
-                        Command="{Binding PauseCommand}"
-                        TabIndex="5">
+                        Command="{Binding PauseCommand}">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock FontSize="18"
                                    Text="&#xF28B;"
@@ -225,8 +219,7 @@
                 <Button Padding="5"
                         x:Name="btnCancel"
                         CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
-                        Command="{Binding CancelCommand}"
-                        TabIndex="6">
+                        Command="{Binding CancelCommand}">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock FontSize="18"
                                    Text="&#xF28D;"
@@ -241,8 +234,7 @@
                 <Button Padding="5"
                         x:Name="btnStartQueue"
                         Command="{Binding StartQueueCommand}"
-                        CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
-                        TabIndex="7">
+                        CommandParameter="{Binding SelectedItems, ElementName=lvDownload}">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock FontSize="18"
                                    Text="&#xF144;"
@@ -255,8 +247,7 @@
                 </Button>
                 <Button Padding="5"
                         x:Name="btnCancelQueue"
-                        Command="{Binding StopQueueCommand}"
-                        TabIndex="8">
+                        Command="{Binding StopQueueCommand}">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock FontSize="18"
                                    Text="&#xF28D;"
@@ -449,7 +440,7 @@
                                    Text="{Binding BytesDownloadedThisSession, Converter={StaticResource DownloaderSizeConverter}}"
                                    ToolTip="Data transferred this session" />
                     </TextBlock>
-                </StatusBarItem>                
+                </StatusBarItem>
             </StatusBar>
         </DockPanel>
         <!--#endregion-->
@@ -462,7 +453,6 @@
             <!--#region CATEGORYLIST -->
             <TreeView ItemsSource="{Binding CategoriesList}"
                       x:Name="tvCategories"
-                      TabIndex="1"
                       Loaded="tvCategories_Loaded">
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="SelectedItemChanged">
@@ -613,7 +603,6 @@
             <!--#region DOWNLOADLIST -->
             <ListView ItemsSource="{Binding CollectionView}"
                       x:Name="lvDownload"
-                      TabIndex="0"
                       Grid.Column="2"
                       ButtonBase.Click="lvDownload_HeaderClick"
                       SelectionMode="Extended"
