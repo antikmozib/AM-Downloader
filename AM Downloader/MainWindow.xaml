@@ -147,7 +147,8 @@
         </Menu>
         <!--#endregion-->
         <!--#region TOOLBAR -->
-        <ToolBarTray DockPanel.Dock="Top">
+        <ToolBarTray DockPanel.Dock="Top"
+                     IsLocked="True">
             <ToolBar TabIndex="3">
                 <ToolBar.Resources>
                     <Style TargetType="{x:Type TextBlock}">
