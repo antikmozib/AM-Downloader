@@ -218,10 +218,9 @@ namespace AMDownloader
             {
                 if (_ctLinked.IsCancellationRequested)
                 {
-                    // if the paused signal was given after creating the temp file
-                    // but before getting the content length, simply cancel the
-                    // download instead of pausing it
-                    if (_ctPause.IsCancellationRequested && SupportsResume)
+                    // if the paused signal was given after creating the temp file but before getting
+                    // the content length, simply cancel the download instead of pausing it
+                    if (_ctPause.IsCancellationRequested && SupportsResume && File.Exists(_tempPath))
                     {
                         Status = DownloadStatus.Paused;
                     }
@@ -281,14 +280,21 @@ namespace AMDownloader
         {
             try
             {
-                _ctsCancel?.Cancel();
+                if (_ctsCancel != null)
+                {
+                    _ctsCancel.Cancel();
+                }
+                else
+                {
+                    // entered paused state after being restored
+                    CleanupTempDownload();
+                }
             }
             catch (ObjectDisposedException)
             {
-                // not downloading
-
                 if (IsPaused)
                 {
+                    // entered paused state after being started
                     CleanupTempDownload();
                 }
             }
