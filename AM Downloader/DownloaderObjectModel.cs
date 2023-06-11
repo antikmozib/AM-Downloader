@@ -126,7 +126,7 @@ namespace AMDownloader
         {
             _httpClient = httpClient;
             _reportProgressBytes = bytesReporter;
-            _tempPath = destination + AppConstants.DownloaderSplitedPartExtension;
+            _tempPath = destination + Constants.DownloaderSplitedPartExtension;
 
             Url = url;
             Destination = destination;

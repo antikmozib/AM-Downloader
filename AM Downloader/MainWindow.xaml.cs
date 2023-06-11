@@ -83,14 +83,14 @@ namespace AMDownloader
 
             // restore column order
 
-            if (File.Exists(AppPaths.UIColumnOrderFile))
+            if (File.Exists(Paths.UIColumnOrderFile))
             {
                 try
                 {
                     SerializableUIColumnOrderList restoreCols;
                     var xmlReader = new XmlSerializer(typeof(SerializableUIColumnOrderList));
 
-                    using (var streamReader = new StreamReader(AppPaths.UIColumnOrderFile))
+                    using (var streamReader = new StreamReader(Paths.UIColumnOrderFile))
                     {
                         restoreCols = (SerializableUIColumnOrderList)xmlReader.Deserialize(streamReader);
                     }
@@ -159,9 +159,9 @@ namespace AMDownloader
                 {
                     var writer = new XmlSerializer(typeof(SerializableUIColumnOrderList));
 
-                    Directory.CreateDirectory(AppPaths.LocalAppDataFolder);
+                    Directory.CreateDirectory(Paths.LocalAppDataFolder);
 
-                    using var streamWriter = new StreamWriter(AppPaths.UIColumnOrderFile, false);
+                    using var streamWriter = new StreamWriter(Paths.UIColumnOrderFile, false);
                     writer.Serialize(streamWriter, columnOrderList);
                 }
                 catch

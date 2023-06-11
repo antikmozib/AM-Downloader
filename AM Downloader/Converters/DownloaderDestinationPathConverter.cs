@@ -24,7 +24,7 @@ namespace AMDownloader
             {
                 // downloading to a first-level folder in drive
                 string parent = Path.GetDirectoryName(path);
-                output += CommonFunctions.DriveLetterToName(parent);
+                output += Functions.DriveLetterToName(parent);
             }
             else
             {

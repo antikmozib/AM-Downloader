@@ -104,21 +104,21 @@ namespace AMDownloader
                 }
                 else
                 {
-                    cboDestination.Text = AppPaths.UserDownloadsFolder;
+                    cboDestination.Text = Paths.UserDownloadsFolder;
                 }
             }
             else
             {
-                cboDestination.Text = AppPaths.UserDownloadsFolder;
+                cboDestination.Text = Paths.UserDownloadsFolder;
             }
-            if (!cboDestination.Items.Contains(AppPaths.UserDownloadsFolder)) cboDestination.Items.Add(AppPaths.UserDownloadsFolder);
+            if (!cboDestination.Items.Contains(Paths.UserDownloadsFolder)) cboDestination.Items.Add(Paths.UserDownloadsFolder);
 
-            if (File.Exists(AppPaths.SavedLocationsFile))
+            if (File.Exists(Paths.SavedLocationsFile))
             {
                 try
                 {
                     XmlSerializer writer = new XmlSerializer(typeof(SerializableDownloadPathHistoryList));
-                    using (StreamReader streamReader = new StreamReader(AppPaths.SavedLocationsFile))
+                    using (StreamReader streamReader = new StreamReader(Paths.SavedLocationsFile))
                     {
                         SerializableDownloadPathHistoryList list;
                         list = (SerializableDownloadPathHistoryList)writer.Deserialize(streamReader);
@@ -142,9 +142,9 @@ namespace AMDownloader
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            if (File.Exists(AppPaths.SavedLocationsFile))
+            if (File.Exists(Paths.SavedLocationsFile))
             {
-                File.Delete(AppPaths.SavedLocationsFile);
+                File.Delete(Paths.SavedLocationsFile);
             }
             var list = new SerializableDownloadPathHistoryList();
             foreach (var item in cboDestination.Items)
@@ -157,7 +157,7 @@ namespace AMDownloader
             }
             try
             {
-                using (var streamWriter = new StreamWriter(AppPaths.SavedLocationsFile))
+                using (var streamWriter = new StreamWriter(Paths.SavedLocationsFile))
                 {
                     XmlSerializer writer = new XmlSerializer(typeof(SerializableDownloadPathHistoryList));
                     writer.Serialize(streamWriter, list);
@@ -189,7 +189,7 @@ namespace AMDownloader
             }
             else
             {
-                dlg.SelectedPath = AppPaths.UserDownloadsFolder;
+                dlg.SelectedPath = Paths.UserDownloadsFolder;
             }
 
             if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)

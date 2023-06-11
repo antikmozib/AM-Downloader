@@ -17,7 +17,7 @@ namespace AMDownloader
 
             if (speed > 1000000)
             {
-                return ((double)speed / (long)ByteConstants.MEGABYTE).ToString("#0.00") + " MB/s";
+                return ((double)speed / (long)Constants.ByteConstants.MEGABYTE).ToString("#0.00") + " MB/s";
             }
             else
             {
@@ -27,7 +27,7 @@ namespace AMDownloader
                 }
                 else
                 {
-                    return ((double)speed / (long)ByteConstants.KILOBYTE).ToString("#0") + " KB/s";
+                    return ((double)speed / (long)Constants.ByteConstants.KILOBYTE).ToString("#0") + " KB/s";
                 }
             }
         }

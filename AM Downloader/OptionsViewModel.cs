@@ -23,9 +23,9 @@ namespace AMDownloader
 
         private void SaveSettings(object obj)
         {
-            if (Settings.Default.MaxParallelDownloads < 1 || Settings.Default.MaxParallelDownloads > AppConstants.ParallelDownloadsLimit)
+            if (Settings.Default.MaxParallelDownloads < 1 || Settings.Default.MaxParallelDownloads > Constants.ParallelDownloadsLimit)
             {
-                Settings.Default.MaxParallelDownloads = AppConstants.ParallelDownloadsLimit;
+                Settings.Default.MaxParallelDownloads = Constants.ParallelDownloadsLimit;
             }
         }
 

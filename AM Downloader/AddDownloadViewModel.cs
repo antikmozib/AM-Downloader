@@ -75,7 +75,7 @@ namespace AMDownloader
             }
             else
             {
-                this.SaveToFolder = AppPaths.UserDownloadsFolder;
+                this.SaveToFolder = Paths.UserDownloadsFolder;
             }
             this.Enqueue = Settings.Default.EnqueueAddedItems;
             this.StartDownload = Settings.Default.StartDownloadingAddedItems;

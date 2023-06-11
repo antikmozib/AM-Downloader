@@ -9,24 +9,21 @@ using System.Threading.Tasks;
 
 namespace AMDownloader.Common
 {
-    internal enum ByteConstants
-    {
-        KILOBYTE = 1024,
-        MEGABYTE = KILOBYTE * KILOBYTE,
-        GIGABYTE = MEGABYTE * KILOBYTE
-    }
-
-    internal static class AppConstants
+    internal static class Constants
     {
         public const int RequestThrottlerInterval = 60000; // 1 min
-        public const int DownloaderStreamBufferLength = (int)ByteConstants.KILOBYTE;
-        public const int RemovingFileBytesBufferLength = (int)(ByteConstants.MEGABYTE);
         public const string DownloaderSplitedPartExtension = ".AMDownload";
         public const int ParallelDownloadsLimit = 10;
-        public const string UpdateLink = @"https://mozib.io/downloads/update.php";
+
+        public enum ByteConstants
+        {
+            KILOBYTE = 1024,
+            MEGABYTE = KILOBYTE * KILOBYTE,
+            GIGABYTE = MEGABYTE * KILOBYTE
+        }
     }
 
-    internal static class AppPaths
+    internal static class Paths
     {
         /// <summary>
         /// Gets the path to the folder where to save the user-specific settings.
@@ -39,16 +36,16 @@ namespace AMDownloader.Common
         public static string UserDownloadsFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
     }
 
-    internal static class CommonFunctions
+    internal static class Functions
     {
-        public static string GetFreshFilename(string fullPath)
+        public static string GetNewFileName(string fullPath)
         {
             string dirName = Path.GetDirectoryName(fullPath);
             string fileName = Path.GetFileName(fullPath);
             string result = dirName + Path.DirectorySeparatorChar + fileName;
             int i = 0;
 
-            while (File.Exists(result) || File.Exists(result + AppConstants.DownloaderSplitedPartExtension))
+            while (File.Exists(result) || File.Exists(result + Constants.DownloaderSplitedPartExtension))
             {
                 result = dirName + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(fileName) +
                     " (" + ++i + ")" + Path.GetExtension(fileName);
@@ -104,12 +101,12 @@ namespace AMDownloader.Common
         public static void ResetAllSettings()
         {
             Settings.Default.Reset();
-            if (Directory.Exists(AppPaths.LocalAppDataFolder))
+            if (Directory.Exists(Paths.LocalAppDataFolder))
             {
                 try
                 {
-                    File.Delete(AppPaths.SavedLocationsFile);
-                    File.Delete(AppPaths.UIColumnOrderFile);
+                    File.Delete(Paths.SavedLocationsFile);
+                    File.Delete(Paths.UIColumnOrderFile);
                 }
                 catch
                 {
@@ -120,6 +117,8 @@ namespace AMDownloader.Common
 
     internal static class AppUpdateService
     {
+        public const string UpdateServer = @"https://mozib.io/downloads/update.php";
+
         public static async Task<string> GetUpdateUrl(string url, string appName, string appVersion)
         {
             using var c = new HttpClient();

@@ -192,7 +192,7 @@ namespace AMDownloader
             });
 
             _client = new HttpClient();
-            _requestThrottler = new RequestThrottler(AppConstants.RequestThrottlerInterval);
+            _requestThrottler = new RequestThrottler(Constants.RequestThrottlerInterval);
             _clipboardService = new ClipboardObserver();
             _semaphoreMeasuringSpeed = new SemaphoreSlim(1);
             _semaphoreUpdatingList = new SemaphoreSlim(1);
@@ -249,7 +249,7 @@ namespace AMDownloader
             }
 
             // Populate history
-            if (File.Exists(AppPaths.DownloadsHistoryFile))
+            if (File.Exists(Paths.DownloadsHistoryFile))
             {
                 _ctsUpdatingList = new CancellationTokenSource();
                 RaisePropertyChanged(nameof(this.IsBackgroundWorking));
@@ -268,7 +268,7 @@ namespace AMDownloader
                         SerializableDownloaderObjectModelList source;
                         var xmlReader = new XmlSerializer(typeof(SerializableDownloaderObjectModelList));
 
-                        using (var streamReader = new StreamReader(AppPaths.DownloadsHistoryFile))
+                        using (var streamReader = new StreamReader(Paths.DownloadsHistoryFile))
                         {
                             source = (SerializableDownloaderObjectModelList)xmlReader.Deserialize(streamReader);
                         }
@@ -629,7 +629,7 @@ namespace AMDownloader
         {
             if (_resetAllSettingsOnClose)
             {
-                CommonFunctions.ResetAllSettings();
+                Functions.ResetAllSettings();
             }
         }
 
@@ -668,7 +668,7 @@ namespace AMDownloader
                     var list = new SerializableDownloaderObjectModelList();
                     var index = 0;
 
-                    Directory.CreateDirectory(AppPaths.LocalAppDataFolder);
+                    Directory.CreateDirectory(Paths.LocalAppDataFolder);
 
                     foreach (var item in DownloadItemsList)
                     {
@@ -696,7 +696,7 @@ namespace AMDownloader
                         list.Objects.Add(sItem);
                     }
 
-                    using var streamWriter = new StreamWriter(AppPaths.DownloadsHistoryFile, false);
+                    using var streamWriter = new StreamWriter(Paths.DownloadsHistoryFile, false);
                     writer.Serialize(streamWriter, list);
                 }
                 catch
@@ -857,7 +857,7 @@ namespace AMDownloader
                     skipping.Add(urls[i]);
                     continue;
                 }
-                var fileName = CommonFunctions.GetFreshFilename(destination + CommonFunctions.GetFilenameFromUrl(urls[i]));
+                var fileName = Functions.GetNewFileName(destination + Functions.GetFilenameFromUrl(urls[i]));
                 if (existingDestinations.Contains(fileName))
                 {
                     skipping.Add(urls[i]);
@@ -1109,9 +1109,9 @@ namespace AMDownloader
         private async Task TriggerUpdateCheckAsync(bool silent = false)
         {
             string url = await AppUpdateService.GetUpdateUrl(
-                   AppConstants.UpdateLink,
-                    Assembly.GetExecutingAssembly().GetName().Name,
-                    Assembly.GetExecutingAssembly().GetName().Version.ToString());
+                AppUpdateService.UpdateServer,
+                Assembly.GetExecutingAssembly().GetName().Name,
+                Assembly.GetExecutingAssembly().GetName().Version.ToString());
 
             if (string.IsNullOrEmpty(url))
             {
