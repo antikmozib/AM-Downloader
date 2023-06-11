@@ -23,7 +23,7 @@ namespace AMDownloader
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public ShowPreviewDelegate ShowPreview { get; private set; }
+        public ShowUrlPreviewDelegate ShowUrlPreview { get; private set; }
         public string Urls { get; set; }
         /// <summary>
         /// Returns the list of full URLs generated from the URL patterns.
@@ -62,7 +62,7 @@ namespace AMDownloader
         public ICommand AddCommand { get; private set; }
         public ICommand PreviewCommand { get; private set; }
 
-        public AddDownloadViewModel(ShowPreviewDelegate showPreview)
+        public AddDownloadViewModel(ShowUrlPreviewDelegate showUrlPreview)
         {
             _clipboardService = new ClipboardObserver();
 
@@ -80,7 +80,7 @@ namespace AMDownloader
             this.Enqueue = Settings.Default.EnqueueAddedItems;
             this.StartDownload = Settings.Default.StartDownloadingAddedItems;
             this.Urls = string.Empty;
-            this.ShowPreview = showPreview;
+            this.ShowUrlPreview = showUrlPreview;
 
             var clipText = _clipboardService.GetText();
             if (clipText.Contains("http") || clipText.Contains("ftp")) this.Urls += clipText.Trim() + "\n";
@@ -95,7 +95,7 @@ namespace AMDownloader
             {
                 output += url + "\n\n";
             }
-            this.ShowPreview.Invoke(output);
+            this.ShowUrlPreview.Invoke(output);
         }
 
         private bool Add_CanExecute(object obj)

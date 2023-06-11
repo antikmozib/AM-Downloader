@@ -224,11 +224,11 @@ namespace AMDownloader
         internal void Preview(string preview)
         {
             var urls = (from url in preview.Split('\n').ToList<string>() where url.Trim().Length > 0 select url).ToList<string>();
-            var previewViewModel = new PreviewViewModel("Preview URL patterns:", urls);
-            var previewWindow = new PreviewWindow();
-            previewWindow.DataContext = previewViewModel;
-            previewWindow.Owner = this;
-            previewWindow.ShowDialog();
+            var listViewerViewModel = new ListViewerViewModel("Preview URL patterns:", urls);
+            var listViewerWindow = new ListViewerWindow();
+            listViewerWindow.DataContext = listViewerViewModel;
+            listViewerWindow.Owner = this;
+            listViewerWindow.ShowDialog();
         }
     }
 }

@@ -9,7 +9,7 @@ using System.Windows.Input;
 
 namespace AMDownloader
 {
-    public class PreviewViewModel : INotifyPropertyChanged
+    public class ListViewerViewModel : INotifyPropertyChanged
     {
         public struct UrlListType
         {
@@ -21,7 +21,7 @@ namespace AMDownloader
             }
         }
 
-        private ClipboardObserver _clipboard;
+        private readonly ClipboardObserver _clipboard;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -29,7 +29,7 @@ namespace AMDownloader
         public string Description { get; set; }
         public ObservableCollection<UrlListType> Urls { get; set; }
 
-        public PreviewViewModel(string description, List<string> urls)
+        public ListViewerViewModel(string description, List<string> urls)
         {
             CopyCommand = new RelayCommand<object>(Copy);
             _clipboard = new ClipboardObserver();

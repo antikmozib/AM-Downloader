@@ -5,11 +5,11 @@ using System.Windows;
 namespace AMDownloader
 {
     /// <summary>
-    /// Interaction logic for PreviewWindow.xaml
+    /// Interaction logic for ListViewerWindow.xaml
     /// </summary>
-    public partial class PreviewWindow : Window
+    public partial class ListViewerWindow : Window
     {
-        public PreviewWindow()
+        public ListViewerWindow()
         {
             InitializeComponent();
         }

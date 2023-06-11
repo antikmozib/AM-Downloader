@@ -353,12 +353,12 @@ namespace AMDownloader
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
-                var previewViewModel = new PreviewViewModel(description, urls);
-                var previewWindow = new PreviewWindow();
-                previewWindow.DataContext = previewViewModel;
-                previewWindow.Owner = this;
-                previewWindow.Title = title;
-                previewWindow.ShowDialog();
+                var listViewerViewModel = new ListViewerViewModel(description, urls);
+                var listViewerWindow = new ListViewerWindow();
+                listViewerWindow.DataContext = listViewerViewModel;
+                listViewerWindow.Owner = this;
+                listViewerWindow.Title = title;
+                listViewerWindow.ShowDialog();
             });
         }
 
