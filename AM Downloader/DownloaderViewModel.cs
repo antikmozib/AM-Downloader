@@ -854,13 +854,13 @@ namespace AMDownloader
             this.Status = "Saving data...";
             RaisePropertyChanged(nameof(this.Status));
 
-            if (QueueProcessor.IsBusy)
-            {
-                QueueProcessor.Stop();
-            }
-
             Task<bool> closingTask = Task.Run(async () =>
             {
+                if (QueueProcessor.IsBusy)
+                {
+                    await QueueProcessor.StopAsync();
+                }
+
                 await _semaphoreUpdatingList.WaitAsync();
 
                 try
@@ -1262,7 +1262,7 @@ namespace AMDownloader
 
         /// <summary>
         /// Starts downloading the specified items. If the number of items is larger than the
-        /// maximum number of parallel downloads allowed, all items are enqueued instead.
+        /// maximum number of parallel downloads allowed, the items are enqueued instead.
         /// </summary>
         /// <param name="enqueue">Whether to enqueue the items instead of immediately starting the download.</param>
         /// <param name="items">The items to download.</param>

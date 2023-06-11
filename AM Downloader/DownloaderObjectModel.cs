@@ -220,7 +220,7 @@ namespace AMDownloader
                 {
                     // if the paused signal was given after creating the temp file but before getting
                     // the content length, simply cancel the download instead of pausing it
-                    if (_ctPause.IsCancellationRequested && SupportsResume && File.Exists(_tempPath))
+                    if (_ctPause.IsCancellationRequested && SupportsResume)
                     {
                         Status = DownloadStatus.Paused;
                     }
