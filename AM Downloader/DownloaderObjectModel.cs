@@ -319,7 +319,7 @@ namespace AMDownloader
 
         private async Task DownloadAsync()
         {
-            HttpRequestMessage request = null;
+            HttpRequestMessage request;
             // reports the lifetime number of bytes
             IProgress<int> progressReporter = new Progress<int>((value) =>
             {

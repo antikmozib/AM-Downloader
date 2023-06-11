@@ -14,7 +14,7 @@ namespace AMDownloader.QueueProcessing
         #region Fields
 
         private readonly SemaphoreSlim _semaphore;
-        private readonly object _lockQueueList;
+        private readonly object _queueListLock;
         private readonly List<IQueueable> _queueList;
         private TaskCompletionSource _tcs;
         private CancellationTokenSource _cts;
@@ -51,7 +51,7 @@ namespace AMDownloader.QueueProcessing
         {
             _semaphore = new SemaphoreSlim(maxParallelDownloads);
             _queueList = new();
-            _lockQueueList = _queueList;
+            _queueListLock = _queueList;
 
             IsBusy = false;
 
@@ -99,11 +99,7 @@ namespace AMDownloader.QueueProcessing
 
             foreach (var item in items)
             {
-                if (_queueList.Contains(item))
-                {
-                    _queueList.Remove(item);
-                    itemsRemoved = true;
-                }
+                itemsRemoved = _queueList.Remove(item);
             }
 
             if (itemsRemoved)
@@ -116,7 +112,10 @@ namespace AMDownloader.QueueProcessing
         {
             bool cancellationRequested;
 
-            if (IsBusy) return;
+            if (IsBusy)
+            {
+                return;
+            };
 
             IsBusy = true;
             RaisePropertyChanged(nameof(IsBusy));
@@ -125,7 +124,7 @@ namespace AMDownloader.QueueProcessing
             _tcs = new();
             _cts = new();
             var ct = _cts.Token;
-
+            
             await Task.Run(async () =>
             {
                 List<Task> tasks = new();
@@ -156,9 +155,9 @@ namespace AMDownloader.QueueProcessing
 
                             if (item.IsCompleted || item.IsErrored)
                             {
-                                Monitor.Enter(_lockQueueList);
+                                Monitor.Enter(_queueListLock);
                                 _queueList.Remove(item);
-                                Monitor.Exit(_lockQueueList);
+                                Monitor.Exit(_queueListLock);
                             }
                         }
                         catch (OperationCanceledException)
@@ -191,6 +190,9 @@ namespace AMDownloader.QueueProcessing
             _tcs.SetResult();
             _cts.Dispose();
 
+            // must be set before restarting the queue automatically
+            IsBusy = false;
+
             // keep running the queue recursively until there are
             // no more queued items or cancellation is requested
             if (_queueList.Count > 0 && !cancellationRequested)
@@ -198,14 +200,16 @@ namespace AMDownloader.QueueProcessing
                 await StartAsync();
             }
 
-            IsBusy = false;
             RaisePropertyChanged(nameof(IsBusy));
             RaiseEvent(QueueProcessorStopped);
         }
 
         public void Stop()
         {
-            if (!IsBusy) return;
+            if (!IsBusy)
+            {
+                return;
+            };
 
             _cts?.Cancel();
 
@@ -229,7 +233,7 @@ namespace AMDownloader.QueueProcessing
         /// Determines if an item is enqueued.
         /// </summary>
         /// <param name="value">The item to check.</param>
-        /// <returns></returns>
+        /// <returns><see langword="true"/> if the item is enqueued.</returns>
         public bool IsQueued(IQueueable value)
         {
             return _queueList.Contains(value);

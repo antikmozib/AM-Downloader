@@ -9,7 +9,6 @@ using AMDownloader.QueueProcessing;
 using AMDownloader.RequestThrottling;
 using Microsoft.VisualBasic.FileIO;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -24,7 +23,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
-using System.Windows.Media.Animation;
 using System.Xml.Serialization;
 
 namespace AMDownloader
@@ -221,7 +219,8 @@ namespace AMDownloader
             DequeueCommand = new RelayCommand<object>(Dequeue);
             DeleteFileCommand = new RelayCommand<object>(DeleteFile, DeleteFile_CanExecute);
             CopyLinkToClipboardCommand = new RelayCommand<object>(CopyLinkToClipboard);
-            ClearFinishedDownloadsCommand = new RelayCommand<object>(ClearFinishedDownloads, ClearFinishedDownloads_CanExecute);
+            ClearFinishedDownloadsCommand = new RelayCommand<object>(
+                ClearFinishedDownloads, ClearFinishedDownloads_CanExecute);
             CancelBackgroundTaskCommand = new RelayCommand<object>(
                 CancelBackgroundTask, CancelBackgroundTask_CanExecute);
             CheckForUpdatesCommand = new RelayCommand<object>(CheckForUpdates);
@@ -361,6 +360,7 @@ namespace AMDownloader
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
             foreach (var item in items)
             {
+                QueueProcessor.Dequeue(item);
                 item.Pause();
             }
         }
@@ -371,11 +371,7 @@ namespace AMDownloader
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
             foreach (var item in items)
             {
-                if (QueueProcessor.IsQueued(item))
-                {
-                    QueueProcessor.Dequeue(item);
-                }
-
+                QueueProcessor.Dequeue(item);
                 item.Cancel();
             }
         }
@@ -421,7 +417,7 @@ namespace AMDownloader
         private void Remove(object obj)
         {
             if (obj == null) return;
-            
+
             _ctsUpdatingList = new CancellationTokenSource();
             RaisePropertyChanged(nameof(IsBackgroundWorking));
 
@@ -504,12 +500,12 @@ namespace AMDownloader
                 await QueueProcessor.StartAsync();
             });
         }
-
+        
         private void StopQueue(object obj)
         {
             QueueProcessor.Stop();
         }
-
+        
         private void ShowOptions(object obj)
         {
             var win = new OptionsWindow();
@@ -546,7 +542,7 @@ namespace AMDownloader
         private void DeleteFile(object obj)
         {
             if (obj == null) return;
-            
+
             _ctsUpdatingList = new CancellationTokenSource();
             RaisePropertyChanged(nameof(this.IsBackgroundWorking));
 
@@ -1105,7 +1101,7 @@ namespace AMDownloader
                 _semaphoreMeasuringSpeed.Release();
             });
         }
-        
+
         private async Task TriggerUpdateCheckAsync(bool silent = false)
         {
             string url = await AppUpdateService.GetUpdateUrl(
