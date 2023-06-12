@@ -2,6 +2,7 @@
 
 using AMDownloader.Common;
 using AMDownloader.ObjectModel;
+using AMDownloader.Properties;
 using AMDownloader.QueueProcessing;
 using System;
 using System.ComponentModel;
@@ -386,9 +387,17 @@ namespace AMDownloader
                 int read;
                 int bytesReceived = 0;
 
+                var stopWatch = new Stopwatch();
+                long maxDownloadSpeed = Settings.Default.MaxDownloadSpeed;
+                int throttlerBytesReceived = 0, throttlerBytesExpected = 0;
+
                 do
                 {
+                    stopWatch.Start();
+
                     read = await readStream.ReadAsync(buffer, _ctLinked);
+
+                    stopWatch.Stop();
 
                     byte[] data = new byte[read];
 
@@ -398,6 +407,27 @@ namespace AMDownloader
 
                     progressReporter.Report(data.Length);
 
+                    // Speed throttler
+
+                    throttlerBytesReceived += read;
+
+                    if (maxDownloadSpeed > 0 && stopWatch.ElapsedMilliseconds > 0)
+                    {
+                        throttlerBytesExpected = (int)((double)maxDownloadSpeed / 1000 * stopWatch.ElapsedMilliseconds);
+                        long millisecondsExpected = (long)(1000 / (double)maxDownloadSpeed * throttlerBytesReceived);
+                        long delay = millisecondsExpected - stopWatch.ElapsedMilliseconds;
+
+                        if (throttlerBytesReceived > throttlerBytesExpected || stopWatch.ElapsedMilliseconds < millisecondsExpected)
+                        {
+                            if (delay > 0)
+                            {
+                                await Task.Delay((int)delay, _ctLinked);
+                            }
+
+                            throttlerBytesReceived = 0;
+                            stopWatch.Reset();
+                        }
+                    }
                 } while (read != 0);
             }
             catch (OperationCanceledException)
