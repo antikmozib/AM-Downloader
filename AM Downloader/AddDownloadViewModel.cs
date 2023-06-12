@@ -2,6 +2,7 @@
 
 using AMDownloader.ClipboardObservation;
 using AMDownloader.Common;
+using AMDownloader.Helpers;
 using AMDownloader.Properties;
 using System;
 using System.Collections.Generic;
@@ -69,9 +70,9 @@ namespace AMDownloader
             AddCommand = new RelayCommand<object>(Add, Add_CanExecute);
             PreviewCommand = new RelayCommand<object>(Preview, Add_CanExecute);
 
-            if (Settings.Default.LastSavedLocation.Trim().Length > 0)
+            if (Settings.Default.LastDownloadLocation.Trim().Length > 0)
             {
-                this.SaveToFolder = Settings.Default.LastSavedLocation;
+                this.SaveToFolder = Settings.Default.LastDownloadLocation;
             }
             else
             {

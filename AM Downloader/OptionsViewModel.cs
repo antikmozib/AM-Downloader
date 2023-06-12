@@ -1,6 +1,7 @@
 ﻿// Copyright (C) 2020-2023 Antik Mozib. All rights reserved.
 
 using AMDownloader.Common;
+using AMDownloader.Helpers;
 using AMDownloader.Properties;
 using System.Windows.Input;
 
@@ -8,69 +9,118 @@ namespace AMDownloader
 {
     internal class OptionsViewModel
     {
+        #region Fields
+
+        private int _maxParallelDownloads;
+        private long _maxDownloadSpeed;
+
+        #endregion
+
+        #region Properties
+
         public int MaxParallelDownloads
         {
-            get => Settings.Default.MaxParallelDownloads;
+            get => _maxParallelDownloads;
 
             set
             {
                 if (value < 1)
                 {
-                    Settings.Default.MaxParallelDownloads = 1;
+                    _maxParallelDownloads = 1;
                 }
                 else if (value > Constants.ParallelDownloadsLimit)
                 {
-                    Settings.Default.MaxParallelDownloads = Constants.ParallelDownloadsLimit;
+                    _maxParallelDownloads = Constants.ParallelDownloadsLimit;
                 }
                 else
                 {
-                    Settings.Default.MaxParallelDownloads = value;
+                    _maxParallelDownloads = value;
                 }
             }
         }
 
         public long MaxDownloadSpeed
         {
-            get => Settings.Default.MaxDownloadSpeed;
+            get => _maxDownloadSpeed;
 
             set
             {
                 if (value < 0)
                 {
-                    Settings.Default.MaxDownloadSpeed = 0;
+                    _maxDownloadSpeed = 0;
                 }
                 else if (value > long.MaxValue)
                 {
-                    Settings.Default.MaxDownloadSpeed = long.MaxValue;
+                    _maxDownloadSpeed = long.MaxValue;
                 }
                 else
                 {
-                    Settings.Default.MaxDownloadSpeed = value;
+                    _maxDownloadSpeed = value;
                 }
             }
         }
 
-        public bool ResetSettingsOnClose;
+        public bool ClearFinishedDownloadsOnExit { get; set; }
 
-        public ICommand SaveSettingsCommand { get; private set; }
-        public ICommand ResetSettingsCommand { get; private set; }
+        public bool RememberLastDownloadLocation { get; set; }
+
+        public bool AutoCheckForUpdates { get; set; }
+
+        public bool ResetSettingsOnClose { get; set; }
+
+        #endregion
+
+        #region Commands
+
+        public ICommand SaveCommand { get; private set; }
+        public ICommand CancelCommand { get; private set; }
+        public ICommand ResetCommand { get; private set; }
+
+        #endregion
+
+        #region Ctors
 
         public OptionsViewModel()
         {
+            _maxParallelDownloads = Settings.Default.MaxParallelDownloads;
+            _maxDownloadSpeed = Settings.Default.MaxDownloadSpeed;
+
+            ClearFinishedDownloadsOnExit = Settings.Default.ClearFinishedDownloadsOnExit;
+            RememberLastDownloadLocation = Settings.Default.RememberLastDownloadLocation;
+            AutoCheckForUpdates = Settings.Default.AutoCheckForUpdates;
+
             ResetSettingsOnClose = false;
 
-            SaveSettingsCommand = new RelayCommand<object>(SaveSettings);
-            ResetSettingsCommand = new RelayCommand<object>(ResetSettings);
+            SaveCommand = new RelayCommand<object>(Save);
+            CancelCommand = new RelayCommand<object>(Cancel);
+            ResetCommand = new RelayCommand<object>(Reset);
         }
 
-        private void SaveSettings(object obj)
+        #endregion
+
+        #region Private methods
+
+        private void Save(object obj)
+        {
+            Settings.Default.MaxParallelDownloads = _maxParallelDownloads;
+            Settings.Default.MaxDownloadSpeed = _maxDownloadSpeed;
+            Settings.Default.ClearFinishedDownloadsOnExit = ClearFinishedDownloadsOnExit;
+            Settings.Default.RememberLastDownloadLocation = RememberLastDownloadLocation;
+            Settings.Default.AutoCheckForUpdates = AutoCheckForUpdates;
+            Settings.Default.Save();
+        }
+
+        private void Cancel(object obj)
         {
         }
 
-        private void ResetSettings(object obj)
+        private void Reset(object obj)
         {
             Settings.Default.Reset();
+
             ResetSettingsOnClose = true;
         }
+
+        #endregion
     }
 }

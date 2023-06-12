@@ -5,13 +5,13 @@
     <Setting Name="MaxParallelDownloads" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">5</Value>
     </Setting>
-    <Setting Name="ClearFinishedOnExit" Type="System.Boolean" Scope="User">
+    <Setting Name="ClearFinishedDownloadsOnExit" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="LastSavedLocation" Type="System.String" Scope="User">
+    <Setting Name="LastDownloadLocation" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="RememberLastSavedLocation" Type="System.Boolean" Scope="User">
+    <Setting Name="RememberLastDownloadLocation" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="MainWindowHeight" Type="System.Int32" Scope="User">
@@ -39,10 +39,10 @@
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="MainWindowTop" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">100</Value>
+      <Value Profile="(Default)">50</Value>
     </Setting>
     <Setting Name="MainWindowLeft" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">100</Value>
+      <Value Profile="(Default)">50</Value>
     </Setting>
     <Setting Name="BytesTransferredOverLifetime" Type="System.UInt64" Scope="User">
       <Value Profile="(Default)">0</Value>
@@ -64,6 +64,9 @@
     </Setting>
     <Setting Name="LastSelectedCatagory" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="FirstRun" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
     </Setting>
   </Settings>
 </SettingsFile>

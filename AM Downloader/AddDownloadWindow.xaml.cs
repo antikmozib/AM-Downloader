@@ -92,15 +92,15 @@ namespace AMDownloader
         {
             InitializeComponent();
         }
-        
+
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            if (Settings.Default.RememberLastSavedLocation)
+            if (Settings.Default.RememberLastDownloadLocation)
             {
-                if (Settings.Default.LastSavedLocation.Trim().Length > 0)
+                if (Settings.Default.LastDownloadLocation.Trim().Length > 0)
                 {
-                    cboDestination.Items.Add(Settings.Default.LastSavedLocation);
-                    cboDestination.Text = Settings.Default.LastSavedLocation;
+                    cboDestination.Items.Add(Settings.Default.LastDownloadLocation);
+                    cboDestination.Text = Settings.Default.LastDownloadLocation;
                 }
                 else
                 {
@@ -139,7 +139,7 @@ namespace AMDownloader
             txtUrl.Select(txtUrl.Text.Length, 0);
             txtUrl.Focus();
         }
-
+        
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             if (File.Exists(Paths.SavedLocationsFile))
@@ -168,12 +168,12 @@ namespace AMDownloader
                 return;
             }
 
-            if (Settings.Default.RememberLastSavedLocation)
+            if (Settings.Default.RememberLastDownloadLocation)
             {
-                Settings.Default.LastSavedLocation = cboDestination.Text;
+                Settings.Default.LastDownloadLocation = cboDestination.Text;
             }
         }
-        
+
         private void btnAdd_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = true;
@@ -199,15 +199,18 @@ namespace AMDownloader
                 cboDestination.Text = dlg.SelectedPath;
             }
         }
-        
+
         private void txtUrl_PreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
         {
             if (Keyboard.Modifiers != ModifierKeys.Control)
             {
                 return;
             }
+
             e.Handled = true;
+
             var fontSize = txtUrl.FontSize;
+
             if (e.Delta > 0)
             {
                 ++fontSize;
@@ -216,8 +219,17 @@ namespace AMDownloader
             {
                 --fontSize;
             }
-            if (fontSize < this.FontSize) fontSize = this.FontSize;
-            if (fontSize > (3 * this.FontSize)) fontSize = 3 * this.FontSize;
+
+            if (fontSize < this.FontSize)
+            {
+                fontSize = this.FontSize;
+            }
+
+            if (fontSize > (3 * this.FontSize))
+            {
+                fontSize = 3 * this.FontSize;
+            }
+
             txtUrl.FontSize = fontSize;
         }
 

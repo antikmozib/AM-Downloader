@@ -17,8 +17,10 @@
         Top="{Binding MainWindowTop, Mode=TwoWay, Source={x:Static properties:Settings.Default}}"
         Left="{Binding MainWindowLeft, Mode=TwoWay, Source={x:Static properties:Settings.Default}}"
         WindowState="{Binding MainWindowState, Mode=TwoWay, Source={x:Static properties:Settings.Default}}"
+        Loaded="Window_Loaded"
+        Initialized="Window_Initialized" 
         Closing="Window_Closing"
-        Icon="pack://application:,,,/Icons/app.ico" Loaded="Window_Loaded">
+        Icon="pack://application:,,,/Icons/app.ico">
     <Window.Resources>
         <converters:ProgressBarVisibilityConverter x:Key="ProgressBarVisibilityConverter" />
         <converters:DownloaderSizeConverter x:Key="DownloaderSizeConverter" />

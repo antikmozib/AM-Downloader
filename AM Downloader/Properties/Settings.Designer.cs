@@ -38,36 +38,36 @@ namespace AMDownloader.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool ClearFinishedOnExit {
+        public bool ClearFinishedDownloadsOnExit {
             get {
-                return ((bool)(this["ClearFinishedOnExit"]));
+                return ((bool)(this["ClearFinishedDownloadsOnExit"]));
             }
             set {
-                this["ClearFinishedOnExit"] = value;
+                this["ClearFinishedDownloadsOnExit"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string LastSavedLocation {
+        public string LastDownloadLocation {
             get {
-                return ((string)(this["LastSavedLocation"]));
+                return ((string)(this["LastDownloadLocation"]));
             }
             set {
-                this["LastSavedLocation"] = value;
+                this["LastDownloadLocation"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool RememberLastSavedLocation {
+        public bool RememberLastDownloadLocation {
             get {
-                return ((bool)(this["RememberLastSavedLocation"]));
+                return ((bool)(this["RememberLastDownloadLocation"]));
             }
             set {
-                this["RememberLastSavedLocation"] = value;
+                this["RememberLastDownloadLocation"] = value;
             }
         }
         
@@ -169,7 +169,7 @@ namespace AMDownloader.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("100")]
+        [global::System.Configuration.DefaultSettingValueAttribute("50")]
         public int MainWindowTop {
             get {
                 return ((int)(this["MainWindowTop"]));
@@ -181,7 +181,7 @@ namespace AMDownloader.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("100")]
+        [global::System.Configuration.DefaultSettingValueAttribute("50")]
         public int MainWindowLeft {
             get {
                 return ((int)(this["MainWindowLeft"]));
@@ -272,6 +272,18 @@ namespace AMDownloader.Properties {
             }
             set {
                 this["LastSelectedCatagory"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool FirstRun {
+            get {
+                return ((bool)(this["FirstRun"]));
+            }
+            set {
+                this["FirstRun"] = value;
             }
         }
     }

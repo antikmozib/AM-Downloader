@@ -18,6 +18,7 @@ using System.Windows.Data;
 using System.Windows.Media;
 using System.Xml;
 using System.Xml.Serialization;
+using WinForms = System.Windows.Forms;
 
 namespace AMDownloader
 {
@@ -46,6 +47,21 @@ namespace AMDownloader
                     "Another instance of " + name + " is already running.",
                     name, MessageBoxButton.OK, MessageBoxImage.Error);
                 Application.Current.Shutdown();
+            }
+        }
+        private void Window_Initialized(object sender, EventArgs e)
+        {
+            // if first run, center window
+
+            if (Settings.Default.FirstRun)
+            {
+                int desktopWidth = WinForms.Screen.AllScreens.FirstOrDefault().WorkingArea.Width;
+                int desktopHeight = WinForms.Screen.AllScreens.FirstOrDefault().WorkingArea.Height;
+
+                this.Left = desktopWidth / 2 - this.Width / 2;
+                this.Top = desktopHeight / 2 - this.Height / 2;
+
+                Settings.Default.FirstRun = false;
             }
         }
 
@@ -210,7 +226,7 @@ namespace AMDownloader
                     (int)(Category)Enum.Parse(typeof(Category), Settings.Default.LastSelectedCatagory)) as TreeViewItem).IsSelected = true;
             }
         }
-
+        
         private void lvDownload_HeaderClick(object sender, RoutedEventArgs e)
         {
             // default sorting direction for a previously unsorted column

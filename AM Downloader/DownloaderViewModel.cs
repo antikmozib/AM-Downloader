@@ -877,7 +877,7 @@ namespace AMDownloader
                         {
                             await item.PauseAsync();
                         }
-                        else if (item.IsCompleted && Settings.Default.ClearFinishedOnExit)
+                        else if (item.IsCompleted && Settings.Default.ClearFinishedDownloadsOnExit)
                         {
                             continue;
                         }
