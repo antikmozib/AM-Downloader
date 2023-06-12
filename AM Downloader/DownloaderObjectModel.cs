@@ -217,10 +217,16 @@ namespace AMDownloader
                 RaisePropertyChanged(nameof(TotalBytesToDownload));
                 RaisePropertyChanged(nameof(Progress));
             }
-            catch (OperationCanceledException)
+            catch (Exception ex)
+            when (ex is OperationCanceledException
+                || ex is AMDownloaderUrlException
+                || ex is HttpRequestException
+                || ex is IOException)
             {
                 if (_ctLinked.IsCancellationRequested)
                 {
+                    // download was paused or canceled by user
+
                     // if the paused signal was given after creating the temp file but before getting
                     // the content length, simply cancel the download instead of pausing it
                     if (_ctPause.IsCancellationRequested && SupportsResume)
@@ -236,13 +242,15 @@ namespace AMDownloader
                         RaisePropertyChanged(nameof(Progress));
                     }
                 }
-            }
-            catch (Exception ex)
-            when (ex is AMDownloaderUrlException || ex is IOException)
-            {
-                CleanupTempDownload();
+                else
+                {
+                    // download interrupted by an exception not related to cancellation
+                    // e.g. timeout, invalid url, IO exception
 
-                Status = DownloadStatus.Errored;
+                    CleanupTempDownload();
+
+                    Status = DownloadStatus.Errored;
+                }
             }
 
             _tcs.SetResult();
@@ -447,7 +455,16 @@ namespace AMDownloader
             }
             catch (OperationCanceledException)
             {
-                _ctLinked.ThrowIfCancellationRequested();
+                if (_ctLinked.IsCancellationRequested)
+                {
+                    // paused or canceled
+                    _ctLinked.ThrowIfCancellationRequested();
+                }
+                else
+                {
+                    // timed out
+                    throw new OperationCanceledException();
+                }
             }
         }
 
