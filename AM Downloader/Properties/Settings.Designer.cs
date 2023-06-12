@@ -286,5 +286,17 @@ namespace AMDownloader.Properties {
                 this["FirstRun"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("100000")]
+        public long ConnectionTimeout {
+            get {
+                return ((long)(this["ConnectionTimeout"]));
+            }
+            set {
+                this["ConnectionTimeout"] = value;
+            }
+        }
     }
 }

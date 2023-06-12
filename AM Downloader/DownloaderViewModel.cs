@@ -189,7 +189,10 @@ namespace AMDownloader
                 }
             });
 
-            _client = new HttpClient();
+            _client = new HttpClient
+            {
+                Timeout = TimeSpan.FromMilliseconds(Settings.Default.ConnectionTimeout)
+            };
             _requestThrottler = new RequestThrottler(Constants.RequestThrottlerInterval);
             _clipboardService = new ClipboardObserver();
             _semaphoreMeasuringSpeed = new SemaphoreSlim(1);

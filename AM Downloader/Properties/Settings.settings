@@ -68,5 +68,8 @@
     <Setting Name="FirstRun" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
+    <Setting Name="ConnectionTimeout" Type="System.Int64" Scope="User">
+      <Value Profile="(Default)">100000</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

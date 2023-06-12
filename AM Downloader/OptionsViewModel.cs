@@ -13,6 +13,7 @@ namespace AMDownloader
 
         private int _maxParallelDownloads;
         private long _maxDownloadSpeed;
+        private long _connectionTimeout;
 
         #endregion
 
@@ -60,6 +61,26 @@ namespace AMDownloader
             }
         }
 
+        public long ConnectionTimeout
+        {
+            get => _connectionTimeout;
+            set
+            {
+                if (value < 0)
+                {
+                    _connectionTimeout = 0;
+                }
+                else if (value > long.MaxValue)
+                {
+                    _connectionTimeout = long.MaxValue;
+                }
+                else
+                {
+                    _connectionTimeout = value;
+                }
+            }
+        }
+
         public bool ClearFinishedDownloadsOnExit { get; set; }
 
         public bool RememberLastDownloadLocation { get; set; }
@@ -84,6 +105,7 @@ namespace AMDownloader
         {
             _maxParallelDownloads = Settings.Default.MaxParallelDownloads;
             _maxDownloadSpeed = Settings.Default.MaxDownloadSpeed;
+            _connectionTimeout = Settings.Default.ConnectionTimeout;
 
             ClearFinishedDownloadsOnExit = Settings.Default.ClearFinishedDownloadsOnExit;
             RememberLastDownloadLocation = Settings.Default.RememberLastDownloadLocation;
@@ -104,6 +126,7 @@ namespace AMDownloader
         {
             Settings.Default.MaxParallelDownloads = _maxParallelDownloads;
             Settings.Default.MaxDownloadSpeed = _maxDownloadSpeed;
+            Settings.Default.ConnectionTimeout = _connectionTimeout;
             Settings.Default.ClearFinishedDownloadsOnExit = ClearFinishedDownloadsOnExit;
             Settings.Default.RememberLastDownloadLocation = RememberLastDownloadLocation;
             Settings.Default.AutoCheckForUpdates = AutoCheckForUpdates;
