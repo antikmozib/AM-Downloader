@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:local="clr-namespace:AMDownloader"
+    xmlns:converters="clr-namespace:AMDownloader.Converters"
     mc:Ignorable="d"
     Title="Preview"
     Height="300"
@@ -12,6 +12,9 @@
     ShowInTaskbar="False"
     WindowStyle="ToolWindow"
     WindowStartupLocation="CenterOwner">
+    <Window.Resources>
+        <converters:ListViewerItemCountConverter x:Key="ListViewerItemCountConverter" />        
+    </Window.Resources>
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="auto" />
@@ -42,7 +45,7 @@
             Margin="0 10 0 0"
             Grid.Row="2"
             LastChildFill="True">
-            <TextBlock Text="{Binding Items.Count, ElementName=listUrls, StringFormat='0 item(s)'}" />
+            <TextBlock Text="{Binding Items.Count, ElementName=listUrls, Converter={StaticResource ListViewerItemCountConverter}}" />
             <Button
                 DockPanel.Dock="Right"
                 Content="OK"

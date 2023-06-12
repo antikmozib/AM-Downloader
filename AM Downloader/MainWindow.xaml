@@ -3,7 +3,6 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
-        xmlns:local="clr-namespace:AMDownloader"
         xmlns:properties="clr-namespace:AMDownloader.Properties"
         xmlns:converters="clr-namespace:AMDownloader.Converters"
         x:Name="WindowMain"
