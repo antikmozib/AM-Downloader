@@ -438,10 +438,11 @@ namespace AMDownloader
                     {
                         throttlerBytesExpected = (int)((double)maxDownloadSpeed / 1000 * stopWatch.ElapsedMilliseconds);
                         long millisecondsExpected = (long)(1000 / (double)maxDownloadSpeed * throttlerBytesReceived);
-                        long delay = millisecondsExpected - stopWatch.ElapsedMilliseconds;
 
                         if (throttlerBytesReceived > throttlerBytesExpected || stopWatch.ElapsedMilliseconds < millisecondsExpected)
                         {
+                            long delay = millisecondsExpected - stopWatch.ElapsedMilliseconds;
+
                             if (delay > 0)
                             {
                                 await Task.Delay((int)delay, _ctLinked);
