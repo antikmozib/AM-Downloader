@@ -760,7 +760,8 @@
                                                VerticalAlignment="Center" />
                                         <TextBlock Grid.Column="1"
                                                    Text="{Binding Name}"
-                                                   TextTrimming="CharacterEllipsis" />
+                                                   TextTrimming="CharacterEllipsis"
+                                                   VerticalAlignment="Center" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
@@ -890,11 +891,13 @@
                                         <TextBlock Margin="0 0 5 0"
                                                    Grid.Column="1"
                                                    TextTrimming="CharacterEllipsis"
-                                                   Text="{Binding Destination, Converter={StaticResource DownloaderDestinationConverter}}" />
+                                                   Text="{Binding Destination, Converter={StaticResource DownloaderDestinationConverter}}" 
+                                                   VerticalAlignment="Center" />
                                         <TextBlock Grid.Column="2"
                                                    TextTrimming="CharacterEllipsis"
                                                    Text="{Binding Destination, Converter={StaticResource DownloaderDestinationPathConverter}}"
-                                                   Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
+                                                   Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                                                   VerticalAlignment="Center" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
