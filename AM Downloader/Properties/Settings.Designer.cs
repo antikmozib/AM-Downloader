@@ -98,9 +98,9 @@ namespace AMDownloader.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int MaxDownloadSpeed {
+        public long MaxDownloadSpeed {
             get {
-                return ((int)(this["MaxDownloadSpeed"]));
+                return ((long)(this["MaxDownloadSpeed"]));
             }
             set {
                 this["MaxDownloadSpeed"] = value;
@@ -169,7 +169,7 @@ namespace AMDownloader.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        [global::System.Configuration.DefaultSettingValueAttribute("100")]
         public int MainWindowTop {
             get {
                 return ((int)(this["MainWindowTop"]));
@@ -181,7 +181,7 @@ namespace AMDownloader.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        [global::System.Configuration.DefaultSettingValueAttribute("100")]
         public int MainWindowLeft {
             get {
                 return ((int)(this["MainWindowLeft"]));

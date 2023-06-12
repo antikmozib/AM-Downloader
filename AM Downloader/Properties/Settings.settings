@@ -20,7 +20,7 @@
     <Setting Name="MainWindowWidth" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">1000</Value>
     </Setting>
-    <Setting Name="MaxDownloadSpeed" Type="System.Int32" Scope="User">
+    <Setting Name="MaxDownloadSpeed" Type="System.Int64" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
     <Setting Name="LeftPaneWidth" Type="System.Windows.GridLength" Scope="User">
@@ -39,10 +39,10 @@
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="MainWindowTop" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">0</Value>
+      <Value Profile="(Default)">100</Value>
     </Setting>
     <Setting Name="MainWindowLeft" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">0</Value>
+      <Value Profile="(Default)">100</Value>
     </Setting>
     <Setting Name="BytesTransferredOverLifetime" Type="System.UInt64" Scope="User">
       <Value Profile="(Default)">0</Value>
