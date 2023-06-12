@@ -432,6 +432,8 @@ namespace AMDownloader
                 QueueProcessor.Dequeue(item);
                 item.Cancel();
             }
+
+            RefreshCollectionView();
         }
 
         private bool Cancel_CanExecute(object obj)

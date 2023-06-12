@@ -185,6 +185,8 @@ namespace AMDownloader
             _ctsLinked = CancellationTokenSource.CreateLinkedTokenSource(_ctPause, _ctCancel);
             _ctLinked = _ctsLinked.Token;
 
+            BytesDownloadedThisSession = 0;
+
             Status = DownloadStatus.Downloading;
             RaisePropertyChanged(nameof(Status));
             RaiseEvent(DownloadStarted);
@@ -287,16 +289,29 @@ namespace AMDownloader
                 }
                 else
                 {
-                    // entered paused state after being restored
+                    // cancel a download which entered
+                    // paused state after being restored
+
                     CleanupTempDownload();
+
+                    if (IsPaused)
+                    {
+                        Status = DownloadStatus.Ready;
+                        RaisePropertyChanged(nameof(Status));
+                    }
                 }
             }
             catch (ObjectDisposedException)
             {
+                // cancel a download which entered
+                // paused state after being started
+
+                CleanupTempDownload();
+
                 if (IsPaused)
                 {
-                    // entered paused state after being started
-                    CleanupTempDownload();
+                    Status = DownloadStatus.Ready;
+                    RaisePropertyChanged(nameof(Status));
                 }
             }
         }
@@ -383,7 +398,7 @@ namespace AMDownloader
                 using var readStream = await response.Content.ReadAsStreamAsync(_ctLinked);
                 using var writeStream = new BinaryWriter(fileStream);
 
-                byte[] buffer = new byte[1024];
+                byte[] buffer = new byte[4096]; // 4 KB buffer size
                 int read;
                 int bytesReceived = 0;
 
