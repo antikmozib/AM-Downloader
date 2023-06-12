@@ -6,7 +6,7 @@ using System.Globalization;
 using System.IO;
 using System.Windows.Data;
 
-namespace AMDownloader
+namespace AMDownloader.Converters
 {
     internal class DownloaderDestinationFolderNameConverter : IValueConverter
     {

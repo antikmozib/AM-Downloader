@@ -5,7 +5,7 @@ using System;
 using System.Globalization;
 using System.Windows.Data;
 
-namespace AMDownloader
+namespace AMDownloader.Converters
 {
     internal class DownloaderStatusConverter : IMultiValueConverter
     {

@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AMDownloader"
         xmlns:properties="clr-namespace:AMDownloader.Properties"
+        xmlns:converters="clr-namespace:AMDownloader.Converters"
         mc:Ignorable="d"
         Title="Add"
         WindowStartupLocation="CenterOwner"
@@ -17,7 +18,7 @@
         WindowStyle="SingleBorderWindow"
         Closing="Window_Closing" Loaded="Window_Loaded">
     <Window.Resources>
-        <local:DownloaderDestinationFolderNameConverter x:Key="DownloaderDestinationConverter" />
+        <converters:DownloaderDestinationFolderNameConverter x:Key="DownloaderDestinationConverter" />
         <Style TargetType="MenuItem">
             <Setter Property="TextBlock.FontSize"
                     Value="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=FontSize}" />
