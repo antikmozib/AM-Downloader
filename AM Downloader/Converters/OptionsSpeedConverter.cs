@@ -2,7 +2,6 @@
 
 using AMDownloader.Common;
 using System;
-using System.Diagnostics.Eventing.Reader;
 using System.Globalization;
 using System.Windows.Data;
 
