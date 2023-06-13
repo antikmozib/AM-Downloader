@@ -155,7 +155,16 @@ namespace AMDownloader
             else
             {
                 // new or errored download
+
                 BytesDownloaded = 0;
+
+                if (status != DownloadStatus.Ready)
+                {
+                    // either the download had a paused or finished status
+                    // but the required files weren't found; or it had a
+                    // errored status to begin with
+                    Status = DownloadStatus.Errored;
+                }
             }
 
             DownloadCreated += downloadCreated;

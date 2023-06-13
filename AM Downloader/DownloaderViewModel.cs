@@ -29,7 +29,7 @@ namespace AMDownloader
 {
     internal delegate Task AddItemsAsyncDelegate(string destination, bool enqueue, bool start, params string[] urls);
 
-    internal delegate void ShowUrlPreviewDelegate(string urls);
+    internal delegate void ShowUrlPreviewDelegate(string[] urls);
 
     internal delegate MessageBoxResult DisplayMessageDelegate(
         string message, string title = "",
@@ -326,7 +326,7 @@ namespace AMDownloader
                             itemsToAdd[i] = item;
                         }
 
-                        this.Status = "Refreshing list...";
+                        this.Status = "Refreshing...";
                         RaisePropertyChanged(nameof(this.Status));
 
                         AddObjects(itemsToAdd);
@@ -853,6 +853,7 @@ namespace AMDownloader
                 {
                     return false;
                 }
+
                 _ctsUpdatingList.Cancel();
             }
 
@@ -1043,7 +1044,7 @@ namespace AMDownloader
         {
             var existingUrls = (from di in DownloadItemsList select di.Url).ToArray();
             var existingDestinations = (from di in DownloadItemsList select di.Destination).ToArray();
-            var itemsToAdd = new DownloaderObjectModel[urls.Length];
+            var itemsToAdd = new List<DownloaderObjectModel>();
             var itemsToEnqueue = new List<IQueueable>();
             var itemsAdded = new List<DownloaderObjectModel>();
             var skipping = new List<string>();
@@ -1063,7 +1064,7 @@ namespace AMDownloader
                     skipping.Add(urls[i]);
                     continue;
                 }
-                var fileName = Functions.GetNewFileName(destination + Functions.GetFilenameFromUrl(urls[i]));
+                var fileName = Functions.GetNewFileName(destination + Functions.GetFileNameFromUrl(urls[i]));
                 if (existingDestinations.Contains(fileName))
                 {
                     skipping.Add(urls[i]);
@@ -1081,7 +1082,7 @@ namespace AMDownloader
                         Download_PropertyChanged,
                         _progressReporter);
 
-                itemsToAdd[i] = item;
+                itemsToAdd.Add(item);
 
                 if (enqueue)
                 {
@@ -1099,10 +1100,10 @@ namespace AMDownloader
 
             if (!wasCanceled)
             {
-                this.Status = "Refreshing list...";
+                this.Status = "Refreshing...";
                 RaisePropertyChanged(nameof(this.Status));
 
-                AddObjects(itemsToAdd);
+                AddObjects(itemsToAdd.ToArray());
                 QueueProcessor.Enqueue(itemsToEnqueue.ToArray());
                 itemsAdded.AddRange(itemsToAdd);
             }
@@ -1217,7 +1218,7 @@ namespace AMDownloader
                 }
             }
 
-            this.Status = "Refreshing list...";
+            this.Status = "Refreshing...";
             RaisePropertyChanged(nameof(this.Status));
 
             Application.Current.Dispatcher.Invoke(() =>
@@ -1344,9 +1345,10 @@ namespace AMDownloader
         private async Task TriggerUpdateCheckAsync(bool silent = false)
         {
             string url = await AppUpdateService.GetUpdateUrl(
-                AppUpdateService.UpdateServer,
+                Constants.UpdateServer,
                 Assembly.GetExecutingAssembly().GetName().Name,
-                Assembly.GetExecutingAssembly().GetName().Version.ToString());
+                Assembly.GetExecutingAssembly().GetName().Version.ToString(),
+                _client);
 
             if (string.IsNullOrEmpty(url))
             {

@@ -76,6 +76,11 @@ namespace AMDownloader.QueueProcessing
 
             foreach (var item in items)
             {
+                if (item == null)
+                {
+                    continue;
+                }
+
                 if (!item.IsCompleted && !_queueList.Contains(item))
                 {
                     _queueList.Add(item);
@@ -124,7 +129,7 @@ namespace AMDownloader.QueueProcessing
             _tcs = new();
             _cts = new();
             var ct = _cts.Token;
-            
+
             await Task.Run(async () =>
             {
                 List<Task> tasks = new();
