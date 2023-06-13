@@ -407,7 +407,7 @@ namespace AMDownloader
                     RaisePropertyChanged(nameof(TotalBytesToDownload));
                 }
 
-                StartReportingProgress();
+                StartMeasuringSpeed();
                 StartMeasuringEta();
 
                 // start downloading
@@ -427,13 +427,13 @@ namespace AMDownloader
                 {
                     stopWatch.Start();
 
-                    read = await readStream.ReadAsync(buffer, _ctLinked);
+                    read = await readStream.ReadAsync(buffer.AsMemory(0, buffer.Length), _ctLinked);
 
                     stopWatch.Stop();
 
                     byte[] data = new byte[read];
 
-                    buffer.ToList().CopyTo(0, data, 0, read);
+                    Array.Copy(buffer, 0, data, 0, read);
                     writeStream.Write(data, 0, data.Length);
                     bytesReceived += read;
 
@@ -461,7 +461,7 @@ namespace AMDownloader
                             stopWatch.Reset();
                         }
                     }
-                } while (read != 0);
+                } while (read > 0);
             }
             catch (OperationCanceledException)
             {
@@ -478,7 +478,7 @@ namespace AMDownloader
             }
         }
 
-        private void StartReportingProgress()
+        private void StartMeasuringSpeed()
         {
             long fromBytes;
             long toBytes;
@@ -504,10 +504,6 @@ namespace AMDownloader
                     if (SupportsResume)
                     {
                         RaisePropertyChanged(nameof(Progress));
-                    }
-                    else
-                    {
-                        RaisePropertyChanged(nameof(TotalBytesToDownload));
                     }
                 }
 
