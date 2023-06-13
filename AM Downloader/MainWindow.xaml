@@ -5,7 +5,7 @@
         xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:properties="clr-namespace:AMDownloader.Properties"
         xmlns:converters="clr-namespace:AMDownloader.Converters"
-        x:Name="WindowMain"
+        x:Name="MainWindowWindow"
         x:Class="AMDownloader.MainWindow"
         mc:Ignorable="d"
         Title="AM Downloader"
@@ -17,7 +17,7 @@
         Left="{Binding MainWindowLeft, Mode=TwoWay, Source={x:Static properties:Settings.Default}}"
         WindowState="{Binding MainWindowState, Mode=TwoWay, Source={x:Static properties:Settings.Default}}"
         Loaded="Window_Loaded"
-        Initialized="Window_Initialized" 
+        Initialized="Window_Initialized"
         Closing="Window_Closing"
         Icon="pack://application:,,,/Icons/app.ico">
     <Window.Resources>
@@ -71,22 +71,22 @@
                     Key="Delete"
                     Modifiers="Alt" />
         <KeyBinding Command="{Binding RemoveCommand}"
-                    CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
+                    CommandParameter="{Binding SelectedItems, ElementName=DownloadsListView}"
                     Key="Delete" />
         <KeyBinding Command="{Binding DeleteFileCommand}"
-                    CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
+                    CommandParameter="{Binding SelectedItems, ElementName=DownloadsListView}"
                     Key="Delete"
                     Modifiers="Shift" />
         <KeyBinding Command="{Binding OpenCommand}"
-                    CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
+                    CommandParameter="{Binding SelectedItems, ElementName=DownloadsListView}"
                     Key="O"
                     Modifiers="Ctrl" />
         <KeyBinding Command="{Binding OpenContainingFolderCommand}"
-                    CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
+                    CommandParameter="{Binding SelectedItems, ElementName=DownloadsListView}"
                     Key="O"
                     Modifiers="Alt" />
         <KeyBinding Command="{Binding CopyLinkToClipboardCommand}"
-                    CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
+                    CommandParameter="{Binding SelectedItems, ElementName=DownloadsListView}"
                     Key="C"
                     Modifiers="Ctrl" />
     </Window.InputBindings>
@@ -117,9 +117,9 @@
                     </MenuItem.Icon>
                 </MenuItem>
                 <Separator />
-                <MenuItem x:Name="menuExit"
+                <MenuItem x:Name="ExitMenu"
                           Header="E_xit"
-                          Click="menuExit_Click"
+                          Click="ExitMenu_Click"
                           InputGestureText="Alt+F4">
                     <MenuItem.Icon>
                         <Viewbox>
@@ -129,7 +129,7 @@
                 </MenuItem>
             </MenuItem>
             <MenuItem Header="_Help">
-                <MenuItem x:Name="menuCheckForUpdates"
+                <MenuItem x:Name="CheckForUpdatesMenu"
                           Header="Check For _Updates"
                           Command="{Binding CheckForUpdatesCommand}">
                     <MenuItem.Icon>
@@ -139,9 +139,9 @@
                     </MenuItem.Icon>
                 </MenuItem>
                 <Separator />
-                <MenuItem x:Name="menuAbout"
+                <MenuItem x:Name="AboutMenu"
                           Header="_About"
-                          Click="menuAbout_Click">
+                          Click="AboutMenu_Click">
                 </MenuItem>
             </MenuItem>
         </Menu>
@@ -162,7 +162,7 @@
                     </Style>
                 </ToolBar.Resources>
                 <Button Padding="5"
-                        x:Name="btnAdd"
+                        x:Name="AddButton"
                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
                         Command="{Binding AddCommand}">
                     <StackPanel Orientation="Horizontal">
@@ -175,10 +175,10 @@
                                    Text="Add" />
                     </StackPanel>
                 </Button>
-                <Button CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
+                <Button CommandParameter="{Binding SelectedItems, ElementName=DownloadsListView}"
                         Command="{Binding RemoveCommand}"
                         Padding="5"
-                        x:Name="btnRemove">
+                        x:Name="RemoveButton">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock FontSize="18"
                                    Text="&#xF056;"
@@ -191,8 +191,8 @@
                 </Button>
                 <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
                 <Button Padding="5"
-                        x:Name="btnStart"
-                        CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
+                        x:Name="StartButton"
+                        CommandParameter="{Binding SelectedItems, ElementName=DownloadsListView}"
                         Command="{Binding StartCommand}">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock FontSize="18"
@@ -205,8 +205,8 @@
                     </StackPanel>
                 </Button>
                 <Button Padding="5"
-                        x:Name="btnPause"
-                        CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
+                        x:Name="PauseButton"
+                        CommandParameter="{Binding SelectedItems, ElementName=DownloadsListView}"
                         Command="{Binding PauseCommand}">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock FontSize="18"
@@ -219,8 +219,8 @@
                     </StackPanel>
                 </Button>
                 <Button Padding="5"
-                        x:Name="btnCancel"
-                        CommandParameter="{Binding SelectedItems, ElementName=lvDownload}"
+                        x:Name="CancelButton"
+                        CommandParameter="{Binding SelectedItems, ElementName=DownloadsListView}"
                         Command="{Binding CancelCommand}">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock FontSize="18"
@@ -234,9 +234,9 @@
                 </Button>
                 <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
                 <Button Padding="5"
-                        x:Name="btnStartQueue"
+                        x:Name="StartQueueButton"
                         Command="{Binding StartQueueCommand}"
-                        CommandParameter="{Binding SelectedItems, ElementName=lvDownload}">
+                        CommandParameter="{Binding SelectedItems, ElementName=DownloadsListView}">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock FontSize="18"
                                    Text="&#xF144;"
@@ -248,7 +248,7 @@
                     </StackPanel>
                 </Button>
                 <Button Padding="5"
-                        x:Name="btnCancelQueue"
+                        x:Name="CancelQueueButton"
                         Command="{Binding StopQueueCommand}">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock FontSize="18"
@@ -321,7 +321,7 @@
                                         <Setter Property="Fill"
                                                 Value="{StaticResource StausBarEllipseReadyColor}" />
                                     </DataTrigger>
-                                    <DataTrigger Binding="{Binding Path=Visibility, ElementName=btnCancelBackgroundTask}"
+                                    <DataTrigger Binding="{Binding Path=Visibility, ElementName=CancelBackgroundTaskButton}"
                                                  Value="Visible">
                                         <Setter Property="Visibility"
                                                 Value="Collapsed" />
@@ -382,7 +382,7 @@
                             <ColumnDefinition Width="auto" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <Button x:Name="btnCancelBackgroundTask"
+                        <Button x:Name="CancelBackgroundTaskButton"
                                 Content="&#xF00D;"
                                 Command="{Binding CancelBackgroundTaskCommand}"
                                 FontFamily="{StaticResource FontAwesomeSolid}"
@@ -390,10 +390,10 @@
                                 ToolTip="Cancel operation"
                                 Cursor="Hand"
                                 Style="{StaticResource CancelButtonStyle}" />
-                        <Ellipse x:Name="ellipseBackgroundTask"
+                        <Ellipse x:Name="BackgroundTaskEllipse"
                                  Grid.Column="1"
                                  Margin="0 0 4 0" />
-                        <TextBlock x:Name="tbPriamryStatus"
+                        <TextBlock x:Name="PriamryStatusTextBlock"
                                    TextTrimming="CharacterEllipsis"
                                    Grid.Column="2"
                                    Text="{Binding Status, Converter={StaticResource ProgramStatusConverter}}"
@@ -412,33 +412,33 @@
                                    Text="{Binding Progress, StringFormat=\{0:0\}%}"
                                    Margin="4 0 4 0" />
                         <ProgressBar Grid.Column="1"
-                                     x:Name="pbProgress"
+                                     x:Name="ProgressProgressBar"
                                      Value="{Binding Progress, Mode=OneWay}"
                                      Width="100" />
                     </Grid>
                 </StatusBarItem>
                 <StatusBarItem Margin="20 0 0 0"
                                Grid.Column="6"
-                               Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=tbSpeed}"
+                               Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=SpeedTextBlock}"
                                HorizontalAlignment="Right">
                     <TextBlock>
                         <TextBlock Margin="0 0 4 0"
                                    Text="&#xF3FD;"
                                    FontFamily="{StaticResource FontAwesomeSolid}" />
                         <TextBlock TextAlignment="Right"
-                                   x:Name="tbSpeed"
+                                   x:Name="SpeedTextBlock"
                                    Text="{Binding Speed, Converter={StaticResource DownloaderSpeedConverter}}"
                                    ToolTip="Current data transfer rate" />
                     </TextBlock>
                 </StatusBarItem>
                 <StatusBarItem Margin="20 0 0 0"
                                Grid.Column="7"
-                               Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=tbBytesDownloaded}">
+                               Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=BytesDownloadedTextBlock}">
                     <TextBlock>
                         <TextBlock Margin="0 0 4 0"
                                    Text="&#xF019;"
                                    FontFamily="{StaticResource FontAwesomeSolid}" />
-                        <TextBlock x:Name="tbBytesDownloaded"
+                        <TextBlock x:Name="BytesDownloadedTextBlock"
                                    Text="{Binding BytesDownloadedThisSession, Converter={StaticResource DownloaderSizeConverter}}"
                                    ToolTip="Data transferred this session" />
                     </TextBlock>
@@ -467,7 +467,8 @@
                         <Setter Property="Template">
                             <Setter.Value>
                                 <ControlTemplate TargetType="{x:Type TreeViewItem}">
-                                    <Grid x:Name="CatItem">
+                                    <Grid x:Name="CatItem"
+                                          VerticalAlignment="Stretch">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="30" />
                                         </Grid.RowDefinitions>
@@ -604,9 +605,9 @@
                           HorizontalAlignment="Stretch" />
             <!--#region DOWNLOADLIST -->
             <ListView ItemsSource="{Binding CollectionView}"
-                      x:Name="lvDownload"
+                      x:Name="DownloadsListView"
                       Grid.Column="2"
-                      ButtonBase.Click="lvDownload_HeaderClick"
+                      ButtonBase.Click="DownloadsListView_HeaderClick"
                       SelectionMode="Extended"
                       ScrollViewer.HorizontalScrollBarVisibility="Auto"
                       ScrollViewer.VerticalScrollBarVisibility="Auto"
@@ -743,7 +744,7 @@
                     </Style>
                 </ListView.ItemContainerStyle>
                 <ListView.View>
-                    <GridView x:Name="gridViewDownloadItems">
+                    <GridView x:Name="DownloadsGridView">
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
                                         HeaderContainerStyle="{StaticResource LeftAligned}"
                                         Width="250"
@@ -808,13 +809,13 @@
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <ProgressBar x:Name="pbProgress"
+                                        <ProgressBar x:Name="ProgressProgressBar"
                                                      VerticalAlignment="Stretch"
                                                      HorizontalAlignment="Stretch"
                                                      Minimum="0"
                                                      Maximum="100"
                                                      Value="{Binding Progress, Mode=OneWay}" />
-                                        <TextBlock Text="{Binding Value, ElementName=pbProgress, StringFormat=\{0:0\}%}"
+                                        <TextBlock Text="{Binding Value, ElementName=ProgressProgressBar, StringFormat=\{0:0\}%}"
                                                    HorizontalAlignment="Center"
                                                    VerticalAlignment="Center" />
                                     </Grid>
@@ -893,7 +894,7 @@
                                         <TextBlock Margin="0 0 5 0"
                                                    Grid.Column="1"
                                                    TextTrimming="CharacterEllipsis"
-                                                   Text="{Binding Destination, Converter={StaticResource DownloaderDestinationConverter}}" 
+                                                   Text="{Binding Destination, Converter={StaticResource DownloaderDestinationConverter}}"
                                                    VerticalAlignment="Center" />
                                         <TextBlock Grid.Column="2"
                                                    TextTrimming="CharacterEllipsis"
