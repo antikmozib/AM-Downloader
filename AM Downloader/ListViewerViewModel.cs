@@ -12,13 +12,13 @@ namespace AMDownloader
 {
     public class ListViewerViewModel : INotifyPropertyChanged
     {
-        public struct UrlListType
+        public struct ListViewerItem
         {
-            public string Url { get; set; }
+            public string Content { get; set; }
 
             public override readonly string ToString()
             {
-                return Url;
+                return Content;
             }
         }
 
@@ -27,31 +27,38 @@ namespace AMDownloader
         public event PropertyChangedEventHandler PropertyChanged;
 
         public ICommand CopyCommand { get; private set; }
-        public string Description { get; set; }
-        public ObservableCollection<UrlListType> Urls { get; set; }
 
-        public ListViewerViewModel(string description, List<string> urls)
+        public string Description { get; set; }
+        public ObservableCollection<ListViewerItem> ListViewerItems { get; set; }
+
+        public ListViewerViewModel(string description, List<string> items)
         {
             CopyCommand = new RelayCommand<object>(Copy);
+
             _clipboard = new ClipboardObserver();
+
             this.Description = description;
-            this.Urls = new ObservableCollection<UrlListType>();
-            foreach (var url in urls)
+            this.ListViewerItems = new ObservableCollection<ListViewerItem>();
+
+            foreach (var item in items)
             {
-                var urlListType = new UrlListType();
-                urlListType.Url = url;
-                Urls.Add(urlListType);
+                var listViewerItem = new ListViewerItem();
+
+                listViewerItem.Content = item;
+                ListViewerItems.Add(listViewerItem);
             }
         }
 
         private void Copy(object obj)
         {
-            var urls = (obj as ObservableCollection<object>).Cast<UrlListType>();
-            string output = "";
-            foreach (var item in urls)
+            var items = (obj as ObservableCollection<object>).Cast<ListViewerItem>();
+            var output = "";
+
+            foreach (var item in items)
             {
-                output += item.Url + '\n';
+                output += item.Content + '\n';
             }
+
             _clipboard.Clear();
             _clipboard.SetText(output);
         }

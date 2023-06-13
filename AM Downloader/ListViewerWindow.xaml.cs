@@ -21,7 +21,7 @@ namespace AMDownloader
 
         private void SelectAll(object sender, RoutedEventArgs e)
         {
-            listUrls.SelectAll();
+            ItemsListBox.SelectAll();
         }
     }
 }
