@@ -64,7 +64,14 @@ namespace AMDownloader.Common
         {
             Uri.TryCreate(url, UriKind.Absolute, out Uri uri);
 
-            return Path.GetFileName(uri.LocalPath);
+            if (uri != null)
+            {
+                return Path.GetFileName(uri.LocalPath);
+            }
+            else
+            {
+                return string.Empty;
+            }
         }
 
         public static string DriveLetterToName(string rootPath)

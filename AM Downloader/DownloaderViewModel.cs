@@ -281,7 +281,7 @@ namespace AMDownloader
                         RaisePropertyChanged(nameof(this.Status));
 
                         SerializableDownloaderObjectModelList source;
-                        var xmlReader = new XmlSerializer(typeof(SerializableDownloaderObjectModelList));
+                        XmlSerializer xmlReader = new (typeof(SerializableDownloaderObjectModelList));
 
                         using (var streamReader = new StreamReader(Paths.DownloadsHistoryFile))
                         {
@@ -783,7 +783,7 @@ namespace AMDownloader
             {
                 return false;
             }
-            
+
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
 
             return items.Length > 0;
@@ -1047,27 +1047,34 @@ namespace AMDownloader
             var itemsToAdd = new List<DownloaderObjectModel>();
             var itemsToEnqueue = new List<IQueueable>();
             var itemsAdded = new List<DownloaderObjectModel>();
-            var skipping = new List<string>();
+            var itemsExist = new List<string>();
+            var itemsErrored = new List<string>();
             var wasCanceled = false;
 
             await _semaphoreUpdatingList.WaitAsync();
 
             for (int i = 0; i < urls.Length; i++)
             {
+                string fileName, filePath;
+
                 this.Progress = (int)((double)(i + 1) / urls.Length * 100);
                 this.Status = $"Creating download {i + 1} of {urls.Length}: {urls[i]}";
                 RaisePropertyChanged(nameof(this.Status));
                 RaisePropertyChanged(nameof(this.Progress));
 
-                if (existingUrls.Contains(urls[i]))
+                fileName = Functions.GetFileNameFromUrl(urls[i]);
+
+                if (string.IsNullOrEmpty(fileName))
                 {
-                    skipping.Add(urls[i]);
+                    itemsErrored.Add(urls[i]);
                     continue;
                 }
-                var fileName = Functions.GetNewFileName(destination + Functions.GetFileNameFromUrl(urls[i]));
-                if (existingDestinations.Contains(fileName))
+
+                filePath = Functions.GetNewFileName(destination + Functions.GetFileNameFromUrl(urls[i]));
+
+                if (existingUrls.Contains(urls[i]) || existingDestinations.Contains(filePath))
                 {
-                    skipping.Add(urls[i]);
+                    itemsExist.Add(urls[i]);
                     continue;
                 }
 
@@ -1075,7 +1082,7 @@ namespace AMDownloader
                 item = new DownloaderObjectModel(
                         _client,
                         urls[i],
-                        fileName,
+                        filePath,
                         Download_Created,
                         Download_Started,
                         Download_Stopped,
@@ -1117,11 +1124,18 @@ namespace AMDownloader
 
             if (!wasCanceled)
             {
-                if (skipping.Count > 0)
+                if (itemsExist.Count > 0)
                 {
-                    _showList(skipping,
+                    _showList(itemsExist,
                         "Duplicate Entries",
                         "The following URLs were not added because they are already in the list:");
+                }
+
+                if (itemsErrored.Count > 0)
+                {
+                    _showList(itemsErrored,
+                        "Invalid Entries",
+                        "The following URLs were not added because they are invalid:");
                 }
             }
 
