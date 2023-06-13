@@ -7,13 +7,13 @@
     <SolidColorBrush x:Key="StartQueueButtonIconColor" Color="DarkGreen" />
     <SolidColorBrush x:Key="StopQueueButtonIconColor" Color="DarkRed" />
     <SolidColorBrush x:Key="CategoryAllColor" Color="Black" />
-    <SolidColorBrush x:Key="CategoryReadyColor" Color="DarkGreen" />
+    <SolidColorBrush x:Key="CategoryReadyColor" Color="Green" />
     <SolidColorBrush x:Key="CategoryQueuedColor" Color="Orange" />
     <SolidColorBrush x:Key="CategoryPausedColor" Color="Gold" />
     <SolidColorBrush x:Key="CategoryFinishedColor" Color="SlateGray" />
     <SolidColorBrush x:Key="CategoryErroredColor" Color="Red" />
-    <SolidColorBrush x:Key="CategoryDownloadingColor" Color="Green" />
+    <SolidColorBrush x:Key="CategoryDownloadingColor" Color="LimeGreen" />
     <SolidColorBrush x:Key="ColumnHeaderSortDirectionColor" Color="DarkGreen" />
-    <SolidColorBrush x:Key="StausBarEllipseReadyColor" Color="Green" />
-    <SolidColorBrush x:Key="StausBarEllipseBusyColor" Color="Orange" />
+    <SolidColorBrush x:Key="StausBarEllipseReadyColor" Color="MediumSeaGreen" />
+    <SolidColorBrush x:Key="StausBarEllipseBusyColor" Color="DarkOrange" />
 </ResourceDictionary>
