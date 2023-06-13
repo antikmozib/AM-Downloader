@@ -11,9 +11,15 @@ namespace AMDownloader.Common
 {
     internal static class Constants
     {
-        public const int RequestThrottlerInterval = 60000; // 1 min
-        public const string DownloaderSplitedPartExtension = ".AMDownload";
-        public const int ParallelDownloadsLimit = 10;
+        private const int _requestThrottlerInterval = 6000; // 1 min
+        private const string _downloaderSplitedPartExtension = ".AMDownload";
+        private const int _parallelDownloadsLimit = 10;
+        private const string _updateServer = @"https://mozib.io/downloads/update.php";
+
+        public static int RequestThrottlerInterval => _requestThrottlerInterval;
+        public static string DownloaderSplitedPartExtension => _downloaderSplitedPartExtension;
+        public static int ParallelDownloadsLimit => _parallelDownloadsLimit;
+        public static string UpdateServer => _updateServer;
 
         public enum ByteConstants
         {
@@ -54,15 +60,17 @@ namespace AMDownloader.Common
             return result;
         }
 
-        public static string GetFilenameFromUrl(string url)
+        public static string GetFileNameFromUrl(string url)
         {
             Uri.TryCreate(url, UriKind.Absolute, out Uri uri);
+
             return Path.GetFileName(uri.LocalPath);
         }
 
         public static string DriveLetterToName(string rootPath)
         {
             var drives = DriveInfo.GetDrives();
+
             foreach (var drive in drives)
             {
                 if (drive.RootDirectory.FullName.TrimEnd(Path.DirectorySeparatorChar) != rootPath.TrimEnd(Path.DirectorySeparatorChar))
@@ -101,6 +109,7 @@ namespace AMDownloader.Common
         public static void ResetAllSettings()
         {
             Settings.Default.Reset();
+
             if (Directory.Exists(Paths.LocalAppDataFolder))
             {
                 try
@@ -117,19 +126,22 @@ namespace AMDownloader.Common
 
     internal static class AppUpdateService
     {
-        public const string UpdateServer = @"https://mozib.io/downloads/update.php";
-
-        public static async Task<string> GetUpdateUrl(string url, string appName, string appVersion)
+        public static async Task<string> GetUpdateUrl(
+            string server, string appName, string appVersion, HttpClient httpClient = null)
         {
-            using var c = new HttpClient();
+            httpClient ??= new HttpClient();
+
             appName = appName.Replace(" ", ""); // replace spaces in url
+
             try
             {
-                var response = await c.GetAsync(url + "?appname=" + appName + "&version=" + appVersion);
+                using var response = await httpClient.GetAsync(server + "?appname=" + appName + "&version=" + appVersion);
+
                 if (response.IsSuccessStatusCode)
                 {
                     return await response.Content.ReadAsStringAsync();
                 }
+
                 return string.Empty;
             }
             catch (Exception)

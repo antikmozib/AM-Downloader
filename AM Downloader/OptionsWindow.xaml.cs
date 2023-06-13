@@ -16,6 +16,12 @@ namespace AMDownloader
 
         private void btnReset_Click(object sender, RoutedEventArgs e)
         {
+            MessageBox.Show(
+                "Please restart the app for the changes to take effect.", 
+                "Reset", 
+                MessageBoxButton.OK, 
+                MessageBoxImage.Information);
+
             this.Close();
         }
 

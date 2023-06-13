@@ -21,10 +21,10 @@ namespace AMDownloader
         private bool _monitorClipboard;
         private CancellationTokenSource _ctsClipboard;
         private readonly ClipboardObserver _clipboardService;
+        private readonly ShowUrlPreviewDelegate _showUrlPreview;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public ShowUrlPreviewDelegate ShowUrlPreview { get; private set; }
         public string Urls { get; set; }
         /// <summary>
         /// Returns the list of full URLs generated from the URL patterns.
@@ -81,7 +81,7 @@ namespace AMDownloader
             this.Enqueue = Settings.Default.EnqueueAddedItems;
             this.StartDownload = Settings.Default.StartDownloadingAddedItems;
             this.Urls = string.Empty;
-            this.ShowUrlPreview = showUrlPreview;
+            this._showUrlPreview = showUrlPreview;
 
             var clipText = _clipboardService.GetText();
             if (clipText.Contains("http") || clipText.Contains("ftp")) this.Urls += clipText.Trim() + "\n";
@@ -89,19 +89,16 @@ namespace AMDownloader
 
         private void Preview(object obj)
         {
-            string[] urls = GeneratedUrls.ToArray();
-            string output = string.Empty;
-
-            foreach (var url in urls)
-            {
-                output += url + "\n\n";
-            }
-            this.ShowUrlPreview.Invoke(output);
+            this._showUrlPreview.Invoke(GeneratedUrls.ToArray());
         }
 
         private bool Add_CanExecute(object obj)
         {
-            if (this.Urls.Trim().Length == 0) return false;
+            if (this.Urls.Trim().Length == 0)
+            {
+                return false;
+            }
+
             return true;
         }
 
@@ -119,8 +116,8 @@ namespace AMDownloader
         private static List<string> BuildUrlsFromPatterns(params string[] urls)
         {
             var filteredUrls = urls.Select(o => o.Trim()).Where(o => o.Length > 0); // trim and discard empty
-            List<string> fullUrls = new();
-            string pattern = @"(\[\d+:\d+\])";
+            var fullUrls = new List<string>();
+            var pattern = @"(\[\d+:\d+\])";
             var regex = new Regex(pattern);
 
             foreach (var url in filteredUrls)
@@ -139,6 +136,7 @@ namespace AMDownloader
                     for (int i = lBound; i <= uBound; i++)
                     {
                         var replacedData = "";
+
                         if (i.ToString().Length < minLength)
                         {
                             for (int j = 0; j < (minLength - i.ToString().Length); j++)
@@ -146,6 +144,7 @@ namespace AMDownloader
                                 replacedData += "0";
                             }
                         }
+
                         replacedData += i.ToString();
                         fullUrls.Add(regex.Replace(url, replacedData));
                     }
@@ -167,15 +166,19 @@ namespace AMDownloader
                 var delay = Task.Delay(1000);
                 List<string> source = Regex.Replace(_clipboardService.GetText(), @"\t|\r", "").Split('\n').ToList();
                 List<string> dest = Regex.Replace(this.Urls, @"\r|\t", "").ToLower().Split('\n').ToList();
+
                 foreach (var url in source)
                 {
                     var f_url = Regex.Replace(url, @"\s", "");
+
                     if ((f_url.ToLower().StartsWith("http") || f_url.ToLower().StartsWith("ftp") || f_url.ToLower().StartsWith("www.")) && !dest.Contains(f_url.ToLower()))
                     {
                         this.Urls += f_url + '\n';
                     }
                 }
+
                 RaisePropertyChanged(nameof(this.Urls));
+
                 await delay;
             }
         }

@@ -4,134 +4,150 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:converters="clr-namespace:AMDownloader.Converters"
-        mc:Ignorable="d" 
-        Title="Options" 
-        WindowStartupLocation="CenterOwner" 
-        WindowStyle="ToolWindow" 
-        ShowInTaskbar="False" 
-        Width="400" 
-        SizeToContent="Height" 
+        mc:Ignorable="d"
+        Title="Options"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="ToolWindow"
+        ShowInTaskbar="False"
+        Width="400"
+        SizeToContent="Height"
         ResizeMode="NoResize">
     <Window.Resources>
         <converters:OptionsSpeedConverter x:Key="OptionsSpeedConverter" />
         <converters:OptionsConnectionTimeoutConverter x:Key="OptionsConnectionTimeoutConverter" />
     </Window.Resources>
-    <Grid Margin="10">
+    <Grid Margin="8">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="auto" />
+            <ColumnDefinition Width="auto" />
+        </Grid.ColumnDefinitions>
+
         <Grid.RowDefinitions>
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
         </Grid.RowDefinitions>
-        <StackPanel>
-            <StackPanel.Resources>
-                <Style x:Key="InputBoxStyle"
-                       TargetType="{x:Type TextBox}">
-                    <Setter Property="Width"
-                            Value="50" />
-                </Style>
-                <Style x:Key="UnitLabel"
-                       TargetType="{x:Type Label}">
-                    <Setter Property="MinWidth"
-                            Value="64" />
-                </Style>
-            </StackPanel.Resources>
-            
-            <DockPanel>
-                <Label Content="Max parallel downloads (1 - 10)*:" />
-                <Label Style="{StaticResource UnitLabel}"
-                       DockPanel.Dock="Right" />
-                <TextBox VerticalContentAlignment="Center" 
-                         HorizontalContentAlignment="Center"                         
-                         Text="{Binding Path=MaxParallelDownloads}" 
-                         Style="{StaticResource InputBoxStyle}"
-                         IsTabStop="True"
-                         DockPanel.Dock="Right" />
-                <Separator DockPanel.Dock="Right" Opacity="0" />
-            </DockPanel>
-            
-            <Separator Margin="0 5 0 5" 
-                       Opacity="0.5" />
-            
-            <DockPanel>
-                <Label Content="Max speed per download (0 = Unlimited):"/>
-                <Label Content="KB/s"
-                       Style="{StaticResource UnitLabel}"
-                       DockPanel.Dock="Right" />
-                <TextBox VerticalContentAlignment="Center" 
-                         HorizontalContentAlignment="Center" 
-                         Text="{Binding Path=MaxDownloadSpeed, Converter={StaticResource OptionsSpeedConverter}}"
-                         Style="{StaticResource InputBoxStyle}"
-                         DockPanel.Dock="Right" />
-                <Separator DockPanel.Dock="Right" Opacity="0" />
-            </DockPanel>
-            
-            <Separator Margin="0 5 0 5" 
-                       Opacity="0.5" />
-            
-            <DockPanel>
-                <Label Content="Connection timeout (0 = Infinity)*:" />
-                <Label Content="seconds"
-                       Style="{StaticResource UnitLabel}"
-                       DockPanel.Dock="Right" />
-                <TextBox VerticalContentAlignment="Center" 
-                         HorizontalContentAlignment="Center"
-                         Text="{Binding Path=ConnectionTimeout, Converter={StaticResource OptionsConnectionTimeoutConverter}}"
-                         Style="{StaticResource InputBoxStyle}"
-                         IsTabStop="True"
-                         DockPanel.Dock="Right" />
-                <Separator DockPanel.Dock="Right" Opacity="0" />
-            </DockPanel>
-            
-            <Separator Margin="0 5 0 5" 
-                       Opacity="0.5" />
-            
-            <StackPanel>
-                <CheckBox VerticalContentAlignment="Center" 
-                          IsChecked="{Binding Path=ClearFinishedDownloadsOnExit}">
-                    <Label Content="Clear finished downloads on exit" />                    
-                </CheckBox>
-                
-                <Separator Margin="0 5 0 5" 
-                           Opacity="0.5" />
-                
-                <CheckBox VerticalContentAlignment="Center" 
-                          IsChecked="{Binding Path=RememberLastDownloadLocation}">
-                    <Label Content="Remember last download location" />
-                </CheckBox>
-                
-                <Separator Margin="0 5 0 5" 
-                           Opacity="0.5" />
-                
-                <CheckBox VerticalContentAlignment="Center" 
-                          IsChecked="{Binding Path=AutoCheckForUpdates}">
-                    <Label Content="Automatically check for updates" />
-                </CheckBox>
-            </StackPanel>
-        </StackPanel>
-        
-        <StackPanel Margin="0 20 0 5" 
-                    Grid.Row="1">
-            <Label Content="*Requires application restart" />
-        </StackPanel>
-        
-        <StackPanel HorizontalAlignment="Right" 
-                    Orientation="Horizontal" 
-                    Grid.Row="2">
-            <Button x:Name="btnOK" 
-                    Content="_OK" 
-                    Margin="0 0 5 0" 
+
+        <Grid.Resources>
+            <Style x:Key="InputBoxStyle"
+                   TargetType="{x:Type TextBox}">
+                <Setter Property="Width"
+                        Value="50" />
+                <Setter Property="HorizontalContentAlignment"
+                        Value="Center" />
+                <Setter Property="VerticalContentAlignment"
+                        Value="Center" />
+                <Setter Property="IsTabStop"
+                        Value="True" />
+            </Style>
+        </Grid.Resources>
+
+        <Label Content="*Max parallel downloads (1 - 10):" />
+        <TextBox Text="{Binding Path=MaxParallelDownloads}"
+                 Style="{StaticResource InputBoxStyle}"
+                 Grid.Column="1" />
+
+        <Separator Margin="0 5 0 5"
+                   Opacity="0.5"
+                   Grid.Row="1"
+                   Grid.ColumnSpan="3" />
+
+        <Label Content="Max speed per download (0 = Unlimited):"
+               Grid.Row="2" />
+        <TextBox Text="{Binding Path=MaxDownloadSpeed, Converter={StaticResource OptionsSpeedConverter}}"
+                 Style="{StaticResource InputBoxStyle}"
+                 Grid.Row="2"
+                 Grid.Column="1" />
+        <Label Content="KB/s"
+               Grid.Row="2"
+               Grid.Column="2" />
+
+        <Separator Margin="0 5 0 5"
+                   Opacity="0.5"
+                   Grid.Row="3"
+                   Grid.ColumnSpan="3" />
+
+        <Label Content="*Connection timeout (0 = Never):"
+               Grid.Row="4" />
+        <TextBox Text="{Binding Path=ConnectionTimeout, Converter={StaticResource OptionsConnectionTimeoutConverter}}"
+                 Style="{StaticResource InputBoxStyle}"
+                 Grid.Row="4"
+                 Grid.Column="1" />
+        <Label Content="seconds"
+               Grid.Row="4"
+               Grid.Column="2" />
+
+        <Separator Margin="0 5 0 5"
+                   Opacity="0.5"
+                   Grid.Row="5"
+                   Grid.ColumnSpan="3" />
+
+        <CheckBox VerticalContentAlignment="Center"
+                  IsChecked="{Binding Path=ClearFinishedDownloadsOnExit}"
+                  Grid.Row="6"
+                  Grid.ColumnSpan="3">
+            <Label Content="Clear finished downloads on exit" />
+        </CheckBox>
+
+        <Separator Margin="0 5 0 5"
+                   Opacity="0.5"
+                   Grid.Row="7"
+                   Grid.ColumnSpan="3" />
+
+        <CheckBox VerticalContentAlignment="Center"
+                  IsChecked="{Binding Path=RememberLastDownloadLocation}"
+                  Grid.Row="8"
+                  Grid.ColumnSpan="3">
+            <Label Content="Remember last download location" />
+        </CheckBox>
+
+        <Separator Margin="0 5 0 5"
+                   Opacity="0.5"
+                   Grid.Row="9"
+                   Grid.ColumnSpan="3" />
+
+        <CheckBox VerticalContentAlignment="Center"
+                  IsChecked="{Binding Path=AutoCheckForUpdates}"
+                  Grid.Row="10"
+                  Grid.ColumnSpan="3">
+            <Label Content="Automatically check for updates" />
+        </CheckBox>
+
+        <Label Content="*Requires application restart"
+               Margin="0 20 0 5"
+               Grid.Row="11"
+               Grid.ColumnSpan="3" />
+
+        <StackPanel HorizontalAlignment="Right"
+                    Orientation="Horizontal"
+                    Grid.Row="12"
+                    Grid.ColumnSpan="3">
+            <Button x:Name="btnOK"
+                    Content="_OK"
+                    Margin="0 0 5 0"
                     IsDefault="True"
-                    Command="{Binding SaveCommand}" 
+                    Command="{Binding SaveCommand}"
                     Click="btnOK_Click" />
-            <Button x:Name="btnCancel" 
-                    Content="_Cancel" 
-                    Margin="0 0 5 0" 
-                    IsCancel="True" 
-                    Command="{Binding CancelCommand}" 
+            <Button x:Name="btnCancel"
+                    Content="_Cancel"
+                    Margin="0 0 5 0"
+                    IsCancel="True"
+                    Command="{Binding CancelCommand}"
                     Click="btnCancel_Click" />
-            <Button x:Name="btnReset" 
-                    Content="_Reset*" 
-                    Command="{Binding ResetCommand}" 
+            <Button x:Name="btnReset"
+                    Content="_Reset"
+                    Command="{Binding ResetCommand}"
                     Click="btnReset_Click" />
         </StackPanel>
     </Grid>

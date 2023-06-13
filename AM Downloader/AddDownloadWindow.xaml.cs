@@ -79,6 +79,7 @@ namespace AMDownloader
                         "Help", MessageBoxButton.OK, MessageBoxImage.Information);
                     handled = true;
                 }
+
                 return IntPtr.Zero;
             });
 
@@ -139,14 +140,16 @@ namespace AMDownloader
             txtUrl.Select(txtUrl.Text.Length, 0);
             txtUrl.Focus();
         }
-        
+
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            var list = new SerializableDownloadPathHistoryList();
+
             if (File.Exists(Paths.SavedLocationsFile))
             {
                 File.Delete(Paths.SavedLocationsFile);
             }
-            var list = new SerializableDownloadPathHistoryList();
+
             foreach (var item in cboDestination.Items)
             {
                 var path = item.ToString();
@@ -155,6 +158,7 @@ namespace AMDownloader
                 model.FolderPath = path;
                 list.Objects.Add(model);
             }
+
             try
             {
                 using (var streamWriter = new StreamWriter(Paths.SavedLocationsFile))
@@ -233,13 +237,16 @@ namespace AMDownloader
             txtUrl.FontSize = fontSize;
         }
 
-        internal void Preview(string preview)
+        internal void Preview(string[] urls)
         {
-            var urls = (from url in preview.Split('\n').ToList<string>() where url.Trim().Length > 0 select url).ToList<string>();
-            var listViewerViewModel = new ListViewerViewModel("Preview URL patterns:", urls);
-            var listViewerWindow = new ListViewerWindow();
-            listViewerWindow.DataContext = listViewerViewModel;
-            listViewerWindow.Owner = this;
+            var listViewerViewModel = new ListViewerViewModel("Preview URL patterns:", 
+                urls.Where(o => o.Trim().Length > 0).ToList());
+            var listViewerWindow = new ListViewerWindow
+            {
+                DataContext = listViewerViewModel,
+                Owner = this
+            };
+
             listViewerWindow.ShowDialog();
         }
     }

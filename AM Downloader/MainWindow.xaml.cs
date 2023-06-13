@@ -49,9 +49,10 @@ namespace AMDownloader
                 Application.Current.Shutdown();
             }
         }
+
         private void Window_Initialized(object sender, EventArgs e)
         {
-            // if first run, center window
+            // if running for the 1st time, center window
 
             if (Settings.Default.FirstRun)
             {
@@ -203,12 +204,14 @@ namespace AMDownloader
             var copyright = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(
                 AssemblyCopyrightAttribute), true).OfType<AssemblyCopyrightAttribute>().FirstOrDefault()?.Copyright;
             var website = "https://mozib.io/amdownloader";
+            var totalDownloaded = Settings.Default.BytesTransferredOverLifetime 
+                / (double)Constants.ByteConstants.GIGABYTE;
 
             MessageBox.Show(
                 $"{name}\nVersion {version}\n\n{copyright}\n\n{website}\n\n"
                 + "DISCLAIMER: This is free software. There is NO warranty; "
                 + "not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
-                + $"Total downloaded since install: {(Settings.Default.BytesTransferredOverLifetime / (1024 * 1024)).ToString("n", cultureInfo)} MB",
+                + $"Total downloaded since installation: {totalDownloaded.ToString("n", cultureInfo)} GB",
                 "About",
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
@@ -359,6 +362,7 @@ namespace AMDownloader
             {
                 title = Assembly.GetExecutingAssembly().GetName().Name;
             }
+
             return Application.Current.Dispatcher.Invoke(() => MessageBox.Show(
                 this,
                 message,
