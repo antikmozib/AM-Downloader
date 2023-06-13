@@ -74,12 +74,12 @@ namespace AMDownloader
             {
                 // get the column to sort
                 GridViewColumn gridViewColumn =
-                    ((GridView)lvDownload.View).Columns.FirstOrDefault(
+                    ((GridView)DownloadsListView.View).Columns.FirstOrDefault(
                         x => (string)x.Header == Settings.Default.SelectedColumnHeader);
 
                 if (gridViewColumn != null)
                 {
-                    List<GridViewColumnHeader> headers = GetVisualChildren<GridViewColumnHeader>(lvDownload).ToList();
+                    List<GridViewColumnHeader> headers = GetVisualChildren<GridViewColumnHeader>(DownloadsListView).ToList();
                     GridViewColumnHeader gridViewColumnHeader = null;
 
                     // get the header of the column to sort
@@ -112,7 +112,7 @@ namespace AMDownloader
                         restoreCols = (SerializableUIColumnList)xmlReader.Deserialize(streamReader);
                     }
 
-                    var gridCols = ((GridView)lvDownload.View).Columns;
+                    var gridCols = ((GridView)DownloadsListView.View).Columns;
 
                     for (int i = 0; i < restoreCols.Objects.Count; i++)
                     {
@@ -164,11 +164,11 @@ namespace AMDownloader
 
                 var columnOrderList = new SerializableUIColumnList();
 
-                foreach (var column in ((GridView)lvDownload.View).Columns)
+                foreach (var column in ((GridView)DownloadsListView.View).Columns)
                 {
                     SerializableUIColumn serializableUIColumnOrder = new()
                     {
-                        Index = ((GridView)lvDownload.View).Columns.IndexOf(column),
+                        Index = ((GridView)DownloadsListView.View).Columns.IndexOf(column),
                         Name = column.Header.ToString(),
                         Width = column.Width
                     };
@@ -191,12 +191,12 @@ namespace AMDownloader
             }
         }
 
-        private void menuExit_Click(object sender, RoutedEventArgs e)
+        private void ExitMenu_Click(object sender, RoutedEventArgs e)
         {
             this.Close();
         }
 
-        private void menuAbout_Click(object sender, RoutedEventArgs e)
+        private void AboutMenu_Click(object sender, RoutedEventArgs e)
         {
             var cultureInfo = CultureInfo.CurrentCulture;
             var name = Assembly.GetExecutingAssembly().GetName().Name;
@@ -217,20 +217,20 @@ namespace AMDownloader
                 MessageBoxImage.Information);
         }
 
-        private void tvCategories_Loaded(object sender, RoutedEventArgs e)
+        private void CategoriesList_Loaded(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrEmpty(Settings.Default.LastSelectedCatagory))
             {
-                (tvCategories.ItemContainerGenerator.ContainerFromIndex(0) as TreeViewItem).IsSelected = true;
+                (CategoriesList.ItemContainerGenerator.ContainerFromIndex(0) as ListBoxItem).IsSelected = true;
             }
             else
             {
-                (tvCategories.ItemContainerGenerator.ContainerFromIndex(
-                    (int)(Category)Enum.Parse(typeof(Category), Settings.Default.LastSelectedCatagory)) as TreeViewItem).IsSelected = true;
+                (CategoriesList.ItemContainerGenerator.ContainerFromIndex(
+                    (int)(Category)Enum.Parse(typeof(Category), Settings.Default.LastSelectedCatagory)) as ListBoxItem).IsSelected = true;
             }
         }
-        
-        private void lvDownload_HeaderClick(object sender, RoutedEventArgs e)
+
+        private void DownloadsListView_HeaderClick(object sender, RoutedEventArgs e)
         {
             // default sorting direction for a previously unsorted column
             ListSortDirection? direction = ListSortDirection.Descending;
@@ -266,7 +266,7 @@ namespace AMDownloader
         {
             if (_dataView == null)
             {
-                _dataView = CollectionViewSource.GetDefaultView(lvDownload.ItemsSource);
+                _dataView = CollectionViewSource.GetDefaultView(DownloadsListView.ItemsSource);
             }
 
             var columnBinding = columnHeader.Column.DisplayMemberBinding as Binding;

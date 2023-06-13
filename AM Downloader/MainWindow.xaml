@@ -452,158 +452,175 @@
                 <ColumnDefinition Width="1.25" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <!--#region CATEGORYLIST -->
-            <TreeView ItemsSource="{Binding CategoriesList}"
-                      x:Name="tvCategories"
-                      Loaded="tvCategories_Loaded">
+
+            <!--#region CATEGORIESLIST -->
+
+            <ListBox x:Name="CategoriesList"
+                     ItemsSource="{Binding CategoriesList}"
+                     Loaded="CategoriesList_Loaded">
                 <i:Interaction.Triggers>
-                    <i:EventTrigger EventName="SelectedItemChanged">
+                    <i:EventTrigger EventName="SelectionChanged">
                         <i:InvokeCommandAction Command="{Binding CategoryChangedCommand}"
-                                               CommandParameter="{Binding SelectedItem, ElementName=tvCategories}" />
+                                               CommandParameter="{Binding SelectedItem, ElementName=CategoriesList}" />
                     </i:EventTrigger>
                 </i:Interaction.Triggers>
-                <TreeView.ItemContainerStyle>
-                    <Style TargetType="{x:Type TreeViewItem}">
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="{x:Type TreeViewItem}">
-                                    <Grid x:Name="CatItem"
-                                          VerticalAlignment="Stretch">
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="30" />
-                                        </Grid.RowDefinitions>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="auto" />
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="auto" />
-                                        </Grid.ColumnDefinitions>
-                                        <Ellipse Width="12"
-                                                 VerticalAlignment="Center"
-                                                 Height="12"
-                                                 Margin="4 0 4 0">
-                                            <Ellipse.Style>
-                                                <Style TargetType="{x:Type Ellipse}">
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding}"
-                                                                     Value="All">
-                                                            <Setter Property="Fill"
-                                                                    Value="{StaticResource CategoryAllColor}" />
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding}"
-                                                                     Value="Ready">
-                                                            <Setter Property="Fill"
-                                                                    Value="{StaticResource CategoryReadyColor}" />
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding}"
-                                                                     Value="Downloading">
-                                                            <Setter Property="Fill"
-                                                                    Value="{StaticResource CategoryDownloadingColor}" />
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding}"
-                                                                     Value="Queued">
-                                                            <Setter Property="Fill"
-                                                                    Value="{StaticResource CategoryQueuedColor}" />
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding}"
-                                                                     Value="Paused">
-                                                            <Setter Property="Fill"
-                                                                    Value="{StaticResource CategoryPausedColor}" />
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding}"
-                                                                     Value="Finished">
-                                                            <Setter Property="Fill"
-                                                                    Value="{StaticResource CategoryFinishedColor}" />
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding}"
-                                                                     Value="Errored">
-                                                            <Setter Property="Fill"
-                                                                    Value="{StaticResource CategoryErroredColor}" />
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding}"
-                                                                     Value="Verifying">
-                                                            <Setter Property="Fill"
-                                                                    Value="{StaticResource CategoryVerifyingColor}" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Ellipse.Style>
-                                        </Ellipse>
-                                        <TextBlock Grid.Column="1"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   VerticalAlignment="Center"
-                                                   Text="{Binding}" />
-                                        <TextBlock x:Name="CatCount"
-                                                   Margin="4 0 4 0"
-                                                   Grid.Column="2"
-                                                   HorizontalAlignment="Right"
-                                                   VerticalAlignment="Center">
-                                            <TextBlock.Style>
-                                                <Style TargetType="{x:Type TextBlock}">
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding}"
-                                                                     Value="All">
-                                                            <Setter Property="Text"
-                                                                    Value="{Binding DataContext.Count, Converter={StaticResource TreeViewCountConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding}"
-                                                                     Value="Ready">
-                                                            <Setter Property="Text"
-                                                                    Value="{Binding DataContext.ReadyCount, Converter={StaticResource TreeViewCountConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding}"
-                                                                     Value="Queued">
-                                                            <Setter Property="Text"
-                                                                    Value="{Binding DataContext.QueuedCount, Converter={StaticResource TreeViewCountConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding}"
-                                                                     Value="Paused">
-                                                            <Setter Property="Text"
-                                                                    Value="{Binding DataContext.PausedCount, Converter={StaticResource TreeViewCountConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding}"
-                                                                     Value="Errored">
-                                                            <Setter Property="Text"
-                                                                    Value="{Binding DataContext.ErroredCount, Converter={StaticResource TreeViewCountConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding}"
-                                                                     Value="Downloading">
-                                                            <Setter Property="Text"
-                                                                    Value="{Binding DataContext.DownloadingCount, Converter={StaticResource TreeViewCountConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding}"
-                                                                     Value="Finished">
-                                                            <Setter Property="Text"
-                                                                    Value="{Binding DataContext.FinishedCount, Converter={StaticResource TreeViewCountConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding}"
-                                                                     Value="Verifying">
-                                                            <Setter Property="Text"
-                                                                    Value="{Binding DataContext.VerifyingCount, Converter={StaticResource TreeViewCountConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </TextBlock.Style></TextBlock>
-                                    </Grid>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsSelected"
-                                                 Value="True">
-                                            <Setter TargetName="CatItem"
-                                                    Property="Background"
-                                                    Value="{DynamicResource {x:Static SystemColors.MenuHighlightBrushKey}}" />
-                                            <Setter Property="Foreground"
-                                                    Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}" />
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
+
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid x:Name="CatItemGrid"
+                              HorizontalAlignment="Stretch">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="24" />
+                            </Grid.RowDefinitions>
+
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <Ellipse Width="12"
+                                     VerticalAlignment="Center"
+                                     Height="12"
+                                     Margin="4 0 4 0">
+                                <Ellipse.Style>
+                                    <Style TargetType="{x:Type Ellipse}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding}"
+                                                         Value="All">
+                                                <Setter Property="Fill"
+                                                        Value="{StaticResource CategoryAllColor}" />
+                                            </DataTrigger>
+
+                                            <DataTrigger Binding="{Binding}"
+                                                         Value="Ready">
+                                                <Setter Property="Fill"
+                                                        Value="{StaticResource CategoryReadyColor}" />
+                                            </DataTrigger>
+
+                                            <DataTrigger Binding="{Binding}"
+                                                         Value="Downloading">
+                                                <Setter Property="Fill"
+                                                        Value="{StaticResource CategoryDownloadingColor}" />
+                                            </DataTrigger>
+
+                                            <DataTrigger Binding="{Binding}"
+                                                         Value="Queued">
+                                                <Setter Property="Fill"
+                                                        Value="{StaticResource CategoryQueuedColor}" />
+                                            </DataTrigger>
+
+                                            <DataTrigger Binding="{Binding}"
+                                                         Value="Paused">
+                                                <Setter Property="Fill"
+                                                        Value="{StaticResource CategoryPausedColor}" />
+                                            </DataTrigger>
+
+                                            <DataTrigger Binding="{Binding}"
+                                                         Value="Finished">
+                                                <Setter Property="Fill"
+                                                        Value="{StaticResource CategoryFinishedColor}" />
+                                            </DataTrigger>
+
+                                            <DataTrigger Binding="{Binding}"
+                                                         Value="Errored">
+                                                <Setter Property="Fill"
+                                                        Value="{StaticResource CategoryErroredColor}" />
+                                            </DataTrigger>
+
+                                            <DataTrigger Binding="{Binding}"
+                                                         Value="Verifying">
+                                                <Setter Property="Fill"
+                                                        Value="{StaticResource CategoryVerifyingColor}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Ellipse.Style>
+                            </Ellipse>
+
+                            <TextBlock Grid.Column="1"
+                                       TextTrimming="CharacterEllipsis"
+                                       VerticalAlignment="Center"
+                                       Text="{Binding}" />
+
+                            <TextBlock x:Name="CatCountTextBlock"
+                                       Margin="4 0 4 0"
+                                       Grid.Column="2"
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Center">
+                                <TextBlock.Style>
+                                    <Style TargetType="{x:Type TextBlock}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding}"
+                                                         Value="All">
+                                                <Setter Property="Text"
+                                                        Value="{Binding DataContext.Count, Converter={StaticResource TreeViewCountConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+                                            </DataTrigger>
+
+                                            <DataTrigger Binding="{Binding}"
+                                                         Value="Ready">
+                                                <Setter Property="Text"
+                                                        Value="{Binding DataContext.ReadyCount, Converter={StaticResource TreeViewCountConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+                                            </DataTrigger>
+
+                                            <DataTrigger Binding="{Binding}"
+                                                         Value="Queued">
+                                                <Setter Property="Text"
+                                                        Value="{Binding DataContext.QueuedCount, Converter={StaticResource TreeViewCountConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+                                            </DataTrigger>
+
+                                            <DataTrigger Binding="{Binding}"
+                                                         Value="Paused">
+                                                <Setter Property="Text"
+                                                        Value="{Binding DataContext.PausedCount, Converter={StaticResource TreeViewCountConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+                                            </DataTrigger>
+
+                                            <DataTrigger Binding="{Binding}"
+                                                         Value="Errored">
+                                                <Setter Property="Text"
+                                                        Value="{Binding DataContext.ErroredCount, Converter={StaticResource TreeViewCountConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+                                            </DataTrigger>
+
+                                            <DataTrigger Binding="{Binding}"
+                                                         Value="Downloading">
+                                                <Setter Property="Text"
+                                                        Value="{Binding DataContext.DownloadingCount, Converter={StaticResource TreeViewCountConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+                                            </DataTrigger>
+
+                                            <DataTrigger Binding="{Binding}"
+                                                         Value="Finished">
+                                                <Setter Property="Text"
+                                                        Value="{Binding DataContext.FinishedCount, Converter={StaticResource TreeViewCountConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+                                            </DataTrigger>
+
+                                            <DataTrigger Binding="{Binding}"
+                                                         Value="Verifying">
+                                                <Setter Property="Text"
+                                                        Value="{Binding DataContext.VerifyingCount, Converter={StaticResource TreeViewCountConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="{x:Type ListBoxItem}">
+                        <Setter Property="HorizontalContentAlignment"
+                                Value="Stretch" />
                     </Style>
-                </TreeView.ItemContainerStyle>
-            </TreeView>
+                </ListBox.ItemContainerStyle>
+            </ListBox>
+
             <!--#endregion-->
+
             <GridSplitter Grid.Column="1"
                           HorizontalAlignment="Stretch" />
+
             <!--#region DOWNLOADLIST -->
+
             <ListView ItemsSource="{Binding CollectionView}"
                       x:Name="DownloadsListView"
                       Grid.Column="2"

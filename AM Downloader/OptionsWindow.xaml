@@ -9,7 +9,7 @@
         WindowStartupLocation="CenterOwner"
         WindowStyle="ToolWindow"
         ShowInTaskbar="False"
-        Width="400"
+        Width="480"
         SizeToContent="Height"
         ResizeMode="NoResize">
     <Window.Resources>
