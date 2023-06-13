@@ -63,7 +63,7 @@
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Closed">
             <i:InvokeCommandAction Command="{Binding UIClosedCommand, Mode=OneTime}"
-                                   CommandParameter="{Binding ElementName=WindowMain}" />
+                                   CommandParameter="{Binding ElementName=MainWindowWindow}" />
         </i:EventTrigger>
     </i:Interaction.Triggers>
     <Window.InputBindings>
@@ -481,8 +481,7 @@
 
                             <Ellipse Width="12"
                                      VerticalAlignment="Center"
-                                     Height="12"
-                                     Margin="4 0 4 0">
+                                     Height="12">
                                 <Ellipse.Style>
                                     <Style TargetType="{x:Type Ellipse}">
                                         <Style.Triggers>
@@ -541,10 +540,11 @@
                             <TextBlock Grid.Column="1"
                                        TextTrimming="CharacterEllipsis"
                                        VerticalAlignment="Center"
+                                       Margin="4 0 4 0"
                                        Text="{Binding}" />
 
                             <TextBlock x:Name="CatCountTextBlock"
-                                       Margin="4 0 4 0"
+                                       Opacity="0.5"
                                        Grid.Column="2"
                                        HorizontalAlignment="Right"
                                        VerticalAlignment="Center">

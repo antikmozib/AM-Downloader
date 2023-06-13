@@ -1,28 +1,19 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <SolidColorBrush x:Key="AddButtonIconColor" Color="SteelBlue" />
     <SolidColorBrush x:Key="RemoveButtonIconColor" Color="SteelBlue" />
-    <SolidColorBrush x:Key="StartButtonIconColor" Color="SeaGreen" />
-    <SolidColorBrush x:Key="PauseButtonIconColor" Color="DarkOrange" />
-    <SolidColorBrush x:Key="StopButtonIconColor" Color="OrangeRed" />
-    <SolidColorBrush x:Key="StartQueueButtonIconColor" Color="LightSeaGreen" />
-    <SolidColorBrush x:Key="StopQueueButtonIconColor" Color="IndianRed" />
-    <SolidColorBrush x:Key="CategoryAllColor" Color="DarkSlateBlue" />
-    <SolidColorBrush x:Key="CategoryReadyColor" Color="LightSeaGreen" />
-    <SolidColorBrush x:Key="CategoryQueuedColor" Color="SandyBrown" />
+    <SolidColorBrush x:Key="StartButtonIconColor" Color="Green" />
+    <SolidColorBrush x:Key="PauseButtonIconColor" Color="Orange" />
+    <SolidColorBrush x:Key="StopButtonIconColor" Color="Red" />
+    <SolidColorBrush x:Key="StartQueueButtonIconColor" Color="DarkGreen" />
+    <SolidColorBrush x:Key="StopQueueButtonIconColor" Color="DarkRed" />
+    <SolidColorBrush x:Key="CategoryAllColor" Color="Black" />
+    <SolidColorBrush x:Key="CategoryReadyColor" Color="DarkGreen" />
+    <SolidColorBrush x:Key="CategoryQueuedColor" Color="Orange" />
     <SolidColorBrush x:Key="CategoryPausedColor" Color="Gold" />
-    <SolidColorBrush x:Key="CategoryFinishedColor" Color="LightSlateGray" />
+    <SolidColorBrush x:Key="CategoryFinishedColor" Color="SlateGray" />
     <SolidColorBrush x:Key="CategoryErroredColor" Color="Red" />
-    <SolidColorBrush x:Key="CategoryDownloadingColor" Color="LimeGreen" />
-    <SolidColorBrush x:Key="CategoryVerifyingColor" Color="Yellow" />
+    <SolidColorBrush x:Key="CategoryDownloadingColor" Color="Green" />
     <SolidColorBrush x:Key="ColumnHeaderSortDirectionColor" Color="DarkGreen" />
-    <SolidColorBrush x:Key="GridViewSelectedItemBackground" Color="PowderBlue" />
-    <SolidColorBrush x:Key="ProgressBarValueColor" Color="#f2f2f2" />
-    <SolidColorBrush x:Key="ProgressBarValueShadowColor" Color="#4d4d4d" />
-    <SolidColorBrush x:Key="ProgressBarFinishedForeground" Color="#669999" />
-    <SolidColorBrush x:Key="ProgressBarErroredBackground" Color="#ff8080" />
-    <SolidColorBrush x:Key="ProgressBarForeground" Color="#00b300" />
-    <SolidColorBrush x:Key="ProgressBarValueLightColor" Color="#ffffff" />
-    <SolidColorBrush x:Key="ProgressBarValueDarkColor" Color="#000000" />
-    <SolidColorBrush x:Key="StausBarEllipseReadyColor" Color="MediumSeaGreen" />
-    <SolidColorBrush x:Key="StausBarEllipseBusyColor" Color="DarkOrange" />
+    <SolidColorBrush x:Key="StausBarEllipseReadyColor" Color="Green" />
+    <SolidColorBrush x:Key="StausBarEllipseBusyColor" Color="Orange" />
 </ResourceDictionary>
