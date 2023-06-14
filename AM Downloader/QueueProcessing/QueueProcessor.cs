@@ -216,11 +216,10 @@ namespace AMDownloader.QueueProcessing
         }
 
         /// <summary>
-        /// Starts this <see cref="QueueProcessor"/> with the <paramref name="items"/> at the front,
-        /// if at least one of the <paramref name="items"/> is enqueued. If this <see cref="QueueProcessor"/> 
-        /// is already running, it is stopped first.
+        /// Starts (or restarts) this <see cref="QueueProcessor"/> with the 
+        /// <paramref name="items"/> at the top.
         /// </summary>
-        /// <param name="items">The items to start with.</param>
+        /// <param name="items">The items to put at the top of the queue.</param>
         /// <returns></returns>
         public async Task StartWithAsync(IEnumerable<IQueueable> items)
         {
@@ -228,20 +227,18 @@ namespace AMDownloader.QueueProcessing
 
             temp.AddRange(items.Where(o => IsQueued(o)));
 
-            if (temp.Count == 0)
+            if (temp.Count > 0)
             {
-                return;
+                if (IsBusy)
+                {
+                    await StopAsync();
+                }
+
+                temp.AddRange(_queueList.Where(o => !temp.Contains(o)));
+
+                _queueList.Clear();
+                _queueList.AddRange(temp);
             }
-
-            if (IsBusy)
-            {
-                await StopAsync();
-            }
-
-            temp.AddRange(_queueList.Where(o => !temp.Contains(o)));
-
-            _queueList.Clear();
-            _queueList.AddRange(temp);
 
             await StartAsync();
         }
