@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace AMDownloader.QueueProcessing
 {
-    internal class QueueProcessor : INotifyPropertyChanged, IEnumerable
+    internal class QueueProcessor : INotifyPropertyChanged
     {
         #region Fields
 
@@ -198,8 +198,8 @@ namespace AMDownloader.QueueProcessing
             });
 
             cancellationRequested = ct.IsCancellationRequested;
-            _tcs.SetResult();
             _cts.Dispose();
+            _tcs.SetResult();
 
             // must be set before restarting the queue automatically
             IsBusy = false;
@@ -216,7 +216,7 @@ namespace AMDownloader.QueueProcessing
         }
 
         /// <summary>
-        /// Starts the <see cref="QueueProcessor"/> with <paramref name="items"/> at the front,
+        /// Starts the <see cref="QueueProcessor"/> with the <paramref name="items"/> at the front,
         /// if at least one of the <paramref name="items"/> is enqueued. If the <see cref="QueueProcessor"/> 
         /// is already running, it is stopped first.
         /// </summary>
@@ -272,23 +272,13 @@ namespace AMDownloader.QueueProcessing
         }
 
         /// <summary>
-        /// Determines if <paramref name="value"/> is enqueued.
+        /// Determines if the <paramref name="value"/> is enqueued.
         /// </summary>
         /// <param name="value">The item to check.</param>
-        /// <returns><see langword="true"/> if <paramref name="value"/> is enqueued.</returns>
+        /// <returns><see langword="true"/> if the <paramref name="value"/> is enqueued.</returns>
         public bool IsQueued(IQueueable value)
         {
             return _queueList.Contains(value);
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
-        public QueueEnumerator GetEnumerator()
-        {
-            return new QueueEnumerator(_queueList.ToArray());
         }
 
         #endregion
@@ -307,53 +297,4 @@ namespace AMDownloader.QueueProcessing
 
         #endregion
     }
-
-    #region Enumerator
-
-    internal class QueueEnumerator : IEnumerator
-    {
-        readonly IQueueable[] _queueables;
-        int position = -1;
-
-        public QueueEnumerator(IQueueable[] queueables)
-        {
-            _queueables = queueables;
-        }
-
-        public bool MoveNext()
-        {
-            position++;
-            return position < _queueables.Length;
-        }
-
-        public void Reset()
-        {
-            position = -1;
-        }
-
-        object IEnumerator.Current
-        {
-            get
-            {
-                return Current;
-            }
-        }
-
-        public IQueueable Current
-        {
-            get
-            {
-                try
-                {
-                    return _queueables[position];
-                }
-                catch (IndexOutOfRangeException)
-                {
-                    throw new InvalidOperationException();
-                }
-            }
-        }
-    }
-
-    #endregion
 }
