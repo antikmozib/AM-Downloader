@@ -164,14 +164,21 @@ namespace AMDownloader
             while (!_ctsClipboard.IsCancellationRequested)
             {
                 var delay = Task.Delay(1000);
-                List<string> source = Regex.Replace(_clipboardService.GetText(), @"\t|\r", "").Split('\n').ToList();
-                List<string> dest = Regex.Replace(this.Urls, @"\r|\t", "").ToLower().Split('\n').ToList();
+                List<string> source = Regex
+                    .Replace(_clipboardService.GetText(), @"\t|\r", "")
+                    .Split('\n')
+                    .Where(o => o.Trim().Length > 0).ToList();
+                List<string> dest = Regex
+                    .Replace(this.Urls, @"\r|\t", "")
+                    .ToLower()
+                    .Split('\n').ToList();
 
                 foreach (var url in source)
                 {
                     var f_url = Regex.Replace(url, @"\s", "");
 
-                    if ((f_url.ToLower().StartsWith("http") || f_url.ToLower().StartsWith("ftp") || f_url.ToLower().StartsWith("www.")) && !dest.Contains(f_url.ToLower()))
+                    if ((f_url.ToLower().StartsWith("http") || f_url.ToLower().StartsWith("ftp") || f_url.ToLower().StartsWith("www."))
+                        && !dest.Contains(f_url.ToLower()))
                     {
                         this.Urls += f_url + '\n';
                     }
