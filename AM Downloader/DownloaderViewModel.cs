@@ -388,7 +388,7 @@ namespace AMDownloader
             return (from item
                     in items
                     where !item.IsDownloading && !item.IsCompleted
-                    select item).ToArray().Length > 0;
+                    select item).ToArray().Length == items.Length;
         }
 
         private void Pause(object obj)
@@ -419,7 +419,7 @@ namespace AMDownloader
             return (from item
                     in items
                     where item.IsDownloading && item.SupportsResume
-                    select item).ToArray().Length > 0;
+                    select item).ToArray().Length == items.Length;
         }
 
         private void Cancel(object obj)
@@ -452,7 +452,7 @@ namespace AMDownloader
             return (from item
                     in items
                     where item.IsDownloading || item.IsPaused
-                    select item).ToArray().Length > 0;
+                    select item).ToArray().Length == items.Length;
         }
 
         private void Add(object obj)
@@ -571,7 +571,7 @@ namespace AMDownloader
             return (from item
                     in items
                     where File.Exists(item.Destination)
-                    select item).ToArray().Length > 0;
+                    select item).ToArray().Length == items.Length;
         }
 
         private void OpenContainingFolder(object obj)
@@ -692,7 +692,7 @@ namespace AMDownloader
             return (from item
                     in items
                     where !item.IsDownloading && !item.IsCompleted && !QueueProcessor.IsQueued(item)
-                    select item).ToArray().Length > 0;
+                    select item).ToArray().Length == items.Length;
         }
 
         private void Dequeue(object obj)
@@ -719,7 +719,7 @@ namespace AMDownloader
             return (from item
                     in items
                     where !item.IsDownloading && QueueProcessor.IsQueued(item)
-                    select item).ToArray().Length > 0;
+                    select item).ToArray().Length == items.Length;
         }
 
         private void DeleteFile(object obj)
@@ -757,7 +757,7 @@ namespace AMDownloader
             return (from item
                     in items
                     where File.Exists(item.Destination) || File.Exists(item.TempDestination)
-                    select item).ToArray().Length > 0;
+                    select item).ToArray().Length == items.Length;
         }
 
         private void CopyLinkToClipboard(object obj)
