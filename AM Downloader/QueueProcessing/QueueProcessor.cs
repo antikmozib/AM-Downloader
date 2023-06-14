@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -67,7 +68,7 @@ namespace AMDownloader.QueueProcessing
         #region Public methods
 
         /// <summary>
-        /// Add and enqueue items to the QueueProcessor.
+        /// Add and enqueue <paramref name="items"/> to the <see cref="QueueProcessor"/>.
         /// </summary>
         /// <param name="items">The items to add and enqueue.</param>
         public void Enqueue(params IQueueable[] items)
@@ -95,7 +96,7 @@ namespace AMDownloader.QueueProcessing
         }
 
         /// <summary>
-        /// Dequeue and remove items from the QueueProcessor.
+        /// Dequeue and remove <paramref name="items"/> from the <see cref="QueueProcessor"/>.
         /// </summary>
         /// <param name="items">The items to dequeue and remove.</param>
         public void Dequeue(params IQueueable[] items)
@@ -113,6 +114,10 @@ namespace AMDownloader.QueueProcessing
             }
         }
 
+        /// <summary>
+        /// Starts the <see cref="QueueProcessor"/> unless it is already running.
+        /// </summary>
+        /// <returns></returns>
         public async Task StartAsync()
         {
             bool cancellationRequested;
@@ -144,13 +149,14 @@ namespace AMDownloader.QueueProcessing
                     var t = Task.Run(async () =>
                     {
                         var semTask = _semaphore.WaitAsync(ct);
+
                         try
                         {
                             await semTask;
 
                             ct.ThrowIfCancellationRequested();
 
-                            // ensure the item is still in the queue list before commencing download
+                            // ensure the item is still enqueued before commencing download
                             if (!_queueList.Contains(item))
                             {
                                 return;
@@ -209,6 +215,37 @@ namespace AMDownloader.QueueProcessing
             RaiseEvent(QueueProcessorStopped);
         }
 
+        /// <summary>
+        /// Starts the <see cref="QueueProcessor"/> with <paramref name="items"/> at the front,
+        /// if at least one of the <paramref name="items"/> is enqueued. If the <see cref="QueueProcessor"/> 
+        /// is already running, it is stopped first.
+        /// </summary>
+        /// <param name="items">The items to start with.</param>
+        /// <returns></returns>
+        public async Task StartWithAsync(IEnumerable<IQueueable> items)
+        {
+            List<IQueueable> temp = new();
+
+            temp.AddRange(items.Where(o => IsQueued(o)));
+
+            if (temp.Count == 0)
+            {
+                return;
+            }
+
+            if (IsBusy)
+            {
+                await StopAsync();
+            }
+
+            temp.AddRange(_queueList.Where(o => !temp.Contains(o)));
+
+            _queueList.Clear();
+            _queueList.AddRange(temp);
+
+            await StartAsync();
+        }
+
         public void Stop()
         {
             if (!IsBusy)
@@ -235,10 +272,10 @@ namespace AMDownloader.QueueProcessing
         }
 
         /// <summary>
-        /// Determines if an item is enqueued.
+        /// Determines if <paramref name="value"/> is enqueued.
         /// </summary>
         /// <param name="value">The item to check.</param>
-        /// <returns><see langword="true"/> if the item is enqueued.</returns>
+        /// <returns><see langword="true"/> if <paramref name="value"/> is enqueued.</returns>
         public bool IsQueued(IQueueable value)
         {
             return _queueList.Contains(value);
