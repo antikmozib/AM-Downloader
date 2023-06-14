@@ -42,9 +42,9 @@ namespace AMDownloader
         #region Properties
 
         /// <summary>
-        /// <see langword="true"/> if the download can be resumed after pausing.
+        /// Returns <see langword="true"/> if the download can be resumed after pausing.
         /// </summary>
-        private bool SupportsResume => TotalBytesToDownload != null && TotalBytesToDownload > 0;
+        public bool SupportsResume => TotalBytesToDownload != null && TotalBytesToDownload > 0;
         public string Url { get; }
         public string Name => Path.GetFileName(Destination);
         /// <summary>

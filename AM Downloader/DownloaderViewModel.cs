@@ -418,7 +418,7 @@ namespace AMDownloader
 
             return (from item
                     in items
-                    where item.IsDownloading
+                    where item.IsDownloading && item.SupportsResume
                     select item).ToArray().Length > 0;
         }
 
