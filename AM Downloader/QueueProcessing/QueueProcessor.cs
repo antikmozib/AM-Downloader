@@ -68,7 +68,7 @@ namespace AMDownloader.QueueProcessing
         #region Public methods
 
         /// <summary>
-        /// Add and enqueue <paramref name="items"/> to the <see cref="QueueProcessor"/>.
+        /// Add and enqueue <paramref name="items"/> to this <see cref="QueueProcessor"/>.
         /// </summary>
         /// <param name="items">The items to add and enqueue.</param>
         public void Enqueue(params IQueueable[] items)
@@ -96,7 +96,7 @@ namespace AMDownloader.QueueProcessing
         }
 
         /// <summary>
-        /// Dequeue and remove <paramref name="items"/> from the <see cref="QueueProcessor"/>.
+        /// Dequeue and remove <paramref name="items"/> from this <see cref="QueueProcessor"/>.
         /// </summary>
         /// <param name="items">The items to dequeue and remove.</param>
         public void Dequeue(params IQueueable[] items)
@@ -115,7 +115,7 @@ namespace AMDownloader.QueueProcessing
         }
 
         /// <summary>
-        /// Starts the <see cref="QueueProcessor"/> unless it is already running.
+        /// Starts this <see cref="QueueProcessor"/> unless it is already running.
         /// </summary>
         /// <returns></returns>
         public async Task StartAsync()
@@ -127,13 +127,13 @@ namespace AMDownloader.QueueProcessing
                 return;
             };
 
-            IsBusy = true;
-            RaisePropertyChanged(nameof(IsBusy));
-            RaiseEvent(QueueProcessorStarted);
-
             _tcs = new();
             _cts = new();
             var ct = _cts.Token;
+
+            IsBusy = true;
+            RaisePropertyChanged(nameof(IsBusy));
+            RaiseEvent(QueueProcessorStarted);
 
             await Task.Run(async () =>
             {
@@ -197,12 +197,12 @@ namespace AMDownloader.QueueProcessing
                 }
             });
 
+            // must be set before restarting the queue automatically
+            IsBusy = false;
+
             cancellationRequested = ct.IsCancellationRequested;
             _cts.Dispose();
             _tcs.SetResult();
-
-            // must be set before restarting the queue automatically
-            IsBusy = false;
 
             // keep running the queue recursively until there are
             // no more queued items or cancellation is requested
@@ -216,8 +216,8 @@ namespace AMDownloader.QueueProcessing
         }
 
         /// <summary>
-        /// Starts the <see cref="QueueProcessor"/> with the <paramref name="items"/> at the front,
-        /// if at least one of the <paramref name="items"/> is enqueued. If the <see cref="QueueProcessor"/> 
+        /// Starts this <see cref="QueueProcessor"/> with the <paramref name="items"/> at the front,
+        /// if at least one of the <paramref name="items"/> is enqueued. If this <see cref="QueueProcessor"/> 
         /// is already running, it is stopped first.
         /// </summary>
         /// <param name="items">The items to start with.</param>
