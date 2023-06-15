@@ -105,7 +105,10 @@ namespace AMDownloader.QueueProcessing
 
             foreach (var item in items)
             {
-                itemsRemoved = _queueList.Remove(item);
+                if (_queueList.Remove(item))
+                {
+                    itemsRemoved = true;
+                }
             }
 
             if (itemsRemoved)
@@ -197,7 +200,9 @@ namespace AMDownloader.QueueProcessing
                 }
             });
 
-            // must be set before restarting the queue automatically
+            // must be set before auto restarting the queue;
+            // also, must be set before setting _tcs due to a race
+            // condition when canceling and restarting the queue
             IsBusy = false;
 
             cancellationRequested = ct.IsCancellationRequested;

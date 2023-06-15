@@ -270,13 +270,13 @@ namespace AMDownloader
                 }
             }
 
-            _tcs.SetResult();
             _ctsLinked.Dispose();
             _ctsPause.Dispose();
             _ctsCancel.Dispose();
             _ctLinked = default;
             _ctPause = default;
             _ctCancel = default;
+            _tcs.SetResult();
 
             RaisePropertyChanged(nameof(Status));
             RaiseEvent(DownloadStopped);
