@@ -137,7 +137,6 @@ namespace AMDownloader
         public ICommand OptionsCommand { get; private set; }
         public ICommand EnqueueCommand { get; private set; }
         public ICommand DequeueCommand { get; private set; }
-        public ICommand DeleteFileCommand { get; private set; }
         public ICommand CopyLinkToClipboardCommand { get; private set; }
         public ICommand ClearFinishedDownloadsCommand { get; private set; }
         public ICommand CancelBackgroundTaskCommand { get; private set; }
@@ -232,8 +231,6 @@ namespace AMDownloader
                 Enqueue, Enqueue_CanExecute);
             DequeueCommand = new RelayCommand<object>(
                 Dequeue, Dequeue_CanExecute);
-            DeleteFileCommand = new RelayCommand<object>(
-                DeleteFile, DeleteFile_CanExecute);
             CopyLinkToClipboardCommand = new RelayCommand<object>(
                 CopyLinkToClipboard, CopyLinkToClipboardCommand_CanExecute);
             ClearFinishedDownloadsCommand = new RelayCommand<object>(
@@ -739,44 +736,6 @@ namespace AMDownloader
                     select item).Count() == items.Length;
         }
 
-        private void DeleteFile(object obj)
-        {
-            _ctsUpdatingList = new CancellationTokenSource();
-            RaisePropertyChanged(nameof(this.IsBackgroundWorking));
-
-            var ct = _ctsUpdatingList.Token;
-
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
-
-            Task.Run(async () => await RemoveObjectsAsync(items, true, ct)).ContinueWith(t =>
-            {
-                _ctsUpdatingList.Dispose();
-                RaisePropertyChanged(nameof(this.IsBackgroundWorking));
-
-                RefreshCollectionView();
-            });
-        }
-
-        private bool DeleteFile_CanExecute(object obj)
-        {
-            if (obj == null || this.IsBackgroundWorking)
-            {
-                return false;
-            }
-
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
-
-            if (items.Length == 0)
-            {
-                return false;
-            }
-
-            return (from item
-                    in items
-                    where item.IsCompleted || item.IsPaused || item.IsDownloading
-                    select item).Count() == items.Length;
-        }
-
         private void CopyLinkToClipboard(object obj)
         {
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
@@ -975,7 +934,7 @@ namespace AMDownloader
                     CollectionView.Filter = new Predicate<object>((o) =>
                     {
                         var item = o as DownloaderObjectModel;
-                        return item.Status == DownloadStatus.Finished;
+                        return item.IsCompleted;
                     });
                     break;
 
@@ -983,7 +942,7 @@ namespace AMDownloader
                     CollectionView.Filter = new Predicate<object>((o) =>
                     {
                         var item = o as DownloaderObjectModel;
-                        return item.Status == DownloadStatus.Paused;
+                        return item.IsPaused;
                     });
                     break;
 
@@ -999,7 +958,7 @@ namespace AMDownloader
                     CollectionView.Filter = new Predicate<object>((o) =>
                     {
                         var item = o as DownloaderObjectModel;
-                        return item.Status == DownloadStatus.Ready && !QueueProcessor.IsQueued(item);
+                        return item.IsReady && !QueueProcessor.IsQueued(item);
                     });
                     break;
 
@@ -1007,7 +966,7 @@ namespace AMDownloader
                     CollectionView.Filter = new Predicate<object>((o) =>
                     {
                         var item = o as DownloaderObjectModel;
-                        return item.Status == DownloadStatus.Errored;
+                        return item.IsErrored;
                     });
                     break;
             }
@@ -1219,7 +1178,7 @@ namespace AMDownloader
                     await QueueProcessor.StopAsync();
                 }
 
-                if (item.IsDownloading || item.IsPaused || item.IsErrored)
+                if (!item.IsCompleted && !item.IsReady)
                 {
                     await item.CancelAsync();
 
@@ -1482,11 +1441,11 @@ namespace AMDownloader
         {
             this.Count = DownloadItemsList.Count;
             this.QueuedCount = QueueProcessor.Count;
-            this.ReadyCount = DownloadItemsList.Count(o => o.Status == DownloadStatus.Ready && !QueueProcessor.IsQueued(o));
-            this.DownloadingCount = DownloadItemsList.Count(o => o.Status == DownloadStatus.Downloading);
-            this.PausedCount = DownloadItemsList.Count(o => o.Status == DownloadStatus.Paused);
-            this.FinishedCount = DownloadItemsList.Count(o => o.Status == DownloadStatus.Finished);
-            this.ErroredCount = DownloadItemsList.Count(o => o.Status == DownloadStatus.Errored);
+            this.ReadyCount = DownloadItemsList.Count(o => o.IsReady && !QueueProcessor.IsQueued(o));
+            this.DownloadingCount = DownloadItemsList.Count(o => o.IsDownloading);
+            this.PausedCount = DownloadItemsList.Count(o => o.IsPaused);
+            this.FinishedCount = DownloadItemsList.Count(o => o.IsCompleted);
+            this.ErroredCount = DownloadItemsList.Count(o => o.IsErrored);
 
             RaisePropertyChanged(nameof(this.Count));
             RaisePropertyChanged(nameof(this.DownloadingCount));

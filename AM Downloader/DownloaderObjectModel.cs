@@ -44,7 +44,7 @@ namespace AMDownloader
         #region Properties
 
         /// <summary>
-        /// Returns <see langword="true"/> if the download can be resumed after pausing.
+        /// <see langword="true"/> if this download can be resumed after pausing.
         /// </summary>
         public bool SupportsResume => TotalBytesToDownload != null && TotalBytesToDownload > 0;
         public string Url { get; }
@@ -75,6 +75,10 @@ namespace AMDownloader
         public long? Speed { get; private set; }
         public HttpStatusCode? StatusCode { get; private set; }
         public DownloadStatus Status { get; private set; }
+        /// <summary>
+        /// <see langword="true"/> if this download has not started yet.
+        /// </summary>
+        public bool IsReady => Status == DownloadStatus.Ready;
         public bool IsDownloading => Status == DownloadStatus.Downloading;
         public bool IsPaused => Status == DownloadStatus.Paused;
         public bool IsCompleted => Status == DownloadStatus.Finished;
@@ -160,11 +164,11 @@ namespace AMDownloader
 
                 BytesDownloaded = 0;
 
-                if (status != DownloadStatus.Ready)
+                // if we have any status other than Ready or Errored at this point
+                // it means there has been an error while restoring, e.g. a Paused or
+                // Finished status was requested but the required files weren't found
+                if (!IsReady && !IsErrored)
                 {
-                    // either the download had a paused or finished status
-                    // but the required files weren't found; or it had a
-                    // errored status to begin with
                     Status = DownloadStatus.Errored;
                 }
             }
@@ -245,9 +249,6 @@ namespace AMDownloader
                     }
                     else
                     {
-                        // if the paused signal was given after creating the temp file but before getting
-                        // the content length, simply cancel the download instead of pausing it
-
                         CleanupTempDownload();
 
                         Status = DownloadStatus.Ready;
@@ -318,11 +319,8 @@ namespace AMDownloader
 
                     CleanupTempDownload();
 
-                    if (IsPaused || IsErrored)
-                    {
-                        Status = DownloadStatus.Ready;
-                        RaisePropertyChanged(nameof(Status));
-                    }
+                    Status = DownloadStatus.Ready;
+                    RaisePropertyChanged(nameof(Status));
                 }
             }
             catch (ObjectDisposedException)
@@ -332,11 +330,8 @@ namespace AMDownloader
 
                 CleanupTempDownload();
 
-                if (IsPaused || IsErrored)
-                {
-                    Status = DownloadStatus.Ready;
-                    RaisePropertyChanged(nameof(Status));
-                }
+                Status = DownloadStatus.Ready;
+                RaisePropertyChanged(nameof(Status));
             }
         }
 
