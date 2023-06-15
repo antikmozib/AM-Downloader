@@ -9,8 +9,7 @@
         WindowStartupLocation="CenterOwner"
         WindowStyle="ToolWindow"
         ShowInTaskbar="False"
-        Width="480"
-        SizeToContent="Height"
+        SizeToContent="WidthAndHeight"
         ResizeMode="NoResize">
     <Window.Resources>
         <converters:OptionsSpeedConverter x:Key="OptionsSpeedConverter" />
@@ -53,7 +52,7 @@
             </Style>
         </Grid.Resources>
 
-        <Label Content="*Max parallel downloads (1 - 10):" />
+        <Label Content="*Maximum parallel downloads (1 - 10):" />
         <TextBox Text="{Binding Path=MaxParallelDownloads}"
                  Style="{StaticResource InputBoxStyle}"
                  Grid.Column="1" />
@@ -63,7 +62,7 @@
                    Grid.Row="1"
                    Grid.ColumnSpan="3" />
 
-        <Label Content="Max speed per download (0 = Unlimited):"
+        <Label Content="Limit speed per download (0 = Unlimited):"
                Grid.Row="2" />
         <TextBox Text="{Binding Path=MaxDownloadSpeed, Converter={StaticResource OptionsSpeedConverter}}"
                  Style="{StaticResource InputBoxStyle}"
@@ -94,10 +93,10 @@
                    Grid.ColumnSpan="3" />
 
         <CheckBox VerticalContentAlignment="Center"
-                  IsChecked="{Binding Path=ClearFinishedDownloadsOnExit}"
+                  IsChecked="{Binding Path=RememberLastDownloadLocation}"
                   Grid.Row="6"
                   Grid.ColumnSpan="3">
-            <Label Content="Clear finished downloads on exit" />
+            <Label Content="Remember last download location" />
         </CheckBox>
 
         <Separator Margin="0 5 0 5"
@@ -106,10 +105,10 @@
                    Grid.ColumnSpan="3" />
 
         <CheckBox VerticalContentAlignment="Center"
-                  IsChecked="{Binding Path=RememberLastDownloadLocation}"
+                  IsChecked="{Binding Path=ClearFinishedDownloadsOnExit}"
                   Grid.Row="8"
                   Grid.ColumnSpan="3">
-            <Label Content="Remember last download location" />
+            <Label Content="Clear finished downloads on exit" />
         </CheckBox>
 
         <Separator Margin="0 5 0 5"
@@ -121,10 +120,10 @@
                   IsChecked="{Binding Path=AutoCheckForUpdates}"
                   Grid.Row="10"
                   Grid.ColumnSpan="3">
-            <Label Content="Automatically check for updates" />
+            <Label Content="Automatically check for updates at startup" />
         </CheckBox>
 
-        <Label Content="*Requires application restart"
+        <Label Content="*Application restart required"
                Margin="0 20 0 5"
                Grid.Row="11"
                Grid.ColumnSpan="3" />

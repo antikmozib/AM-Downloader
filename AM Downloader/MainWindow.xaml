@@ -73,10 +73,6 @@
         <KeyBinding Command="{Binding RemoveCommand}"
                     CommandParameter="{Binding SelectedItems, ElementName=DownloadsListView}"
                     Key="Delete" />
-        <KeyBinding Command="{Binding DeleteFileCommand}"
-                    CommandParameter="{Binding SelectedItems, ElementName=DownloadsListView}"
-                    Key="Delete"
-                    Modifiers="Shift" />
         <KeyBinding Command="{Binding OpenCommand}"
                     CommandParameter="{Binding SelectedItems, ElementName=DownloadsListView}"
                     Key="O"
