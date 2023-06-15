@@ -204,14 +204,14 @@ namespace AMDownloader
             var copyright = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(
                 AssemblyCopyrightAttribute), true).OfType<AssemblyCopyrightAttribute>().FirstOrDefault()?.Copyright;
             var website = "https://mozib.io/amdownloader";
-            var totalDownloaded = Settings.Default.BytesTransferredOverLifetime 
-                / (double)Constants.ByteConstants.GIGABYTE;
+            var totalDownloaded = Math.Round(Settings.Default.BytesTransferredOverLifetime
+                / (double)Constants.ByteConstants.MEGABYTE);
 
             MessageBox.Show(
                 $"{name}\nVersion {version}\n\n{copyright}\n\n{website}\n\n"
                 + "DISCLAIMER: This is free software. There is NO warranty; "
                 + "not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
-                + $"Total downloaded since installation: {totalDownloaded.ToString("n", cultureInfo)} GB",
+                + $"Total downloaded since installation: {totalDownloaded.ToString("n0", cultureInfo)} MB",
                 "About",
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
