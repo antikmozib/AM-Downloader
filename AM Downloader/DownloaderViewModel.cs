@@ -385,19 +385,19 @@ namespace AMDownloader
 
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
 
+            if (items.Length == 0)
+            {
+                return false;
+            }
+
             return (from item
                     in items
                     where !item.IsDownloading && !item.IsCompleted
-                    select item).ToArray().Length == items.Length;
+                    select item).Count() == items.Length;
         }
 
         private void Pause(object obj)
         {
-            if (obj == null)
-            {
-                return;
-            }
-
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
 
             foreach (var item in items)
@@ -416,19 +416,19 @@ namespace AMDownloader
 
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
 
+            if (items.Length == 0)
+            {
+                return false;
+            }
+
             return (from item
                     in items
                     where item.IsDownloading && item.SupportsResume
-                    select item).ToArray().Length == items.Length;
+                    select item).Count() == items.Length;
         }
 
         private void Cancel(object obj)
         {
-            if (obj == null)
-            {
-                return;
-            }
-
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
 
             foreach (var item in items)
@@ -449,10 +449,15 @@ namespace AMDownloader
 
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
 
+            if (items.Length == 0)
+            {
+                return false;
+            }
+
             return (from item
                     in items
-                    where item.IsDownloading || item.IsPaused
-                    select item).ToArray().Length == items.Length;
+                    where item.IsDownloading || item.IsPaused || (item.IsErrored && item.SupportsResume)
+                    select item).Count() == items.Length;
         }
 
         private void Add(object obj)
@@ -497,19 +502,34 @@ namespace AMDownloader
 
         private void Remove(object obj)
         {
-            if (obj == null)
+            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
+            var itemsDeleteable = from item in items where item.IsCompleted select item;
+            var delete = true;
+
+            if (itemsDeleteable.Any())
             {
-                return;
+                var result = _displayMessage.Invoke(
+                    "Also delete the files from storage?",
+                    "Remove",
+                    MessageBoxButton.YesNoCancel,
+                    MessageBoxImage.Asterisk,
+                    MessageBoxResult.No);
+
+                if (result == MessageBoxResult.No)
+                {
+                    delete = false;
+                }
+                else if (result == MessageBoxResult.Cancel)
+                {
+                    return;
+                }
             }
 
             _ctsUpdatingList = new CancellationTokenSource();
             RaisePropertyChanged(nameof(IsBackgroundWorking));
-
             var ct = _ctsUpdatingList.Token;
 
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
-
-            Task.Run(async () => await RemoveObjectsAsync(items, false, ct)).ContinueWith(t =>
+            Task.Run(async () => await RemoveObjectsAsync(items, delete, ct)).ContinueWith(t =>
             {
                 _ctsUpdatingList.Dispose();
                 RaisePropertyChanged(nameof(this.IsBackgroundWorking));
@@ -532,28 +552,24 @@ namespace AMDownloader
 
         private void Open(object obj)
         {
-            if (obj == null)
-            {
-                return;
-            }
-
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
-            var itemsFinished = from item in items
-                                where item.Status == DownloadStatus.Finished
-                                where new FileInfo(item.Destination).Exists
-                                select item;
 
-            if (itemsFinished.Count() > 1)
+            if (items.Count > 1)
             {
-                var r = _displayMessage.Invoke(
-                    "You have selected to open " + itemsFinished.Count() + " files.\n\n" +
-                    "Opening too many files at the same file may cause the system to crash.\n\nDo you wish to proceed?",
-                    "Open", MessageBoxButton.YesNo, MessageBoxImage.Exclamation, MessageBoxResult.No);
+                var result = _displayMessage.Invoke(
+                    "Opening too many files at the same file may cause the system to crash.\n\nProceed anyway?",
+                    $"Open {items.Count} Files",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Exclamation,
+                    MessageBoxResult.No);
 
-                if (r == MessageBoxResult.No) return;
+                if (result == MessageBoxResult.No)
+                {
+                    return;
+                }
             }
 
-            foreach (var item in itemsFinished)
+            foreach (var item in items)
             {
                 Process.Start("explorer.exe", "\"" + item.Destination + "\"");
             }
@@ -568,19 +584,19 @@ namespace AMDownloader
 
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
 
+            if (items.Length == 0)
+            {
+                return false;
+            }
+
             return (from item
                     in items
-                    where File.Exists(item.Destination)
-                    select item).ToArray().Length == items.Length;
+                    where item.IsCompleted
+                    select item).Count() == items.Length;
         }
 
         private void OpenContainingFolder(object obj)
         {
-            if (obj == null)
-            {
-                return;
-            }
-
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
             var itemsOpenable = from item in items
                                 where File.Exists(item.Destination) ||
@@ -590,10 +606,11 @@ namespace AMDownloader
             if (itemsOpenable.Count() > 1)
             {
                 var result = _displayMessage.Invoke(
-                    "You have selected to open " + items.Count + " folders.\n\n" +
-                    "Opening too many folders at the same time may cause the system to crash.\n\n" +
-                    "Do you wish to proceed?", "Open Folder",
-                    MessageBoxButton.YesNo, MessageBoxImage.Exclamation, MessageBoxResult.No);
+                    "Opening too many folders at the same time may cause the system to crash.\n\nProceed anyway?",
+                    $"Open {items.Count} Folders",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Exclamation,
+                    MessageBoxResult.No);
 
                 if (result == MessageBoxResult.No)
                 {
@@ -667,11 +684,6 @@ namespace AMDownloader
 
         private void Enqueue(object obj)
         {
-            if (obj == null)
-            {
-                return;
-            }
-
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
 
             foreach (var item in items)
@@ -689,19 +701,19 @@ namespace AMDownloader
 
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
 
+            if (items.Length == 0)
+            {
+                return false;
+            }
+
             return (from item
                     in items
                     where !item.IsDownloading && !item.IsCompleted && !QueueProcessor.IsQueued(item)
-                    select item).ToArray().Length == items.Length;
+                    select item).Count() == items.Length;
         }
 
         private void Dequeue(object obj)
         {
-            if (obj == null)
-            {
-                return;
-            }
-
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
 
             QueueProcessor.Dequeue(items);
@@ -716,19 +728,19 @@ namespace AMDownloader
 
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
 
+            if (items.Length == 0)
+            {
+                return false;
+            }
+
             return (from item
                     in items
                     where !item.IsDownloading && QueueProcessor.IsQueued(item)
-                    select item).ToArray().Length == items.Length;
+                    select item).Count() == items.Length;
         }
 
         private void DeleteFile(object obj)
         {
-            if (obj == null)
-            {
-                return;
-            }
-
             _ctsUpdatingList = new CancellationTokenSource();
             RaisePropertyChanged(nameof(this.IsBackgroundWorking));
 
@@ -754,19 +766,19 @@ namespace AMDownloader
 
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
 
+            if (items.Length == 0)
+            {
+                return false;
+            }
+
             return (from item
                     in items
-                    where File.Exists(item.Destination) || File.Exists(item.TempDestination)
-                    select item).ToArray().Length == items.Length;
+                    where item.IsCompleted || item.IsPaused || item.IsDownloading
+                    select item).Count() == items.Length;
         }
 
         private void CopyLinkToClipboard(object obj)
         {
-            if (obj == null)
-            {
-                return;
-            }
-
             var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToList();
             string clipText = string.Empty;
             int counter = 0;
@@ -1207,7 +1219,7 @@ namespace AMDownloader
                     await QueueProcessor.StopAsync();
                 }
 
-                if (item.IsDownloading || item.IsPaused)
+                if (item.IsDownloading || item.IsPaused || item.IsErrored)
                 {
                     await item.CancelAsync();
 

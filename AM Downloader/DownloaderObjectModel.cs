@@ -4,6 +4,8 @@ using AMDownloader.Common;
 using AMDownloader.ObjectModel;
 using AMDownloader.Properties;
 using AMDownloader.QueueProcessing;
+using Polly;
+using Polly.Timeout;
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -142,12 +144,12 @@ namespace AMDownloader
             Status = status;
 
             // are we restoring an existing download?
-            if (status == DownloadStatus.Paused && File.Exists(_tempPath) && !File.Exists(destination))
+            if ((IsPaused || IsErrored) && File.Exists(_tempPath) && !File.Exists(destination))
             {
-                // paused
+                // paused or interrupted
                 BytesDownloaded = new FileInfo(_tempPath).Length;
             }
-            else if (status == DownloadStatus.Finished && !File.Exists(_tempPath) && File.Exists(destination))
+            else if (IsCompleted && !File.Exists(_tempPath) && File.Exists(destination))
             {
                 // finished
                 BytesDownloaded = new FileInfo(destination).Length;
@@ -230,20 +232,22 @@ namespace AMDownloader
             when (ex is OperationCanceledException
                 || ex is AMDownloaderUrlException
                 || ex is HttpRequestException
+                || ex is TimeoutRejectedException
                 || ex is IOException)
             {
                 if (_ctLinked.IsCancellationRequested)
                 {
                     // download was paused or canceled by user
 
-                    // if the paused signal was given after creating the temp file but before getting
-                    // the content length, simply cancel the download instead of pausing it
                     if (_ctPause.IsCancellationRequested && SupportsResume)
                     {
                         Status = DownloadStatus.Paused;
                     }
                     else
                     {
+                        // if the paused signal was given after creating the temp file but before getting
+                        // the content length, simply cancel the download instead of pausing it
+
                         CleanupTempDownload();
 
                         Status = DownloadStatus.Ready;
@@ -256,7 +260,10 @@ namespace AMDownloader
                     // download interrupted by an exception not related to cancellation
                     // e.g. timeout, invalid url, IO exception
 
-                    CleanupTempDownload();
+                    if (!SupportsResume)
+                    {
+                        CleanupTempDownload();
+                    }
 
                     Status = DownloadStatus.Errored;
                 }
@@ -311,7 +318,7 @@ namespace AMDownloader
 
                     CleanupTempDownload();
 
-                    if (IsPaused)
+                    if (IsPaused || IsErrored)
                     {
                         Status = DownloadStatus.Ready;
                         RaisePropertyChanged(nameof(Status));
@@ -325,7 +332,7 @@ namespace AMDownloader
 
                 CleanupTempDownload();
 
-                if (IsPaused)
+                if (IsPaused || IsErrored)
                 {
                     Status = DownloadStatus.Ready;
                     RaisePropertyChanged(nameof(Status));
@@ -360,6 +367,7 @@ namespace AMDownloader
         private async Task DownloadAsync()
         {
             HttpRequestMessage request;
+            IAsyncPolicy timeoutPolicy = Policy.TimeoutAsync(_httpClient.Timeout);
             // reports the lifetime number of bytes
             IProgress<int> progressReporter = new Progress<int>((value) =>
             {
@@ -419,7 +427,7 @@ namespace AMDownloader
                 int read;
                 int bytesReceived = 0;
 
-                var stopWatch = new Stopwatch();
+                Stopwatch stopWatch = new();
                 long maxDownloadSpeed = Settings.Default.MaxDownloadSpeed;
                 int throttlerBytesReceived = 0, throttlerBytesExpected = 0;
 
@@ -427,7 +435,7 @@ namespace AMDownloader
                 {
                     stopWatch.Start();
 
-                    read = await readStream.ReadAsync(buffer.AsMemory(0, buffer.Length), _ctLinked);
+                    read = await timeoutPolicy.ExecuteAsync(async ct => await readStream.ReadAsync(buffer.AsMemory(0, buffer.Length), ct), _ctLinked);
 
                     stopWatch.Stop();
 

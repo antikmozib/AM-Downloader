@@ -732,17 +732,17 @@
                             </MenuItem.Icon>
                         </MenuItem>
                         <Separator />
-                        <MenuItem Header="Remove From List"
+                        <MenuItem Header="Remove"
                                   Command="{Binding RemoveCommand}"
                                   CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
                                   InputGestureText="Del">
                             <MenuItem.Icon>
                                 <Viewbox>
-                                    <Frame Source="pack://application:,,,/Icons/Remove_16x.xaml" />
+                                    <Frame Source="pack://application:,,,/Icons/Trash_16x.xaml" />
                                 </Viewbox>
                             </MenuItem.Icon>
                         </MenuItem>
-                        <MenuItem Header="Delete File"
+                        <!--<MenuItem Header="Delete File"
                                   Command="{Binding DeleteFileCommand}"
                                   CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
                                   InputGestureText="Shift+Del">
@@ -751,7 +751,7 @@
                                     <Frame Source="pack://application:,,,/Icons/Trash_16x.xaml" />
                                 </Viewbox>
                             </MenuItem.Icon>
-                        </MenuItem>
+                        </MenuItem>-->
                     </ContextMenu>
                 </ListView.ContextMenu>
                 <ListView.ItemContainerStyle>
