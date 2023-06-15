@@ -156,7 +156,7 @@ namespace AMDownloader
             else if (IsCompleted && !File.Exists(_tempPath) && File.Exists(destination))
             {
                 // finished
-                BytesDownloaded = new FileInfo(destination).Length;
+                BytesDownloaded = TotalBytesToDownload ?? new FileInfo(destination).Length;
             }
             else
             {
