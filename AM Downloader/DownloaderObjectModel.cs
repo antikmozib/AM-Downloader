@@ -155,6 +155,8 @@ namespace AMDownloader
             else if (IsCompleted && !File.Exists(_tempPath) && File.Exists(destination))
             {
                 // finished
+
+                // set downloaded bytes to total bytes as the size is dictated by the file system
                 BytesDownloaded = TotalBytesToDownload ?? new FileInfo(destination).Length;
             }
             else
@@ -207,7 +209,7 @@ namespace AMDownloader
 
             try
             {
-                if (!SupportsResume)
+                if (!SupportsResume || BytesDownloaded == 0)
                 {
                     // creating a new download
 
@@ -217,8 +219,15 @@ namespace AMDownloader
                     {
                         File.Delete(_tempPath);
                     }
+                }
+                else
+                {
+                    // resuming a paused download
 
-                    File.Create(_tempPath).Close();
+                    // re-read the temp file size because this is the
+                    // actual point we'll be resuming from as the size
+                    // is dictated by the file system
+                    BytesDownloaded = new FileInfo(_tempPath).Length;
                 }
 
                 await DownloadAsync();
@@ -370,7 +379,7 @@ namespace AMDownloader
                 _reportProgressBytes.Report(value);
             });
 
-            if (SupportsResume)
+            if (SupportsResume && BytesDownloaded > 0)
             {
                 // resuming an existing download
                 request = new HttpRequestMessage
