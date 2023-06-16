@@ -22,7 +22,7 @@ namespace AMDownloader
                 MessageBoxButton.OK, 
                 MessageBoxImage.Information);
 
-            this.Close();
+            DialogResult = true;
         }
 
         private void btnOK_Click(object sender, RoutedEventArgs e)

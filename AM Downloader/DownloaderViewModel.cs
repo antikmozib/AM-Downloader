@@ -18,7 +18,6 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
-using System.Security.Policy;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -30,15 +29,13 @@ namespace AMDownloader
 {
     internal delegate Task AddItemsAsyncDelegate(string destination, bool enqueue, bool start, params string[] urls);
 
-    internal delegate void ShowUrlPreviewDelegate(string[] urls);
-
     internal delegate MessageBoxResult DisplayMessageDelegate(
         string message, string title = "",
         MessageBoxButton button = MessageBoxButton.OK,
         MessageBoxImage image = MessageBoxImage.Information,
         MessageBoxResult defaultResult = MessageBoxResult.OK);
 
-    internal delegate void ShowListDelegate(List<string> urls, string title, string description);
+    internal delegate bool? ShowWindowDelegate(object viewModel);
 
     internal enum Category
     {
@@ -66,7 +63,7 @@ namespace AMDownloader
         private readonly List<CancellationTokenSource> _ctsRefreshViewList;
         private RequestThrottler _requestThrottler;
         private readonly HttpClient _client;
-        private readonly ShowListDelegate _showList;
+        private readonly ShowWindowDelegate _showWindow;
         private bool _resetAllSettingsOnClose;
         private readonly IProgress<long> _progressReporter;
 
@@ -74,9 +71,10 @@ namespace AMDownloader
 
         #region Properties
 
-        public ObservableCollection<DownloaderObjectModel> DownloadItemsList { get; private set; }
+        public ObservableCollection<DownloaderObjectModel> DownloadItemsList { get; }
         public ObservableCollection<Category> CategoriesList { get; }
-        public ICollectionView DownloadItemsView { get; private set; }
+        public ICollectionView DownloadItemsView { get; }
+        public ICollectionViewLiveShaping CategorisedDownloadItemsView { get; }
         public QueueProcessor QueueProcessor { get; }
         public int Progress { get; private set; }
         public long BytesDownloadedThisSession { get; private set; }
@@ -147,7 +145,7 @@ namespace AMDownloader
 
         #region Constructors
 
-        public DownloaderViewModel(DisplayMessageDelegate displayMessage, ShowListDelegate showList)
+        public DownloaderViewModel(DisplayMessageDelegate displayMessage, ShowWindowDelegate showWindow)
         {
             DownloadItemsList = new();
             DownloadItemsList.CollectionChanged += DownloadItemsList_CollectionChanged;
@@ -204,7 +202,7 @@ namespace AMDownloader
             _lockBytesDownloaded = this.BytesDownloadedThisSession;
             _lockBytesTransferredOverLifetime = Settings.Default.BytesTransferredOverLifetime;
             _lockCtsRefreshViewList = _ctsRefreshViewList;
-            _showList = showList;
+            _showWindow = showWindow;
             _resetAllSettingsOnClose = false;
 
             AddCommand = new RelayCommand<object>(
@@ -459,14 +457,10 @@ namespace AMDownloader
 
         private void Add(object obj)
         {
-            AddDownloadWindow win = new();
-            AddDownloadViewModel vm = new(win.Preview);
+            AddDownloadViewModel vm = new(_showWindow);
             DownloaderObjectModel[] itemsAdded = null;
 
-            win.DataContext = vm;
-            win.Owner = obj as Window;
-
-            if (win.ShowDialog() == true)
+            if (_showWindow.Invoke(vm) == true)
             {
                 _ctsUpdatingList = new CancellationTokenSource();
                 RaisePropertyChanged(nameof(this.IsBackgroundWorking));
@@ -665,17 +659,14 @@ namespace AMDownloader
 
         private void ShowOptions(object obj)
         {
-            var win = new OptionsWindow();
             var vm = new OptionsViewModel();
 
-            win.DataContext = vm;
-            win.Owner = obj as Window;
-
-            win.ShowDialog();
-
-            if (vm.ResetSettingsOnClose)
+            if (_showWindow.Invoke(vm) == true)
             {
-                _resetAllSettingsOnClose = true;
+                if (vm.ResetSettingsOnClose)
+                {
+                    _resetAllSettingsOnClose = true;
+                }
             }
         }
 
@@ -1117,16 +1108,16 @@ namespace AMDownloader
             {
                 if (itemsExist.Count > 0)
                 {
-                    _showList(itemsExist,
-                        "Duplicate Entries",
-                        "The following URLs were not added because they are already in the list:");
+                    _showWindow.Invoke(new ListViewerViewModel(itemsExist,
+                        "The following URLs were not added because they are already in the list:",
+                        "Duplicate Entries"));
                 }
 
                 if (itemsErrored.Count > 0)
                 {
-                    _showList(itemsErrored,
-                        "Invalid Entries",
-                        "The following URLs were not added because they are invalid:");
+                    _showWindow.Invoke(new ListViewerViewModel(itemsErrored,
+                        "The following URLs were not added because they are invalid:",
+                        "Invalid Entries"));
                 }
             }
 
@@ -1271,7 +1262,7 @@ namespace AMDownloader
                     description = "The following files were not removed due to errors:";
                 }
 
-                _showList(failed, title, description);
+                _showWindow(new ListViewerViewModel(failed, title, description));
             }
         }
 

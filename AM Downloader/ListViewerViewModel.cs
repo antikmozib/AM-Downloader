@@ -28,15 +28,17 @@ namespace AMDownloader
 
         public ICommand CopyCommand { get; private set; }
 
-        public string Description { get; set; }
-        public ObservableCollection<ListViewerItem> ListViewerItems { get; set; }
+        public string Title { get; }
+        public string Description { get; }
+        public ObservableCollection<ListViewerItem> ListViewerItems { get; }
 
-        public ListViewerViewModel(string description, List<string> items)
+        public ListViewerViewModel(List<string> items, string description, string title)
         {
             CopyCommand = new RelayCommand<object>(Copy);
 
             _clipboard = new ClipboardObserver();
 
+            this.Title = title;
             this.Description = description;
             this.ListViewerItems = new ObservableCollection<ListViewerItem>();
 

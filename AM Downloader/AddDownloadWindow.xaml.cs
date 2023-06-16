@@ -5,7 +5,6 @@ using AMDownloader.ObjectModel.Serializable;
 using AMDownloader.Properties;
 using System;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
@@ -235,19 +234,6 @@ namespace AMDownloader
             }
 
             txtUrl.FontSize = fontSize;
-        }
-
-        internal void Preview(string[] urls)
-        {
-            var listViewerViewModel = new ListViewerViewModel("Preview URL patterns:", 
-                urls.Where(o => o.Trim().Length > 0).ToList());
-            var listViewerWindow = new ListViewerWindow
-            {
-                DataContext = listViewerViewModel,
-                Owner = this
-            };
-
-            listViewerWindow.ShowDialog();
         }
     }
 }

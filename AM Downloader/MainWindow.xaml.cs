@@ -36,7 +36,9 @@ namespace AMDownloader
 
         public MainWindow()
         {
-            _primaryViewModel = new DownloaderViewModel(DisplayMessage, ShowUrlList);
+            ShowWindowDelegate showWindowDelegate = ShowWindow;
+
+            _primaryViewModel = new DownloaderViewModel(DisplayMessage, ShowWindow);
             InitializeComponent();
             DataContext = _primaryViewModel;
 
@@ -372,17 +374,38 @@ namespace AMDownloader
                 defaultResult));
         }
 
-        private void ShowUrlList(List<string> urls, string title, string description)
+        private bool? ShowWindow(object viewModel)
         {
+            Window window = null;
+            bool? result = null;
+
+            // ViewModels must be assigned and the window must
+            // be shown explicitly from the main thread
             Application.Current.Dispatcher.Invoke(() =>
             {
-                var listViewerViewModel = new ListViewerViewModel(description, urls);
-                var listViewerWindow = new ListViewerWindow();
-                listViewerWindow.DataContext = listViewerViewModel;
-                listViewerWindow.Owner = this;
-                listViewerWindow.Title = title;
-                listViewerWindow.ShowDialog();
+                if (viewModel is AddDownloadViewModel)
+                {
+                    window = new AddDownloadWindow();
+                }
+                else if (viewModel is OptionsViewModel)
+                {
+                    window = new OptionsWindow();
+                }
+                else if (viewModel is ListViewerViewModel)
+                {
+                    window = new ListViewerWindow();
+                }
+
+                if (window != null)
+                {
+                    window.DataContext = viewModel;
+                    window.Owner = this;
+                }
+
+                result = window?.ShowDialog();
             });
+
+            return result;
         }
 
         private static IEnumerable<T> GetVisualChildren<T>(DependencyObject parent) where T : DependencyObject

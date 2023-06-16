@@ -21,7 +21,7 @@ namespace AMDownloader
         private bool _monitorClipboard;
         private CancellationTokenSource _ctsClipboard;
         private readonly ClipboardObserver _clipboardService;
-        private readonly ShowUrlPreviewDelegate _showUrlPreview;
+        private readonly ShowWindowDelegate _showList;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -63,7 +63,7 @@ namespace AMDownloader
         public ICommand AddCommand { get; private set; }
         public ICommand PreviewCommand { get; private set; }
 
-        public AddDownloadViewModel(ShowUrlPreviewDelegate showUrlPreview)
+        public AddDownloadViewModel(ShowWindowDelegate showList)
         {
             _clipboardService = new ClipboardObserver();
 
@@ -81,7 +81,7 @@ namespace AMDownloader
             this.Enqueue = Settings.Default.EnqueueAddedItems;
             this.StartDownload = Settings.Default.StartDownloadingAddedItems;
             this.Urls = string.Empty;
-            this._showUrlPreview = showUrlPreview;
+            this._showList = showList;
 
             var clipText = _clipboardService.GetText();
             if (clipText.Contains("http") || clipText.Contains("ftp")) this.Urls += clipText.Trim() + "\n";
@@ -89,7 +89,7 @@ namespace AMDownloader
 
         private void Preview(object obj)
         {
-            this._showUrlPreview.Invoke(GeneratedUrls.ToArray());
+            this._showList.Invoke(new ListViewerViewModel(GeneratedUrls.ToList(), "Generated URLs:", "Preview"));
         }
 
         private bool Add_CanExecute(object obj)

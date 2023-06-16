@@ -5,26 +5,26 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:converters="clr-namespace:AMDownloader.Converters"
         mc:Ignorable="d"
-        Title="Preview"
         Height="300"
         Width="600"
         ShowInTaskbar="False"
         WindowStyle="ToolWindow"
-        WindowStartupLocation="CenterOwner">
+        WindowStartupLocation="CenterOwner"
+        Title="{Binding Title}">
     <Window.Resources>
         <converters:ListViewerItemCountConverter x:Key="ListViewerItemCountConverter" />
     </Window.Resources>
-    
+
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
-        
+
         <Label Grid.Row="0"
                Content="{Binding Description}" />
-        
+
         <ListBox ItemsSource="{Binding ListViewerItems}"
                  Name="ItemsListBox"
                  Grid.Row="1"
@@ -34,24 +34,24 @@
                     <MenuItem Header="Copy"
                               CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
                               Command="{Binding CopyCommand}" />
-                    
+
                     <MenuItem Header="Select All"
                               Click="SelectAll" />
                 </ContextMenu>
             </ListBox.ContextMenu>
         </ListBox>
-        
+
         <DockPanel Margin="0 10 0 0"
                    Grid.Row="2"
                    LastChildFill="True">
-            <TextBlock Text="{Binding Items.Count, ElementName=listUrls, Converter={StaticResource ListViewerItemCountConverter}}" />
-            
+            <TextBlock Text="{Binding Items.Count, ElementName=ItemsListBox, Converter={StaticResource ListViewerItemCountConverter}}" />
+
             <Button DockPanel.Dock="Right"
                     Content="OK"
                     IsDefault="True"
                     IsCancel="True"
                     Click="Button_Click" />
-            
+
             <Separator Background="Transparent"
                        BorderBrush="Transparent" />
         </DockPanel>
