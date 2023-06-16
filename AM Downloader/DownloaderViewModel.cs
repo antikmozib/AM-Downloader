@@ -76,7 +76,7 @@ namespace AMDownloader
 
         public ObservableCollection<DownloaderObjectModel> DownloadItemsList { get; private set; }
         public ObservableCollection<Category> CategoriesList { get; }
-        public ICollectionView CollectionView { get; private set; }
+        public ICollectionView DownloadItemsView { get; private set; }
         public QueueProcessor QueueProcessor { get; }
         public int Progress { get; private set; }
         public long BytesDownloadedThisSession { get; private set; }
@@ -162,8 +162,8 @@ namespace AMDownloader
                 QueueProcessor_ItemEnqueued,
                 QueueProcessor_ItemDequeued);
 
-            CollectionView = CollectionViewSource.GetDefaultView(DownloadItemsList);
-            CollectionView.CurrentChanged += CollectionView_CurrentChanged;
+            DownloadItemsView = CollectionViewSource.GetDefaultView(DownloadItemsList);
+            DownloadItemsView.CurrentChanged += CollectionView_CurrentChanged;
 
             this.Progress = 0;
             this.BytesDownloadedThisSession = 0;
@@ -923,14 +923,14 @@ namespace AMDownloader
             switch (category)
             {
                 case Category.All:
-                    CollectionView.Filter = new Predicate<object>((o) =>
+                    DownloadItemsView.Filter = new Predicate<object>((o) =>
                     {
                         return true;
                     });
                     break;
 
                 case Category.Downloading:
-                    CollectionView.Filter = new Predicate<object>((o) =>
+                    DownloadItemsView.Filter = new Predicate<object>((o) =>
                     {
                         var item = o as DownloaderObjectModel;
                         return item.IsDownloading;
@@ -938,7 +938,7 @@ namespace AMDownloader
                     break;
 
                 case Category.Finished:
-                    CollectionView.Filter = new Predicate<object>((o) =>
+                    DownloadItemsView.Filter = new Predicate<object>((o) =>
                     {
                         var item = o as DownloaderObjectModel;
                         return item.IsCompleted;
@@ -946,7 +946,7 @@ namespace AMDownloader
                     break;
 
                 case Category.Paused:
-                    CollectionView.Filter = new Predicate<object>((o) =>
+                    DownloadItemsView.Filter = new Predicate<object>((o) =>
                     {
                         var item = o as DownloaderObjectModel;
                         return item.IsPaused;
@@ -954,7 +954,7 @@ namespace AMDownloader
                     break;
 
                 case Category.Queued:
-                    CollectionView.Filter = new Predicate<object>((o) =>
+                    DownloadItemsView.Filter = new Predicate<object>((o) =>
                     {
                         var item = o as DownloaderObjectModel;
                         return QueueProcessor.IsQueued(item);
@@ -962,7 +962,7 @@ namespace AMDownloader
                     break;
 
                 case Category.Ready:
-                    CollectionView.Filter = new Predicate<object>((o) =>
+                    DownloadItemsView.Filter = new Predicate<object>((o) =>
                     {
                         var item = o as DownloaderObjectModel;
                         return item.IsReady && !QueueProcessor.IsQueued(item);
@@ -970,7 +970,7 @@ namespace AMDownloader
                     break;
 
                 case Category.Errored:
-                    CollectionView.Filter = new Predicate<object>((o) =>
+                    DownloadItemsView.Filter = new Predicate<object>((o) =>
                     {
                         var item = o as DownloaderObjectModel;
                         return item.IsErrored;
@@ -1009,8 +1009,8 @@ namespace AMDownloader
                     await semTask;
                     Application.Current?.Dispatcher?.Invoke(() =>
                     {
-                        CollectionView.Refresh();
-                        CommandManager.InvalidateRequerySuggested();
+                        DownloadItemsView.Refresh();
+                        //CommandManager.InvalidateRequerySuggested();
                     });
                     await throttle;
                 }

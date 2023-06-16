@@ -617,7 +617,7 @@
 
             <!--#region DOWNLOADLIST -->
 
-            <ListView ItemsSource="{Binding CollectionView}"
+            <ListView ItemsSource="{Binding DownloadItemsView}"
                       x:Name="DownloadsListView"
                       Grid.Column="2"
                       ButtonBase.Click="DownloadsListView_HeaderClick"
