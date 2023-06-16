@@ -1006,7 +1006,7 @@ namespace AMDownloader
                     Application.Current?.Dispatcher?.Invoke(() =>
                     {
                         DownloadItemsView.Refresh();
-                        //CommandManager.InvalidateRequerySuggested();
+                        CommandManager.InvalidateRequerySuggested();
                     });
                     await throttle;
                 }
