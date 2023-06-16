@@ -274,6 +274,16 @@ namespace AMDownloader
                         CleanupTempDownload();
                     }
 
+                    /*if (ex is OperationCanceledException && BytesDownloaded == 0)
+                    {
+                        // no network connection
+                        Status = DownloadStatus.Ready;
+                    }
+                    else
+                    {
+                        Status = DownloadStatus.Errored;
+                    }*/
+
                     Status = DownloadStatus.Errored;
                 }
             }
