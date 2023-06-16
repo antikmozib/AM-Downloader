@@ -3,6 +3,7 @@
 using AMDownloader.ClipboardObservation;
 using AMDownloader.Common;
 using AMDownloader.Helpers;
+using AMDownloader.ObjectModel;
 using AMDownloader.ObjectModel.Serializable;
 using AMDownloader.Properties;
 using AMDownloader.QueueProcessing;
@@ -29,13 +30,14 @@ namespace AMDownloader
 {
     internal delegate Task AddItemsAsyncDelegate(string destination, bool enqueue, bool start, params string[] urls);
 
-    internal delegate MessageBoxResult DisplayMessageDelegate(
-        string message, string title = "",
-        MessageBoxButton button = MessageBoxButton.OK,
-        MessageBoxImage image = MessageBoxImage.Information,
-        MessageBoxResult defaultResult = MessageBoxResult.OK);
-
     internal delegate bool? ShowWindowDelegate(object viewModel);
+
+    internal delegate bool? ShowPromptDelegate(
+        string promptText,
+        string caption,
+        PromptButton button,
+        PromptIcon icon,
+        bool defaultResult = true);
 
     internal enum Category
     {
@@ -50,7 +52,7 @@ namespace AMDownloader
         /// Gets the interval between refreshing the CollectionView.
         /// </summary>
         private const int _collectionRefreshDelay = 1000;
-        private readonly DisplayMessageDelegate _displayMessage;
+        private readonly ShowPromptDelegate _showPrompt;
         private readonly ClipboardObserver _clipboardService;
         private readonly object _lockDownloadItemsList;
         private readonly object _lockBytesDownloaded;
@@ -61,7 +63,7 @@ namespace AMDownloader
         private readonly SemaphoreSlim _semaphoreRefreshingView;
         private CancellationTokenSource _ctsUpdatingList;
         private readonly List<CancellationTokenSource> _ctsRefreshViewList;
-        private RequestThrottler _requestThrottler;
+        private readonly RequestThrottler _requestThrottler;
         private readonly HttpClient _client;
         private readonly ShowWindowDelegate _showWindow;
         private bool _resetAllSettingsOnClose;
@@ -145,7 +147,7 @@ namespace AMDownloader
 
         #region Constructors
 
-        public DownloaderViewModel(DisplayMessageDelegate displayMessage, ShowWindowDelegate showWindow)
+        public DownloaderViewModel(ShowPromptDelegate showPrompt, ShowWindowDelegate showWindow)
         {
             DownloadItemsList = new();
             DownloadItemsList.CollectionChanged += DownloadItemsList_CollectionChanged;
@@ -197,7 +199,7 @@ namespace AMDownloader
             _semaphoreUpdatingList = new SemaphoreSlim(1);
             _semaphoreRefreshingView = new SemaphoreSlim(1);
             _ctsRefreshViewList = new();
-            _displayMessage = displayMessage;
+            _showPrompt = showPrompt;
             _lockDownloadItemsList = DownloadItemsList;
             _lockBytesDownloaded = this.BytesDownloadedThisSession;
             _lockBytesTransferredOverLifetime = Settings.Default.BytesTransferredOverLifetime;
@@ -499,18 +501,18 @@ namespace AMDownloader
 
             if (itemsDeleteable.Any())
             {
-                var result = _displayMessage.Invoke(
+                var result = _showPrompt.Invoke(
                     "Also delete the files from storage?",
                     "Remove",
-                    MessageBoxButton.YesNoCancel,
-                    MessageBoxImage.Asterisk,
-                    MessageBoxResult.No);
+                    PromptButton.YesNoCancel,
+                    PromptIcon.Asterisk,
+                    false);
 
-                if (result == MessageBoxResult.No)
+                if (result == false)
                 {
                     delete = false;
                 }
-                else if (result == MessageBoxResult.Cancel)
+                else if (result == null)
                 {
                     return;
                 }
@@ -547,14 +549,14 @@ namespace AMDownloader
 
             if (items.Count() > 1)
             {
-                var result = _displayMessage.Invoke(
+                var result = _showPrompt.Invoke(
                     "Opening too many files at the same file may cause the system to crash.\n\nProceed anyway?",
                     $"Open {items.Count()} Files",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Exclamation,
-                    MessageBoxResult.No);
+                    PromptButton.YesNo,
+                    PromptIcon.Exclamation,
+                    false);
 
-                if (result == MessageBoxResult.No)
+                if (result == false)
                 {
                     return;
                 }
@@ -596,14 +598,14 @@ namespace AMDownloader
 
             if (itemsOpenable.Count() > 1)
             {
-                var result = _displayMessage.Invoke(
+                var result = _showPrompt.Invoke(
                     "Opening too many folders at the same time may cause the system to crash.\n\nProceed anyway?",
                     $"Open {items.Count()} Folders",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Exclamation,
-                    MessageBoxResult.No);
+                    PromptButton.YesNo,
+                    PromptIcon.Exclamation,
+                    false);
 
-                if (result == MessageBoxResult.No)
+                if (result == false)
                 {
                     return;
                 }
@@ -825,9 +827,12 @@ namespace AMDownloader
         {
             if (IsBackgroundWorking)
             {
-                if (_displayMessage.Invoke(
-                    "Background operation in progress. Cancel and exit program?", "Exit",
-                    MessageBoxButton.YesNo, MessageBoxImage.Exclamation, MessageBoxResult.No) == MessageBoxResult.No)
+                if (_showPrompt.Invoke(
+                    "Background operation in progress. Cancel and exit program?",
+                    "Exit",
+                    PromptButton.YesNo,
+                    PromptIcon.Exclamation,
+                    false) == false)
                 {
                     return false;
                 }
@@ -1354,15 +1359,21 @@ namespace AMDownloader
             {
                 if (!silent)
                 {
-                    _displayMessage.Invoke(
-                        "No new updates are available.", "Update", MessageBoxButton.OK, MessageBoxImage.Information);
+                    _showPrompt.Invoke(
+                        "No new updates are available.",
+                        "Update",
+                        PromptButton.OK,
+                        PromptIcon.Information);
                 }
                 return;
             }
 
-            if (_displayMessage.Invoke(
-                "An update is available.\n\nWould you like to download it now?", "Update",
-                MessageBoxButton.YesNo, MessageBoxImage.Information, MessageBoxResult.Yes) == MessageBoxResult.Yes)
+            if (_showPrompt.Invoke(
+                "An update is available.\n\nWould you like to download it now?",
+                "Update",
+                PromptButton.YesNo,
+                PromptIcon.Information,
+                true) == true)
             {
                 Process.Start("explorer.exe", url);
             }
