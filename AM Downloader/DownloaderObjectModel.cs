@@ -249,7 +249,7 @@ namespace AMDownloader
             {
                 if (_ctLinked.IsCancellationRequested)
                 {
-                    // download was paused or canceled by user
+                    // interrupted by user
 
                     if (_ctPause.IsCancellationRequested && SupportsResume)
                     {
@@ -266,23 +266,13 @@ namespace AMDownloader
                 }
                 else
                 {
-                    // download interrupted by an exception not related to cancellation
-                    // e.g. timeout, invalid url, IO exception
+                    // interrupted due an exception not related to user cancellation
+                    // e.g. no connection, invalid url
 
                     if (!SupportsResume)
                     {
                         CleanupTempDownload();
                     }
-
-                    /*if (ex is OperationCanceledException && BytesDownloaded == 0)
-                    {
-                        // no network connection
-                        Status = DownloadStatus.Ready;
-                    }
-                    else
-                    {
-                        Status = DownloadStatus.Errored;
-                    }*/
 
                     Status = DownloadStatus.Errored;
                 }
