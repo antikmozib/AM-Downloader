@@ -19,7 +19,7 @@ namespace AMDownloader
             this.Close();
         }
 
-        private void SelectAll(object sender, RoutedEventArgs e)
+        private void SelectAllMenuItem(object sender, RoutedEventArgs e)
         {
             ItemsListBox.SelectAll();
         }

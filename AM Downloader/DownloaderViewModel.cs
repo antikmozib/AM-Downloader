@@ -261,6 +261,8 @@ namespace AMDownloader
                 Task.Run(async () => await TriggerUpdateCheckAsync(true));
             }
 
+            Settings.Default.LaunchCount++;
+
             // Populate history
             if (File.Exists(Paths.DownloadsHistoryFile))
             {
@@ -502,10 +504,10 @@ namespace AMDownloader
             if (itemsDeleteable.Any())
             {
                 var result = _showPrompt.Invoke(
-                    "Also delete the files from storage?",
+                    $"Also delete the file{(items.Count() > 1 ? "s" : "")} from storage?",
                     "Remove",
                     PromptButton.YesNoCancel,
-                    PromptIcon.Asterisk,
+                    PromptIcon.Warning,
                     false);
 
                 if (result == false)
@@ -551,7 +553,7 @@ namespace AMDownloader
             {
                 var result = _showPrompt.Invoke(
                     "Opening too many files at the same file may cause the system to crash.\n\nProceed anyway?",
-                    $"Open {items.Count()} Files",
+                    "Open",
                     PromptButton.YesNo,
                     PromptIcon.Exclamation,
                     false);
@@ -600,7 +602,7 @@ namespace AMDownloader
             {
                 var result = _showPrompt.Invoke(
                     "Opening too many folders at the same time may cause the system to crash.\n\nProceed anyway?",
-                    $"Open {items.Count()} Folders",
+                    $"Open Folder",
                     PromptButton.YesNo,
                     PromptIcon.Exclamation,
                     false);
@@ -898,7 +900,12 @@ namespace AMDownloader
                     _semaphoreUpdatingList.Release();
                 }
 
+                if (Settings.Default.FirstRun)
+                {
+                    Settings.Default.FirstRun = false;
+                }
                 Settings.Default.Save();
+
                 return true;
             });
 
@@ -1254,18 +1261,8 @@ namespace AMDownloader
 
             if (failed.Count > 0)
             {
-                string title, description;
-
-                if (delete)
-                {
-                    title = "Deletion Errors";
-                    description = "The following files were not deleted due to errors:";
-                }
-                else
-                {
-                    title = "Removal Errors";
-                    description = "The following files were not removed due to errors:";
-                }
+                string title = delete ? "Delete" : "Remove";
+                string description = $"The following files could not be {(delete ? "deleted" : "removed")} due to errors:";
 
                 _showWindow(new ListViewerViewModel(failed, title, description));
             }

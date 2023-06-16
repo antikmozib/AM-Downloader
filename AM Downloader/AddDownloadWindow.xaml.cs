@@ -71,10 +71,11 @@ namespace AMDownloader
                 if (msg == WM_SYSCOMMAND && ((int)wParam & 0xFFF0) == SC_CONTEXTHELP)
                 {
                     MessageBox.Show(
-                        "You can use patterns to download multiple files from a single URL. For example, entering the following pattern" +
-                        "\n\n" + "http://www.example.com/file[1:10].txt" +
-                        "\n\n" + "will download the following ten files" +
-                        "\n\n" + "file1.txt" + "\n" + "file2.txt" + "\n" + "..." + "\n\n" + "file10.txt",
+                        "Patterns can be applied to download multiple files from a single URL."
+                        + "\nFor example, entering the following pattern:"
+                        + "\n\n\thttp://www.example.com/file[1:10].png"
+                        + "\n\nwill download the following ten files:"
+                        + "\n\n\tfile1.png\n\tfile2.png\n\t...\n\n\tfile10.png",
                         "Help", MessageBoxButton.OK, MessageBoxImage.Information);
                     handled = true;
                 }

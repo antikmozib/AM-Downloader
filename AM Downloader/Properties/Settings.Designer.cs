@@ -289,13 +289,25 @@ namespace AMDownloader.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("100000")]
+        [global::System.Configuration.DefaultSettingValueAttribute("15000")]
         public long ConnectionTimeout {
             get {
                 return ((long)(this["ConnectionTimeout"]));
             }
             set {
                 this["ConnectionTimeout"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int LaunchCount {
+            get {
+                return ((int)(this["LaunchCount"]));
+            }
+            set {
+                this["LaunchCount"] = value;
             }
         }
     }

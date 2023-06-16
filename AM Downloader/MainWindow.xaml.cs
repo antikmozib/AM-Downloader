@@ -63,8 +63,6 @@ namespace AMDownloader
 
                 this.Left = desktopWidth / 2 - this.Width / 2;
                 this.Top = desktopHeight / 2 - this.Height / 2;
-
-                Settings.Default.FirstRun = false;
             }
         }
 
@@ -210,10 +208,11 @@ namespace AMDownloader
                 / (double)Constants.ByteConstants.MEGABYTE);
 
             MessageBox.Show(
-                $"{name}\nVersion {version}\n\n{copyright}\n\n{website}\n\n"
-                + "DISCLAIMER: This is free software. There is NO warranty; "
-                + "not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
-                + $"Total downloaded since installation: {totalDownloaded.ToString("n0", cultureInfo)} MB",
+                $"{name}\nVersion {version}\n\n{copyright}\n\n{website}"
+                + "\n\nDISCLAIMER: This is free software. There is NO warranty; "
+                + "not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."
+                + $"\n\nTotal downloaded since installation: {totalDownloaded.ToString("n0", cultureInfo)} MB"
+                + $"\nNumber of times launched: {Settings.Default.LaunchCount}",
                 "About",
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
@@ -390,7 +389,7 @@ namespace AMDownloader
             };
             var result = messageBoxDefaultResult;
 
-            Application.Current.Dispatcher.Invoke(() => 
+            Application.Current.Dispatcher.Invoke(() =>
                 result = MessageBox.Show(
                     promptText,
                     caption,

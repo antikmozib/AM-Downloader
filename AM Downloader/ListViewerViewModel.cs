@@ -2,6 +2,7 @@
 
 using AMDownloader.ClipboardObservation;
 using AMDownloader.Helpers;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -34,7 +35,7 @@ namespace AMDownloader
 
         public ListViewerViewModel(List<string> items, string description, string title)
         {
-            CopyCommand = new RelayCommand<object>(Copy);
+            CopyCommand = new RelayCommand<object>(Copy, Copy_CanExecute);
 
             _clipboard = new ClipboardObserver();
 
@@ -63,6 +64,16 @@ namespace AMDownloader
 
             _clipboard.Clear();
             _clipboard.SetText(output);
+        }
+
+        private bool Copy_CanExecute(object obj)
+        {
+            if (obj == null)
+            {
+                return false;
+            }
+
+            return (obj as ObservableCollection<object>).Cast<ListViewerItem>().Any();
         }
 
         protected void RaisePropertyChanged(string prop)
