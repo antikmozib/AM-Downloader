@@ -12,8 +12,8 @@
         SizeToContent="WidthAndHeight"
         ResizeMode="NoResize">
     <Window.Resources>
-        <converters:OptionsSpeedConverter x:Key="OptionsSpeedConverter" />
-        <converters:OptionsConnectionTimeoutConverter x:Key="OptionsConnectionTimeoutConverter" />
+        <converters:SettingsSpeedConverter x:Key="SettingsSpeedConverter" />
+        <converters:SettingsConnectionTimeoutConverter x:Key="SettingsConnectionTimeoutConverter" />
     </Window.Resources>
     <Grid Margin="8">
         <Grid.ColumnDefinitions>
@@ -64,7 +64,7 @@
 
         <Label Content="Limit speed per download (0 = Unlimited):"
                Grid.Row="2" />
-        <TextBox Text="{Binding Path=MaxDownloadSpeed, Converter={StaticResource OptionsSpeedConverter}}"
+        <TextBox Text="{Binding Path=MaxDownloadSpeed, Converter={StaticResource SettingsSpeedConverter}}"
                  Style="{StaticResource InputBoxStyle}"
                  Grid.Row="2"
                  Grid.Column="1" />
@@ -79,7 +79,7 @@
 
         <Label Content="*Connection timeout (0 = Never):"
                Grid.Row="4" />
-        <TextBox Text="{Binding Path=ConnectionTimeout, Converter={StaticResource OptionsConnectionTimeoutConverter}}"
+        <TextBox Text="{Binding Path=ConnectionTimeout, Converter={StaticResource SettingsConnectionTimeoutConverter}}"
                  Style="{StaticResource InputBoxStyle}"
                  Grid.Row="4"
                  Grid.Column="1" />
