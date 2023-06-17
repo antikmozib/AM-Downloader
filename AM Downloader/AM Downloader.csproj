@@ -84,8 +84,7 @@
         <Page Remove="Resources\Icons\ShutDown_16x.xaml" />
         <Page Remove="Resources\Icons\Stop_16x.xaml" />
         <Page Remove="Resources\Icons\Trash_16x.xaml" />
-        <Page Remove="Style.xaml" />
-        <Page Remove="Styles\TreeViewItemNoIndent.xaml" />
+        <Page Remove="Styles\Style.xaml" />
     </ItemGroup>
 
     <ItemGroup>
@@ -167,28 +166,7 @@
             <LastGenOutput>Settings.Designer.cs</LastGenOutput>
         </None>
     </ItemGroup>
-
-    <ItemGroup>
-        <Page Update="Resources\Icons\AddCellToLeft_16x.xaml">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Page>
-        <Page Update="Resources\Icons\DeleteCell_16x.xaml">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Page>
-        <Page Update="Resources\Icons\StatusBlocked_16x.xaml">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Page>
-        <Page Update="Resources\Icons\StatusPause_16x.xaml">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Page>
-        <Page Update="Resources\Icons\StatusRun_16x.xaml">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Page>
-        <Page Update="Resources\Icons\StatusStop_16x.xaml">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Page>
-    </ItemGroup>
-
+    
     <ItemGroup>
       <Folder Include="Properties\PublishProfiles\" />
     </ItemGroup>
