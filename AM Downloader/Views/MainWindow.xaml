@@ -6,7 +6,7 @@
         xmlns:properties="clr-namespace:AMDownloader.Properties"
         xmlns:converters="clr-namespace:AMDownloader.Converters"
         x:Name="MainWindowWindow"
-        x:Class="AMDownloader.MainWindow"
+        x:Class="AMDownloader.Views.MainWindow"
         mc:Ignorable="d"
         Title="AM Downloader"
         Height="{Binding MainWindowHeight, Mode=TwoWay, Source={x:Static properties:Settings.Default}}"
@@ -19,7 +19,7 @@
         Loaded="Window_Loaded"
         Initialized="Window_Initialized"
         Closing="Window_Closing"
-        Icon="pack://application:,,,/Icons/app.ico">
+        Icon="/Resources/Icons/app.ico">
     <Window.Resources>
         <converters:ProgressBarVisibilityConverter x:Key="ProgressBarVisibilityConverter" />
         <converters:DownloaderSizeConverter x:Key="DownloaderSizeConverter" />
@@ -99,16 +99,16 @@
                           InputGestureText="Alt+Del">
                     <MenuItem.Icon>
                         <Viewbox>
-                            <Frame Source="pack://application:,,,/Icons/Checklist_16x.xaml" />
+                            <Frame Source="pack://application:,,,/Resources/Icons/Checklist_16x.xaml" />
                         </Viewbox>
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="_Options"
+                <MenuItem Header="_Settings"
                           CommandParameter="{Binding RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
-                          Command="{Binding OptionsCommand}">
+                          Command="{Binding SettingsCommand}">
                     <MenuItem.Icon>
                         <Viewbox>
-                            <Frame Source="pack://application:,,,/Icons/Settings_16x.xaml" />
+                            <Frame Source="pack://application:,,,/Resources/Icons/Settings_16x.xaml" />
                         </Viewbox>
                     </MenuItem.Icon>
                 </MenuItem>
@@ -119,7 +119,7 @@
                           InputGestureText="Alt+F4">
                     <MenuItem.Icon>
                         <Viewbox>
-                            <Frame Source="pack://application:,,,/Icons/ShutDown_16x.xaml" />
+                            <Frame Source="pack://application:,,,/Resources/Icons/ShutDown_16x.xaml" />
                         </Viewbox>
                     </MenuItem.Icon>
                 </MenuItem>
@@ -130,7 +130,7 @@
                           Command="{Binding CheckForUpdatesCommand}">
                     <MenuItem.Icon>
                         <Viewbox>
-                            <Frame Source="pack://application:,,,/Icons/GetWebSite_16x.xaml" />
+                            <Frame Source="pack://application:,,,/Resources/Icons/GetWebSite_16x.xaml" />
                         </Viewbox>
                     </MenuItem.Icon>
                 </MenuItem>
@@ -656,7 +656,7 @@
                                   InputGestureText="Ctrl+O">
                             <MenuItem.Icon>
                                 <Viewbox>
-                                    <Frame Source="pack://application:,,,/Icons/Open_16x.xaml" />
+                                    <Frame Source="pack://application:,,,/Resources/Icons/Open_16x.xaml" />
                                 </Viewbox>
                             </MenuItem.Icon>
                         </MenuItem>
@@ -666,7 +666,7 @@
                                   InputGestureText="Alt+O">
                             <MenuItem.Icon>
                                 <Viewbox>
-                                    <Frame Source="pack://application:,,,/Icons/OpenFolder_16x.xaml" />
+                                    <Frame Source="pack://application:,,,/Resources/Icons/OpenFolder_16x.xaml" />
                                 </Viewbox>
                             </MenuItem.Icon>
                         </MenuItem>
@@ -676,7 +676,7 @@
                                   InputGestureText="Ctrl+C">
                             <MenuItem.Icon>
                                 <Viewbox>
-                                    <Frame Source="pack://application:,,,/Icons/CopyLongTextToClipboard_16x.xaml" />
+                                    <Frame Source="pack://application:,,,/Resources/Icons/CopyLongTextToClipboard_16x.xaml" />
                                 </Viewbox>
                             </MenuItem.Icon>
                         </MenuItem>
@@ -686,7 +686,7 @@
                                   CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}">
                             <MenuItem.Icon>
                                 <Viewbox>
-                                    <Frame Source="pack://application:,,,/Icons/Run_16x.xaml" />
+                                    <Frame Source="pack://application:,,,/Resources/Icons/Run_16x.xaml" />
                                 </Viewbox>
                             </MenuItem.Icon>
                         </MenuItem>
@@ -695,7 +695,7 @@
                                   CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}">
                             <MenuItem.Icon>
                                 <Viewbox>
-                                    <Frame Source="pack://application:,,,/Icons/Pause_16x.xaml" />
+                                    <Frame Source="pack://application:,,,/Resources/Icons/Pause_16x.xaml" />
                                 </Viewbox>
                             </MenuItem.Icon>
                         </MenuItem>
@@ -704,7 +704,7 @@
                                   CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}">
                             <MenuItem.Icon>
                                 <Viewbox>
-                                    <Frame Source="pack://application:,,,/Icons/Stop_16x.xaml" />
+                                    <Frame Source="pack://application:,,,/Resources/Icons/Stop_16x.xaml" />
                                 </Viewbox>
                             </MenuItem.Icon>
                         </MenuItem>
@@ -714,7 +714,7 @@
                                   CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}">
                             <MenuItem.Icon>
                                 <Viewbox>
-                                    <Frame Source="pack://application:,,,/Icons/AddRow_16x.xaml" />
+                                    <Frame Source="pack://application:,,,/Resources/Icons/AddRow_16x.xaml" />
                                 </Viewbox>
                             </MenuItem.Icon>
                         </MenuItem>
@@ -723,7 +723,7 @@
                                   CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}">
                             <MenuItem.Icon>
                                 <Viewbox>
-                                    <Frame Source="pack://application:,,,/Icons/RemoveRow_16x.xaml" />
+                                    <Frame Source="pack://application:,,,/Resources/Icons/RemoveRow_16x.xaml" />
                                 </Viewbox>
                             </MenuItem.Icon>
                         </MenuItem>
@@ -734,7 +734,7 @@
                                   InputGestureText="Del">
                             <MenuItem.Icon>
                                 <Viewbox>
-                                    <Frame Source="pack://application:,,,/Icons/Trash_16x.xaml" />
+                                    <Frame Source="pack://application:,,,/Resources/Icons/Trash_16x.xaml" />
                                 </Viewbox>
                             </MenuItem.Icon>
                         </MenuItem>

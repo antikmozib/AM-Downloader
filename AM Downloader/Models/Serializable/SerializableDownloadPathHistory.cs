@@ -3,7 +3,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace AMDownloader.ObjectModel.Serializable
+namespace AMDownloader.Models.Serializable
 {
     [Serializable]
     public class SerializableDownloadPathHistory

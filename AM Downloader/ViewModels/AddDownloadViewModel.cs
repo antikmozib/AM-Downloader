@@ -14,7 +14,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
-namespace AMDownloader
+namespace AMDownloader.ViewModels
 {
     internal class AddDownloadViewModel : INotifyPropertyChanged
     {
@@ -72,29 +72,29 @@ namespace AMDownloader
 
             if (Settings.Default.LastDownloadLocation.Trim().Length > 0)
             {
-                this.SaveToFolder = Settings.Default.LastDownloadLocation;
+                SaveToFolder = Settings.Default.LastDownloadLocation;
             }
             else
             {
-                this.SaveToFolder = Paths.UserDownloadsFolder;
+                SaveToFolder = Paths.UserDownloadsFolder;
             }
-            this.Enqueue = Settings.Default.EnqueueAddedItems;
-            this.StartDownload = Settings.Default.StartDownloadingAddedItems;
-            this.Urls = string.Empty;
-            this._showList = showList;
+            Enqueue = Settings.Default.EnqueueAddedItems;
+            StartDownload = Settings.Default.StartDownloadingAddedItems;
+            Urls = string.Empty;
+            _showList = showList;
 
             var clipText = _clipboardService.GetText();
-            if (clipText.Contains("http") || clipText.Contains("ftp")) this.Urls += clipText.Trim() + "\n";
+            if (clipText.Contains("http") || clipText.Contains("ftp")) Urls += clipText.Trim() + "\n";
         }
 
         private void Preview(object obj)
         {
-            this._showList.Invoke(new ListViewerViewModel(GeneratedUrls.ToList(), "Generated URLs:", "Preview"));
+            _showList.Invoke(new ListViewerViewModel(GeneratedUrls.ToList(), "Generated URLs:", "Preview"));
         }
 
         private bool Add_CanExecute(object obj)
         {
-            if (this.Urls.Trim().Length == 0)
+            if (Urls.Trim().Length == 0)
             {
                 return false;
             }
@@ -109,8 +109,8 @@ namespace AMDownloader
             if (SaveToFolder.LastIndexOf(Path.DirectorySeparatorChar) != SaveToFolder.Length - 1)
                 SaveToFolder += Path.DirectorySeparatorChar;
 
-            Settings.Default.EnqueueAddedItems = this.Enqueue;
-            Settings.Default.StartDownloadingAddedItems = this.StartDownload;
+            Settings.Default.EnqueueAddedItems = Enqueue;
+            Settings.Default.StartDownloadingAddedItems = StartDownload;
         }
 
         private static List<string> BuildUrlsFromPatterns(params string[] urls)
@@ -139,7 +139,7 @@ namespace AMDownloader
 
                         if (i.ToString().Length < minLength)
                         {
-                            for (int j = 0; j < (minLength - i.ToString().Length); j++)
+                            for (int j = 0; j < minLength - i.ToString().Length; j++)
                             {
                                 replacedData += "0";
                             }
@@ -169,7 +169,7 @@ namespace AMDownloader
                     .Split('\n')
                     .Where(o => o.Trim().Length > 0).ToList();
                 List<string> dest = Regex
-                    .Replace(this.Urls, @"\r|\t", "")
+                    .Replace(Urls, @"\r|\t", "")
                     .ToLower()
                     .Split('\n').ToList();
 
@@ -180,11 +180,11 @@ namespace AMDownloader
                     if ((f_url.ToLower().StartsWith("http") || f_url.ToLower().StartsWith("ftp") || f_url.ToLower().StartsWith("www."))
                         && !dest.Contains(f_url.ToLower()))
                     {
-                        this.Urls += f_url + '\n';
+                        Urls += f_url + '\n';
                     }
                 }
 
-                RaisePropertyChanged(nameof(this.Urls));
+                RaisePropertyChanged(nameof(Urls));
 
                 await delay;
             }

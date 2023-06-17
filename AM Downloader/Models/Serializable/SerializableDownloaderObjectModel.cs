@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 
-namespace AMDownloader.ObjectModel.Serializable
+namespace AMDownloader.Models.Serializable
 {
     [Serializable]
     public class SerializableDownloaderObjectModel

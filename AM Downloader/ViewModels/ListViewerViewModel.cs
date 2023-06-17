@@ -2,14 +2,13 @@
 
 using AMDownloader.ClipboardObservation;
 using AMDownloader.Helpers;
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Input;
 
-namespace AMDownloader
+namespace AMDownloader.ViewModels
 {
     public class ListViewerViewModel : INotifyPropertyChanged
     {
@@ -39,9 +38,9 @@ namespace AMDownloader
 
             _clipboard = new ClipboardObserver();
 
-            this.Title = title;
-            this.Description = description;
-            this.ListViewerItems = new ObservableCollection<ListViewerItem>();
+            Title = title;
+            Description = description;
+            ListViewerItems = new ObservableCollection<ListViewerItem>();
 
             foreach (var item in items)
             {

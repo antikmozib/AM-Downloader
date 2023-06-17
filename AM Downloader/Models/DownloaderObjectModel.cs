@@ -1,7 +1,6 @@
 ﻿// Copyright (C) 2020-2023 Antik Mozib. All rights reserved.
 
 using AMDownloader.Common;
-using AMDownloader.ObjectModel;
 using AMDownloader.Properties;
 using AMDownloader.QueueProcessing;
 using Polly;
@@ -16,7 +15,7 @@ using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace AMDownloader
+namespace AMDownloader.Models
 {
     public enum DownloadStatus
     {

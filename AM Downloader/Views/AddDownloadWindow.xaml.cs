@@ -1,7 +1,7 @@
 ﻿// Copyright (C) 2020-2023 Antik Mozib. All rights reserved.
 
 using AMDownloader.Common;
-using AMDownloader.ObjectModel.Serializable;
+using AMDownloader.Models.Serializable;
 using AMDownloader.Properties;
 using System;
 using System.IO;
@@ -11,7 +11,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Xml.Serialization;
 
-namespace AMDownloader
+namespace AMDownloader.Views
 {
     /// <summary>
     /// Interaction logic for AddDownloadWindow.xaml

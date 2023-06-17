@@ -2,7 +2,7 @@
 
 using System.Windows;
 
-namespace AMDownloader
+namespace AMDownloader.Views
 {
     /// <summary>
     /// Interaction logic for ListViewerWindow.xaml

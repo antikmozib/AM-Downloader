@@ -2,14 +2,14 @@
 
 using System.Windows;
 
-namespace AMDownloader
+namespace AMDownloader.Views
 {
     /// <summary>
     /// Interaction logic for OptionsWindow.xaml
     /// </summary>
-    public partial class OptionsWindow : Window
+    public partial class SettingsWindow : Window
     {
-        public OptionsWindow()
+        public SettingsWindow()
         {
             InitializeComponent();
         }

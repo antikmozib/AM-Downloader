@@ -1,9 +1,10 @@
 ﻿// Copyright (C) 2020-2023 Antik Mozib. All rights reserved.
 
 using AMDownloader.Common;
-using AMDownloader.ObjectModel;
-using AMDownloader.ObjectModel.Serializable;
+using AMDownloader.Models;
+using AMDownloader.Models.Serializable;
 using AMDownloader.Properties;
+using AMDownloader.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -20,7 +21,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using WinForms = System.Windows.Forms;
 
-namespace AMDownloader
+namespace AMDownloader.Views
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -29,14 +30,14 @@ namespace AMDownloader
     {
         private static readonly string _appGuid = "20d3be33-cd45-4c69-b038-e95bc434e09c";
         private static readonly Mutex _mutex = new(false, "Global\\" + _appGuid);
-        private readonly DownloaderViewModel _primaryViewModel;
+        private readonly MainViewModel _primaryViewModel;
         private ICollectionView _dataView = null;
         private GridViewColumnHeader _lastHeaderClicked = null;
         private ListSortDirection? _lastDirection = null;
 
         public MainWindow()
         {
-            _primaryViewModel = new DownloaderViewModel(ShowPrompt, ShowWindow);
+            _primaryViewModel = new MainViewModel(ShowPrompt, ShowWindow);
 
             InitializeComponent();
 
@@ -425,9 +426,9 @@ namespace AMDownloader
                 {
                     window = new AddDownloadWindow();
                 }
-                else if (viewModel is OptionsViewModel)
+                else if (viewModel is SettingsViewModel)
                 {
-                    window = new OptionsWindow();
+                    window = new SettingsWindow();
                 }
                 else if (viewModel is ListViewerViewModel)
                 {

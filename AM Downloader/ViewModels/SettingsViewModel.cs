@@ -5,9 +5,9 @@ using AMDownloader.Helpers;
 using AMDownloader.Properties;
 using System.Windows.Input;
 
-namespace AMDownloader
+namespace AMDownloader.ViewModels
 {
-    internal class OptionsViewModel
+    internal class SettingsViewModel
     {
         #region Fields
 
@@ -101,7 +101,7 @@ namespace AMDownloader
 
         #region Ctors
 
-        public OptionsViewModel()
+        public SettingsViewModel()
         {
             _maxParallelDownloads = Settings.Default.MaxParallelDownloads;
             _maxDownloadSpeed = Settings.Default.MaxDownloadSpeed;

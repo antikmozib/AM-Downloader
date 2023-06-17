@@ -2,7 +2,7 @@
 
 using System;
 
-namespace AMDownloader.ObjectModel
+namespace AMDownloader.Models
 {
     /// <summary>
     /// Represents errors related to the processing of downloads.

@@ -1,6 +1,7 @@
 ﻿// Copyright (C) 2020-2023 Antik Mozib. All rights reserved.
 
 using AMDownloader.Helpers;
+using AMDownloader.Models;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
