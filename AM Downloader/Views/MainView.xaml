@@ -540,10 +540,10 @@
                                        Text="{Binding}" />
 
                             <TextBlock x:Name="CatCountTextBlock"
-                                       Opacity="0.5"
                                        Grid.Column="2"
                                        HorizontalAlignment="Right"
-                                       VerticalAlignment="Center">
+                                       VerticalAlignment="Center"
+                                       Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}">
                                 <TextBlock.Style>
                                     <Style TargetType="{x:Type TextBlock}">
                                         <Style.Triggers>

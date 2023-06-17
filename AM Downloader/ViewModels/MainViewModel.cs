@@ -266,6 +266,9 @@ namespace AMDownloader.ViewModels
             // Populate history
             if (File.Exists(Paths.DownloadsHistoryFile))
             {
+                Status = "Loading...";
+                RaisePropertyChanged(nameof(Status));
+
                 _ctsUpdatingList = new CancellationTokenSource();
                 RaisePropertyChanged(nameof(IsBackgroundWorking));
 
@@ -277,9 +280,6 @@ namespace AMDownloader.ViewModels
 
                     try
                     {
-                        Status = "Restoring data...";
-                        RaisePropertyChanged(nameof(Status));
-
                         SerializableDownloaderObjectModelList source;
                         XmlSerializer xmlReader = new(typeof(SerializableDownloaderObjectModelList));
 
@@ -300,7 +300,7 @@ namespace AMDownloader.ViewModels
 
                             int progress = (int)((double)(i + 1) / total * 100);
                             Progress = progress;
-                            Status = "Restoring " + (i + 1) + " of " + total + ": " + sourceObjects[i].Url;
+                            Status = "Loading " + (i + 1) + " of " + total + ": " + sourceObjects[i].Url;
                             RaisePropertyChanged(nameof(Progress));
                             RaisePropertyChanged(nameof(Status));
 
@@ -602,7 +602,7 @@ namespace AMDownloader.ViewModels
             {
                 var result = _showPrompt.Invoke(
                     "Opening too many folders at the same time may cause the system to crash.\n\nProceed anyway?",
-                    $"Open Folder",
+                    "Open Folder",
                     PromptButton.YesNo,
                     PromptIcon.Exclamation,
                     false);

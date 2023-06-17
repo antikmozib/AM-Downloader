@@ -12,10 +12,14 @@ namespace AMDownloader.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            string extensionName;
-            string path = value.ToString();
-            extensionName = (string)Registry.GetValue("HKEY_CLASSES_ROOT\\" + Path.GetExtension(path), "", Path.GetExtension(path));
-            return (string)Registry.GetValue("HKEY_CLASSES_ROOT\\" + extensionName, "", Path.GetExtension(path));
+            var path = value.ToString();
+            var ext = Path.GetExtension(path); // e.g. .exe
+            var extName = (string)Registry.GetValue("HKEY_CLASSES_ROOT\\" + ext, "", ext); // e.g. exefile
+            var extDescription = (string)Registry.GetValue("HKEY_CLASSES_ROOT\\" + extName, "", ext); // e.g. Application
+
+            return extDescription == ext
+                ? $"{ext.Replace(".", "")}{(ext.Length == 0 ? "" : " ")}File"
+                : extDescription;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
