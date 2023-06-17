@@ -7,9 +7,9 @@ namespace AMDownloader.Views
     /// <summary>
     /// Interaction logic for ListViewerWindow.xaml
     /// </summary>
-    public partial class ListViewerWindow : Window
+    public partial class ListViewerView : Window
     {
-        public ListViewerWindow()
+        public ListViewerView()
         {
             InitializeComponent();
         }

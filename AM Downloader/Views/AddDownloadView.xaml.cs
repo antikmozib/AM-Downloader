@@ -17,7 +17,7 @@ namespace AMDownloader.Views
     /// Interaction logic for AddDownloadWindow.xaml
     /// </summary>
     ///
-    public partial class AddDownloadWindow : Window
+    public partial class AddDownloadView : Window
     {
         #region Native
 
@@ -89,7 +89,7 @@ namespace AMDownloader.Views
 
         #endregion
 
-        public AddDownloadWindow()
+        public AddDownloadView()
         {
             InitializeComponent();
         }

@@ -26,7 +26,7 @@ namespace AMDownloader.Views
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainView : Window
     {
         private static readonly string _appGuid = "20d3be33-cd45-4c69-b038-e95bc434e09c";
         private static readonly Mutex _mutex = new(false, "Global\\" + _appGuid);
@@ -35,7 +35,7 @@ namespace AMDownloader.Views
         private GridViewColumnHeader _lastHeaderClicked = null;
         private ListSortDirection? _lastDirection = null;
 
-        public MainWindow()
+        public MainView()
         {
             _primaryViewModel = new MainViewModel(ShowPrompt, ShowWindow);
 
@@ -424,15 +424,15 @@ namespace AMDownloader.Views
             {
                 if (viewModel is AddDownloadViewModel)
                 {
-                    window = new AddDownloadWindow();
+                    window = new AddDownloadView();
                 }
                 else if (viewModel is SettingsViewModel)
                 {
-                    window = new SettingsWindow();
+                    window = new SettingsView();
                 }
                 else if (viewModel is ListViewerViewModel)
                 {
-                    window = new ListViewerWindow();
+                    window = new ListViewerView();
                 }
 
                 if (window != null)

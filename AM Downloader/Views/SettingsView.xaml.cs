@@ -7,9 +7,9 @@ namespace AMDownloader.Views
     /// <summary>
     /// Interaction logic for OptionsWindow.xaml
     /// </summary>
-    public partial class SettingsWindow : Window
+    public partial class SettingsView : Window
     {
-        public SettingsWindow()
+        public SettingsView()
         {
             InitializeComponent();
         }

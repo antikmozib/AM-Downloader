@@ -5,8 +5,8 @@
         xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:properties="clr-namespace:AMDownloader.Properties"
         xmlns:converters="clr-namespace:AMDownloader.Converters"
-        x:Name="MainWindowWindow"
-        x:Class="AMDownloader.Views.MainWindow"
+        x:Name="MainViewWindow"
+        x:Class="AMDownloader.Views.MainView"
         mc:Ignorable="d"
         Title="AM Downloader"
         Height="{Binding MainWindowHeight, Mode=TwoWay, Source={x:Static properties:Settings.Default}}"
@@ -63,7 +63,7 @@
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Closed">
             <i:InvokeCommandAction Command="{Binding UIClosedCommand, Mode=OneTime}"
-                                   CommandParameter="{Binding ElementName=MainWindowWindow}" />
+                                   CommandParameter="{Binding ElementName=MainViewWindow}" />
         </i:EventTrigger>
     </i:Interaction.Triggers>
     <Window.InputBindings>
