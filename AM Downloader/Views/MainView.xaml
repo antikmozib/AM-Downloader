@@ -452,7 +452,7 @@
             <!--#region CATEGORIESLIST -->
 
             <ListBox x:Name="CategoriesList"
-                     ItemsSource="{Binding CategoriesList}"
+                     ItemsSource="{Binding CategoriesCollection}"
                      Loaded="CategoriesList_Loaded">
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="SelectionChanged">

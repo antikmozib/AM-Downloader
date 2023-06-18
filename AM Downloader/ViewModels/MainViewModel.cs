@@ -7,7 +7,6 @@ using AMDownloader.Models;
 using AMDownloader.Models.Serializable;
 using AMDownloader.Properties;
 using AMDownloader.QueueProcessing;
-using AMDownloader.RequestThrottling;
 using Microsoft.VisualBasic.FileIO;
 using System;
 using System.Collections.Generic;
@@ -54,16 +53,15 @@ namespace AMDownloader.ViewModels
         private const int _collectionRefreshDelay = 1000;
         private readonly ShowPromptDelegate _showPrompt;
         private readonly ClipboardObserver _clipboardService;
-        private readonly object _lockDownloadItemsList;
-        private readonly object _lockBytesDownloaded;
-        private readonly object _lockBytesTransferredOverLifetime;
-        private readonly object _lockCtsRefreshViewList;
+        private readonly object _downloadItemsCollectionLock;
+        private readonly object _bytesDownloadedLock;
+        private readonly object _bytesTransferredOverLifetimeLock;
+        private readonly object _ctsRefreshViewListLock;
         private readonly SemaphoreSlim _semaphoreMeasuringSpeed;
         private readonly SemaphoreSlim _semaphoreUpdatingList;
         private readonly SemaphoreSlim _semaphoreRefreshingView;
         private CancellationTokenSource _ctsUpdatingList;
         private readonly List<CancellationTokenSource> _ctsRefreshViewList;
-        private readonly RequestThrottler _requestThrottler;
         private readonly HttpClient _client;
         private readonly ShowWindowDelegate _showWindow;
         private bool _resetAllSettingsOnClose;
@@ -73,10 +71,9 @@ namespace AMDownloader.ViewModels
 
         #region Properties
 
-        public ObservableCollection<DownloaderObjectModel> DownloadItemsList { get; }
-        public ObservableCollection<Category> CategoriesList { get; }
+        public ObservableCollection<DownloaderObjectModel> DownloadItemsCollection { get; }
+        public ObservableCollection<Category> CategoriesCollection { get; }
         public ICollectionView DownloadItemsView { get; }
-        public ICollectionViewLiveShaping CategorisedDownloadItemsView { get; }
         public QueueProcessor QueueProcessor { get; }
         public int Progress { get; private set; }
         public long BytesDownloadedThisSession { get; private set; }
@@ -149,10 +146,9 @@ namespace AMDownloader.ViewModels
 
         public MainViewModel(ShowPromptDelegate showPrompt, ShowWindowDelegate showWindow)
         {
-            DownloadItemsList = new();
-            DownloadItemsList.CollectionChanged += DownloadItemsList_CollectionChanged;
+            DownloadItemsCollection = new();
 
-            CategoriesList = new ObservableCollection<Category>();
+            CategoriesCollection = new ObservableCollection<Category>();
 
             QueueProcessor = new QueueProcessor(
                 Settings.Default.MaxParallelDownloads,
@@ -162,7 +158,7 @@ namespace AMDownloader.ViewModels
                 QueueProcessor_ItemEnqueued,
                 QueueProcessor_ItemDequeued);
 
-            DownloadItemsView = CollectionViewSource.GetDefaultView(DownloadItemsList);
+            DownloadItemsView = CollectionViewSource.GetDefaultView(DownloadItemsCollection);
             DownloadItemsView.CurrentChanged += CollectionView_CurrentChanged;
 
             Progress = 0;
@@ -178,14 +174,14 @@ namespace AMDownloader.ViewModels
             Status = "Ready";
             _progressReporter = new Progress<long>(value =>
             {
-                Monitor.Enter(_lockBytesDownloaded);
+                Monitor.Enter(_bytesDownloadedLock);
                 try
                 {
                     BytesDownloadedThisSession += value;
                 }
                 finally
                 {
-                    Monitor.Exit(_lockBytesDownloaded);
+                    Monitor.Exit(_bytesDownloadedLock);
                 }
             });
 
@@ -193,17 +189,16 @@ namespace AMDownloader.ViewModels
             {
                 Timeout = TimeSpan.FromMilliseconds(Settings.Default.ConnectionTimeout)
             };
-            _requestThrottler = new RequestThrottler(Constants.RequestThrottlerInterval);
             _clipboardService = new ClipboardObserver();
             _semaphoreMeasuringSpeed = new SemaphoreSlim(1);
             _semaphoreUpdatingList = new SemaphoreSlim(1);
             _semaphoreRefreshingView = new SemaphoreSlim(1);
             _ctsRefreshViewList = new();
             _showPrompt = showPrompt;
-            _lockDownloadItemsList = DownloadItemsList;
-            _lockBytesDownloaded = BytesDownloadedThisSession;
-            _lockBytesTransferredOverLifetime = Settings.Default.BytesTransferredOverLifetime;
-            _lockCtsRefreshViewList = _ctsRefreshViewList;
+            _downloadItemsCollectionLock = DownloadItemsCollection;
+            _bytesDownloadedLock = BytesDownloadedThisSession;
+            _bytesTransferredOverLifetimeLock = Settings.Default.BytesTransferredOverLifetime;
+            _ctsRefreshViewListLock = _ctsRefreshViewList;
             _showWindow = showWindow;
             _resetAllSettingsOnClose = false;
 
@@ -242,7 +237,7 @@ namespace AMDownloader.ViewModels
 
             foreach (Category cat in (Category[])Enum.GetValues(typeof(Category)))
             {
-                CategoriesList.Add(cat);
+                CategoriesCollection.Add(cat);
             }
 
             // Load last selected category
@@ -770,7 +765,7 @@ namespace AMDownloader.ViewModels
 
             var ct = _ctsUpdatingList.Token;
 
-            var items = from item in DownloadItemsList where item.IsCompleted select item;
+            var items = from item in DownloadItemsCollection where item.IsCompleted select item;
 
             Task.Run(async () => await RemoveObjectsAsync(items, false, ct)).ContinueWith(t =>
             {
@@ -862,7 +857,7 @@ namespace AMDownloader.ViewModels
 
                     Directory.CreateDirectory(Paths.LocalAppDataFolder);
 
-                    foreach (var item in DownloadItemsList)
+                    foreach (var item in DownloadItemsCollection)
                     {
                         if (item.IsDownloading)
                         {
@@ -992,7 +987,7 @@ namespace AMDownloader.ViewModels
             }
 
             // cancel all pending refreshes
-            Monitor.Enter(_lockCtsRefreshViewList);
+            Monitor.Enter(_ctsRefreshViewListLock);
             foreach (var oldCts in _ctsRefreshViewList)
             {
                 oldCts.Cancel();
@@ -1001,7 +996,7 @@ namespace AMDownloader.ViewModels
             _ctsRefreshViewList.Clear();
             var newCts = new CancellationTokenSource();
             _ctsRefreshViewList.Add(newCts);
-            Monitor.Exit(_lockCtsRefreshViewList);
+            Monitor.Exit(_ctsRefreshViewListLock);
 
             Task.Run(async () =>
             {
@@ -1032,8 +1027,8 @@ namespace AMDownloader.ViewModels
 
         private async Task<DownloaderObjectModel[]> AddItemsAsync(IEnumerable<string> urls, string destination, bool enqueue, CancellationToken ct)
         {
-            var existingUrls = from di in DownloadItemsList select di.Url;
-            var existingDestinations = from di in DownloadItemsList select di.Destination;
+            var existingUrls = from di in DownloadItemsCollection select di.Url;
+            var existingDestinations = from di in DownloadItemsCollection select di.Destination;
             var itemsToAdd = new List<DownloaderObjectModel>();
             var itemsToEnqueue = new List<IQueueable>();
             var itemsAdded = new List<DownloaderObjectModel>();
@@ -1138,7 +1133,7 @@ namespace AMDownloader.ViewModels
 
         private void AddObjects(params DownloaderObjectModel[] objects)
         {
-            Monitor.Enter(_lockDownloadItemsList);
+            Monitor.Enter(_downloadItemsCollectionLock);
             int total = objects.Length;
             try
             {
@@ -1148,7 +1143,7 @@ namespace AMDownloader.ViewModels
                     {
                         if (objects[i] == null) continue;
 
-                        DownloadItemsList.Add(objects[i]);
+                        DownloadItemsCollection.Add(objects[i]);
                     }
                 });
             }
@@ -1157,7 +1152,7 @@ namespace AMDownloader.ViewModels
             }
             finally
             {
-                Monitor.Exit(_lockDownloadItemsList);
+                Monitor.Exit(_downloadItemsCollectionLock);
             }
         }
 
@@ -1235,19 +1230,19 @@ namespace AMDownloader.ViewModels
 
             Application.Current.Dispatcher.Invoke(() =>
             {
-                Monitor.Enter(_lockDownloadItemsList);
-                if (itemsToRemove.Count == DownloadItemsList.Count)
+                Monitor.Enter(_downloadItemsCollectionLock);
+                if (itemsToRemove.Count == DownloadItemsCollection.Count)
                 {
-                    DownloadItemsList.Clear();
+                    DownloadItemsCollection.Clear();
                 }
                 else
                 {
                     for (int i = 0; i < itemsToRemove.Count; i++)
                     {
-                        DownloadItemsList.Remove(itemsToRemove[i]);
+                        DownloadItemsCollection.Remove(itemsToRemove[i]);
                     }
                 }
-                Monitor.Exit(_lockDownloadItemsList);
+                Monitor.Exit(_downloadItemsCollectionLock);
             });
 
             QueueProcessor.Dequeue(itemsToDequeue.ToArray());
@@ -1427,7 +1422,7 @@ namespace AMDownloader.ViewModels
 
             RefreshCollectionView();
 
-            Monitor.Enter(_lockBytesTransferredOverLifetime);
+            Monitor.Enter(_bytesTransferredOverLifetimeLock);
             try
             {
                 Settings.Default.BytesTransferredOverLifetime +=
@@ -1435,23 +1430,19 @@ namespace AMDownloader.ViewModels
             }
             finally
             {
-                Monitor.Exit(_lockBytesTransferredOverLifetime);
+                Monitor.Exit(_bytesTransferredOverLifetimeLock);
             }
         }
-
-        private void DownloadItemsList_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-        }
-
+        
         private void CollectionView_CurrentChanged(object sender, EventArgs e)
         {
-            Count = DownloadItemsList.Count;
+            Count = DownloadItemsCollection.Count;
             QueuedCount = QueueProcessor.Count;
-            ReadyCount = DownloadItemsList.Count(o => o.IsReady && !QueueProcessor.IsQueued(o));
-            DownloadingCount = DownloadItemsList.Count(o => o.IsDownloading);
-            PausedCount = DownloadItemsList.Count(o => o.IsPaused);
-            FinishedCount = DownloadItemsList.Count(o => o.IsCompleted);
-            ErroredCount = DownloadItemsList.Count(o => o.IsErrored);
+            ReadyCount = DownloadItemsCollection.Count(o => o.IsReady && !QueueProcessor.IsQueued(o));
+            DownloadingCount = DownloadItemsCollection.Count(o => o.IsDownloading);
+            PausedCount = DownloadItemsCollection.Count(o => o.IsPaused);
+            FinishedCount = DownloadItemsCollection.Count(o => o.IsCompleted);
+            ErroredCount = DownloadItemsCollection.Count(o => o.IsErrored);
 
             RaisePropertyChanged(nameof(Count));
             RaisePropertyChanged(nameof(DownloadingCount));
