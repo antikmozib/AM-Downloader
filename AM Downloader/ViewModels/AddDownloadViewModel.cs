@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 
 namespace AMDownloader.ViewModels
@@ -82,8 +83,12 @@ namespace AMDownloader.ViewModels
             Urls = string.Empty;
             _showList = showList;
 
-            var clipText = _clipboardService.GetText();
-            if (clipText.Contains("http") || clipText.Contains("ftp")) Urls += clipText.Trim() + "\n";
+            var clipText = GenerateValidUrl(_clipboardService.GetText());
+
+            if (!string.IsNullOrEmpty(clipText))
+            {
+                Urls += clipText + '\n';
+            }
         }
 
         private void Preview(object obj)
@@ -112,6 +117,11 @@ namespace AMDownloader.ViewModels
             Settings.Default.StartDownloadingAddedItems = StartDownload;
         }
 
+        /// <summary>
+        /// Builds and returns a list of URLs from a given list of URL patterns.
+        /// </summary>
+        /// <param name="urls">A list of URL patterns.</param>
+        /// <returns>A list of URLs built from the provided URL patterns.</returns>
         private static List<string> BuildUrlsFromPatterns(params string[] urls)
         {
             var filteredUrls = urls.Select(o => o.Trim()).Where(o => o.Length > 0); // trim and discard empty
@@ -158,6 +168,31 @@ namespace AMDownloader.ViewModels
             return fullUrls;
         }
 
+        /// <summary>
+        /// Extracts any valid URLs from the provided <paramref name="value"/>,
+        /// and then trims and returns them as a string separated by newlines.
+        /// </summary>
+        /// <param name="value">A list of strings (separated by newlines) in which
+        /// to scan for valid URLs.</param>
+        /// <returns>A list of validated and trimmed URLs (separated by newlines).</returns>
+        private string GenerateValidUrl(string value)
+        {
+            var urls = value.Split(Environment.NewLine);
+            var output = new List<string>();
+
+            for (int i = 0; i < urls.Length; i++)
+            {
+                var url = urls[i].Trim();
+
+                if ((url.StartsWith("http") || url.StartsWith("ftp") || url.StartsWith("www.")) && !url.Contains(' '))
+                {
+                    output.Add(url);
+                }
+            }
+
+            return string.Join(Environment.NewLine, output);
+        }
+
         private async Task MonitorClipboardAsync()
         {
             while (!_ctsClipboard.IsCancellationRequested)
@@ -172,14 +207,13 @@ namespace AMDownloader.ViewModels
                     .ToLower()
                     .Split('\n').ToList();
 
-                foreach (var url in source)
+                for (int i = 0; i < source.Count; i++)
                 {
-                    var f_url = Regex.Replace(url, @"\s", "");
+                    var url = GenerateValidUrl(source[i]);
 
-                    if ((f_url.ToLower().StartsWith("http") || f_url.ToLower().StartsWith("ftp") || f_url.ToLower().StartsWith("www."))
-                        && !dest.Contains(f_url.ToLower()))
+                    if (!string.IsNullOrEmpty(url) && !dest.Contains(url.ToLower()))
                     {
-                        Urls += f_url + '\n';
+                        Urls += url + '\n';
                     }
                 }
 
