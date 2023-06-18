@@ -1,7 +1,6 @@
 ﻿// Copyright (C) 2020-2023 Antik Mozib. All rights reserved.
 
 using AMDownloader.ClipboardObservation;
-using AMDownloader.Helpers.Common;
 using AMDownloader.Helpers;
 using AMDownloader.Models;
 using AMDownloader.Models.Serializable;
@@ -11,7 +10,6 @@ using Microsoft.VisualBasic.FileIO;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;

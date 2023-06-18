@@ -7,7 +7,7 @@ using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace AMDownloader.Helpers.Common
+namespace AMDownloader.Helpers
 {
     internal static class Constants
     {
