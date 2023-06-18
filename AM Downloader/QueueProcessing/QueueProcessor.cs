@@ -221,7 +221,7 @@ namespace AMDownloader.QueueProcessing
 
         /// <summary>
         /// Starts (or restarts) this <see cref="QueueProcessor"/> with the 
-        /// <paramref name="items"/> at the top.
+        /// specified <paramref name="items"/> at the top.
         /// </summary>
         /// <param name="items">The items to put at the top of the queue.</param>
         /// <returns></returns>
@@ -273,13 +273,13 @@ namespace AMDownloader.QueueProcessing
         }
 
         /// <summary>
-        /// Determines if the <paramref name="value"/> is enqueued.
+        /// Determines if the <paramref name="item"/> is enqueued.
         /// </summary>
-        /// <param name="value">The item to check.</param>
-        /// <returns><see langword="true"/> if the <paramref name="value"/> is enqueued.</returns>
-        public bool IsQueued(IQueueable value)
+        /// <param name="item">The item to check.</param>
+        /// <returns><see langword="true"/> if the <paramref name="item"/> is enqueued.</returns>
+        public bool IsQueued(IQueueable item)
         {
-            return _queueList.Contains(value);
+            return _queueList.Contains(item);
         }
 
         #endregion
