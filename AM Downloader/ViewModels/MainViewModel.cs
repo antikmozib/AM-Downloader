@@ -1028,17 +1028,16 @@ namespace AMDownloader.ViewModels
             var existingUrls = from di in DownloadItemsCollection select di.Url;
             var existingDestinations = from di in DownloadItemsCollection select di.Destination;
             var itemsToAdd = new List<DownloaderObjectModel>();
-            var itemsToEnqueue = new List<IQueueable>();
-            var itemsAdded = new List<DownloaderObjectModel>();
-            var itemsExist = new List<string>();
-            var itemsErrored = new List<string>();
+            var itemsAdded = new List<DownloaderObjectModel>(); // the final list of items added; return this
+            var itemsExist = new List<string>(); // skipped
+            var itemsErrored = new List<string>(); // errored
             var wasCanceled = false;
             var totalItems = urls.Count();
             var counter = 0;
 
             await _semaphoreUpdatingList.WaitAsync();
 
-            foreach (var url in urls)
+            foreach (var url in urls.Distinct())
             {
                 string fileName, filePath;
 
@@ -1078,13 +1077,6 @@ namespace AMDownloader.ViewModels
 
                 itemsToAdd.Add(item);
 
-                if (enqueue)
-                {
-                    // enqueue lazily because we might cancel the process
-                    // before the items appear in the downloads list
-                    itemsToEnqueue.Add(item);
-                }
-
                 if (ct.IsCancellationRequested)
                 {
                     wasCanceled = true;
@@ -1098,7 +1090,12 @@ namespace AMDownloader.ViewModels
                 RaisePropertyChanged(nameof(Status));
 
                 AddObjects(itemsToAdd.ToArray());
-                QueueProcessor.Enqueue(itemsToEnqueue.ToArray());
+
+                if (enqueue)
+                {
+                    QueueProcessor.Enqueue(itemsToAdd.ToArray());
+                }
+
                 itemsAdded.AddRange(itemsToAdd);
             }
 
@@ -1431,7 +1428,7 @@ namespace AMDownloader.ViewModels
                 Monitor.Exit(_bytesTransferredOverLifetimeLock);
             }
         }
-        
+
         private void CollectionView_CurrentChanged(object sender, EventArgs e)
         {
             Count = DownloadItemsCollection.Count;

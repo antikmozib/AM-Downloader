@@ -11,7 +11,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Input;
 
 namespace AMDownloader.ViewModels
@@ -98,18 +97,11 @@ namespace AMDownloader.ViewModels
 
         private bool Add_CanExecute(object obj)
         {
-            if (Urls.Trim().Length == 0)
-            {
-                return false;
-            }
-
-            return true;
+            return !string.IsNullOrWhiteSpace(Urls);
         }
 
         private void Add(object item)
         {
-            if (Urls == null || SaveToFolder == null) return;
-
             if (SaveToFolder.LastIndexOf(Path.DirectorySeparatorChar) != SaveToFolder.Length - 1)
                 SaveToFolder += Path.DirectorySeparatorChar;
 
