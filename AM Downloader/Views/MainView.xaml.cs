@@ -335,11 +335,11 @@ namespace AMDownloader.Views
             // apply the arrow to the newly sorted column
             if (direction == ListSortDirection.Descending)
             {
-                columnHeader.Column.HeaderTemplate = Resources["HeaderTemplateArrowUp"] as DataTemplate;
+                columnHeader.Column.HeaderTemplate = Resources["HeaderTemplateArrowDown"] as DataTemplate;
             }
             else if (direction == ListSortDirection.Ascending)
             {
-                columnHeader.Column.HeaderTemplate = Resources["HeaderTemplateArrowDown"] as DataTemplate;
+                columnHeader.Column.HeaderTemplate = Resources["HeaderTemplateArrowUp"] as DataTemplate;
             }
             else
             {
