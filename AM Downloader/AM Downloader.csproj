@@ -160,9 +160,6 @@
             <Generator>PublicSettingsSingleFileGenerator</Generator>
             <LastGenOutput>Settings.Designer.cs</LastGenOutput>
         </None>
-        <None Update="Resources\Icons\amdownloader.svg">
-          <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-        </None>
     </ItemGroup>
     
     <ItemGroup>
