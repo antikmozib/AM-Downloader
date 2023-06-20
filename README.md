@@ -2,7 +2,7 @@
 
 A modern download manager for Windows.
 
-![Screenshot](https://github.com/antikmozib/AM-Downloader/blob/master/Screenshot.png?raw=true)
+![Screenshot](screenshot.png?raw=true)
 
 <h3>Features</h3>
 
