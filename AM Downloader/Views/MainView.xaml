@@ -19,7 +19,7 @@
         Loaded="Window_Loaded"
         Initialized="Window_Initialized"
         Closing="Window_Closing"
-        Icon="/Resources/Icons/app.ico">
+        Icon="/Resources/Icons/amdownloader.ico">
     <Window.Resources>
         <converters:ProgressBarVisibilityConverter x:Key="ProgressBarVisibilityConverter" />
         <converters:DownloaderSizeConverter x:Key="DownloaderSizeConverter" />
@@ -57,7 +57,7 @@
                 <TextBlock Grid.Column="1"
                            TextTrimming="CharacterEllipsis"
                            VerticalAlignment="Center"
-                           Text="{Binding }"
+                           Text="{Binding}"
                            Margin="5" />
             </Grid>
         </DataTemplate>
@@ -76,7 +76,7 @@
                 <TextBlock Grid.Column="1"
                            TextTrimming="CharacterEllipsis"
                            VerticalAlignment="Center"
-                           Text="{Binding }"
+                           Text="{Binding}"
                            Margin="5" />
             </Grid>
         </DataTemplate>
