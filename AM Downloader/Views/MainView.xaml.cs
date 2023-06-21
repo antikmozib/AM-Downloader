@@ -30,18 +30,18 @@ namespace AMDownloader.Views
     {
         private static readonly string _appGuid = "20d3be33-cd45-4c69-b038-e95bc434e09c";
         private static readonly Mutex _mutex = new(false, "Global\\" + _appGuid);
-        private readonly MainViewModel _primaryViewModel;
+        private readonly MainViewModel _mainViewModel;
         private ICollectionView _dataView = null;
         private GridViewColumnHeader _lastHeaderClicked = null;
         private ListSortDirection? _lastDirection = null;
 
         public MainView()
         {
-            _primaryViewModel = new MainViewModel(ShowPrompt, ShowWindow);
+            _mainViewModel = new MainViewModel(ShowPrompt, ShowWindow);
 
             InitializeComponent();
 
-            DataContext = _primaryViewModel;
+            DataContext = _mainViewModel;
 
             if (!_mutex.WaitOne(0, false))
             {
@@ -185,9 +185,8 @@ namespace AMDownloader.Views
                     using var streamWriter = new StreamWriter(Paths.UIColumnOrderFile, false);
                     writer.Serialize(streamWriter, columnOrderList);
                 }
-                catch
+                catch (IOException)
                 {
-
                 }
             }
         }
