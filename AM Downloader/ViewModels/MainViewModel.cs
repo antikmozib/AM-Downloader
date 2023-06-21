@@ -985,20 +985,27 @@ namespace AMDownloader.ViewModels
             }
 
             // cancel all pending refreshes
+
             Monitor.Enter(_ctsRefreshViewListLock);
+
             foreach (var oldCts in _ctsRefreshViewList)
             {
                 oldCts.Cancel();
                 oldCts.Dispose();
             }
+
             _ctsRefreshViewList.Clear();
+
             var newCts = new CancellationTokenSource();
+            var ct = newCts.Token;
+
             _ctsRefreshViewList.Add(newCts);
+
             Monitor.Exit(_ctsRefreshViewListLock);
 
             Task.Run(async () =>
             {
-                var semTask = _semaphoreRefreshingView.WaitAsync(newCts.Token);
+                var semTask = _semaphoreRefreshingView.WaitAsync(ct);
                 var throttle = Task.Delay(_collectionRefreshDelay);
                 try
                 {
@@ -1020,7 +1027,7 @@ namespace AMDownloader.ViewModels
                         _semaphoreRefreshingView.Release();
                     }
                 }
-            }, newCts.Token);
+            }, ct);
         }
 
         private async Task<DownloaderObjectModel[]> AddItemsAsync(IEnumerable<string> urls, string destination, bool enqueue, CancellationToken ct)
