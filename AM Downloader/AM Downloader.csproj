@@ -6,12 +6,12 @@
         <RootNamespace>AMDownloader</RootNamespace>
         <UseWPF>true</UseWPF>
         <UseWindowsForms>true</UseWindowsForms>
-        <ApplicationIcon>Resources\Icons\AM Downloader.ico</ApplicationIcon>
+        <ApplicationIcon>Resources\Icons\AMDownloader.ico</ApplicationIcon>
         <Company>Antik Mozib</Company>
         <Description>A modern download manager for Windows.</Description>
         <Copyright>Copyright © 2020-2023 Antik Mozib. All rights reserved.</Copyright>
         <StartupObject />
-        <PackageIcon>Resources\Icons\amdownloader.ico</PackageIcon>
+        <PackageIcon>Resources\Icons\AMDownloader.ico</PackageIcon>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <AssemblyVersion>1.3.3.0</AssemblyVersion>
         <Platforms>AnyCPU;x86;x64</Platforms>
@@ -99,7 +99,7 @@
         <Resource Include="Resources\Icons\AddRow_16x.xaml">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Resource>
-        <Resource Include="Resources\Icons\AM Downloader.ico">
+        <Resource Include="Resources\Icons\AMDownloader.ico">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Resource>
         <Resource Include="Resources\Icons\Checklist_16x.xaml">

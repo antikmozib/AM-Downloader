@@ -19,7 +19,7 @@
         Loaded="Window_Loaded"
         Initialized="Window_Initialized"
         Closing="Window_Closing"
-        Icon="/Resources/Icons/AM Downloader.ico">
+        Icon="/Resources/Icons/AMDownloader.ico">
     <Window.Resources>
         <converters:ProgressBarVisibilityConverter x:Key="ProgressBarVisibilityConverter" />
         <converters:DownloaderSizeConverter x:Key="DownloaderSizeConverter" />
