@@ -1196,21 +1196,24 @@ namespace AMDownloader.ViewModels
                 }
                 else if (item.IsCompleted && delete)
                 {
-                    try
+                    if (File.Exists(item.Destination))
                     {
-                        FileSystem.DeleteFile(
-                            item.Destination,
-                            UIOption.OnlyErrorDialogs,
-                            RecycleOption.SendToRecycleBin);
+                        try
+                        {
+                            FileSystem.DeleteFile(
+                                item.Destination,
+                                UIOption.OnlyErrorDialogs,
+                                RecycleOption.SendToRecycleBin);
 
-                        if (File.Exists(item.Destination))
+                            if (File.Exists(item.Destination))
+                            {
+                                failed.Add(item.Destination);
+                            }
+                        }
+                        catch
                         {
                             failed.Add(item.Destination);
                         }
-                    }
-                    catch
-                    {
-                        failed.Add(item.Destination);
                     }
                 }
 
@@ -1261,7 +1264,7 @@ namespace AMDownloader.ViewModels
                 string title = delete ? "Delete" : "Remove";
                 string description = $"The following files could not be {(delete ? "deleted" : "removed")} due to errors:";
 
-                _showWindow(new ListViewerViewModel(failed, title, description));
+                _showWindow(new ListViewerViewModel(failed, description, title));
             }
         }
 

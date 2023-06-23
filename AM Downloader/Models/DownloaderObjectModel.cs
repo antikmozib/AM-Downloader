@@ -242,12 +242,12 @@ namespace AMDownloader.Models
                 RaisePropertyChanged(nameof(TotalBytesToDownload));
                 RaisePropertyChanged(nameof(Progress));
             }
-            catch (Exception ex)
+            catch /*(Exception ex)
             when (ex is OperationCanceledException
                 || ex is AMDownloaderUrlException
                 || ex is HttpRequestException
                 || ex is TimeoutRejectedException
-                || ex is IOException)
+                || ex is IOException)*/
             {
                 if (_ctLinked.IsCancellationRequested)
                 {
@@ -259,7 +259,7 @@ namespace AMDownloader.Models
                     }
                     else
                     {
-                        CleanupTempFiles();
+                        //CleanupTempFiles();
 
                         Status = DownloadStatus.Ready;
                         RaisePropertyChanged(nameof(BytesDownloaded));
@@ -271,10 +271,10 @@ namespace AMDownloader.Models
                     // interrupted due an exception not related to user cancellation
                     // e.g. no connection, invalid url
 
-                    if (!SupportsResume)
+                    /*if (!SupportsResume)
                     {
                         CleanupTempFiles();
-                    }
+                    }*/
 
                     Status = DownloadStatus.Errored;
                 }
@@ -535,7 +535,7 @@ namespace AMDownloader.Models
 
                 MergeFiles(tempFiles, Destination);
             }
-            catch (OperationCanceledException)
+            catch (Exception ex)
             {
                 if (!SupportsResume || BytesDownloaded == 0 || _ctCancel.IsCancellationRequested)
                 {
@@ -543,11 +543,7 @@ namespace AMDownloader.Models
                     CleanupTempFiles();
                 }
 
-                throw new OperationCanceledException();
-            }
-            catch
-            {
-
+                throw new Exception(null, ex);
             }
         }
 
