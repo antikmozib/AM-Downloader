@@ -395,7 +395,7 @@ namespace AMDownloader.Models
                 {
                     using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, _ctLinked);
 
-                    // check the validity of the url
+                    // ensure the url returns a valid http status code
                     StatusCode = response.StatusCode;
                     if (StatusCode != HttpStatusCode.OK && StatusCode != HttpStatusCode.PartialContent)
                     {
@@ -426,39 +426,57 @@ namespace AMDownloader.Models
                     connCount = 1;
                 }
 
-                Debug.WriteLine($"\nCycles = {connCount}, Length/cycle = {toReadPerConn}");
+                Debug.WriteLine($"\nConns = {connCount}, {nameof(toReadPerConn)} = {toReadPerConn}");
 
                 for (int i = 0; i < connCount; i++)
                 {
                     // must be declared here to ensure var is captured correctly in the tasks
-                    int cycle = i;
+                    int conn = i;
 
                     var t = Task.Run(async () =>
                     {
-                        var connFile = $"{Destination}.{cycle}{Constants.DownloaderSplitedPartExtension}";
+                        var connFile = $"{Destination}.{conn}{Constants.DownloaderSplitedPartExtension}";
                         var connFileInfo = new FileInfo(connFile);
 
-                        long connByteStart = (toReadPerConn + 1) * cycle;
-                        long connByteEnd = cycle == connCount - 1 ? (TotalBytesToDownload ?? 0) : connByteStart + toReadPerConn;
+                        long connByteStart = (toReadPerConn + 1) * conn;
+                        // if this is the last conn, end where the file ends irrespective of toReadPerConn
+                        long connByteEnd = conn == connCount - 1 ? (TotalBytesToDownload ?? 0) : connByteStart + toReadPerConn;
                         long connByteLength;
 
                         if (File.Exists(connFile))
                         {
                             if (SupportsResume && connFileInfo.Length > 0)
                             {
-                                connByteStart = (cycle * (toReadPerConn + 1)) + connFileInfo.Length;
+                                // if resuming a paused download, start the connection from the prev point,
+                                // which is determined from the length of the existing conn file
+                                connByteStart = (conn * (toReadPerConn + 1)) + connFileInfo.Length;
                             }
                             else
                             {
+                                // if the download doesn't support resume, simply delete any existing conn
+                                // file and start from the theoretical conn start point
                                 File.Delete(connFile);
                             }
                         }
 
                         connByteLength = connByteEnd - connByteStart;
 
-                        Debug.WriteLine($"#{cycle}:\t\tCycle byte start = {connByteStart}\t\tCycle byte end = {connByteEnd}\t\tCycle byte length = {connByteLength}");
+                        Debug.WriteLine("{0,1}{1,2}{2,24}{3,12}{4,24}{5,12}{6,24}{7,12}",
+                            "#",
+                            conn,
+                            "Conn byte start = ",
+                            connByteStart,
+                            "Conn byte end = ",
+                            connByteEnd,
+                            "Conn byte length = ",
+                            connByteLength);
 
-                        if (connByteLength <= 0)
+                        // conn already completed its allocated bytes;
+                        // the check must be for values less than 0 as
+                        // downloads which don't support resume will
+                        // have a connByteLength of 0 but we still want
+                        // them to go ahead
+                        if (connByteLength < 0)
                         {
                             return;
                         }
@@ -496,10 +514,9 @@ namespace AMDownloader.Models
 
                         // start downloading
 
-                        do
+                        while ((read = await timeoutPolicy.ExecuteAsync(async ct =>
+                            await readStream.ReadAsync(buffer.AsMemory(0, buffer.Length), ct), _ctLinked)) > 0)
                         {
-                            read = await timeoutPolicy.ExecuteAsync(async ct =>
-                                await readStream.ReadAsync(buffer.AsMemory(0, buffer.Length), ct), _ctLinked);
                             readThisConn += read;
 
                             var data = new byte[read];
@@ -509,12 +526,14 @@ namespace AMDownloader.Models
 
                             progressReporter.Report(read);
 
-                            // reached the end of this conn's length
-                            if (SupportsResume && readThisConn > connByteLength)
+                            // reached the end of this conn's allocated bytes
+                            if (SupportsResume && readThisConn >= connByteLength)
                             {
                                 break;
                             }
-                        } while (read > 0);
+                        }
+
+                        Debug.WriteLine($"Conn #{conn} actual read = {readThisConn}");
 
                         Interlocked.Decrement(ref _connections);
                     });
@@ -537,6 +556,8 @@ namespace AMDownloader.Models
             }
             catch (Exception ex)
             {
+                Debug.WriteLine($"{ex.Message} ({Name})");
+
                 if (!SupportsResume || BytesDownloaded == 0 || _ctCancel.IsCancellationRequested)
                 {
                     // cleanup if download wasn't paused or can't be resumed
@@ -573,15 +594,13 @@ namespace AMDownloader.Models
                 int read;
                 var buffer = new byte[4096];
 
-                do
+                while ((read = reader.Read(buffer, 0, buffer.Length)) > 0)
                 {
-                    read = reader.Read(buffer, 0, buffer.Length);
-
                     var data = new byte[read];
 
                     Array.Copy(buffer, 0, data, 0, read);
                     writer.Write(data, 0, read);
-                } while (read > 0);
+                }
 
                 reader.Dispose();
                 readStream.Dispose();
