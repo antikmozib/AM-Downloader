@@ -1189,9 +1189,9 @@ namespace AMDownloader.ViewModels
                 {
                     await item.CancelAsync();
 
-                    if (File.Exists(item.TempDestination))
+                    if (item.TempFilesExist())
                     {
-                        failed.Add(item.TempDestination);
+                        failed.Add(item.Destination);
                     }
                 }
                 else if (item.IsCompleted && delete)

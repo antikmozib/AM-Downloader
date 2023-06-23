@@ -276,12 +276,20 @@ namespace AMDownloader.Views
             // link the column header string value to the prop of the binded obj
             switch (columnToSort.ToLower())
             {
+                case "type":
+                    columnToSort = "Extension";
+                    break;
+
                 case "downloaded":
                     columnToSort = "BytesDownloaded";
                     break;
 
                 case "size":
                     columnToSort = "TotalBytesToDownload";
+                    break;
+
+                case "eta":
+                    columnToSort = "TimeRemaining";
                     break;
 
                 case "location":
@@ -298,14 +306,6 @@ namespace AMDownloader.Views
 
                 case "http status":
                     columnToSort = "StatusCode";
-                    break;
-
-                case "eta":
-                    columnToSort = "TimeRemaining";
-                    break;
-
-                case "type":
-                    columnToSort = "Extension";
                     break;
             }
 

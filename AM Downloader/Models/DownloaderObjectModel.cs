@@ -6,12 +6,15 @@ using AMDownloader.QueueProcessing;
 using Polly;
 using Polly.Timeout;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime.Intrinsics.Arm;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -32,10 +35,11 @@ namespace AMDownloader.Models
         private const int _reportingDelay = 1000;
         private readonly HttpClient _httpClient;
         private readonly IProgress<long> _reportProgressBytes;
+        private int _connections;
         private TaskCompletionSource _tcs;
         private CancellationTokenSource _ctsPause, _ctsCancel, _ctsLinked;
         private CancellationToken _ctPause, _ctCancel, _ctLinked;
-        private readonly string _tempPath;
+        //private readonly string _tempPath;
 
         #endregion
 
@@ -51,7 +55,7 @@ namespace AMDownloader.Models
         /// Gets the full local path to the file.
         /// </summary>
         public string Destination { get; }
-        public string TempDestination => _tempPath;
+        //public string TempDestination => _tempPath;
         public string Extension => Path.GetExtension(Destination);
         public DateTime DateCreated { get; }
         /// <summary>
@@ -71,6 +75,7 @@ namespace AMDownloader.Models
             : 0;
         public double? TimeRemaining { get; private set; }
         public long? Speed { get; private set; }
+        public int? Connections => _connections == 0 ? null : _connections;
         public HttpStatusCode? StatusCode { get; private set; }
         public DownloadStatus Status { get; private set; }
         /// <summary>
@@ -132,7 +137,8 @@ namespace AMDownloader.Models
         {
             _httpClient = httpClient;
             _reportProgressBytes = bytesReporter;
-            _tempPath = destination + Constants.DownloaderSplitedPartExtension;
+            _connections = 0;
+            //_tempPath = destination + Constants.DownloaderSplitedPartExtension;
 
             Url = url;
             Destination = destination;
@@ -146,12 +152,12 @@ namespace AMDownloader.Models
             Status = status;
 
             // are we restoring an existing download?
-            if ((IsPaused || IsErrored) && File.Exists(_tempPath) && !File.Exists(destination))
+            if ((IsPaused || IsErrored) && TempFilesExist() && !File.Exists(destination))
             {
                 // paused or interrupted
-                BytesDownloaded = new FileInfo(_tempPath).Length;
+                BytesDownloaded = GetTempFilesLength();
             }
-            else if (IsCompleted && !File.Exists(_tempPath) && File.Exists(destination))
+            else if (IsCompleted && !TempFilesExist() && File.Exists(destination))
             {
                 // finished
 
@@ -212,11 +218,11 @@ namespace AMDownloader.Models
                 {
                     // creating a new download
 
-                    Directory.CreateDirectory(Path.GetDirectoryName(_tempPath));
+                    Directory.CreateDirectory(Path.GetDirectoryName(Destination));
 
-                    if (File.Exists(_tempPath))
+                    if (TempFilesExist())
                     {
-                        File.Delete(_tempPath);
+                        CleanupTempFiles();
                     }
                 }
                 else
@@ -226,12 +232,12 @@ namespace AMDownloader.Models
                     // re-read the temp file size because this is the
                     // actual point we'll be resuming from as the size
                     // is dictated by the file system
-                    BytesDownloaded = new FileInfo(_tempPath).Length;
+                    BytesDownloaded = GetTempFilesLength();
                 }
 
                 await DownloadAsync();
 
-                File.Move(_tempPath, Destination, true);
+                //File.Move(TempDestination, Destination, true);
 
                 TotalBytesToDownload = BytesDownloaded;
                 Status = DownloadStatus.Finished;
@@ -256,7 +262,7 @@ namespace AMDownloader.Models
                     }
                     else
                     {
-                        CleanupTempDownload();
+                        CleanupTempFiles();
 
                         Status = DownloadStatus.Ready;
                         RaisePropertyChanged(nameof(BytesDownloaded));
@@ -270,7 +276,7 @@ namespace AMDownloader.Models
 
                     if (!SupportsResume)
                     {
-                        CleanupTempDownload();
+                        CleanupTempFiles();
                     }
 
                     Status = DownloadStatus.Errored;
@@ -324,7 +330,7 @@ namespace AMDownloader.Models
                     // cancel a download which entered
                     // paused state after being restored
 
-                    CleanupTempDownload();
+                    CleanupTempFiles();
 
                     Status = DownloadStatus.Ready;
                     RaisePropertyChanged(nameof(Status));
@@ -335,7 +341,7 @@ namespace AMDownloader.Models
                 // cancel a download which entered
                 // paused state after being started
 
-                CleanupTempDownload();
+                CleanupTempFiles();
 
                 Status = DownloadStatus.Ready;
                 RaisePropertyChanged(nameof(Status));
@@ -350,6 +356,14 @@ namespace AMDownloader.Models
             {
                 await _tcs.Task;
             }
+        }
+
+        public bool TempFilesExist()
+        {
+            DirectoryInfo d = new DirectoryInfo(Path.GetDirectoryName(Destination));
+            FileInfo[] files = d.GetFiles($"{Name}.*{Constants.DownloaderSplitedPartExtension}");
+
+            return files.Length > 0;
         }
 
         #endregion
@@ -368,7 +382,6 @@ namespace AMDownloader.Models
 
         private async Task DownloadAsync()
         {
-            HttpRequestMessage request;
             IAsyncPolicy timeoutPolicy = Policy.TimeoutAsync(_httpClient.Timeout);
             // reports the lifetime number of bytes
             IProgress<int> progressReporter = new Progress<int>((value) =>
@@ -378,113 +391,215 @@ namespace AMDownloader.Models
                 _reportProgressBytes.Report(value);
             });
 
-            if (SupportsResume && BytesDownloaded > 0)
-            {
-                // resuming an existing download
-                request = new HttpRequestMessage
-                {
-                    RequestUri = new Uri(Url),
-                    Method = HttpMethod.Get,
-                    Headers = { Range = new RangeHeaderValue(BytesDownloaded, TotalBytesToDownload) }
-                };
-            }
-            else
-            {
-                // creating a new download
-                request = new HttpRequestMessage
-                {
-                    RequestUri = new Uri(Url),
-                    Method = HttpMethod.Get
-                };
-            }
-
             try
             {
-                using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, _ctLinked);
-
-                // check the validity of the url
-                StatusCode = response.StatusCode;
-                if (StatusCode != HttpStatusCode.OK && StatusCode != HttpStatusCode.PartialContent)
+                using (var request = new HttpRequestMessage(HttpMethod.Get, new Uri(Url)))
                 {
-                    throw new AMDownloaderUrlException(Url);
-                }
+                    if (SupportsResume && BytesDownloaded > 0)
+                    {
+                        request.Headers.Range = new RangeHeaderValue(BytesDownloaded, TotalBytesToDownload);
+                    }
 
-                // get the size of the download
-                var contentLength = response.Content.Headers.ContentLength;
-                if (contentLength != null && contentLength > 0)
-                {
-                    TotalBytesToDownload = BytesDownloaded + contentLength;
-                    RaisePropertyChanged(nameof(TotalBytesToDownload));
+                    using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, _ctLinked);
+
+                    // check the validity of the url
+                    StatusCode = response.StatusCode;
+                    if (StatusCode != HttpStatusCode.OK && StatusCode != HttpStatusCode.PartialContent)
+                    {
+                        throw new AMDownloaderUrlException(Url);
+                    }
+
+                    // get the size of the download
+                    var contentLength = response.Content.Headers.ContentLength;
+                    if (contentLength != null && contentLength > 0)
+                    {
+                        TotalBytesToDownload = BytesDownloaded + contentLength;
+                        RaisePropertyChanged(nameof(TotalBytesToDownload));
+                    }
                 }
 
                 StartMeasuringSpeed();
                 StartMeasuringEta();
 
-                // start downloading
-                using var fileStream = new FileStream(_tempPath, FileMode.Append, FileAccess.Write);
-                using var readStream = await response.Content.ReadAsStreamAsync(_ctLinked);
-                using var writeStream = new BinaryWriter(fileStream);
+                List<Task> cycleTasks = new();
+                int cycleCount = SupportsResume ? 5 : 1;
+                long toReadPerCycle = (TotalBytesToDownload ?? 0) / cycleCount;
 
-                byte[] buffer = new byte[4096]; // 4 KB buffer size
-                int read;
-                int bytesReceived = 0;
-
-                Stopwatch stopWatch = new();
-                long maxDownloadSpeed = Settings.Default.MaxDownloadSpeed;
-                int throttlerBytesReceived = 0, throttlerBytesExpected = 0;
-
-                do
+                for (int i = 0; i < cycleCount; i++)
                 {
-                    stopWatch.Start();
+                    int cycle = i;
 
-                    read = await timeoutPolicy.ExecuteAsync(async ct => await readStream.ReadAsync(buffer.AsMemory(0, buffer.Length), ct), _ctLinked);
+                    Debug.WriteLine("");
 
-                    stopWatch.Stop();
-
-                    byte[] data = new byte[read];
-
-                    Array.Copy(buffer, 0, data, 0, read);
-                    writeStream.Write(data, 0, data.Length);
-                    bytesReceived += read;
-
-                    progressReporter.Report(data.Length);
-
-                    // Speed throttler
-
-                    throttlerBytesReceived += read;
-
-                    if (maxDownloadSpeed > 0 && stopWatch.ElapsedMilliseconds > 0)
+                    var t = Task.Run(async () =>
                     {
-                        throttlerBytesExpected = (int)((double)maxDownloadSpeed / 1000 * stopWatch.ElapsedMilliseconds);
-                        long millisecondsExpected = (long)(1000 / (double)maxDownloadSpeed * throttlerBytesReceived);
+                        var cycleFile = $"{Destination}.{cycle}{Constants.DownloaderSplitedPartExtension}";
+                        var cycleFileInfo = new FileInfo(cycleFile);
 
-                        if (throttlerBytesReceived > throttlerBytesExpected || stopWatch.ElapsedMilliseconds < millisecondsExpected)
+                        long cycleStart = (toReadPerCycle + 1) * cycle;
+                        long cycleEnd = cycle == cycleCount - 1 ? (TotalBytesToDownload ?? 0) : cycleStart + toReadPerCycle;
+                        long cycleLength;
+
+                        if (File.Exists(cycleFile))
                         {
-                            long delay = millisecondsExpected - stopWatch.ElapsedMilliseconds;
-
-                            if (delay > 0)
+                            if (SupportsResume && cycleFileInfo.Length > 0)
                             {
-                                await Task.Delay((int)delay, _ctLinked);
+                                cycleStart = (cycle * (toReadPerCycle + 1)) + cycleFileInfo.Length;
                             }
-
-                            throttlerBytesReceived = 0;
-                            stopWatch.Reset();
+                            else
+                            {
+                                File.Delete(cycleFile);
+                            }
                         }
-                    }
-                } while (read > 0);
+
+                        cycleLength = cycleEnd - cycleStart;
+
+                        Debug.WriteLine($"#{cycle}: Cycle start = {cycleStart}, Cycle end = {cycleEnd}, Cycle length = {cycleLength}");
+
+                        if (cycleLength <= 0)
+                        {
+                            return;
+                        }
+
+                        using var cycleRequest = new HttpRequestMessage()
+                        {
+                            RequestUri = new Uri(Url),
+                            Method = HttpMethod.Get,
+                            Headers =
+                            {
+                                Range = new RangeHeaderValue(cycleStart, cycleEnd)
+                            }
+                        };
+
+                        using var cycleResponse = await _httpClient.SendAsync(
+                            cycleRequest,
+                            HttpCompletionOption.ResponseHeadersRead,
+                            _ctLinked);
+
+                        using var readStream = await cycleResponse.Content.ReadAsStreamAsync(_ctLinked);
+
+                        using var writeStream = new FileStream(
+                            cycleFile,
+                            FileMode.Append,
+                            FileAccess.Write);
+
+                        using var writer = new BinaryWriter(writeStream);
+
+                        long readThisCycle = 0;
+                        int read = 0;
+                        var buffer = new byte[4096];
+
+                        Interlocked.Increment(ref _connections);
+
+                        do
+                        {
+                            read = await timeoutPolicy.ExecuteAsync(async ct => await readStream.ReadAsync(buffer.AsMemory(0, buffer.Length), ct), _ctLinked);
+                            readThisCycle += read;
+
+                            var data = new byte[read];
+
+                            Array.Copy(buffer, 0, data, 0, read);
+                            writer.Write(data, 0, read);
+
+                            progressReporter.Report(read);
+                        } while (read > 0 && readThisCycle < cycleLength);
+
+                        Interlocked.Decrement(ref _connections);
+                    });
+
+                    cycleTasks.Add(t);
+                }
+
+                await Task.WhenAll(cycleTasks);
+
+                List<string> tempFiles = new();
+
+                for (int i = 0; i < cycleCount; i++)
+                {
+                    tempFiles.Add($"{Destination}.{i}{Constants.DownloaderSplitedPartExtension}");
+                }
+
+                MergeFiles(tempFiles, Destination);
             }
             catch (OperationCanceledException)
             {
-                if (_ctLinked.IsCancellationRequested)
+                if (!SupportsResume || BytesDownloaded == 0 || _ctCancel.IsCancellationRequested)
                 {
-                    // paused or canceled
-                    _ctLinked.ThrowIfCancellationRequested();
+                    CleanupTempFiles();
                 }
-                else
+
+                throw new OperationCanceledException();
+            }
+        }
+
+        private void MergeFiles(List<string> sources, string target, bool deleteSource = true)
+        {
+            using var writeStream = new FileStream(target, FileMode.OpenOrCreate, FileAccess.Write);
+            using var writer = new BinaryWriter(writeStream);
+
+            foreach (var source in sources)
+            {
+                if (!File.Exists(source))
                 {
-                    // timed out
-                    throw new OperationCanceledException();
+                    continue;
                 }
+
+                var readStream = new FileStream(source, FileMode.Open);
+                var reader = new BinaryReader(readStream);
+
+                int read;
+                var buffer = new byte[4096];
+
+                do
+                {
+                    read = reader.Read(buffer, 0, buffer.Length);
+
+                    var data = new byte[read];
+
+                    Array.Copy(buffer, 0, data, 0, read);
+                    writer.Write(data, 0, read);
+                } while (read > 0);
+
+                reader.Dispose();
+                readStream.Dispose();
+
+                if (deleteSource)
+                {
+                    File.Delete(source);
+                }
+            }
+
+            Debug.WriteLine($"Size of output = {new FileInfo(target).Length}");
+        }
+
+        private long GetTempFilesLength()
+        {
+            long length = 0;
+
+            DirectoryInfo d = new DirectoryInfo(Path.GetDirectoryName(Destination));
+            FileInfo[] files = d.GetFiles($"{Name}.*{Constants.DownloaderSplitedPartExtension}");
+
+            foreach (var f in files)
+            {
+                length += f.Length;
+            }
+
+            return length;
+        }
+
+        private void CleanupTempFiles()
+        {
+            if (TempFilesExist())
+            {
+                DirectoryInfo d = new DirectoryInfo(Path.GetDirectoryName(Destination));
+                FileInfo[] files = d.GetFiles($"{Name}.*{Constants.DownloaderSplitedPartExtension}");
+
+                foreach (var f in files)
+                {
+                    f.Delete();
+                }
+
+                BytesDownloaded = 0;
             }
         }
 
@@ -510,12 +625,15 @@ namespace AMDownloader.Models
                     }
 
                     RaisePropertyChanged(nameof(BytesDownloaded));
+                    RaisePropertyChanged(nameof(Connections));
 
                     if (SupportsResume)
                     {
                         RaisePropertyChanged(nameof(Progress));
                     }
                 }
+
+                _connections = 0;
 
                 Speed = null;
                 RaisePropertyChanged(nameof(Speed));
@@ -563,15 +681,6 @@ namespace AMDownloader.Models
                     TimeRemaining = null;
                     RaisePropertyChanged(nameof(TimeRemaining));
                 });
-            }
-        }
-
-        private void CleanupTempDownload()
-        {
-            if (File.Exists(_tempPath))
-            {
-                File.Delete(_tempPath);
-                BytesDownloaded = 0;
             }
         }
 

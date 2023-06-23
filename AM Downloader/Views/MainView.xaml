@@ -876,6 +876,20 @@
                         </GridViewColumn>
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
                                         HeaderContainerStyle="{StaticResource RightAligned}"
+                                        Header="Connections"
+                                        Width="75">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <TextBlock TextTrimming="CharacterEllipsis"
+                                                   Text="{Binding Connections}"
+                                                   HorizontalAlignment="Right" />
+                                    </Grid>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
+                                        HeaderContainerStyle="{StaticResource RightAligned}"
                                         Header="Speed"
                                         Width="75">
                             <GridViewColumn.CellTemplate>
