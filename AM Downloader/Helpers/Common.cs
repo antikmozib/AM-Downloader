@@ -14,11 +14,13 @@ namespace AMDownloader.Helpers
         private const int _requestThrottlerInterval = 6000; // 1 min
         private const string _downloaderSplitedPartExtension = ".AMDownload";
         private const int _parallelDownloadsLimit = 10;
+        private const int _parallelConnPerDownloadLimit = 5;
         private const string _updateServer = @"https://mozib.io/downloads/update.php";
 
         public static int RequestThrottlerInterval => _requestThrottlerInterval;
         public static string DownloaderSplitedPartExtension => _downloaderSplitedPartExtension;
         public static int ParallelDownloadsLimit => _parallelDownloadsLimit;
+        public static int ParallelConnPerDownloadLimit => _parallelConnPerDownloadLimit;
         public static string UpdateServer => _updateServer;
 
         public enum ByteConstants

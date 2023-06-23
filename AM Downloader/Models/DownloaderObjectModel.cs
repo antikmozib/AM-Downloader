@@ -138,7 +138,6 @@ namespace AMDownloader.Models
             _httpClient = httpClient;
             _reportProgressBytes = bytesReporter;
             _connections = 0;
-            //_tempPath = destination + Constants.DownloaderSplitedPartExtension;
 
             Url = url;
             Destination = destination;
@@ -236,8 +235,6 @@ namespace AMDownloader.Models
                 }
 
                 await DownloadAsync();
-
-                //File.Move(TempDestination, Destination, true);
 
                 TotalBytesToDownload = BytesDownloaded;
                 Status = DownloadStatus.Finished;
@@ -382,6 +379,7 @@ namespace AMDownloader.Models
 
         private async Task DownloadAsync()
         {
+            const int bufferLength = 4096;
             IAsyncPolicy timeoutPolicy = Policy.TimeoutAsync(_httpClient.Timeout);
             // reports the lifetime number of bytes
             IProgress<int> progressReporter = new Progress<int>((value) =>
@@ -395,11 +393,6 @@ namespace AMDownloader.Models
             {
                 using (var request = new HttpRequestMessage(HttpMethod.Get, new Uri(Url)))
                 {
-                    if (SupportsResume && BytesDownloaded > 0)
-                    {
-                        request.Headers.Range = new RangeHeaderValue(BytesDownloaded, TotalBytesToDownload);
-                    }
-
                     using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, _ctLinked);
 
                     // check the validity of the url
@@ -413,7 +406,7 @@ namespace AMDownloader.Models
                     var contentLength = response.Content.Headers.ContentLength;
                     if (contentLength != null && contentLength > 0)
                     {
-                        TotalBytesToDownload = BytesDownloaded + contentLength;
+                        TotalBytesToDownload = contentLength;
                         RaisePropertyChanged(nameof(TotalBytesToDownload));
                     }
                 }
@@ -421,80 +414,93 @@ namespace AMDownloader.Models
                 StartMeasuringSpeed();
                 StartMeasuringEta();
 
-                List<Task> cycleTasks = new();
-                int cycleCount = SupportsResume ? 5 : 1;
-                long toReadPerCycle = (TotalBytesToDownload ?? 0) / cycleCount;
+                // setup the connections
 
-                for (int i = 0; i < cycleCount; i++)
+                List<Task> connTasks = new();
+                int connCount = Settings.Default.MaxParallelConnPerDownload;
+                long toReadPerConn = (TotalBytesToDownload ?? 0) / connCount;
+
+                // if the file doesn't support resume or is too small, open just 1 conn
+                if (!SupportsResume || TotalBytesToDownload < bufferLength)
                 {
-                    int cycle = i;
+                    connCount = 1;
+                }
 
-                    Debug.WriteLine("");
+                Debug.WriteLine($"\nCycles = {connCount}, Length/cycle = {toReadPerConn}");
+
+                for (int i = 0; i < connCount; i++)
+                {
+                    // must be declared here to ensure var is captured correctly in the tasks
+                    int cycle = i;
 
                     var t = Task.Run(async () =>
                     {
-                        var cycleFile = $"{Destination}.{cycle}{Constants.DownloaderSplitedPartExtension}";
-                        var cycleFileInfo = new FileInfo(cycleFile);
+                        var connFile = $"{Destination}.{cycle}{Constants.DownloaderSplitedPartExtension}";
+                        var connFileInfo = new FileInfo(connFile);
 
-                        long cycleStart = (toReadPerCycle + 1) * cycle;
-                        long cycleEnd = cycle == cycleCount - 1 ? (TotalBytesToDownload ?? 0) : cycleStart + toReadPerCycle;
-                        long cycleLength;
+                        long connByteStart = (toReadPerConn + 1) * cycle;
+                        long connByteEnd = cycle == connCount - 1 ? (TotalBytesToDownload ?? 0) : connByteStart + toReadPerConn;
+                        long connByteLength;
 
-                        if (File.Exists(cycleFile))
+                        if (File.Exists(connFile))
                         {
-                            if (SupportsResume && cycleFileInfo.Length > 0)
+                            if (SupportsResume && connFileInfo.Length > 0)
                             {
-                                cycleStart = (cycle * (toReadPerCycle + 1)) + cycleFileInfo.Length;
+                                connByteStart = (cycle * (toReadPerConn + 1)) + connFileInfo.Length;
                             }
                             else
                             {
-                                File.Delete(cycleFile);
+                                File.Delete(connFile);
                             }
                         }
 
-                        cycleLength = cycleEnd - cycleStart;
+                        connByteLength = connByteEnd - connByteStart;
 
-                        Debug.WriteLine($"#{cycle}: Cycle start = {cycleStart}, Cycle end = {cycleEnd}, Cycle length = {cycleLength}");
+                        Debug.WriteLine($"#{cycle}:\t\tCycle byte start = {connByteStart}\t\tCycle byte end = {connByteEnd}\t\tCycle byte length = {connByteLength}");
 
-                        if (cycleLength <= 0)
+                        if (connByteLength <= 0)
                         {
                             return;
                         }
 
-                        using var cycleRequest = new HttpRequestMessage()
+                        using var connRequest = new HttpRequestMessage()
                         {
                             RequestUri = new Uri(Url),
-                            Method = HttpMethod.Get,
-                            Headers =
-                            {
-                                Range = new RangeHeaderValue(cycleStart, cycleEnd)
-                            }
+                            Method = HttpMethod.Get
                         };
 
-                        using var cycleResponse = await _httpClient.SendAsync(
-                            cycleRequest,
+                        if (SupportsResume)
+                        {
+                            connRequest.Headers.Range = new RangeHeaderValue(connByteStart, connByteEnd);
+                        }
+
+                        using var connResponse = await _httpClient.SendAsync(
+                            connRequest,
                             HttpCompletionOption.ResponseHeadersRead,
                             _ctLinked);
 
-                        using var readStream = await cycleResponse.Content.ReadAsStreamAsync(_ctLinked);
+                        using var readStream = await connResponse.Content.ReadAsStreamAsync(_ctLinked);
 
                         using var writeStream = new FileStream(
-                            cycleFile,
+                            connFile,
                             FileMode.Append,
                             FileAccess.Write);
 
                         using var writer = new BinaryWriter(writeStream);
 
-                        long readThisCycle = 0;
+                        long readThisConn = 0;
                         int read = 0;
-                        var buffer = new byte[4096];
+                        var buffer = new byte[bufferLength];
 
                         Interlocked.Increment(ref _connections);
 
+                        // start downloading
+
                         do
                         {
-                            read = await timeoutPolicy.ExecuteAsync(async ct => await readStream.ReadAsync(buffer.AsMemory(0, buffer.Length), ct), _ctLinked);
-                            readThisCycle += read;
+                            read = await timeoutPolicy.ExecuteAsync(async ct =>
+                                await readStream.ReadAsync(buffer.AsMemory(0, buffer.Length), ct), _ctLinked);
+                            readThisConn += read;
 
                             var data = new byte[read];
 
@@ -502,19 +508,27 @@ namespace AMDownloader.Models
                             writer.Write(data, 0, read);
 
                             progressReporter.Report(read);
-                        } while (read > 0 && readThisCycle < cycleLength);
+
+                            // reached the end of this conn's length
+                            if (SupportsResume && readThisConn > connByteLength)
+                            {
+                                break;
+                            }
+                        } while (read > 0);
 
                         Interlocked.Decrement(ref _connections);
                     });
 
-                    cycleTasks.Add(t);
+                    connTasks.Add(t);
                 }
 
-                await Task.WhenAll(cycleTasks);
+                await Task.WhenAll(connTasks);
+
+                // download complete; merge temp files
 
                 List<string> tempFiles = new();
 
-                for (int i = 0; i < cycleCount; i++)
+                for (int i = 0; i < connCount; i++)
                 {
                     tempFiles.Add($"{Destination}.{i}{Constants.DownloaderSplitedPartExtension}");
                 }
@@ -525,13 +539,26 @@ namespace AMDownloader.Models
             {
                 if (!SupportsResume || BytesDownloaded == 0 || _ctCancel.IsCancellationRequested)
                 {
+                    // cleanup if download wasn't paused or can't be resumed
                     CleanupTempFiles();
                 }
 
                 throw new OperationCanceledException();
             }
+            catch
+            {
+
+            }
         }
 
+        /// <summary>
+        /// Merges the <paramref name="sources"/> into the <paramref name="target"/>.
+        /// If the <paramref name="target"/> already exists, it is overwritten.
+        /// </summary>
+        /// <param name="sources">The list of files to merge.</param>
+        /// <param name="target">The output of the merging operation.</param>
+        /// <param name="deleteSource">If <see langword="true"/>, the sources
+        /// will be deleted once merged.</param>
         private void MergeFiles(List<string> sources, string target, bool deleteSource = true)
         {
             using var writeStream = new FileStream(target, FileMode.OpenOrCreate, FileAccess.Write);
@@ -568,8 +595,6 @@ namespace AMDownloader.Models
                     File.Delete(source);
                 }
             }
-
-            Debug.WriteLine($"Size of output = {new FileInfo(target).Length}");
         }
 
         private long GetTempFilesLength()

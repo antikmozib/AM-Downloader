@@ -11,6 +11,7 @@ namespace AMDownloader.ViewModels
         #region Fields
 
         private int _maxParallelDownloads;
+        private int _maxParallelConnPerDownload;
         private long _maxDownloadSpeed;
         private long _connectionTimeout;
 
@@ -35,6 +36,27 @@ namespace AMDownloader.ViewModels
                 else
                 {
                     _maxParallelDownloads = value;
+                }
+            }
+        }
+
+        public int MaxParallelConnPerDownload
+        {
+            get => _maxParallelConnPerDownload;
+
+            set
+            {
+                if (value < 1)
+                {
+                    _maxParallelConnPerDownload = 1;
+                }
+                else if (value > Constants.ParallelConnPerDownloadLimit)
+                {
+                    _maxParallelConnPerDownload = Constants.ParallelConnPerDownloadLimit;
+                }
+                else
+                {
+                    _maxParallelConnPerDownload = value;
                 }
             }
         }
@@ -103,6 +125,7 @@ namespace AMDownloader.ViewModels
         public SettingsViewModel()
         {
             _maxParallelDownloads = Settings.Default.MaxParallelDownloads;
+            _maxParallelConnPerDownload = Settings.Default.MaxParallelConnPerDownload;
             _maxDownloadSpeed = Settings.Default.MaxDownloadSpeed;
             _connectionTimeout = Settings.Default.ConnectionTimeout;
 

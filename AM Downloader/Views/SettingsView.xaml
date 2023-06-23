@@ -14,8 +14,109 @@
     <Window.Resources>
         <converters:SettingsSpeedConverter x:Key="SettingsSpeedConverter" />
         <converters:SettingsConnectionTimeoutConverter x:Key="SettingsConnectionTimeoutConverter" />
+        <Style x:Key="InputBoxStyle"
+               TargetType="{x:Type TextBox}">
+            <Setter Property="Width"
+                    Value="50" />
+            <Setter Property="HorizontalContentAlignment"
+                    Value="Center" />
+            <Setter Property="VerticalContentAlignment"
+                    Value="Center" />
+            <Setter Property="IsTabStop"
+                    Value="True" />
+        </Style>
+        <Style x:Key="StackPanelStyle"
+               TargetType="{x:Type StackPanel}">
+            <Setter Property="Orientation"
+                    Value="Horizontal" />
+        </Style>
     </Window.Resources>
-    <Grid Margin="8">
+    <StackPanel Margin="16">
+        <StackPanel Style="{StaticResource StackPanelStyle}">
+            <Label Content="*Maximum parallel downloads (1 - 10):" />
+            <TextBox Text="{Binding Path=MaxParallelDownloads}"
+                     Style="{StaticResource InputBoxStyle}"/>
+        </StackPanel>
+
+        <Separator Margin="0 5 0 5"
+                   Opacity="0.5" />
+
+        <StackPanel Style="{StaticResource StackPanelStyle}">
+            <Label Content="Maximum parallel connections per download (1 - 5):" />
+            <TextBox Text="{Binding Path=MaxParallelConnPerDownload}"
+                     Style="{StaticResource InputBoxStyle}"/>
+        </StackPanel>
+
+        <Separator Margin="0 5 0 5"
+                   Opacity="0.5"/>
+
+        <StackPanel Style="{StaticResource StackPanelStyle}">
+            <Label Content="Speed limit per download (0 = Unlimited):"/>
+            <TextBox Text="{Binding Path=MaxDownloadSpeed, Converter={StaticResource SettingsSpeedConverter}}"
+                     Style="{StaticResource InputBoxStyle}" />
+            <Label Content="KB/s" />
+
+        </StackPanel>
+
+        <Separator Margin="0 5 0 5"
+                   Opacity="0.5"/>
+
+        <StackPanel Style="{StaticResource StackPanelStyle}">
+            <Label Content="*Connection timeout (0 = Never):"/>
+            <TextBox Text="{Binding Path=ConnectionTimeout, Converter={StaticResource SettingsConnectionTimeoutConverter}}"
+                     Style="{StaticResource InputBoxStyle}" />
+            <Label Content="seconds" />
+        </StackPanel>
+
+        <Separator Margin="0 5 0 5"
+                   Opacity="0.5" />
+
+        <CheckBox VerticalContentAlignment="Center"
+                  IsChecked="{Binding Path=RememberLastDownloadLocation}">
+            <Label Content="Remember last download location" />
+        </CheckBox>
+
+        <Separator Margin="0 5 0 5"
+                   Opacity="0.5" />
+
+        <CheckBox VerticalContentAlignment="Center"
+                  IsChecked="{Binding Path=ClearFinishedDownloadsOnExit}">
+            <Label Content="Clear finished downloads on exit" />
+        </CheckBox>
+
+        <Separator Margin="0 5 0 5"
+                   Opacity="0.5" />
+
+        <CheckBox VerticalContentAlignment="Center"
+                  IsChecked="{Binding Path=AutoCheckForUpdates}">
+            <Label Content="Automatically check for updates at startup" />
+        </CheckBox>
+
+        <Label Content="*Application restart required"
+               Margin="0 20 0 5"/>
+
+        <StackPanel HorizontalAlignment="Right"
+                    Orientation="Horizontal"
+                    Grid.ColumnSpan="3">
+            <Button x:Name="btnOK"
+                    Content="_OK"
+                    Margin="0 0 5 0"
+                    IsDefault="True"
+                    Command="{Binding SaveCommand}"
+                    Click="btnOK_Click" />
+            <Button x:Name="btnCancel"
+                    Content="_Cancel"
+                    Margin="0 0 5 0"
+                    IsCancel="True"
+                    Command="{Binding CancelCommand}"
+                    Click="btnCancel_Click" />
+            <Button x:Name="btnReset"
+                    Content="_Reset"
+                    Command="{Binding ResetCommand}"
+                    Click="btnReset_Click" />
+        </StackPanel>
+    </StackPanel>
+    <!--<Grid Margin="8">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="auto" />
@@ -23,6 +124,7 @@
         </Grid.ColumnDefinitions>
 
         <Grid.RowDefinitions>
+            <RowDefinition />
             <RowDefinition />
             <RowDefinition />
             <RowDefinition />
@@ -62,75 +164,87 @@
                    Grid.Row="1"
                    Grid.ColumnSpan="3" />
 
-        <Label Content="Limit speed per download (0 = Unlimited):"
+        <Label Content="*Maximum parallel connections per download (1 - 5):"
                Grid.Row="2" />
+        <TextBox Text="{Binding Path=MaxParallelConnPerDownload}"
+                 Style="{StaticResource InputBoxStyle}"
+                 Grid.Column="1"
+                 Grid.Row="2" />
+
+        <Separator Margin="0 5 0 5"
+                   Opacity="0.5"
+                   Grid.Row="2"
+                   Grid.ColumnSpan="3" />
+
+        <Label Content="Limit speed per download (0 = Unlimited):"
+               Grid.Row="3" />
         <TextBox Text="{Binding Path=MaxDownloadSpeed, Converter={StaticResource SettingsSpeedConverter}}"
                  Style="{StaticResource InputBoxStyle}"
-                 Grid.Row="2"
+                 Grid.Row="3"
                  Grid.Column="1" />
         <Label Content="KB/s"
-               Grid.Row="2"
+               Grid.Row="3"
                Grid.Column="2" />
 
         <Separator Margin="0 5 0 5"
                    Opacity="0.5"
-                   Grid.Row="3"
+                   Grid.Row="4"
                    Grid.ColumnSpan="3" />
 
         <Label Content="*Connection timeout (0 = Never):"
-               Grid.Row="4" />
+               Grid.Row="5" />
         <TextBox Text="{Binding Path=ConnectionTimeout, Converter={StaticResource SettingsConnectionTimeoutConverter}}"
                  Style="{StaticResource InputBoxStyle}"
-                 Grid.Row="4"
+                 Grid.Row="5"
                  Grid.Column="1" />
         <Label Content="seconds"
-               Grid.Row="4"
+               Grid.Row="5"
                Grid.Column="2" />
 
         <Separator Margin="0 5 0 5"
                    Opacity="0.5"
-                   Grid.Row="5"
+                   Grid.Row="6"
                    Grid.ColumnSpan="3" />
 
         <CheckBox VerticalContentAlignment="Center"
                   IsChecked="{Binding Path=RememberLastDownloadLocation}"
-                  Grid.Row="6"
+                  Grid.Row="7"
                   Grid.ColumnSpan="3">
             <Label Content="Remember last download location" />
         </CheckBox>
 
         <Separator Margin="0 5 0 5"
                    Opacity="0.5"
-                   Grid.Row="7"
+                   Grid.Row="8"
                    Grid.ColumnSpan="3" />
 
         <CheckBox VerticalContentAlignment="Center"
                   IsChecked="{Binding Path=ClearFinishedDownloadsOnExit}"
-                  Grid.Row="8"
+                  Grid.Row="9"
                   Grid.ColumnSpan="3">
             <Label Content="Clear finished downloads on exit" />
         </CheckBox>
 
         <Separator Margin="0 5 0 5"
                    Opacity="0.5"
-                   Grid.Row="9"
+                   Grid.Row="10"
                    Grid.ColumnSpan="3" />
 
         <CheckBox VerticalContentAlignment="Center"
                   IsChecked="{Binding Path=AutoCheckForUpdates}"
-                  Grid.Row="10"
+                  Grid.Row="11"
                   Grid.ColumnSpan="3">
             <Label Content="Automatically check for updates at startup" />
         </CheckBox>
 
         <Label Content="*Application restart required"
                Margin="0 20 0 5"
-               Grid.Row="11"
+               Grid.Row="12"
                Grid.ColumnSpan="3" />
 
         <StackPanel HorizontalAlignment="Right"
                     Orientation="Horizontal"
-                    Grid.Row="12"
+                    Grid.Row="13"
                     Grid.ColumnSpan="3">
             <Button x:Name="btnOK"
                     Content="_OK"
@@ -149,5 +263,5 @@
                     Command="{Binding ResetCommand}"
                     Click="btnReset_Click" />
         </StackPanel>
-    </Grid>
+    </Grid>-->
 </Window>

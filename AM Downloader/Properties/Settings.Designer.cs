@@ -310,5 +310,17 @@ namespace AMDownloader.Properties {
                 this["LaunchCount"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("3")]
+        public int MaxParallelConnPerDownload {
+            get {
+                return ((int)(this["MaxParallelConnPerDownload"]));
+            }
+            set {
+                this["MaxParallelConnPerDownload"] = value;
+            }
+        }
     }
 }
