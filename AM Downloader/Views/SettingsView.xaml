@@ -31,7 +31,7 @@
                     Value="Horizontal" />
         </Style>
     </Window.Resources>
-    <StackPanel Margin="16">
+    <StackPanel Margin="10">
         <StackPanel Style="{StaticResource StackPanelStyle}">
             <Label Content="*Maximum parallel downloads (1 - 10):" />
             <TextBox Text="{Binding Path=MaxParallelDownloads}"
