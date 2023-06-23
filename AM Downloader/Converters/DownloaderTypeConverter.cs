@@ -18,7 +18,7 @@ namespace AMDownloader.Converters
             var extDescription = (string)Registry.GetValue("HKEY_CLASSES_ROOT\\" + extName, "", ext); // e.g. Application
 
             return extDescription == ext
-                ? $"{ext.Replace(".", "")}{(ext.Length == 0 ? "" : " ")}File"
+                ? $"{ext.Replace(".", "").ToUpper()}{(ext.Length == 0 ? "" : " ")}File"
                 : extDescription;
         }
 

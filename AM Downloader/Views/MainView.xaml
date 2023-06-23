@@ -773,7 +773,7 @@
                     <GridView x:Name="DownloadsGridView">
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
                                         HeaderContainerStyle="{StaticResource LeftAligned}"
-                                        Width="250"
+                                        Width="200"
                                         Header="Name">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
@@ -798,7 +798,7 @@
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
                                         HeaderContainerStyle="{StaticResource LeftAligned}"
                                         Header="Type"
-                                        Width="120">
+                                        Width="100">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
@@ -811,7 +811,7 @@
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
                                         HeaderContainerStyle="{StaticResource LeftAligned}"
                                         Header="Status"
-                                        Width="100">
+                                        Width="85">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
@@ -851,7 +851,7 @@
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
                                         HeaderContainerStyle="{StaticResource RightAligned}"
                                         Header="Downloaded"
-                                        Width="120">
+                                        Width="100">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
@@ -875,15 +875,15 @@
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
-                                        HeaderContainerStyle="{StaticResource RightAligned}"
+                                        HeaderContainerStyle="{StaticResource MiddleAligned}"
                                         Header="Connections"
-                                        Width="75">
+                                        Width="80">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
                                         <TextBlock TextTrimming="CharacterEllipsis"
                                                    Text="{Binding Connections}"
-                                                   HorizontalAlignment="Right" />
+                                                   HorizontalAlignment="Center" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
@@ -905,7 +905,7 @@
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
                                         HeaderContainerStyle="{StaticResource RightAligned}"
                                         Header="ETA"
-                                        Width="80">
+                                        Width="75">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBlock TextAlignment="Right"
@@ -973,7 +973,7 @@
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
                                         HeaderContainerStyle="{StaticResource LeftAligned}"
                                         Header="HTTP Status"
-                                        Width="120">
+                                        Width="80">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBlock Grid.Column="1"
