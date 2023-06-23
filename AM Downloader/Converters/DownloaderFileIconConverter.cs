@@ -17,7 +17,7 @@ namespace AMDownloader.Converters
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             var item = value as DownloaderObjectModel;
-            return IconExtractor.Extract(item.Destination, item.Url, false);
+            return IconExtractor.Extract(item.Destination, false);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

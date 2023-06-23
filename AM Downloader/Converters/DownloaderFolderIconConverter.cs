@@ -12,7 +12,7 @@ namespace AMDownloader.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return IconExtractor.Extract(Path.GetDirectoryName(value.ToString()), string.Empty, true);
+            return IconExtractor.Extract(Path.GetDirectoryName(value.ToString()), true);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
