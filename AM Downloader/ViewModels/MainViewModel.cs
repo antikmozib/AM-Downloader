@@ -303,6 +303,7 @@ namespace AMDownloader.ViewModels
                                 sourceObjects[i].Destination,
                                 sourceObjects[i].DateCreated,
                                 sourceObjects[i].TotalBytesToDownload,
+                                sourceObjects[i].ConnectionLimit,
                                 sourceObjects[i].StatusCode,
                                 sourceObjects[i].Status,
                                 Download_Created,
@@ -872,6 +873,7 @@ namespace AMDownloader.ViewModels
                             Url = item.Url,
                             Destination = item.Destination,
                             TotalBytesToDownload = item.TotalBytesToDownload,
+                            ConnectionLimit = item.ConnectionLimit,
                             IsQueued = QueueProcessor.IsQueued(item),
                             Status = item.Status,
                             DateCreated = item.DateCreated,
@@ -1317,22 +1319,24 @@ namespace AMDownloader.ViewModels
             Task.Run(async () =>
             {
                 await _semaphoreMeasuringSpeed.WaitAsync();
-                var stopWatch = new Stopwatch();
+
+                Stopwatch stopwatch = new();
                 long bytesFrom;
-                long bytesTo;
                 long bytesCaptured;
+
                 do
                 {
-                    stopWatch.Restart();
+                    stopwatch.Restart();
                     bytesFrom = BytesDownloadedThisSession;
+
                     await Task.Delay(1000);
-                    bytesTo = BytesDownloadedThisSession;
-                    stopWatch.Stop();
-                    bytesCaptured = bytesTo - bytesFrom;
+
+                    bytesCaptured = BytesDownloadedThisSession - bytesFrom;
+                    stopwatch.Stop();
 
                     if (bytesCaptured >= 0)
                     {
-                        Speed = (long)(bytesCaptured / ((double)stopWatch.ElapsedMilliseconds / 1000));
+                        Speed = (long)(bytesCaptured / ((double)stopwatch.ElapsedMilliseconds / 1000));
                         RaisePropertyChanged(nameof(Speed));
                         RaisePropertyChanged(nameof(BytesDownloadedThisSession));
                     }
@@ -1340,6 +1344,7 @@ namespace AMDownloader.ViewModels
 
                 Speed = null;
                 RaisePropertyChanged(nameof(Speed));
+
                 _semaphoreMeasuringSpeed.Release();
             });
         }

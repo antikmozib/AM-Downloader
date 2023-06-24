@@ -29,17 +29,12 @@ namespace AMDownloader.Models
     {
         #region Fields
 
-        /// <summary>
-        /// Gets the interval between providing download progression updates.
-        /// </summary>
-        private const int _reportingDelay = 1000;
         private readonly HttpClient _httpClient;
         private readonly IProgress<long> _reportProgressBytes;
         private int _connections;
         private TaskCompletionSource _tcs;
         private CancellationTokenSource _ctsPause, _ctsCancel, _ctsLinked;
         private CancellationToken _ctPause, _ctCancel, _ctLinked;
-        //private readonly string _tempPath;
 
         #endregion
 
@@ -55,7 +50,6 @@ namespace AMDownloader.Models
         /// Gets the full local path to the file.
         /// </summary>
         public string Destination { get; }
-        //public string TempDestination => _tempPath;
         public string Extension => Path.GetExtension(Destination);
         public DateTime DateCreated { get; }
         /// <summary>
@@ -82,6 +76,12 @@ namespace AMDownloader.Models
         /// </summary>
         public long? Speed { get; private set; }
         public int? Connections => _connections == 0 ? null : _connections;
+        /// <summary>
+        /// Gets the maximum number of connections allowed for this download.
+        /// Once the download has started, this value cannot be changed without
+        /// canceling the download first.
+        /// </summary>
+        public int ConnectionLimit { get; private set; }
         public HttpStatusCode? StatusCode { get; private set; }
         public DownloadStatus Status { get; private set; }
         /// <summary>
@@ -118,6 +118,7 @@ namespace AMDownloader.Models
                 destination,
                 DateTime.Now,
                 null,
+                Settings.Default.MaxParallelConnPerDownload,
                 null,
                 DownloadStatus.Ready,
                 downloadCreated,
@@ -133,6 +134,7 @@ namespace AMDownloader.Models
             string destination,
             DateTime dateCreated,
             long? bytesToDownload,
+            int connectionLimit,
             HttpStatusCode? httpStatusCode,
             DownloadStatus status,
             EventHandler downloadCreated,
@@ -153,6 +155,7 @@ namespace AMDownloader.Models
             BytesDownloadedThisSession = 0;
             TimeRemaining = null;
             Speed = null;
+            ConnectionLimit = connectionLimit;
             StatusCode = httpStatusCode;
             Status = status;
 
@@ -229,6 +232,9 @@ namespace AMDownloader.Models
                     {
                         CleanupTempFiles();
                     }
+
+                    // for new downloads, we can reset the number of conns allowed
+                    ConnectionLimit = Settings.Default.MaxParallelConnPerDownload;
                 }
                 else
                 {
@@ -248,12 +254,7 @@ namespace AMDownloader.Models
                 RaisePropertyChanged(nameof(TotalBytesToDownload));
                 RaisePropertyChanged(nameof(Progress));
             }
-            catch /*(Exception ex)
-            when (ex is OperationCanceledException
-                || ex is AMDownloaderUrlException
-                || ex is HttpRequestException
-                || ex is TimeoutRejectedException
-                || ex is IOException)*/
+            catch
             {
                 if (_ctLinked.IsCancellationRequested)
                 {
@@ -265,8 +266,6 @@ namespace AMDownloader.Models
                     }
                     else
                     {
-                        //CleanupTempFiles();
-
                         Status = DownloadStatus.Ready;
                         RaisePropertyChanged(nameof(BytesDownloaded));
                         RaisePropertyChanged(nameof(Progress));
@@ -276,12 +275,7 @@ namespace AMDownloader.Models
                 {
                     // interrupted due an exception not related to user cancellation
                     // e.g. no connection, invalid url
-
-                    /*if (!SupportsResume)
-                    {
-                        CleanupTempFiles();
-                    }*/
-
+                    
                     Status = DownloadStatus.Errored;
                 }
             }
@@ -422,11 +416,11 @@ namespace AMDownloader.Models
                 // setup the connections
 
                 List<Task> connTasks = new();
-                int connCount = Settings.Default.MaxParallelConnPerDownload;
+                int connCount = ConnectionLimit;
                 long toReadPerConn = (TotalBytesToDownload ?? 0) / connCount;
 
                 // if the file doesn't support resume or is too small, open just 1 conn
-                if (!SupportsResume || TotalBytesToDownload < bufferLength)
+                if (!SupportsResume || TotalBytesToDownload < (bufferLength * connCount))
                 {
                     connCount = 1;
                 }
@@ -698,13 +692,13 @@ namespace AMDownloader.Models
 
                 while (IsDownloading)
                 {
+                    stopwatch.Restart();
                     fromBytes = BytesDownloaded;
 
-                    stopwatch.Restart();
-                    await Task.Delay(_reportingDelay);
-                    stopwatch.Stop();
+                    await Task.Delay(1000);
 
                     bytesCaptured = BytesDownloaded - fromBytes;
+                    stopwatch.Stop();
 
                     if (bytesCaptured > 0)
                     {
