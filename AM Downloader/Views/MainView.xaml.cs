@@ -208,9 +208,7 @@ namespace AMDownloader.Views
                 / (double)Constants.ByteConstants.MEGABYTE);
 
             MessageBox.Show(
-                $"{name}\nVersion {version}\n\n{copyright}\n\n{website}"
-                + "\n\nDISCLAIMER: This is free software. There is NO warranty; "
-                + "not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."
+                $"{name}\nVersion {version}\n\n{copyright}\n\n{website}"                
                 + $"\n\nTotal downloaded since installation: {totalDownloaded.ToString("n0", cultureInfo)} MB"
                 + $"\nNumber of times launched: {Settings.Default.LaunchCount}",
                 "About",
