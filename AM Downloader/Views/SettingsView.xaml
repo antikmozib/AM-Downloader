@@ -35,7 +35,7 @@
         <StackPanel Style="{StaticResource StackPanelStyle}">
             <Label Content="*Maximum parallel downloads (1 - 10):" />
             <TextBox Text="{Binding Path=MaxParallelDownloads}"
-                     Style="{StaticResource InputBoxStyle}"/>
+                     Style="{StaticResource InputBoxStyle}" />
         </StackPanel>
 
         <Separator Margin="0 5 0 5"
@@ -44,14 +44,14 @@
         <StackPanel Style="{StaticResource StackPanelStyle}">
             <Label Content="Maximum parallel connections per download (1 - 5):" />
             <TextBox Text="{Binding Path=MaxParallelConnPerDownload}"
-                     Style="{StaticResource InputBoxStyle}"/>
+                     Style="{StaticResource InputBoxStyle}" />
         </StackPanel>
 
         <Separator Margin="0 5 0 5"
-                   Opacity="0.5"/>
+                   Opacity="0.5" />
 
         <StackPanel Style="{StaticResource StackPanelStyle}">
-            <Label Content="Speed limit per download (0 = Unlimited):"/>
+            <Label Content="Speed limit per download (0 = Unlimited):" />
             <TextBox Text="{Binding Path=MaxDownloadSpeed, Converter={StaticResource SettingsSpeedConverter}}"
                      Style="{StaticResource InputBoxStyle}" />
             <Label Content="KB/s" />
@@ -59,10 +59,10 @@
         </StackPanel>
 
         <Separator Margin="0 5 0 5"
-                   Opacity="0.5"/>
+                   Opacity="0.5" />
 
         <StackPanel Style="{StaticResource StackPanelStyle}">
-            <Label Content="*Connection timeout (0 = Never):"/>
+            <Label Content="*Connection timeout (0 = Never):" />
             <TextBox Text="{Binding Path=ConnectionTimeout, Converter={StaticResource SettingsConnectionTimeoutConverter}}"
                      Style="{StaticResource InputBoxStyle}" />
             <Label Content="seconds" />
@@ -93,7 +93,7 @@
         </CheckBox>
 
         <Label Content="*Application restart required"
-               Margin="0 20 0 5"/>
+               Margin="0 20 0 5" />
 
         <StackPanel HorizontalAlignment="Right"
                     Orientation="Horizontal"

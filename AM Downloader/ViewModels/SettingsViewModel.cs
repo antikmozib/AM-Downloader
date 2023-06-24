@@ -147,6 +147,7 @@ namespace AMDownloader.ViewModels
         private void Save(object obj)
         {
             Settings.Default.MaxParallelDownloads = _maxParallelDownloads;
+            Settings.Default.MaxParallelConnPerDownload = _maxParallelConnPerDownload;
             Settings.Default.MaxDownloadSpeed = _maxDownloadSpeed;
             Settings.Default.ConnectionTimeout = _connectionTimeout;
             Settings.Default.ClearFinishedDownloadsOnExit = ClearFinishedDownloadsOnExit;
