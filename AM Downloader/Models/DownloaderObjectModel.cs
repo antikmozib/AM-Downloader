@@ -73,7 +73,13 @@ namespace AMDownloader.Models
         public int Progress => SupportsResume
             ? (int)(BytesDownloaded / (double)TotalBytesToDownload * 100)
             : 0;
+        /// <summary>
+        /// Gets the estimated time remaining (in milliseconds) to complete the download.
+        /// </summary>
         public double? TimeRemaining { get; private set; }
+        /// <summary>
+        /// Gets the estimated speed of the download (in bytes/second).
+        /// </summary>
         public long? Speed { get; private set; }
         public int? Connections => _connections == 0 ? null : _connections;
         public HttpStatusCode? StatusCode { get; private set; }
@@ -411,8 +417,7 @@ namespace AMDownloader.Models
                     }
                 }
 
-                StartMeasuringSpeed();
-                StartMeasuringEta();
+                StartMeasuringStats();
 
                 // setup the connections
 
@@ -510,13 +515,27 @@ namespace AMDownloader.Models
                         int read = 0;
                         var buffer = new byte[bufferLength];
 
+                        // vars for speed throttler
+                        Stopwatch t_Stopwatch = new();
+                        long speedLimit = Settings.Default.MaxDownloadSpeed / connCount; // B/s
+                        long t_BytesExpected = 0, t_BytesReceived = 0;
+                        long t_TimeExpected = 0, t_TimeTaken = 0, t_Delay = 0; // ms
+
+                        Debug.WriteLine($"Conn {conn} speed limit = {speedLimit}");
+
                         Interlocked.Increment(ref _connections);
 
                         // start downloading
 
-                        while ((read = await timeoutPolicy.ExecuteAsync(async ct =>
-                            await readStream.ReadAsync(buffer.AsMemory(0, buffer.Length), ct), _ctLinked)) > 0)
+                        do
                         {
+                            t_Stopwatch.Start();
+
+                            read = await timeoutPolicy.ExecuteAsync(async ct =>
+                            await readStream.ReadAsync(buffer.AsMemory(0, buffer.Length), ct), _ctLinked);
+
+                            t_Stopwatch.Stop();
+
                             readThisConn += read;
 
                             var data = new byte[read];
@@ -531,7 +550,33 @@ namespace AMDownloader.Models
                             {
                                 break;
                             }
-                        }
+
+                            // speed throttler
+
+                            t_BytesReceived += read;
+                            t_TimeTaken = t_Stopwatch.ElapsedMilliseconds;
+
+                            if (speedLimit > 0 && t_TimeTaken > 0)
+                            {
+                                t_BytesExpected = (long)((double)speedLimit / 1000 * t_TimeTaken);
+                                t_TimeExpected = (long)(1000 / (double)speedLimit * t_BytesReceived);
+
+                                if (t_BytesReceived > t_BytesExpected || t_TimeTaken < t_TimeExpected)
+                                {
+                                    t_Delay = t_TimeExpected - t_TimeTaken;
+
+                                    if (t_Delay > 0)
+                                    {
+                                        Debug.WriteLine($"Sleeping conn {conn} for {t_Delay} ms");
+
+                                        await Task.Delay((int)t_Delay, _ctLinked);
+                                    }
+
+                                    t_BytesReceived = 0;
+                                    t_Stopwatch.Reset();
+                                }
+                            }
+                        } while (read > 0);
 
                         Debug.WriteLine($"Conn #{conn} actual read = {readThisConn}");
 
@@ -643,85 +688,58 @@ namespace AMDownloader.Models
             }
         }
 
-        private void StartMeasuringSpeed()
+        private void StartMeasuringStats()
         {
-            long fromBytes;
-            long toBytes;
-            long bytesCaptured;
-
             Task.Run(async () =>
             {
+                long fromBytes, bytesCaptured;
+                double timeRemaining;
+                Stopwatch stopwatch = new();
+
                 while (IsDownloading)
                 {
                     fromBytes = BytesDownloaded;
+
+                    stopwatch.Restart();
                     await Task.Delay(_reportingDelay);
-                    toBytes = BytesDownloaded;
-                    bytesCaptured = toBytes - fromBytes;
+                    stopwatch.Stop();
 
-                    if (bytesCaptured >= 0)
+                    bytesCaptured = BytesDownloaded - fromBytes;
+
+                    if (bytesCaptured > 0)
                     {
-                        Speed = (long)((double)bytesCaptured / _reportingDelay * 1000);
+                        Speed = (long)((double)bytesCaptured / stopwatch.ElapsedMilliseconds * 1000);
                         RaisePropertyChanged(nameof(Speed));
+
+                        if (SupportsResume)
+                        {
+                            timeRemaining = (double)((double)stopwatch.ElapsedMilliseconds
+                                / bytesCaptured
+                                * ((TotalBytesToDownload ?? 0) - BytesDownloaded));
+
+                            if (timeRemaining > 0 && timeRemaining != TimeRemaining)
+                            {
+                                TimeRemaining = timeRemaining;
+                                RaisePropertyChanged(nameof(TimeRemaining));
+                            }
+
+                            RaisePropertyChanged(nameof(Progress));
+                        }
+
+                        RaisePropertyChanged(nameof(BytesDownloaded));
                     }
 
-                    RaisePropertyChanged(nameof(BytesDownloaded));
                     RaisePropertyChanged(nameof(Connections));
-
-                    if (SupportsResume)
-                    {
-                        RaisePropertyChanged(nameof(Progress));
-                    }
                 }
 
+                TimeRemaining = null;
+                Speed = null;
                 _connections = 0;
 
-                Speed = null;
-                RaisePropertyChanged(nameof(Speed));
-            });
-        }
-
-        private void StartMeasuringEta()
-        {
-            if (!SupportsResume)
-            {
-                TimeRemaining = null;
                 RaisePropertyChanged(nameof(TimeRemaining));
-            }
-            else
-            {
-                Stopwatch stopWatch = new();
-
-                Task.Run(async () =>
-                {
-                    long fromBytes;
-                    long toBytes;
-                    long bytesCaptured;
-
-                    while (IsDownloading)
-                    {
-                        fromBytes = BytesDownloaded;
-                        stopWatch.Restart();
-                        await Task.Delay(_reportingDelay);
-                        toBytes = BytesDownloaded;
-                        bytesCaptured = toBytes - fromBytes;
-                        stopWatch.Stop();
-
-                        double timeRemaining = (double)(
-                        stopWatch.ElapsedMilliseconds
-                            / (double)bytesCaptured
-                            * ((TotalBytesToDownload ?? 0) - BytesDownloaded));
-
-                        if (timeRemaining >= 0 && timeRemaining != TimeRemaining)
-                        {
-                            TimeRemaining = timeRemaining;
-                            RaisePropertyChanged(nameof(TimeRemaining));
-                        }
-                    }
-
-                    TimeRemaining = null;
-                    RaisePropertyChanged(nameof(TimeRemaining));
-                });
-            }
+                RaisePropertyChanged(nameof(Speed));
+                RaisePropertyChanged(nameof(Connections));
+            });
         }
 
         #endregion
