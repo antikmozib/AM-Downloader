@@ -4,17 +4,14 @@ using AMDownloader.Helpers;
 using AMDownloader.Properties;
 using AMDownloader.QueueProcessing;
 using Polly;
-using Polly.Timeout;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Runtime.Intrinsics.Arm;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -75,7 +72,7 @@ namespace AMDownloader.Models
         /// Gets the estimated speed of the download (in bytes/second).
         /// </summary>
         public long? Speed { get; private set; }
-        public int? Connections => _connections == 0 ? null : _connections;
+        public int Connections => _connections;
         /// <summary>
         /// Gets the maximum number of connections allowed for this download.
         /// Once the download has started, this value cannot be changed without
@@ -235,6 +232,7 @@ namespace AMDownloader.Models
 
                     // for new downloads, we can reset the number of conns allowed
                     ConnectionLimit = Settings.Default.MaxParallelConnPerDownload;
+                    RaisePropertyChanged(nameof(ConnectionLimit));
                 }
                 else
                 {
@@ -423,6 +421,10 @@ namespace AMDownloader.Models
                 if (!SupportsResume || TotalBytesToDownload < (bufferLength * connCount))
                 {
                     connCount = 1;
+
+                    // update the conn limit so that it's reflected in the UI
+                    ConnectionLimit = connCount;
+                    RaisePropertyChanged(nameof(ConnectionLimit));
                 }
 
                 Debug.WriteLine($"\n{Name}: Total = {TotalBytesToDownload}, " +
@@ -709,29 +711,25 @@ namespace AMDownloader.Models
                     bytesCaptured = BytesDownloaded - fromBytes;
                     stopwatch.Stop();
 
-                    if (bytesCaptured > 0)
+                    Speed = (long)((double)bytesCaptured / stopwatch.ElapsedMilliseconds * 1000);
+                    RaisePropertyChanged(nameof(Speed));
+
+                    if (SupportsResume && bytesCaptured > 0)
                     {
-                        Speed = (long)((double)bytesCaptured / stopwatch.ElapsedMilliseconds * 1000);
-                        RaisePropertyChanged(nameof(Speed));
+                        timeRemaining = (double)((double)stopwatch.ElapsedMilliseconds
+                            / bytesCaptured
+                            * ((TotalBytesToDownload ?? 0) - BytesDownloaded));
 
-                        if (SupportsResume)
+                        if (timeRemaining > 0 && timeRemaining != TimeRemaining)
                         {
-                            timeRemaining = (double)((double)stopwatch.ElapsedMilliseconds
-                                / bytesCaptured
-                                * ((TotalBytesToDownload ?? 0) - BytesDownloaded));
-
-                            if (timeRemaining > 0 && timeRemaining != TimeRemaining)
-                            {
-                                TimeRemaining = timeRemaining;
-                                RaisePropertyChanged(nameof(TimeRemaining));
-                            }
-
-                            RaisePropertyChanged(nameof(Progress));
+                            TimeRemaining = timeRemaining;
+                            RaisePropertyChanged(nameof(TimeRemaining));
                         }
 
-                        RaisePropertyChanged(nameof(BytesDownloaded));
+                        RaisePropertyChanged(nameof(Progress));
                     }
 
+                    RaisePropertyChanged(nameof(BytesDownloaded));
                     RaisePropertyChanged(nameof(Connections));
                 }
 

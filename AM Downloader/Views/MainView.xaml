@@ -882,8 +882,25 @@
                                 <DataTemplate>
                                     <Grid>
                                         <TextBlock TextTrimming="CharacterEllipsis"
-                                                   Text="{Binding Connections}"
-                                                   HorizontalAlignment="Center" />
+                                                   HorizontalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="{x:Type TextBlock}">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsDownloading}"
+                                                                     Value="False">
+                                                            <Setter Property="Visibility"
+                                                                    Value="Collapsed" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                            <TextBlock.Text>
+                                                <MultiBinding StringFormat="{}{0}/{1}">
+                                                    <Binding Path="Connections" />
+                                                    <Binding Path="ConnectionLimit" />
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>

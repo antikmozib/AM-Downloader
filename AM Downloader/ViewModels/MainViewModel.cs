@@ -21,7 +21,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
-using System.Xml.Serialization;
 
 namespace AMDownloader.ViewModels
 {
@@ -830,8 +829,29 @@ namespace AMDownloader.ViewModels
 
                 _ctsUpdatingList.Cancel();
             }
+            else if (DownloadingCount > 0)
+            {
+                var unPauseableDownloads = from item
+                                           in DownloadItemsCollection
+                                           where item.IsDownloading && !item.SupportsResume
+                                           select item;
 
-            Status = "Saving data...";
+                if (unPauseableDownloads.Any())
+                {
+                    if (_showPrompt.Invoke(
+                    "The following ongoing downloads cannot be paused and will be canceled. Proceed?\n\n"
+                    + string.Join("\n", unPauseableDownloads.Select(o => o.Name).ToArray()),
+                    "Exit",
+                    PromptButton.YesNo,
+                    PromptIcon.Exclamation,
+                    false) == false)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            Status = "Saving...";
             RaisePropertyChanged(nameof(Status));
 
             Task<bool> closingTask = Task.Run(async () =>
@@ -1327,12 +1347,9 @@ namespace AMDownloader.ViewModels
                     bytesCaptured = BytesDownloadedThisSession - bytesFrom;
                     stopwatch.Stop();
 
-                    if (bytesCaptured >= 0)
-                    {
-                        Speed = (long)(bytesCaptured / ((double)stopwatch.ElapsedMilliseconds / 1000));
-                        RaisePropertyChanged(nameof(Speed));
-                        RaisePropertyChanged(nameof(BytesDownloadedThisSession));
-                    }
+                    Speed = (long)(bytesCaptured / ((double)stopwatch.ElapsedMilliseconds / 1000));
+                    RaisePropertyChanged(nameof(Speed));
+                    RaisePropertyChanged(nameof(BytesDownloadedThisSession));
                 } while (DownloadingCount > 0);
 
                 Speed = null;
