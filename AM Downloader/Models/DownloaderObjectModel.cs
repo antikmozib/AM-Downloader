@@ -275,7 +275,7 @@ namespace AMDownloader.Models
                 {
                     // interrupted due an exception not related to user cancellation
                     // e.g. no connection, invalid url
-                    
+
                     Status = DownloadStatus.Errored;
                 }
             }
@@ -425,7 +425,10 @@ namespace AMDownloader.Models
                     connCount = 1;
                 }
 
-                Debug.WriteLine($"\nConns = {connCount}, {nameof(toReadPerConn)} = {toReadPerConn}");
+                Debug.WriteLine($"\n{Name}: Total = {TotalBytesToDownload}, " +
+                    $"Remaining = {TotalBytesToDownload - BytesDownloaded}, " +
+                    $"Conns = {connCount}, " +
+                    $"{nameof(toReadPerConn)} = {toReadPerConn}");
 
                 for (int i = 0; i < connCount; i++)
                 {
@@ -521,7 +524,7 @@ namespace AMDownloader.Models
 
                         // start downloading
 
-                        do
+                        while (true)
                         {
                             t_Stopwatch.Start();
 
@@ -529,6 +532,11 @@ namespace AMDownloader.Models
                             await readStream.ReadAsync(buffer.AsMemory(0, buffer.Length), ct), _ctLinked);
 
                             t_Stopwatch.Stop();
+
+                            if (read == 0)
+                            {
+                                break;
+                            }
 
                             readThisConn += read;
 
@@ -570,9 +578,10 @@ namespace AMDownloader.Models
                                     t_Stopwatch.Reset();
                                 }
                             }
-                        } while (read > 0);
+                        }
 
-                        Debug.WriteLine($"Conn #{conn} actual read = {readThisConn}");
+                        Debug.WriteLine($"Conn {conn} completed" +
+                            $"\tActual read = {new FileInfo($"{Destination}.{conn}{Constants.DownloaderSplitedPartExtension}").Length}");
 
                         Interlocked.Decrement(ref _connections);
                     });
