@@ -118,22 +118,19 @@ namespace AMDownloader.Views
             {
                 try
                 {
-                    XmlSerializer writer = new XmlSerializer(typeof(SerializableDownloadPathHistoryList));
-                    using (StreamReader streamReader = new StreamReader(Paths.SavedLocationsFile))
+                    var list = Functions.Deserialize<SerializableDownloadPathHistoryList>(Paths.SavedLocationsFile);
+
+                    foreach (var item in list.Objects)
                     {
-                        SerializableDownloadPathHistoryList list;
-                        list = (SerializableDownloadPathHistoryList)writer.Deserialize(streamReader);
-                        foreach (var item in list.Objects)
+                        if (item.FolderPath.Trim().Length > 0 && !cboDestination.Items.Contains(item.FolderPath))
                         {
-                            if (item.FolderPath.Trim().Length > 0 && !cboDestination.Items.Contains(item.FolderPath))
-                            {
-                                cboDestination.Items.Add(item.FolderPath);
-                            }
+                            cboDestination.Items.Add(item.FolderPath);
                         }
                     }
                 }
                 catch
                 {
+
                 }
             }
 
@@ -143,38 +140,37 @@ namespace AMDownloader.Views
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            var list = new SerializableDownloadPathHistoryList();
-
-            if (File.Exists(Paths.SavedLocationsFile))
+            if (Settings.Default.RememberLastDownloadLocation)
             {
-                File.Delete(Paths.SavedLocationsFile);
+                Settings.Default.LastDownloadLocation = cboDestination.Text;
             }
+
+            var list = new SerializableDownloadPathHistoryList();
 
             foreach (var item in cboDestination.Items)
             {
                 var path = item.ToString();
-                if (path.Trim().Length == 0) continue;
-                var model = new SerializableDownloadPathHistory();
-                model.FolderPath = path;
+
+                if (path.Trim().Length == 0)
+                {
+                    continue;
+                }
+
+                var model = new SerializableDownloadPathHistory
+                {
+                    FolderPath = path
+                };
+
                 list.Objects.Add(model);
             }
 
             try
             {
-                using (var streamWriter = new StreamWriter(Paths.SavedLocationsFile))
-                {
-                    XmlSerializer writer = new XmlSerializer(typeof(SerializableDownloadPathHistoryList));
-                    writer.Serialize(streamWriter, list);
-                }
+                Functions.Serialize(list, Paths.SavedLocationsFile);
             }
-            catch (IOException)
+            catch
             {
-                return;
-            }
 
-            if (Settings.Default.RememberLastDownloadLocation)
-            {
-                Settings.Default.LastDownloadLocation = cboDestination.Text;
             }
         }
 
@@ -199,7 +195,10 @@ namespace AMDownloader.Views
             if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 if (!cboDestination.Items.Contains(dlg.SelectedPath))
+                {
                     cboDestination.Items.Add(dlg.SelectedPath);
+                }
+
                 cboDestination.Text = dlg.SelectedPath;
             }
         }

@@ -274,14 +274,7 @@ namespace AMDownloader.ViewModels
 
                     try
                     {
-                        SerializableDownloaderObjectModelList source;
-                        XmlSerializer xmlReader = new(typeof(SerializableDownloaderObjectModelList));
-
-                        using (var streamReader = new StreamReader(Paths.DownloadsHistoryFile))
-                        {
-                            source = (SerializableDownloaderObjectModelList)xmlReader.Deserialize(streamReader);
-                        }
-
+                        var source = Functions.Deserialize<SerializableDownloaderObjectModelList>(Paths.DownloadsHistoryFile);
                         var sourceObjects = source.Objects.ToArray();
                         var itemsToAdd = new DownloaderObjectModel[sourceObjects.Length];
                         var itemsToEnqueue = new List<IQueueable>();
@@ -327,8 +320,9 @@ namespace AMDownloader.ViewModels
                         AddObjects(itemsToAdd);
                         QueueProcessor.Enqueue(itemsToEnqueue.ToArray());
                     }
-                    catch (InvalidOperationException)
+                    catch
                     {
+
                     }
                     finally
                     {
@@ -851,7 +845,6 @@ namespace AMDownloader.ViewModels
 
                 try
                 {
-                    var writer = new XmlSerializer(typeof(SerializableDownloaderObjectModelList));
                     var list = new SerializableDownloaderObjectModelList();
                     var index = 0;
 
@@ -884,8 +877,7 @@ namespace AMDownloader.ViewModels
                         list.Objects.Add(sItem);
                     }
 
-                    using var streamWriter = new StreamWriter(Paths.DownloadsHistoryFile, false);
-                    writer.Serialize(streamWriter, list);
+                    Functions.Serialize(list, Paths.DownloadsHistoryFile);
                 }
                 catch
                 {

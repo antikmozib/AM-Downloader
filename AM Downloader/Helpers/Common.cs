@@ -2,10 +2,13 @@
 
 using AMDownloader.Properties;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Reflection;
+using System.Text.Json;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 namespace AMDownloader.Helpers
 {
@@ -129,6 +132,36 @@ namespace AMDownloader.Helpers
                 catch
                 {
                 }
+            }
+        }
+
+        public static void Serialize<T>(T obj, string path)
+        {
+            var xmlSerializer = new XmlSerializer(typeof(T));
+            using var streamWriter = new StreamWriter(path, false);
+
+            try
+            {
+                xmlSerializer.Serialize(streamWriter, obj);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(null, ex);
+            }
+        }
+
+        public static T Deserialize<T>(string path)
+        {
+            var xmlSerializer = new XmlSerializer(typeof(T));
+            using var streamReader = new StreamReader(path);
+
+            try
+            {
+                return (T)xmlSerializer.Deserialize(streamReader);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(null, ex);
             }
         }
     }

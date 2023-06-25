@@ -105,14 +105,7 @@ namespace AMDownloader.Views
             {
                 try
                 {
-                    SerializableUIColumnList restoreCols;
-                    var xmlReader = new XmlSerializer(typeof(SerializableUIColumnList));
-
-                    using (var streamReader = new StreamReader(Paths.UIColumnOrderFile))
-                    {
-                        restoreCols = (SerializableUIColumnList)xmlReader.Deserialize(streamReader);
-                    }
-
+                    var restoreCols = Functions.Deserialize<SerializableUIColumnList>(Paths.UIColumnOrderFile);
                     var gridCols = ((GridView)DownloadsListView.View).Columns;
 
                     for (int i = 0; i < restoreCols.Objects.Count; i++)
@@ -137,9 +130,9 @@ namespace AMDownloader.Views
                         }
                     }
                 }
-                catch (Exception ex)
-                when (ex is XmlException || ex is InvalidOperationException)
+                catch
                 {
+
                 }
             }
         }
@@ -178,15 +171,12 @@ namespace AMDownloader.Views
 
                 try
                 {
-                    var writer = new XmlSerializer(typeof(SerializableUIColumnList));
-
                     Directory.CreateDirectory(Paths.LocalAppDataFolder);
-
-                    using var streamWriter = new StreamWriter(Paths.UIColumnOrderFile, false);
-                    writer.Serialize(streamWriter, columnOrderList);
+                    Functions.Serialize(columnOrderList, Paths.UIColumnOrderFile);
                 }
-                catch (IOException)
+                catch
                 {
+
                 }
             }
         }
@@ -208,7 +198,7 @@ namespace AMDownloader.Views
                 / (double)Constants.ByteConstants.MEGABYTE);
 
             MessageBox.Show(
-                $"{name}\nVersion {version}\n\n{copyright}\n{website}"                
+                $"{name}\nVersion {version}\n\n{copyright}\n{website}"
                 + $"\n\nTotal downloaded since installation: {totalDownloaded.ToString("n0", cultureInfo)} MB"
                 + $"\nNumber of times launched: {Settings.Default.LaunchCount}",
                 "About",
@@ -271,7 +261,9 @@ namespace AMDownloader.Views
             var columnBinding = columnHeader.Column.DisplayMemberBinding as Binding;
             var columnToSort = columnBinding?.Path.Path ?? columnHeader.Column.Header as string;
 
-            // link the column header string value to the prop of the binded obj
+            // link the column header string value to the prop of the binded obj;
+            // this is only needed for those columns whose header names are
+            // different from the prop names
             switch (columnToSort.ToLower())
             {
                 case "type":

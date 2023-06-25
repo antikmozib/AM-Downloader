@@ -24,7 +24,6 @@ namespace AMDownloader.Models.Serializable
     public class SerializableDownloaderObjectModelList
     {
         public List<SerializableDownloaderObjectModel> Objects;
-        public int Count => Objects.Count;
 
         public SerializableDownloaderObjectModelList()
         {
