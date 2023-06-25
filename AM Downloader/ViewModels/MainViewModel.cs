@@ -49,21 +49,22 @@ namespace AMDownloader.ViewModels
         /// Gets the interval between refreshing the CollectionView.
         /// </summary>
         private const int _collectionRefreshDelay = 1000;
-        private readonly ShowPromptDelegate _showPrompt;
+
+        private readonly HttpClient _client;
+        private readonly IProgress<long> _progressReporter;
         private readonly ClipboardObserver _clipboardService;
+        private readonly SemaphoreSlim _semaphoreUpdatingList;
+        private readonly SemaphoreSlim _semaphoreRefreshingView;
+        private readonly SemaphoreSlim _semaphoreMeasuringSpeed;
+        private readonly ShowWindowDelegate _showWindow;
+        private readonly ShowPromptDelegate _showPrompt;
+        private CancellationTokenSource _ctsUpdatingList;
+        private readonly List<CancellationTokenSource> _ctsRefreshViewList;
+        private readonly object _ctsRefreshViewListLock;
         private readonly object _downloadItemsCollectionLock;
         private readonly object _bytesDownloadedLock;
         private readonly object _bytesTransferredOverLifetimeLock;
-        private readonly object _ctsRefreshViewListLock;
-        private readonly SemaphoreSlim _semaphoreMeasuringSpeed;
-        private readonly SemaphoreSlim _semaphoreUpdatingList;
-        private readonly SemaphoreSlim _semaphoreRefreshingView;
-        private CancellationTokenSource _ctsUpdatingList;
-        private readonly List<CancellationTokenSource> _ctsRefreshViewList;
-        private readonly HttpClient _client;
-        private readonly ShowWindowDelegate _showWindow;
         private bool _resetAllSettingsOnClose;
-        private readonly IProgress<long> _progressReporter;
 
         #endregion
 
@@ -170,6 +171,11 @@ namespace AMDownloader.ViewModels
             ErroredCount = 0;
             PausedCount = 0;
             Status = "Ready";
+
+            _client = new HttpClient
+            {
+                Timeout = TimeSpan.FromMilliseconds(Settings.Default.ConnectionTimeout)
+            };
             _progressReporter = new Progress<long>(value =>
             {
                 Monitor.Enter(_bytesDownloadedLock);
@@ -182,22 +188,17 @@ namespace AMDownloader.ViewModels
                     Monitor.Exit(_bytesDownloadedLock);
                 }
             });
-
-            _client = new HttpClient
-            {
-                Timeout = TimeSpan.FromMilliseconds(Settings.Default.ConnectionTimeout)
-            };
             _clipboardService = new ClipboardObserver();
-            _semaphoreMeasuringSpeed = new SemaphoreSlim(1);
             _semaphoreUpdatingList = new SemaphoreSlim(1);
             _semaphoreRefreshingView = new SemaphoreSlim(1);
-            _ctsRefreshViewList = new();
+            _semaphoreMeasuringSpeed = new SemaphoreSlim(1);
+            _showWindow = showWindow;
             _showPrompt = showPrompt;
+            _ctsRefreshViewList = new();
+            _ctsRefreshViewListLock = _ctsRefreshViewList;
             _downloadItemsCollectionLock = DownloadItemsCollection;
             _bytesDownloadedLock = BytesDownloadedThisSession;
             _bytesTransferredOverLifetimeLock = Settings.Default.BytesTransferredOverLifetime;
-            _ctsRefreshViewListLock = _ctsRefreshViewList;
-            _showWindow = showWindow;
             _resetAllSettingsOnClose = false;
 
             AddCommand = new RelayCommand<object>(
