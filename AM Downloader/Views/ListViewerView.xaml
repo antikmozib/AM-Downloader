@@ -11,25 +11,27 @@
         WindowStyle="ToolWindow"
         WindowStartupLocation="CenterOwner"
         Title="{Binding Title}"
+        d:Title="List Viewer"
         ResizeMode="CanResizeWithGrip">
     <Window.Resources>
         <converters:ListViewerItemCountConverter x:Key="ListViewerItemCountConverter" />
     </Window.Resources>
 
-    <Grid Margin="10">
+    <Grid Margin="8">
         <Grid.RowDefinitions>
             <RowDefinition Height="auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
 
-        <TextBlock Text="{Binding Description}" />
+        <TextBlock Text="{Binding Description}"
+                   d:Text="Description..."/>
 
         <ListBox ItemsSource="{Binding ListViewerItems}"
                  Name="ItemsListBox"
                  Grid.Row="1"
                  SelectionMode="Extended"
-                 Margin="0 10 0 10">
+                 Margin="0 8 0 8">
             <ListBox.ContextMenu>
                 <ContextMenu>
                     <MenuItem Header="Copy"

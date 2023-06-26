@@ -39,7 +39,7 @@
         <converters:TreeViewCountConverter x:Key="TreeViewCountConverter" />
         <DataTemplate x:Key="HeaderTemplate">
             <TextBlock TextTrimming="CharacterEllipsis"
-                       Margin="5"
+                       Margin="4"
                        Text="{Binding}" />
         </DataTemplate>
         <DataTemplate x:Key="HeaderTemplateArrowDown">
@@ -50,15 +50,15 @@
                 </Grid.ColumnDefinitions>
                 <Path StrokeThickness="1"
                       Fill="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
-                      Data="M 0 0 L 5 5 L 10 0 Z"
+                      Data="M 0 0 L 4 4 L 8 0 Z"
                       HorizontalAlignment="Right"
                       VerticalAlignment="Center"
-                      Margin="5 0 0 0" />
+                      Margin="4 0 0 0" />
                 <TextBlock Grid.Column="1"
                            TextTrimming="CharacterEllipsis"
                            VerticalAlignment="Center"
                            Text="{Binding}"
-                           Margin="5" />
+                           Margin="4" />
             </Grid>
         </DataTemplate>
         <DataTemplate x:Key="HeaderTemplateArrowUp">
@@ -69,15 +69,15 @@
                 </Grid.ColumnDefinitions>
                 <Path StrokeThickness="1"
                       Fill="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
-                      Data="M 0 5 L 5 0 L 10 5 Z"
+                      Data="M 0 4 L 4 0 L 8 4 Z"
                       HorizontalAlignment="Right"
                       VerticalAlignment="Center"
-                      Margin="5 0 0 0" />
+                      Margin="4 0 0 0" />
                 <TextBlock Grid.Column="1"
                            TextTrimming="CharacterEllipsis"
                            VerticalAlignment="Center"
                            Text="{Binding}"
-                           Margin="5" />
+                           Margin="4" />
             </Grid>
         </DataTemplate>
         <CollectionViewSource x:Key="CategoriesList"
@@ -180,26 +180,26 @@
                         </Style.Triggers>
                     </Style>
                 </ToolBar.Resources>
-                <Button Padding="5"
+                <Button Padding="4"
                         x:Name="AddButton"
                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
                         Command="{Binding AddCommand}">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock FontSize="18"
+                        <TextBlock FontSize="16"
                                    Text="&#xF055;"
                                    FontFamily="{StaticResource FontAwesomeSolid}"
                                    Foreground="{StaticResource ResourceKey=AddButtonIconColor}" />
-                        <TextBlock Margin="5 0 0 0"
+                        <TextBlock Margin="4 0 0 0"
                                    VerticalAlignment="Center"
                                    Text="Add" />
                     </StackPanel>
                 </Button>
                 <Button CommandParameter="{Binding SelectedItems, ElementName=DownloadsListView}"
                         Command="{Binding RemoveCommand}"
-                        Padding="5"
+                        Padding="4"
                         x:Name="RemoveButton">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock FontSize="18"
+                        <TextBlock FontSize="16"
                                    Text="&#xF056;"
                                    FontFamily="{StaticResource FontAwesomeSolid}"
                                    Foreground="{StaticResource ResourceKey=RemoveButtonIconColor}" />
@@ -209,72 +209,72 @@
                     </StackPanel>
                 </Button>
                 <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
-                <Button Padding="5"
+                <Button Padding="4"
                         x:Name="StartButton"
                         CommandParameter="{Binding SelectedItems, ElementName=DownloadsListView}"
                         Command="{Binding StartCommand}">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock FontSize="18"
+                        <TextBlock FontSize="16"
                                    Text="&#xF144;"
                                    FontFamily="{StaticResource FontAwesomeSolid}"
                                    Foreground="{StaticResource ResourceKey=StartButtonIconColor}" />
-                        <TextBlock Margin="5 0 0 0"
+                        <TextBlock Margin="4 0 0 0"
                                    VerticalAlignment="Center"
                                    Text="Start" />
                     </StackPanel>
                 </Button>
-                <Button Padding="5"
+                <Button Padding="4"
                         x:Name="PauseButton"
                         CommandParameter="{Binding SelectedItems, ElementName=DownloadsListView}"
                         Command="{Binding PauseCommand}">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock FontSize="18"
+                        <TextBlock FontSize="16"
                                    Text="&#xF28B;"
                                    FontFamily="{StaticResource FontAwesomeSolid}"
                                    Foreground="{StaticResource ResourceKey=PauseButtonIconColor}" />
-                        <TextBlock Margin="5 0 0 0"
+                        <TextBlock Margin="4 0 0 0"
                                    VerticalAlignment="Center"
                                    Text="Pause" />
                     </StackPanel>
                 </Button>
-                <Button Padding="5"
+                <Button Padding="4"
                         x:Name="CancelButton"
                         CommandParameter="{Binding SelectedItems, ElementName=DownloadsListView}"
                         Command="{Binding CancelCommand}">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock FontSize="18"
+                        <TextBlock FontSize="16"
                                    Text="&#xF28D;"
                                    FontFamily="{StaticResource FontAwesomeSolid}"
                                    Foreground="{StaticResource ResourceKey=StopButtonIconColor}" />
-                        <TextBlock Margin="5 0 0 0"
+                        <TextBlock Margin="4 0 0 0"
                                    VerticalAlignment="Center"
                                    Text="Cancel" />
                     </StackPanel>
                 </Button>
                 <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
-                <Button Padding="5"
+                <Button Padding="4"
                         x:Name="StartQueueButton"
                         Command="{Binding StartQueueCommand}"
                         CommandParameter="{Binding SelectedItems, ElementName=DownloadsListView}">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock FontSize="18"
+                        <TextBlock FontSize="16"
                                    Text="&#xF144;"
                                    FontFamily="{StaticResource FontAwesomeSolid}"
                                    Foreground="{StaticResource ResourceKey=StartQueueButtonIconColor}" />
-                        <TextBlock Margin="5 0 0 0"
+                        <TextBlock Margin="4 0 0 0"
                                    VerticalAlignment="Center"
                                    Text="Start Queue" />
                     </StackPanel>
                 </Button>
-                <Button Padding="5"
+                <Button Padding="4"
                         x:Name="CancelQueueButton"
                         Command="{Binding StopQueueCommand}">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock FontSize="18"
+                        <TextBlock FontSize="16"
                                    Text="&#xF28D;"
                                    FontFamily="{StaticResource FontAwesomeSolid}"
                                    Foreground="{StaticResource ResourceKey=StopQueueButtonIconColor}" />
-                        <TextBlock Margin="5 0 0 0"
+                        <TextBlock Margin="4 0 0 0"
                                    VerticalAlignment="Center"
                                    Text="Stop Queue" />
                     </StackPanel>
@@ -284,11 +284,11 @@
         <!--#endregion-->
         <!--#region STATUSBAR -->
         <DockPanel DockPanel.Dock="Bottom">
-            <StatusBar Padding="5">
+            <StatusBar Padding="4">
                 <StatusBar.Resources>
                     <Style TargetType="{x:Type ProgressBar}">
                         <Setter Property="Height"
-                                Value="14" />
+                                Value="16" />
                     </Style>
                     <Style TargetType="{x:Type Button}">
                         <Setter Property="HorizontalContentAlignment"
@@ -296,9 +296,9 @@
                         <Setter Property="VerticalContentAlignment"
                                 Value="Center" />
                         <Setter Property="Width"
-                                Value="14" />
+                                Value="16" />
                         <Setter Property="Height"
-                                Value="14" />
+                                Value="16" />
                         <Style.Triggers>
                             <Trigger Property="IsEnabled"
                                      Value="False">
@@ -331,9 +331,9 @@
                                 <Setter Property="Fill"
                                         Value="{StaticResource StausBarEllipseBusyColor}" />
                                 <Setter Property="Width"
-                                        Value="14" />
+                                        Value="16" />
                                 <Setter Property="Height"
-                                        Value="14" />
+                                        Value="16" />
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding Status}"
                                                  Value="Ready">
@@ -351,9 +351,9 @@
                                    TargetType="Button"
                                    BasedOn="{StaticResource {x:Type Button}}">
                                 <Setter Property="Width"
-                                        Value="14" />
+                                        Value="16" />
                                 <Setter Property="Height"
-                                        Value="14" />
+                                        Value="16" />
                                 <Setter Property="BorderBrush"
                                         Value="{StaticResource StausBarEllipseBusyColor}" />
                                 <Setter Property="Background"
@@ -405,7 +405,7 @@
                                 Content="&#xF00D;"
                                 Command="{Binding CancelBackgroundTaskCommand}"
                                 FontFamily="{StaticResource FontAwesomeSolid}"
-                                Margin="0,0,4,0"
+                                Margin="0 0 4 0"
                                 ToolTip="Cancel operation"
                                 Cursor="Hand"
                                 Style="{StaticResource CancelButtonStyle}" />
@@ -416,6 +416,7 @@
                                    TextTrimming="CharacterEllipsis"
                                    Grid.Column="2"
                                    Text="{Binding Status, Converter={StaticResource ProgramStatusConverter}}"
+                                   d:Text="Status..."
                                    VerticalAlignment="Center" />
                     </Grid>
                 </StatusBarItem>
@@ -429,10 +430,12 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock VerticalAlignment="Center"
                                    Text="{Binding Progress, StringFormat=\{0:0\}%}"
+                                   d:Text="50%"
                                    Margin="4 0 4 0" />
                         <ProgressBar Grid.Column="1"
                                      x:Name="ProgressProgressBar"
                                      Value="{Binding Progress, Mode=OneWay}"
+                                     d:Value="50"
                                      Width="100" />
                     </Grid>
                 </StatusBarItem>
@@ -447,6 +450,7 @@
                         <TextBlock TextAlignment="Right"
                                    x:Name="SpeedTextBlock"
                                    Text="{Binding Speed, Converter={StaticResource DownloaderSpeedConverter}}"
+                                   d:Text="Speed"
                                    ToolTip="Current data transfer rate" />
                     </TextBlock>
                 </StatusBarItem>
@@ -459,6 +463,7 @@
                                    FontFamily="{StaticResource FontAwesomeSolid}" />
                         <TextBlock x:Name="BytesDownloadedTextBlock"
                                    Text="{Binding BytesDownloadedThisSession, Converter={StaticResource DownloaderSizeConverter}}"
+                                   d:Text="Downloaded"
                                    ToolTip="Data transferred this session" />
                     </TextBlock>
                 </StatusBarItem>
@@ -783,8 +788,8 @@
                                             <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
                                         <Image Source="{Binding Converter={StaticResource DownloaderIconConverter}}"
-                                               Width="18"
-                                               Height="18"
+                                               Width="16"
+                                               Height="16"
                                                Margin="0 0 2 0"
                                                VerticalAlignment="Center" />
                                         <TextBlock Grid.Column="1"
@@ -811,7 +816,7 @@
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
                                         HeaderContainerStyle="{StaticResource LeftAligned}"
                                         Header="Status"
-                                        Width="85">
+                                        Width="84">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
@@ -865,7 +870,7 @@
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
                                         HeaderContainerStyle="{StaticResource RightAligned}"
                                         Header="Size"
-                                        Width="75">
+                                        Width="76">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBlock TextAlignment="Right"
@@ -908,7 +913,7 @@
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
                                         HeaderContainerStyle="{StaticResource RightAligned}"
                                         Header="Speed"
-                                        Width="75">
+                                        Width="76">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
@@ -922,7 +927,7 @@
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
                                         HeaderContainerStyle="{StaticResource RightAligned}"
                                         Header="ETA"
-                                        Width="75">
+                                        Width="76">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBlock TextAlignment="Right"
@@ -934,7 +939,7 @@
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
                                         HeaderContainerStyle="{StaticResource LeftAligned}"
                                         Header="Location"
-                                        Width="250">
+                                        Width="248">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
@@ -944,11 +949,11 @@
                                             <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
                                         <Image Source="{Binding Destination, Converter={StaticResource DownloaderFolderIconConverter}}"
-                                               Width="18"
-                                               Height="18"
+                                               Width="16"
+                                               Height="16"
                                                Margin="0 0 2 0"
                                                VerticalAlignment="Center" />
-                                        <TextBlock Margin="0 0 5 0"
+                                        <TextBlock Margin="0 0 4 0"
                                                    Grid.Column="1"
                                                    TextTrimming="CharacterEllipsis"
                                                    Text="{Binding Destination, Converter={StaticResource DownloaderDestinationConverter}}"
@@ -976,7 +981,7 @@
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
                                         HeaderContainerStyle="{StaticResource RightAligned}"
                                         Header="Created"
-                                        Width="150">
+                                        Width="148">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
