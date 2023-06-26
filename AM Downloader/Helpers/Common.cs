@@ -56,8 +56,8 @@ namespace AMDownloader.Helpers
 
             while (File.Exists(result) || File.Exists(result + Constants.DownloaderSplitedPartExtension))
             {
-                result = dirName + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(fileName) +
-                    " (" + ++i + ")" + Path.GetExtension(fileName);
+                result = Path.Combine(dirName,
+                    $"{Path.GetFileNameWithoutExtension(fileName)} ({++i}){Path.GetExtension(fileName)}");
             };
 
             return result;

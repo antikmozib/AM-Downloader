@@ -1,7 +1,6 @@
 ﻿// Copyright (C) 2020-2023 Antik Mozib. All rights reserved.
 
 using System;
-using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Windows;

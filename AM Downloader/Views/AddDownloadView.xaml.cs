@@ -5,7 +5,6 @@ using AMDownloader.Models.Serializable;
 using AMDownloader.Properties;
 using System;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
@@ -15,59 +14,45 @@ namespace AMDownloader.Views
     /// <summary>
     /// Interaction logic for AddDownloadWindow.xaml
     /// </summary>
-    ///
     public partial class AddDownloadView : Window
     {
-        #region Native
-
-        private const uint WS_EX_CONTEXTHELP = 0x00000400;
-        private const uint WS_MINIMIZEBOX = 0x00020000;
-        private const uint WS_MAXIMIZEBOX = 0x00010000;
-        private const int GWL_STYLE = -16;
-        private const int GWL_EXSTYLE = -20;
-        private const int SWP_NOSIZE = 0x0001;
-        private const int SWP_NOMOVE = 0x0002;
-        private const int SWP_NOZORDER = 0x0004;
-        private const int SWP_FRAMECHANGED = 0x0020;
-        private const int WM_SYSCOMMAND = 0x0112;
-        private const int SC_CONTEXTHELP = 0xF180;
-        private const int WM_SETICON = 0x0080;
-        private const int WS_EX_DLGMODALFRAME = 0x0001;
-
-        [DllImport("user32.dll")]
-        public static extern int SendMessage(IntPtr hWnd, int wMsg, IntPtr wParam, IntPtr lParam);
-
-        [DllImport("user32.dll")]
-        private static extern uint GetWindowLong(IntPtr hwnd, int index);
-
-        [DllImport("user32.dll")]
-        private static extern int SetWindowLong(IntPtr hwnd, int index, uint newStyle);
-
-        [DllImport("user32.dll")]
-        private static extern bool SetWindowPos(IntPtr hwnd, IntPtr hwndInsertAfter, int x, int y, int width, int height, uint flags);
-
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);
 
-            IntPtr hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
-            uint styles = GetWindowLong(hwnd, GWL_STYLE);
+            IntPtr hwnd = new WindowInteropHelper(this).Handle;
+            uint styles = Helpers.Native.User32.GetWindowLong(hwnd, Helpers.Native.User32.GWL_STYLE);
 
-            styles &= 0xFFFFFFFF ^ (WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
-            SetWindowLong(hwnd, GWL_STYLE, styles);
+            styles &= 0xFFFFFFFF ^ (Helpers.Native.User32.WS_MINIMIZEBOX | Helpers.Native.User32.WS_MAXIMIZEBOX);
+            Helpers.Native.User32.SetWindowLong(hwnd, Helpers.Native.User32.GWL_STYLE, styles);
 
-            styles = GetWindowLong(hwnd, GWL_EXSTYLE);
-            styles |= WS_EX_CONTEXTHELP;
-            SetWindowLong(hwnd, GWL_EXSTYLE, styles);
+            styles = Helpers.Native.User32.GetWindowLong(hwnd, Helpers.Native.User32.GWL_EXSTYLE);
+            styles |= Helpers.Native.User32.WS_EX_CONTEXTHELP;
+            Helpers.Native.User32.SetWindowLong(hwnd, Helpers.Native.User32.GWL_EXSTYLE, styles);
 
-            styles = GetWindowLong(hwnd, GWL_EXSTYLE);
-            styles |= WS_EX_DLGMODALFRAME;
-            SetWindowLong(hwnd, GWL_EXSTYLE, styles);
+            styles = Helpers.Native.User32.GetWindowLong(hwnd, Helpers.Native.User32.GWL_EXSTYLE);
+            styles |= Helpers.Native.User32.WS_EX_DLGMODALFRAME;
+            Helpers.Native.User32.SetWindowLong(hwnd, Helpers.Native.User32.GWL_EXSTYLE, styles);
 
-            SetWindowPos(hwnd, IntPtr.Zero, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
-            ((HwndSource)PresentationSource.FromVisual(this)).AddHook((IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) =>
+            Helpers.Native.User32.SetWindowPos(hwnd,
+                IntPtr.Zero,
+                0,
+                0,
+                0,
+                0,
+                Helpers.Native.User32.SWP_NOMOVE
+                    | Helpers.Native.User32.SWP_NOSIZE
+                    | Helpers.Native.User32.SWP_NOZORDER
+                    | Helpers.Native.User32.SWP_FRAMECHANGED);
+
+            ((HwndSource)PresentationSource.FromVisual(this)).AddHook((IntPtr hwnd,
+                int msg,
+                IntPtr wParam,
+                IntPtr lParam,
+                ref bool handled) =>
             {
-                if (msg == WM_SYSCOMMAND && ((int)wParam & 0xFFF0) == SC_CONTEXTHELP)
+                if (msg == Helpers.Native.User32.WM_SYSCOMMAND
+                    && ((int)wParam & 0xFFF0) == Helpers.Native.User32.SC_CONTEXTHELP)
                 {
                     MessageBox.Show(
                         "Patterns can be applied to download multiple files from a single URL."
@@ -82,11 +67,9 @@ namespace AMDownloader.Views
                 return IntPtr.Zero;
             });
 
-            SendMessage(hwnd, WM_SETICON, new IntPtr(1), IntPtr.Zero);
-            SendMessage(hwnd, WM_SETICON, IntPtr.Zero, IntPtr.Zero);
+            Helpers.Native.User32.SendMessage(hwnd, Helpers.Native.User32.WM_SETICON, new IntPtr(1), IntPtr.Zero);
+            Helpers.Native.User32.SendMessage(hwnd, Helpers.Native.User32.WM_SETICON, IntPtr.Zero, IntPtr.Zero);
         }
-
-        #endregion
 
         public AddDownloadView()
         {
