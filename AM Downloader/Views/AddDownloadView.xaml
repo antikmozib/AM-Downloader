@@ -45,8 +45,7 @@
                       HorizontalAlignment="Right"
                       ToolTip="Automatically monitor the clipboard for URLs and add them to the list." />
         </DockPanel>
-        <TextBox Padding="2"
-                 x:Name="txtUrl"
+        <TextBox x:Name="txtUrl"
                  Grid.Row="2"
                  Text="{Binding Path=Urls, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                  Width="auto"
@@ -88,7 +87,7 @@
                       Content="Start downloading"
                       IsChecked="{Binding Path=StartDownload, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
                       VerticalAlignment="Center"
-                      Margin="0 0 20 0" />
+                      Margin="0 0 16 0" />
             <Button x:Name="btnAdd"
                     Margin="0 0 4 0"
                     Content="Add"

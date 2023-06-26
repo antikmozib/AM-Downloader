@@ -37,58 +37,95 @@
         <converters:TaskBarProgressConverter x:Key="TaskBarProgressConverter" />
         <converters:TaskBarProgressStateConverter x:Key="TaskBarProgressStateConverter" />
         <converters:TreeViewCountConverter x:Key="TreeViewCountConverter" />
+
+        <Style x:Key="HeaderRowStyle"
+               TargetType="{x:Type RowDefinition}">
+            <Setter Property="Height"
+                    Value="24" />
+        </Style>
+
+        <Style x:Key="HeaderTextBlockStyle"
+               TargetType="{x:Type TextBlock}">
+            <Setter Property="VerticalAlignment"
+                    Value="Center" />
+
+            <Setter Property="TextTrimming"
+                    Value="CharacterEllipsis" />
+
+            <Setter Property="Margin"
+                    Value="4 0 4 0" />
+        </Style>
+
         <DataTemplate x:Key="HeaderTemplate">
-            <TextBlock TextTrimming="CharacterEllipsis"
-                       Margin="4"
-                       Text="{Binding}" />
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Style="{StaticResource HeaderRowStyle}" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Style="{StaticResource HeaderTextBlockStyle}"
+                           Text="{Binding}" />
+            </Grid>
         </DataTemplate>
+
         <DataTemplate x:Key="HeaderTemplateArrowDown">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="auto" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Style="{StaticResource HeaderRowStyle}" />
+                </Grid.RowDefinitions>
+
                 <Path StrokeThickness="1"
                       Fill="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
                       Data="M 0 0 L 4 4 L 8 0 Z"
                       HorizontalAlignment="Right"
                       VerticalAlignment="Center"
                       Margin="4 0 0 0" />
+
                 <TextBlock Grid.Column="1"
-                           TextTrimming="CharacterEllipsis"
-                           VerticalAlignment="Center"
-                           Text="{Binding}"
-                           Margin="4" />
+                           Style="{StaticResource HeaderTextBlockStyle}"
+                           Text="{Binding}" />
             </Grid>
         </DataTemplate>
+
         <DataTemplate x:Key="HeaderTemplateArrowUp">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="auto" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Style="{StaticResource HeaderRowStyle}" />
+                </Grid.RowDefinitions>
+
                 <Path StrokeThickness="1"
                       Fill="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
                       Data="M 0 4 L 4 0 L 8 4 Z"
                       HorizontalAlignment="Right"
                       VerticalAlignment="Center"
                       Margin="4 0 0 0" />
+
                 <TextBlock Grid.Column="1"
-                           TextTrimming="CharacterEllipsis"
-                           VerticalAlignment="Center"
-                           Text="{Binding}"
-                           Margin="4" />
+                           Style="{StaticResource HeaderTextBlockStyle}"
+                           Text="{Binding}" />
             </Grid>
         </DataTemplate>
+
         <CollectionViewSource x:Key="CategoriesList"
                               Source="{Binding CategoriesList}" />
     </Window.Resources>
+
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Closed">
             <i:InvokeCommandAction Command="{Binding UIClosedCommand, Mode=OneTime}"
                                    CommandParameter="{Binding ElementName=MainViewWindow}" />
         </i:EventTrigger>
     </i:Interaction.Triggers>
+
     <Window.InputBindings>
         <KeyBinding Command="{Binding ClearFinishedDownloadsCommand}"
                     Key="Delete"
@@ -659,23 +696,49 @@
                                                CommandParameter="{Binding Path=SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type ListView}}}" />
                     </i:EventTrigger>
                 </i:Interaction.Triggers>
+
                 <ListView.Resources>
-                    <Style x:Key="LeftAligned"
+                    <Style x:Key="HeaderLeftAlignedStyle"
                            TargetType="{x:Type GridViewColumnHeader}">
                         <Setter Property="HorizontalContentAlignment"
                                 Value="Left" />
                     </Style>
-                    <Style x:Key="MiddleAligned"
+
+                    <Style x:Key="HeaderCenterAlignedStyle"
                            TargetType="{x:Type GridViewColumnHeader}">
                         <Setter Property="HorizontalContentAlignment"
                                 Value="Center" />
                     </Style>
-                    <Style x:Key="RightAligned"
+
+                    <Style x:Key="HeaderRightAlignedStyle"
                            TargetType="{x:Type GridViewColumnHeader}">
                         <Setter Property="HorizontalContentAlignment"
                                 Value="Right" />
                     </Style>
+
+                    <Style x:Key="DownloadsGridIconStyle"
+                           TargetType="{x:Type Image}">
+                        <Setter Property="Width"
+                                Value="16" />
+                        <Setter Property="Height"
+                                Value="16" />
+                    </Style>
+
+                    <Style x:Key="DownloadsGridRowStyle"
+                           TargetType="{x:Type RowDefinition}">
+                        <Setter Property="Height"
+                                Value="20" />
+                    </Style>
+
+                    <Style x:Key="DownloadsGridTextBlockStyle"
+                           TargetType="{x:Type TextBlock}">
+                        <Setter Property="VerticalAlignment"
+                                Value="Center" />
+                        <Setter Property="TextTrimming"
+                                Value="CharacterEllipsis" />
+                    </Style>
                 </ListView.Resources>
+
                 <ListView.ContextMenu>
                     <ContextMenu>
                         <MenuItem Header="Open"
@@ -768,16 +831,18 @@
                         </MenuItem>
                     </ContextMenu>
                 </ListView.ContextMenu>
+
                 <ListView.ItemContainerStyle>
                     <Style TargetType="{x:Type ListViewItem}">
                         <Setter Property="HorizontalContentAlignment"
                                 Value="Stretch" />
                     </Style>
                 </ListView.ItemContainerStyle>
+
                 <ListView.View>
                     <GridView x:Name="DownloadsGridView">
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
-                                        HeaderContainerStyle="{StaticResource LeftAligned}"
+                                        HeaderContainerStyle="{StaticResource HeaderLeftAlignedStyle}"
                                         Width="200"
                                         Header="Name">
                             <GridViewColumn.CellTemplate>
@@ -787,40 +852,54 @@
                                             <ColumnDefinition Width="auto" />
                                             <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
+
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Style="{StaticResource DownloadsGridRowStyle}" />
+                                        </Grid.RowDefinitions>
+
                                         <Image Source="{Binding Converter={StaticResource DownloaderIconConverter}}"
-                                               Width="16"
-                                               Height="16"
-                                               Margin="0 0 2 0"
+                                               Style="{StaticResource DownloadsGridIconStyle}"
+                                               Margin="0 0 4 0"
                                                VerticalAlignment="Center" />
+
                                         <TextBlock Grid.Column="1"
                                                    Text="{Binding Name}"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   VerticalAlignment="Center" />
+                                                   Style="{StaticResource DownloadsGridTextBlockStyle}" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
+
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
-                                        HeaderContainerStyle="{StaticResource LeftAligned}"
+                                        HeaderContainerStyle="{StaticResource HeaderLeftAlignedStyle}"
                                         Header="Type"
                                         Width="100">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Style="{StaticResource DownloadsGridRowStyle}" />
+                                        </Grid.RowDefinitions>
+
                                         <TextBlock Text="{Binding Destination, Converter={StaticResource DownloaderTypeConverter}}"
-                                                   TextTrimming="CharacterEllipsis" />
+                                                   Style="{StaticResource DownloadsGridTextBlockStyle}" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
+
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
-                                        HeaderContainerStyle="{StaticResource LeftAligned}"
+                                        HeaderContainerStyle="{StaticResource HeaderLeftAlignedStyle}"
                                         Header="Status"
                                         Width="84">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <TextBlock TextTrimming="CharacterEllipsis">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Style="{StaticResource DownloadsGridRowStyle}" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Style="{StaticResource DownloadsGridTextBlockStyle}">
                                             <TextBlock.Text>
                                                 <MultiBinding Converter="{StaticResource DownloaderStatusConverter}">
                                                     <Binding Path="DataContext.QueueProcessor"
@@ -829,67 +908,91 @@
                                                 </MultiBinding>
                                             </TextBlock.Text>
                                         </TextBlock>
+
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
+
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
-                                        HeaderContainerStyle="{StaticResource MiddleAligned}"
+                                        HeaderContainerStyle="{StaticResource HeaderCenterAlignedStyle}"
                                         Header="Progress"
                                         Width="100">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Style="{StaticResource DownloadsGridRowStyle}" />
+                                        </Grid.RowDefinitions>
+
                                         <ProgressBar x:Name="ProgressProgressBar"
                                                      VerticalAlignment="Stretch"
                                                      HorizontalAlignment="Stretch"
                                                      Minimum="0"
                                                      Maximum="100"
                                                      Value="{Binding Progress, Mode=OneWay}" />
+
                                         <TextBlock Text="{Binding Value, ElementName=ProgressProgressBar, StringFormat=\{0:0\}%}"
                                                    HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center" />
+                                                   Style="{StaticResource DownloadsGridTextBlockStyle}" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
+
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
-                                        HeaderContainerStyle="{StaticResource RightAligned}"
+                                        HeaderContainerStyle="{StaticResource HeaderRightAlignedStyle}"
                                         Header="Downloaded"
                                         Width="100">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <TextBlock TextTrimming="CharacterEllipsis"
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Style="{StaticResource DownloadsGridRowStyle}" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Style="{StaticResource DownloadsGridTextBlockStyle}"
                                                    Text="{Binding BytesDownloaded, Converter={StaticResource DownloaderSizeConverter}}"
                                                    HorizontalAlignment="Right" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
+
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
-                                        HeaderContainerStyle="{StaticResource RightAligned}"
+                                        HeaderContainerStyle="{StaticResource HeaderRightAlignedStyle}"
                                         Header="Size"
                                         Width="76">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock TextAlignment="Right"
-                                               TextTrimming="CharacterEllipsis"
-                                               Text="{Binding TotalBytesToDownload, Converter={StaticResource DownloaderSizeConverter}}" />
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Style="{StaticResource DownloadsGridRowStyle}" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock TextAlignment="Right"
+                                                   Style="{StaticResource DownloadsGridTextBlockStyle}"
+                                                   Text="{Binding TotalBytesToDownload, Converter={StaticResource DownloaderSizeConverter}}" />
+                                    </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
+
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
-                                        HeaderContainerStyle="{StaticResource MiddleAligned}"
+                                        HeaderContainerStyle="{StaticResource HeaderCenterAlignedStyle}"
                                         Header="Connections"
                                         Width="80">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <TextBlock TextTrimming="CharacterEllipsis"
-                                                   HorizontalAlignment="Center">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Style="{StaticResource DownloadsGridRowStyle}" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock HorizontalAlignment="Center">
                                             <TextBlock.Style>
-                                                <Style TargetType="{x:Type TextBlock}">
+                                                <Style TargetType="{x:Type TextBlock}"
+                                                       BasedOn="{StaticResource DownloadsGridTextBlockStyle}">
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding IsDownloading}"
                                                                      Value="False">
@@ -899,6 +1002,7 @@
                                                     </Style.Triggers>
                                                 </Style>
                                             </TextBlock.Style>
+
                                             <TextBlock.Text>
                                                 <MultiBinding StringFormat="{}{0}/{1}">
                                                     <Binding Path="Connections" />
@@ -910,14 +1014,19 @@
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
+
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
-                                        HeaderContainerStyle="{StaticResource RightAligned}"
+                                        HeaderContainerStyle="{StaticResource HeaderRightAlignedStyle}"
                                         Header="Speed"
                                         Width="76">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <TextBlock TextTrimming="CharacterEllipsis"
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Style="{StaticResource DownloadsGridRowStyle}" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Style="{StaticResource DownloadsGridTextBlockStyle}"
                                                    Text="{Binding Speed, Converter={StaticResource DownloaderSpeedConverter}}"
                                                    HorizontalAlignment="Right" />
                                     </Grid>
@@ -925,19 +1034,26 @@
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
-                                        HeaderContainerStyle="{StaticResource RightAligned}"
+                                        HeaderContainerStyle="{StaticResource HeaderRightAlignedStyle}"
                                         Header="ETA"
                                         Width="76">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock TextAlignment="Right"
-                                               TextTrimming="CharacterEllipsis"
-                                               Text="{Binding TimeRemaining, Converter={StaticResource DownloaderEtaConverter}}" />
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Style="{StaticResource DownloadsGridRowStyle}" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock TextAlignment="Right"
+                                                   Style="{StaticResource DownloadsGridTextBlockStyle}"
+                                                   Text="{Binding TimeRemaining, Converter={StaticResource DownloaderEtaConverter}}" />
+                                    </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
+
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
-                                        HeaderContainerStyle="{StaticResource LeftAligned}"
+                                        HeaderContainerStyle="{StaticResource HeaderLeftAlignedStyle}"
                                         Header="Location"
                                         Width="248">
                             <GridViewColumn.CellTemplate>
@@ -948,59 +1064,81 @@
                                             <ColumnDefinition Width="auto" />
                                             <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
+
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Style="{StaticResource DownloadsGridRowStyle}" />
+                                        </Grid.RowDefinitions>
+
                                         <Image Source="{Binding Destination, Converter={StaticResource DownloaderFolderIconConverter}}"
-                                               Width="16"
-                                               Height="16"
-                                               Margin="0 0 2 0"
+                                               Style="{StaticResource DownloadsGridIconStyle}"
+                                               Margin="0 0 4 0"
                                                VerticalAlignment="Center" />
+
                                         <TextBlock Margin="0 0 4 0"
                                                    Grid.Column="1"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   Text="{Binding Destination, Converter={StaticResource DownloaderDestinationConverter}}"
-                                                   VerticalAlignment="Center" />
+                                                   Style="{StaticResource DownloadsGridTextBlockStyle}"
+                                                   Text="{Binding Destination, Converter={StaticResource DownloaderDestinationConverter}}" />
+
                                         <TextBlock Grid.Column="2"
-                                                   TextTrimming="CharacterEllipsis"
+                                                   Style="{StaticResource DownloadsGridTextBlockStyle}"
                                                    Text="{Binding Destination, Converter={StaticResource DownloaderDestinationPathConverter}}"
-                                                   Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
-                                                   VerticalAlignment="Center" />
+                                                   Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
+
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
-                                        HeaderContainerStyle="{StaticResource LeftAligned}"
+                                        HeaderContainerStyle="{StaticResource HeaderLeftAlignedStyle}"
                                         Header="URL"
                                         Width="400">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock TextTrimming="CharacterEllipsis"
-                                               Text="{Binding Url}" />
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Style="{StaticResource DownloadsGridRowStyle}" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Style="{StaticResource DownloadsGridTextBlockStyle}"
+                                                   Text="{Binding Url}" />
+                                    </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
+
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
-                                        HeaderContainerStyle="{StaticResource RightAligned}"
+                                        HeaderContainerStyle="{StaticResource HeaderRightAlignedStyle}"
                                         Header="Created"
                                         Width="148">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <TextBlock TextTrimming="CharacterEllipsis"
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Style="{StaticResource DownloadsGridRowStyle}" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Style="{StaticResource DownloadsGridTextBlockStyle}"
                                                    Text="{Binding DateCreated, Converter={StaticResource DownloaderDateConverter}}"
                                                    TextAlignment="Right" />
                                     </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
+
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
-                                        HeaderContainerStyle="{StaticResource LeftAligned}"
+                                        HeaderContainerStyle="{StaticResource HeaderLeftAlignedStyle}"
                                         Header="HTTP Status"
                                         Width="80">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock Grid.Column="1"
-                                               TextTrimming="CharacterEllipsis"
-                                               Text="{Binding StatusCode}" />
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Style="{StaticResource DownloadsGridRowStyle}" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Style="{StaticResource DownloadsGridTextBlockStyle}"
+                                                   Text="{Binding StatusCode}" />
+                                    </Grid>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
