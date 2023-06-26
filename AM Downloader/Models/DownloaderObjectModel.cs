@@ -14,6 +14,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog;
 
 namespace AMDownloader.Models
 {
@@ -427,7 +428,7 @@ namespace AMDownloader.Models
                     RaisePropertyChanged(nameof(ConnectionLimit));
                 }
 
-                Debug.WriteLine($"\n{Name}: Total = {TotalBytesToDownload}, " +
+                Log.Debug($"\n{Name}: Total = {TotalBytesToDownload}, " +
                     $"Remaining = {TotalBytesToDownload - BytesDownloaded}, " +
                     $"Conns = {connCount}, " +
                     $"{nameof(toReadPerConn)} = {toReadPerConn}");
@@ -465,7 +466,7 @@ namespace AMDownloader.Models
 
                         connByteLength = connByteEnd - connByteStart;
 
-                        Debug.WriteLine("{0,1}{1,2}{2,24}{3,12}{4,24}{5,12}{6,24}{7,12}",
+                        Log.Debug("{0,1}{1,2}{2,24}{3,12}{4,24}{5,12}{6,24}{7,12}",
                             "#",
                             conn,
                             "Conn byte start = ",
@@ -520,7 +521,7 @@ namespace AMDownloader.Models
                         long t_BytesExpected = 0, t_BytesReceived = 0;
                         long t_TimeExpected = 0, t_TimeTaken = 0, t_Delay = 0; // ms
 
-                        Debug.WriteLine($"Conn {conn} speed limit = {speedLimit}");
+                        Log.Debug($"Conn {conn} speed limit = {speedLimit}");
 
                         Interlocked.Increment(ref _connections);
 
@@ -571,7 +572,7 @@ namespace AMDownloader.Models
 
                                     if (t_Delay > 0)
                                     {
-                                        Debug.WriteLine($"Sleeping conn {conn} for {t_Delay} ms");
+                                        Log.Debug($"Sleeping conn {conn} for {t_Delay} ms");
 
                                         await Task.Delay((int)t_Delay, _ctLinked);
                                     }
@@ -582,7 +583,7 @@ namespace AMDownloader.Models
                             }
                         }
 
-                        Debug.WriteLine($"Conn {conn} completed" +
+                        Log.Debug($"Conn {conn} completed" +
                             $"\tActual read = {new FileInfo($"{Destination}.{conn}{Constants.DownloaderSplitedPartExtension}").Length}");
 
                         Interlocked.Decrement(ref _connections);
@@ -606,7 +607,7 @@ namespace AMDownloader.Models
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"{ex.Message} ({Name})");
+                Log.Error($"{ex.Message} ({Name})");
 
                 if (!SupportsResume || BytesDownloaded == 0 || _ctCancel.IsCancellationRequested)
                 {

@@ -26,29 +26,13 @@ namespace AMDownloader.Views
     /// </summary>
     public partial class MainView : Window
     {
-        private static readonly string _appGuid = "20d3be33-cd45-4c69-b038-e95bc434e09c";
-        private static readonly Mutex _mutex = new(false, "Global\\" + _appGuid);
-        private readonly MainViewModel _mainViewModel;
         private ICollectionView _dataView = null;
         private GridViewColumnHeader _lastHeaderClicked = null;
         private ListSortDirection? _lastDirection = null;
 
         public MainView()
         {
-            _mainViewModel = new MainViewModel(ShowPrompt, ShowWindow);
-
             InitializeComponent();
-
-            DataContext = _mainViewModel;
-
-            if (!_mutex.WaitOne(0, false))
-            {
-                var name = Assembly.GetExecutingAssembly().GetName().Name;
-                MessageBox.Show(
-                    "Another instance of " + name + " is already running.",
-                    name, MessageBoxButton.OK, MessageBoxImage.Error);
-                Application.Current.Shutdown();
-            }
         }
 
         private void Window_Initialized(object sender, EventArgs e)
@@ -340,7 +324,7 @@ namespace AMDownloader.Views
             Settings.Default.SelectedColumnHeaderDirection = direction ?? ListSortDirection.Descending;
         }
 
-        private bool? ShowPrompt(
+        internal bool? ShowPrompt(
             string promptText,
             string caption,
             PromptButton button,
@@ -400,7 +384,7 @@ namespace AMDownloader.Views
             }
         }
 
-        private bool? ShowWindow(object viewModel)
+        internal bool? ShowWindow(object viewModel)
         {
             Window window = null;
             bool? result = null;
