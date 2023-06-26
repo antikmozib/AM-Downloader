@@ -37,11 +37,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: 
 
 [Files]
-Source: "{#SourcePath}\..\AM Downloader\bin\Release\net6.0-windows\publish\Setup\AM Downloader.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#SourcePath}\..\AM Downloader\bin\Release\net6.0-windows\publish\Setup\AM Downloader.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#SourcePath}\..\AM Downloader\bin\Release\net6.0-windows\publish\Setup\AM Downloader.runtimeconfig.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#SourcePath}\..\AM Downloader\bin\Release\net6.0-windows\publish\Setup\Microsoft.Xaml.Behaviors.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#SourcePath}\..\AM Downloader\bin\Release\net6.0-windows\publish\Setup\Polly.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#SourcePath}\..\AM Downloader\bin\Release\net6.0-windows\publish\Setup\*"; Excludes: "*.pdb,*.log"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
