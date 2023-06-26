@@ -4,6 +4,7 @@ using System;
 using System.Reflection;
 using System.Threading;
 using System.Windows;
+using AMDownloader.Helpers;
 using AMDownloader.ViewModels;
 using AMDownloader.Views;
 using Serilog;
@@ -30,15 +31,14 @@ namespace AMDownloader
             }
 
             string[] args = Environment.GetCommandLineArgs();
-            var logFile = "logs/app.log";
             var debugLoggerConfig = new LoggerConfiguration()
                 .MinimumLevel.Debug()
                 .WriteTo.Debug()
-                .WriteTo.File(logFile, rollingInterval: RollingInterval.Day)
+                .WriteTo.File(Paths.LogFile, rollingInterval: RollingInterval.Day)
                 .CreateLogger();
             var releaseLoggerConfig = new LoggerConfiguration()
                 .MinimumLevel.Error()
-                .WriteTo.File(logFile, rollingInterval: RollingInterval.Day)
+                .WriteTo.File(Paths.LogFile, rollingInterval: RollingInterval.Day)
                 .CreateLogger();
 
 #if DEBUG

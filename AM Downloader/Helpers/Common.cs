@@ -13,13 +13,13 @@ namespace AMDownloader.Helpers
     internal static class Constants
     {
         private const int _requestThrottlerInterval = 6000; // 1 min
-        private const string _downloaderSplitedPartExtension = ".AMDownload";
+        private const string _tempDownloadExtension = ".AMDownload";
         private const int _parallelDownloadsLimit = 10;
         private const int _parallelConnPerDownloadLimit = 5;
         private const string _updateServer = @"https://mozib.io/downloads/update.php";
 
         public static int RequestThrottlerInterval => _requestThrottlerInterval;
-        public static string DownloaderSplitedPartExtension => _downloaderSplitedPartExtension;
+        public static string TempDownloadExtension => _tempDownloadExtension;
         public static int ParallelDownloadsLimit => _parallelDownloadsLimit;
         public static int ParallelConnPerDownloadLimit => _parallelConnPerDownloadLimit;
         public static string UpdateServer => _updateServer;
@@ -43,6 +43,7 @@ namespace AMDownloader.Helpers
         public static string SavedLocationsFile => Path.Combine(LocalAppDataFolder, "SavedLocations.xml");
         public static string UIColumnOrderFile => Path.Combine(LocalAppDataFolder, "UIColumnOrder.xml");
         public static string UserDownloadsFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+        public static string LogFile => "logs/app.log";
     }
 
     internal static class Functions
@@ -54,7 +55,7 @@ namespace AMDownloader.Helpers
             string result = dirName + Path.DirectorySeparatorChar + fileName;
             int i = 0;
 
-            while (File.Exists(result) || File.Exists(result + Constants.DownloaderSplitedPartExtension))
+            while (File.Exists(result) || File.Exists(result + Constants.TempDownloadExtension))
             {
                 result = Path.Combine(dirName,
                     $"{Path.GetFileNameWithoutExtension(fileName)} ({++i}){Path.GetExtension(fileName)}");
@@ -129,6 +130,7 @@ namespace AMDownloader.Helpers
                 }
                 catch
                 {
+
                 }
             }
         }
