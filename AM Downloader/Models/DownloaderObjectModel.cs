@@ -15,6 +15,7 @@ using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using Serilog;
+using System.Linq;
 
 namespace AMDownloader.Models
 {
@@ -356,10 +357,7 @@ namespace AMDownloader.Models
 
         public bool TempFilesExist()
         {
-            DirectoryInfo d = new DirectoryInfo(Path.GetDirectoryName(Destination));
-            FileInfo[] files = d.GetFiles($"{Name}.*{Constants.DownloaderSplitedPartExtension}");
-
-            return files.Length > 0;
+            return GetTempFiles().Length > 0;
         }
 
         #endregion
@@ -440,7 +438,7 @@ namespace AMDownloader.Models
 
                     var t = Task.Run(async () =>
                     {
-                        var connFile = $"{Destination}.{conn}{Constants.DownloaderSplitedPartExtension}";
+                        var connFile = $"{Destination}.{conn}{Constants.TempDownloadExtension}";
                         var connFileInfo = new FileInfo(connFile);
 
                         long connByteStart = (toReadPerConn + 1) * conn;
@@ -584,7 +582,7 @@ namespace AMDownloader.Models
                         }
 
                         Log.Debug($"Conn {conn} completed" +
-                            $"\tActual read = {new FileInfo($"{Destination}.{conn}{Constants.DownloaderSplitedPartExtension}").Length}");
+                            $"\tActual read = {new FileInfo($"{Destination}.{conn}{Constants.TempDownloadExtension}").Length}");
 
                         Interlocked.Decrement(ref _connections);
                     });
@@ -596,14 +594,7 @@ namespace AMDownloader.Models
 
                 // download complete; merge temp files
 
-                List<string> tempFiles = new();
-
-                for (int i = 0; i < connCount; i++)
-                {
-                    tempFiles.Add($"{Destination}.{i}{Constants.DownloaderSplitedPartExtension}");
-                }
-
-                MergeFiles(tempFiles, Destination);
+                MergeFiles(GetTempFiles().Select(o => o.FullName), Destination);
             }
             catch (Exception ex)
             {
@@ -616,81 +607,6 @@ namespace AMDownloader.Models
                 }
 
                 throw new Exception(null, ex);
-            }
-        }
-
-        /// <summary>
-        /// Merges the <paramref name="sources"/> into the <paramref name="target"/>.
-        /// If the <paramref name="target"/> already exists, it is overwritten.
-        /// </summary>
-        /// <param name="sources">The list of files to merge.</param>
-        /// <param name="target">The output of the merging operation.</param>
-        /// <param name="deleteSource">If <see langword="true"/>, the sources
-        /// will be deleted once merged.</param>
-        private void MergeFiles(List<string> sources, string target, bool deleteSource = true)
-        {
-            using var writeStream = new FileStream(target, FileMode.OpenOrCreate, FileAccess.Write);
-            using var writer = new BinaryWriter(writeStream);
-
-            foreach (var source in sources)
-            {
-                if (!File.Exists(source))
-                {
-                    continue;
-                }
-
-                var readStream = new FileStream(source, FileMode.Open);
-                var reader = new BinaryReader(readStream);
-
-                int read;
-                var buffer = new byte[4096];
-
-                while ((read = reader.Read(buffer, 0, buffer.Length)) > 0)
-                {
-                    var data = new byte[read];
-
-                    Array.Copy(buffer, 0, data, 0, read);
-                    writer.Write(data, 0, read);
-                }
-
-                reader.Dispose();
-                readStream.Dispose();
-
-                if (deleteSource)
-                {
-                    File.Delete(source);
-                }
-            }
-        }
-
-        private long GetTempFilesLength()
-        {
-            long length = 0;
-
-            DirectoryInfo d = new DirectoryInfo(Path.GetDirectoryName(Destination));
-            FileInfo[] files = d.GetFiles($"{Name}.*{Constants.DownloaderSplitedPartExtension}");
-
-            foreach (var f in files)
-            {
-                length += f.Length;
-            }
-
-            return length;
-        }
-
-        private void CleanupTempFiles()
-        {
-            if (TempFilesExist())
-            {
-                DirectoryInfo d = new DirectoryInfo(Path.GetDirectoryName(Destination));
-                FileInfo[] files = d.GetFiles($"{Name}.*{Constants.DownloaderSplitedPartExtension}");
-
-                foreach (var f in files)
-                {
-                    f.Delete();
-                }
-
-                BytesDownloaded = 0;
             }
         }
 
@@ -742,6 +658,85 @@ namespace AMDownloader.Models
                 RaisePropertyChanged(nameof(Speed));
                 RaisePropertyChanged(nameof(Connections));
             });
+        }
+
+        /// <summary>
+        /// Merges the <paramref name="sources"/> into the <paramref name="target"/>.
+        /// If the <paramref name="target"/> already exists, it is overwritten.
+        /// </summary>
+        /// <param name="sources">The list of files to merge.</param>
+        /// <param name="target">The output of the merging operation.</param>
+        /// <param name="deleteSource">If <see langword="true"/>, the sources
+        /// will be deleted once merged.</param>
+        private void MergeFiles(IEnumerable<string> sources, string target, bool deleteSource = true)
+        {
+            using var writeStream = new FileStream(target, FileMode.OpenOrCreate, FileAccess.Write);
+            using var writer = new BinaryWriter(writeStream);
+
+            foreach (var source in sources)
+            {
+                if (!File.Exists(source))
+                {
+                    continue;
+                }
+
+                var readStream = new FileStream(source, FileMode.Open);
+                var reader = new BinaryReader(readStream);
+
+                int read;
+                var buffer = new byte[4096];
+
+                while ((read = reader.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    var data = new byte[read];
+
+                    Array.Copy(buffer, 0, data, 0, read);
+                    writer.Write(data, 0, read);
+                }
+
+                reader.Dispose();
+                readStream.Dispose();
+
+                if (deleteSource)
+                {
+                    File.Delete(source);
+                }
+            }
+        }
+
+        private FileInfo[] GetTempFiles()
+        {
+            DirectoryInfo d = new(Path.GetDirectoryName(Destination));
+            return d.GetFiles($"{Name}.*{Constants.TempDownloadExtension}");
+        }
+
+        /// <summary>
+        /// Gets the sum of the lengths of all the temp files (in bytes).
+        /// </summary>
+        /// <returns></returns>
+        private long GetTempFilesLength()
+        {
+            long length = 0;
+
+            foreach (var f in GetTempFiles())
+            {
+                length += f.Length;
+            }
+
+            return length;
+        }
+
+        private void CleanupTempFiles()
+        {
+            if (TempFilesExist())
+            {
+                foreach (var f in GetTempFiles())
+                {
+                    f.Delete();
+                }
+
+                BytesDownloaded = 0;
+            }
         }
 
         #endregion
