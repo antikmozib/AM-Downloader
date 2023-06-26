@@ -449,10 +449,10 @@ namespace AMDownloader.ViewModels
 
         private void Add(object obj)
         {
-            AddDownloadViewModel vm = new(_showWindow);
+            AddDownloadViewModel addDownloadViewModel = new(_showWindow);
             DownloaderObjectModel[] itemsAdded = null;
 
-            if (_showWindow.Invoke(vm) == true)
+            if (_showWindow.Invoke(addDownloadViewModel) == true)
             {
                 _ctsUpdatingList = new CancellationTokenSource();
                 RaisePropertyChanged(nameof(IsBackgroundWorking));
@@ -461,7 +461,10 @@ namespace AMDownloader.ViewModels
 
                 Task.Run(async () =>
                 {
-                    itemsAdded = await AddItemsAsync(vm.GeneratedUrls, vm.SaveToFolder, vm.Enqueue, ct);
+                    itemsAdded = await AddItemsAsync(addDownloadViewModel.GeneratedUrls,
+                        addDownloadViewModel.SaveToFolder,
+                        addDownloadViewModel.Enqueue,
+                        ct);
                 }
                 ).ContinueWith(async t =>
                 {
@@ -470,9 +473,9 @@ namespace AMDownloader.ViewModels
 
                     RefreshCollectionView();
 
-                    if (vm.StartDownload)
+                    if (addDownloadViewModel.StartDownload)
                     {
-                        await StartDownloadAsync(vm.Enqueue, itemsAdded);
+                        await StartDownloadAsync(addDownloadViewModel.Enqueue, itemsAdded);
                     }
                 });
             }
@@ -651,11 +654,11 @@ namespace AMDownloader.ViewModels
 
         private void ShowSettings(object obj)
         {
-            var vm = new SettingsViewModel();
+            var settingsViewModel = new SettingsViewModel();
 
-            if (_showWindow.Invoke(vm) == true)
+            if (_showWindow.Invoke(settingsViewModel) == true)
             {
-                if (vm.ResetSettingsOnClose)
+                if (settingsViewModel.ResetSettingsOnClose)
                 {
                     _resetAllSettingsOnClose = true;
                 }

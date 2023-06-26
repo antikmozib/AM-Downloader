@@ -36,7 +36,7 @@
             <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
         <DockPanel>
-            <TextBlock Text="Enter URL or pattern to add. You can enter multiple entries on separate lines" />
+            <TextBlock Text="Enter the URL or pattern to add. You can enter multiple entries on separate lines." />
             <CheckBox DockPanel.Dock="Right"
                       x:Name="cbMonitorClipboard"
                       Content="Monitor clipboard"
