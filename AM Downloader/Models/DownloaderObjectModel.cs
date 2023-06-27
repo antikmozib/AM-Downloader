@@ -28,6 +28,8 @@ namespace AMDownloader.Models
     {
         #region Fields
 
+        private const int BufferLength = 4096;
+
         private readonly HttpClient _httpClient;
         private readonly IProgress<long> _reportProgressBytes;
         private int _connections;
@@ -422,9 +424,9 @@ namespace AMDownloader.Models
                     {
                         connCount = 1;
                     }
-                    else if (TotalBytesToDownload < connCount)
+                    else if (TotalBytesToDownload < (BufferLength * connCount))
                     {
-                        connCount = (int)TotalBytesToDownload;
+                        connCount = (int)(TotalBytesToDownload / (double)BufferLength);
                     }
 
                     // fewer than the requested number of conns can be opened due
@@ -519,7 +521,7 @@ namespace AMDownloader.Models
 
                         long readThisConn = 0;
                         int read = 0;
-                        var buffer = new byte[4096];
+                        var buffer = new byte[BufferLength];
 
                         // vars for speed throttler
                         Stopwatch t_Stopwatch = new();
@@ -689,7 +691,7 @@ namespace AMDownloader.Models
                 var reader = new BinaryReader(readStream);
 
                 int read;
-                var buffer = new byte[4096];
+                var buffer = new byte[BufferLength];
 
                 while ((read = reader.Read(buffer, 0, buffer.Length)) > 0)
                 {
