@@ -417,25 +417,24 @@ namespace AMDownloader.Models
                 List<Task> connTasks = new();
                 int connCount = ConnLimit;
 
-                // if the file doesn't support resume or is too small, open just 1 conn
-                if (!SupportsResume || TotalBytesToDownload < connCount)
+                // if the file doesn't support resume or is too small, override ConnLimit
+                if (!SupportsResume)
                 {
-                    if (!SupportsResume)
-                    {
-                        connCount = 1;
-                    }
-                    else if (TotalBytesToDownload < (BufferLength * connCount))
-                    {
-                        connCount = (int)(TotalBytesToDownload / (double)BufferLength);
-                    }
+                    connCount = 1;
+                }
+                else if (TotalBytesToDownload < (BufferLength * connCount))
+                {
+                    connCount = Math.Max((int)(TotalBytesToDownload / (double)BufferLength), 1);
+                }
 
-                    // fewer than the requested number of conns can be opened due
-                    // to the nature of the url; update conn limit to reflect this
+                if (connCount != ConnLimit)
+                {
+                    // if ConnLimit was overridden, update ConnLimit to reflect this
                     ConnLimit = connCount;
                     RaisePropertyChanged(nameof(ConnLimit));
                 }
 
-                Log.Debug($"\n{Name}: " +
+                Log.Debug($"{Name}: " +
                     $"Total = {TotalBytesToDownload}, " +
                     $"Remaining = {TotalBytesToDownload - BytesDownloaded}, " +
                     $"Conns = {connCount}");
