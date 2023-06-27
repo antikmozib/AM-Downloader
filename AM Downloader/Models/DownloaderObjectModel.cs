@@ -232,7 +232,6 @@ namespace AMDownloader.Models
 
                     // for new downloads, we can reset the number of conns allowed
                     ConnLimit = Settings.Default.MaxParallelConnPerDownload;
-
                     RaisePropertyChanged(nameof(ConnLimit));
                 }
 
@@ -314,6 +313,8 @@ namespace AMDownloader.Models
 
         public void Cancel()
         {
+            bool cleanup = false;
+
             try
             {
                 if (_ctsCancel != null)
@@ -325,14 +326,7 @@ namespace AMDownloader.Models
                     // cancel a download which entered
                     // paused state after being restored
 
-                    CleanupTempFiles();
-
-                    BytesDownloaded = 0;
-                    Status = DownloadStatus.Ready;
-
-                    RaisePropertyChanged(nameof(BytesDownloaded));
-                    RaisePropertyChanged(nameof(Progress));
-                    RaisePropertyChanged(nameof(Status));
+                    cleanup = true;
                 }
             }
             catch (ObjectDisposedException)
@@ -340,6 +334,11 @@ namespace AMDownloader.Models
                 // cancel a download which entered
                 // paused state after being started
 
+                cleanup = true;
+            }
+
+            if (cleanup)
+            {
                 CleanupTempFiles();
 
                 BytesDownloaded = 0;
@@ -401,7 +400,7 @@ namespace AMDownloader.Models
                     StatusCode = response.StatusCode;
                     if (StatusCode != HttpStatusCode.OK && StatusCode != HttpStatusCode.PartialContent)
                     {
-                        throw new AMDownloaderUrlException(Url);
+                        throw new AMDownloaderUrlException($"The URL returned an invalid HttpStatusCode. ({StatusCode})");
                     }
 
                     // get the size of the download
@@ -604,7 +603,7 @@ namespace AMDownloader.Models
             }
             catch (Exception ex)
             {
-                Log.Error($"{ex.Message} ({Name})");
+                Log.Error($"{ex.GetType().Name}: {ex.Message} ({Name})");
 
                 if (!SupportsResume || BytesDownloaded == 0 || _ctCancel.IsCancellationRequested)
                 {

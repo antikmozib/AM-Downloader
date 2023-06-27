@@ -43,7 +43,7 @@ namespace AMDownloader.ViewModels
     internal class MainViewModel : INotifyPropertyChanged, IClosing
     {
         #region Fields
-        
+
         private readonly HttpClient _client;
         private readonly IProgress<long> _progressReporter;
         private readonly ClipboardObserver _clipboardService;
@@ -838,7 +838,7 @@ namespace AMDownloader.ViewModels
             {
                 var unPauseableDownloads = from item
                                            in DownloadItemsCollection
-                                           where item.IsDownloading && !item.SupportsResume
+                                           where item.IsDownloading && !item.SupportsResume && item.BytesDownloaded > 0
                                            select item;
 
                 if (unPauseableDownloads.Any())
