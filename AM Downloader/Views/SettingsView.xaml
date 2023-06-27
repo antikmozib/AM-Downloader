@@ -51,7 +51,7 @@
                    Opacity="0.5" />
 
         <StackPanel Style="{StaticResource StackPanelStyle}">
-            <Label Content="Speed limit per download (0 = Unlimited):" />
+            <Label Content="Limit speed per download (0 = Unlimited):" />
             <TextBox Text="{Binding Path=MaxDownloadSpeed, Converter={StaticResource SettingsSpeedConverter}}"
                      Style="{StaticResource InputBoxStyle}" />
             <Label Content="KB/s" />
@@ -93,20 +93,20 @@
         </CheckBox>
 
         <Label Content="*Application restart required"
-               Margin="0 20 0 4" />
+               Margin="0 16 0 4" />
 
         <StackPanel HorizontalAlignment="Right"
                     Orientation="Horizontal"
                     Grid.ColumnSpan="3">
             <Button x:Name="btnOK"
                     Content="_OK"
-                    Margin="0 0 4 0"
+                    Margin="0 0 8 0"
                     IsDefault="True"
                     Command="{Binding SaveCommand}"
                     Click="btnOK_Click" />
             <Button x:Name="btnCancel"
                     Content="_Cancel"
-                    Margin="0 0 4 0"
+                    Margin="0 0 8 0"
                     IsCancel="True"
                     Command="{Binding CancelCommand}"
                     Click="btnCancel_Click" />

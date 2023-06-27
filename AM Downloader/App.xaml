@@ -8,14 +8,17 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/Styles/Style.xaml" />
             </ResourceDictionary.MergedDictionaries>
+            
             <FontFamily x:Key="FontAwesomeRegular">/AM Downloader;component/Resources/Fonts/fontawesomeregular.otf#Font Awesome 5 Free Regular</FontFamily>
             <FontFamily x:Key="FontAwesomeSolid">/AM Downloader;component/Resources/Fonts/fontawesomesolid.otf#Font Awesome 5 Free Solid</FontFamily>
+            
             <Style TargetType="Button">
                 <Setter Property="Height"
                         Value="25" />
                 <Setter Property="Width"
                         Value="80" />
             </Style>
+            
             <Style TargetType="MenuItem">
                 <Style.Resources>
                     <Style TargetType="Frame">
@@ -29,6 +32,7 @@
                     </Style>
                 </Style.Resources>
             </Style>
+            
             <!--<DataTemplate DataType="{x:Type local:AddDownloadViewModel}">
                 <local:AddDownloadWindow />
             </DataTemplate>-->

@@ -67,7 +67,7 @@
                     Content="Browse"
                     Click="btnBrowse_Click" />
             <ComboBox x:Name="cboDestination"
-                      Margin="0 0 4 0"
+                      Margin="0 0 8 0"
                       Width="auto"
                       HorizontalAlignment="Stretch"
                       VerticalContentAlignment="Center"
@@ -89,13 +89,13 @@
                       VerticalAlignment="Center"
                       Margin="0 0 16 0" />
             <Button x:Name="btnAdd"
-                    Margin="0 0 4 0"
+                    Margin="0 0 8 0"
                     Content="Add"
                     Command="{Binding AddCommand}"
                     IsDefault="True"
                     Click="btnAdd_Click" />
             <Button x:Name="btnCancel"
-                    Margin="0 0 4 0"
+                    Margin="0 0 8 0"
                     Content="Cancel"
                     IsCancel="True" />
             <Button Command="{Binding PreviewCommand}"

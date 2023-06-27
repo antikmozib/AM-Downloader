@@ -25,7 +25,7 @@
         </Grid.RowDefinitions>
 
         <TextBlock Text="{Binding Description}"
-                   d:Text="Description..."/>
+                   d:Text="Description..." />
 
         <ListBox ItemsSource="{Binding ListViewerItems}"
                  Name="ItemsListBox"
