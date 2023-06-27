@@ -459,7 +459,7 @@
                 </StatusBarItem>
                 <StatusBarItem Grid.Column="1"
                                Visibility="{Binding Progress, Converter={StaticResource ProgressBarVisibilityConverter}}"
-                               Margin="20 0 0 0">
+                               Margin="16 0 0 0">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
@@ -476,7 +476,7 @@
                                      Width="100" />
                     </Grid>
                 </StatusBarItem>
-                <StatusBarItem Margin="20 0 0 0"
+                <StatusBarItem Margin="16 0 0 0"
                                Grid.Column="6"
                                Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=SpeedTextBlock}"
                                HorizontalAlignment="Right">
@@ -491,7 +491,7 @@
                                    ToolTip="Current data transfer rate" />
                     </TextBlock>
                 </StatusBarItem>
-                <StatusBarItem Margin="20 0 0 0"
+                <StatusBarItem Margin="16 0 0 0"
                                Grid.Column="7"
                                Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=BytesDownloadedTextBlock}">
                     <TextBlock>
@@ -1006,7 +1006,7 @@
                                             <TextBlock.Text>
                                                 <MultiBinding StringFormat="{}{0}/{1}">
                                                     <Binding Path="Connections" />
-                                                    <Binding Path="ConnectionLimit" />
+                                                    <Binding Path="ConnLimit" />
                                                 </MultiBinding>
                                             </TextBlock.Text>
                                         </TextBlock>
