@@ -80,7 +80,7 @@ namespace AMDownloader.Models
         /// Once the download has started, this value cannot be changed without
         /// canceling the download first.
         /// </summary>
-        public int ConnectionLimit { get; private set; }
+        public int ConnLimit { get; private set; }
         public HttpStatusCode? StatusCode { get; private set; }
         public DownloadStatus Status { get; private set; }
         /// <summary>
@@ -133,7 +133,7 @@ namespace AMDownloader.Models
             string destination,
             DateTime dateCreated,
             long? bytesToDownload,
-            int connectionLimit,
+            int connLimit,
             HttpStatusCode? httpStatusCode,
             DownloadStatus status,
             EventHandler downloadCreated,
@@ -142,6 +142,8 @@ namespace AMDownloader.Models
             PropertyChangedEventHandler propertyChanged,
             IProgress<long> bytesReporter)
         {
+            var destFileInfo = new FileInfo(destination);
+
             _httpClient = httpClient;
             _reportProgressBytes = bytesReporter;
             _connections = 0;
@@ -154,28 +156,29 @@ namespace AMDownloader.Models
             BytesDownloadedThisSession = 0;
             TimeRemaining = null;
             Speed = null;
-            ConnectionLimit = connectionLimit;
+            ConnLimit = connLimit;
             StatusCode = httpStatusCode;
             Status = status;
 
             // are we restoring an existing download?
-            if ((IsPaused || IsErrored) && TempFilesExist() && !File.Exists(destination))
+            if ((IsPaused || IsErrored)
+                && TempFilesExist()
+                && !File.Exists(destination))
             {
                 // paused or interrupted
                 BytesDownloaded = GetTempFilesLength();
             }
-            else if (IsCompleted && !TempFilesExist() && File.Exists(destination))
+            else if (IsCompleted
+                && !TempFilesExist()
+                && File.Exists(destination)
+                && destFileInfo.Length == TotalBytesToDownload)
             {
                 // finished
-
-                // set downloaded bytes to total bytes as the size is dictated by the file system
-                BytesDownloaded = TotalBytesToDownload ?? new FileInfo(destination).Length;
+                BytesDownloaded = new FileInfo(destination).Length;
             }
             else
             {
                 // new or errored download
-
-                BytesDownloaded = 0;
 
                 // if we have any status other than Ready or Errored at this point
                 // it means there has been an error while restoring, e.g. a Paused or
@@ -214,8 +217,8 @@ namespace AMDownloader.Models
             _ctLinked = _ctsLinked.Token;
 
             BytesDownloadedThisSession = 0;
-
             Status = DownloadStatus.Downloading;
+
             RaisePropertyChanged(nameof(Status));
             RaiseEvent(DownloadStarted);
 
@@ -227,39 +230,35 @@ namespace AMDownloader.Models
 
                     Directory.CreateDirectory(Path.GetDirectoryName(Destination));
 
-                    if (TempFilesExist())
-                    {
-                        CleanupTempFiles();
-                    }
-
                     // for new downloads, we can reset the number of conns allowed
-                    ConnectionLimit = Settings.Default.MaxParallelConnPerDownload;
-                    RaisePropertyChanged(nameof(ConnectionLimit));
-                }
-                else
-                {
-                    // resuming a paused download
+                    ConnLimit = Settings.Default.MaxParallelConnPerDownload;
 
-                    // re-read the temp file size because this is the
-                    // actual point we'll be resuming from as the size
-                    // is dictated by the file system
-                    BytesDownloaded = GetTempFilesLength();
+                    RaisePropertyChanged(nameof(ConnLimit));
                 }
 
                 await DownloadAsync();
 
+                // update sizes to reflect actual size on disk
+                BytesDownloaded = new FileInfo(Destination).Length;
                 TotalBytesToDownload = BytesDownloaded;
                 Status = DownloadStatus.Finished;
 
                 RaisePropertyChanged(nameof(TotalBytesToDownload));
-                RaisePropertyChanged(nameof(Progress));
             }
             catch
             {
+                if (TempFilesExist())
+                {
+                    BytesDownloaded = GetTempFilesLength();
+                }
+                else
+                {
+                    BytesDownloaded = 0;
+                }
+
                 if (_ctLinked.IsCancellationRequested)
                 {
                     // interrupted by user
-
                     if (_ctPause.IsCancellationRequested && SupportsResume)
                     {
                         Status = DownloadStatus.Paused;
@@ -267,15 +266,12 @@ namespace AMDownloader.Models
                     else
                     {
                         Status = DownloadStatus.Ready;
-                        RaisePropertyChanged(nameof(BytesDownloaded));
-                        RaisePropertyChanged(nameof(Progress));
                     }
                 }
                 else
                 {
                     // interrupted due an exception not related to user cancellation
                     // e.g. no connection, invalid url
-
                     Status = DownloadStatus.Errored;
                 }
             }
@@ -288,6 +284,8 @@ namespace AMDownloader.Models
             _ctCancel = default;
             _tcs.SetResult();
 
+            RaisePropertyChanged(nameof(BytesDownloaded));
+            RaisePropertyChanged(nameof(Progress));
             RaisePropertyChanged(nameof(Status));
             RaiseEvent(DownloadStopped);
         }
@@ -329,7 +327,11 @@ namespace AMDownloader.Models
 
                     CleanupTempFiles();
 
+                    BytesDownloaded = 0;
                     Status = DownloadStatus.Ready;
+
+                    RaisePropertyChanged(nameof(BytesDownloaded));
+                    RaisePropertyChanged(nameof(Progress));
                     RaisePropertyChanged(nameof(Status));
                 }
             }
@@ -340,7 +342,11 @@ namespace AMDownloader.Models
 
                 CleanupTempFiles();
 
+                BytesDownloaded = 0;
                 Status = DownloadStatus.Ready;
+
+                RaisePropertyChanged(nameof(BytesDownloaded));
+                RaisePropertyChanged(nameof(Progress));
                 RaisePropertyChanged(nameof(Status));
             }
         }
@@ -376,7 +382,6 @@ namespace AMDownloader.Models
 
         private async Task DownloadAsync()
         {
-            const int bufferLength = 4096;
             IAsyncPolicy timeoutPolicy = Policy.TimeoutAsync(_httpClient.Timeout);
             // reports the lifetime number of bytes
             IProgress<int> progressReporter = new Progress<int>((value) =>
@@ -400,12 +405,8 @@ namespace AMDownloader.Models
                     }
 
                     // get the size of the download
-                    var contentLength = response.Content.Headers.ContentLength;
-                    if (contentLength != null && contentLength > 0)
-                    {
-                        TotalBytesToDownload = contentLength;
-                        RaisePropertyChanged(nameof(TotalBytesToDownload));
-                    }
+                    TotalBytesToDownload = response.Content.Headers.ContentLength;
+                    RaisePropertyChanged(nameof(TotalBytesToDownload));
                 }
 
                 StartMeasuringStats();
@@ -413,23 +414,30 @@ namespace AMDownloader.Models
                 // setup the connections
 
                 List<Task> connTasks = new();
-                int connCount = ConnectionLimit;
-                long toReadPerConn = (TotalBytesToDownload ?? 0) / connCount;
+                int connCount = ConnLimit;
 
                 // if the file doesn't support resume or is too small, open just 1 conn
-                if (!SupportsResume || TotalBytesToDownload < (bufferLength * connCount))
+                if (!SupportsResume || TotalBytesToDownload < connCount)
                 {
-                    connCount = 1;
+                    if (!SupportsResume)
+                    {
+                        connCount = 1;
+                    }
+                    else if (TotalBytesToDownload < connCount)
+                    {
+                        connCount = (int)TotalBytesToDownload;
+                    }
 
-                    // update the conn limit so that it's reflected in the UI
-                    ConnectionLimit = connCount;
-                    RaisePropertyChanged(nameof(ConnectionLimit));
+                    // fewer than the requested number of conns can be opened due
+                    // to the nature of the url; update conn limit to reflect this
+                    ConnLimit = connCount;
+                    RaisePropertyChanged(nameof(ConnLimit));
                 }
 
-                Log.Debug($"\n{Name}: Total = {TotalBytesToDownload}, " +
+                Log.Debug($"\n{Name}: " +
+                    $"Total = {TotalBytesToDownload}, " +
                     $"Remaining = {TotalBytesToDownload - BytesDownloaded}, " +
-                    $"Conns = {connCount}, " +
-                    $"{nameof(toReadPerConn)} = {toReadPerConn}");
+                    $"Conns = {connCount}");
 
                 for (int i = 0; i < connCount; i++)
                 {
@@ -439,50 +447,7 @@ namespace AMDownloader.Models
                     var t = Task.Run(async () =>
                     {
                         var connFile = $"{Destination}.{conn}{Constants.TempDownloadExtension}";
-                        var connFileInfo = new FileInfo(connFile);
-
-                        long connByteStart = (toReadPerConn + 1) * conn;
-                        // if this is the last conn, end where the file ends irrespective of toReadPerConn
-                        long connByteEnd = conn == connCount - 1 ? (TotalBytesToDownload ?? 0) : connByteStart + toReadPerConn;
-                        long connByteLength;
-
-                        if (File.Exists(connFile))
-                        {
-                            if (SupportsResume && connFileInfo.Length > 0)
-                            {
-                                // if resuming a paused download, start the connection from the prev point,
-                                // which is determined from the length of the existing conn file
-                                connByteStart = (conn * (toReadPerConn + 1)) + connFileInfo.Length;
-                            }
-                            else
-                            {
-                                // if the download doesn't support resume, simply delete any existing conn
-                                // file and start from the theoretical conn start point
-                                File.Delete(connFile);
-                            }
-                        }
-
-                        connByteLength = connByteEnd - connByteStart;
-
-                        Log.Debug("{0,1}{1,2}{2,24}{3,12}{4,24}{5,12}{6,24}{7,12}",
-                            "#",
-                            conn,
-                            "Conn byte start = ",
-                            connByteStart,
-                            "Conn byte end = ",
-                            connByteEnd,
-                            "Conn byte length = ",
-                            connByteLength);
-
-                        // conn already completed its allocated bytes;
-                        // the check must be for values less than 0 as
-                        // downloads which don't support resume will
-                        // have a connByteLength of 0 but we still want
-                        // them to go ahead
-                        if (connByteLength < 0)
-                        {
-                            return;
-                        }
+                        long connLength = 0;
 
                         using var connRequest = new HttpRequestMessage()
                         {
@@ -492,7 +457,51 @@ namespace AMDownloader.Models
 
                         if (SupportsResume)
                         {
-                            connRequest.Headers.Range = new RangeHeaderValue(connByteStart, connByteEnd);
+                            var connFileInfo = new FileInfo(connFile);
+                            long connStart = (TotalBytesToDownload ?? 0) / connCount * conn;
+                            // if this is the last conn, read till the end of the file
+                            long connEnd = conn == connCount - 1
+                                ? (TotalBytesToDownload ?? 0)
+                                : (TotalBytesToDownload ?? 0) / connCount * (conn + 1);
+
+                            if (File.Exists(connFile))
+                            {
+                                if (connFileInfo.Length > 0)
+                                {
+                                    // if resuming a paused download, add the bytes already downloaded
+                                    // which is determined from the length of the existing conn file
+                                    connStart += connFileInfo.Length;
+                                }
+                            }
+
+                            connLength = connEnd - connStart;
+
+                            Log.Debug("{0,1}{1,2}{2,12}{3,12}{4,12}{5,12}{6,12}{7,12}",
+                                "Conn = ",
+                                conn,
+                                "Start = ",
+                                connStart,
+                                "End = ",
+                                connEnd,
+                                "Length = ",
+                                connLength);
+
+                            // conn already completed its allocated bytes
+                            if (connLength <= 0)
+                            {
+                                Log.Debug($"Conn {conn} already completed.");
+
+                                return;
+                            }
+
+                            connRequest.Headers.Range = new RangeHeaderValue(connStart, connEnd - 1);
+                        }
+                        else
+                        {
+                            // if the download doesn't support resume,
+                            // simply delete any existing conn file and
+                            // start from the beginning
+                            File.Delete(connFile);
                         }
 
                         using var connResponse = await _httpClient.SendAsync(
@@ -511,20 +520,19 @@ namespace AMDownloader.Models
 
                         long readThisConn = 0;
                         int read = 0;
-                        var buffer = new byte[bufferLength];
+                        var buffer = new byte[4096];
 
                         // vars for speed throttler
                         Stopwatch t_Stopwatch = new();
-                        long speedLimit = Settings.Default.MaxDownloadSpeed / connCount; // B/s
+                        long connSpeedLimit = Settings.Default.MaxDownloadSpeed / connCount; // B/s
                         long t_BytesExpected = 0, t_BytesReceived = 0;
                         long t_TimeExpected = 0, t_TimeTaken = 0, t_Delay = 0; // ms
 
-                        Log.Debug($"Conn {conn} speed limit = {speedLimit}");
+                        Log.Debug($"Conn {conn} speed limit = {connSpeedLimit}");
 
                         Interlocked.Increment(ref _connections);
 
                         // start downloading
-
                         while (true)
                         {
                             t_Stopwatch.Start();
@@ -549,7 +557,7 @@ namespace AMDownloader.Models
                             progressReporter.Report(read);
 
                             // reached the end of this conn's allocated bytes
-                            if (SupportsResume && readThisConn >= connByteLength)
+                            if (SupportsResume && readThisConn >= connLength)
                             {
                                 break;
                             }
@@ -559,10 +567,10 @@ namespace AMDownloader.Models
                             t_BytesReceived += read;
                             t_TimeTaken = t_Stopwatch.ElapsedMilliseconds;
 
-                            if (speedLimit > 0 && t_TimeTaken > 0)
+                            if (connSpeedLimit > 0 && t_TimeTaken > 0)
                             {
-                                t_BytesExpected = (long)((double)speedLimit / 1000 * t_TimeTaken);
-                                t_TimeExpected = (long)(1000 / (double)speedLimit * t_BytesReceived);
+                                t_BytesExpected = (long)((double)connSpeedLimit / 1000 * t_TimeTaken);
+                                t_TimeExpected = (long)(1000 / (double)connSpeedLimit * t_BytesReceived);
 
                                 if (t_BytesReceived > t_BytesExpected || t_TimeTaken < t_TimeExpected)
                                 {
@@ -570,7 +578,7 @@ namespace AMDownloader.Models
 
                                     if (t_Delay > 0)
                                     {
-                                        Log.Debug($"Sleeping conn {conn} for {t_Delay} ms");
+                                        Log.Debug($"Conn {conn} sleeping for {t_Delay} ms");
 
                                         await Task.Delay((int)t_Delay, _ctLinked);
                                     }
@@ -581,8 +589,7 @@ namespace AMDownloader.Models
                             }
                         }
 
-                        Log.Debug($"Conn {conn} completed" +
-                            $"\tActual read = {new FileInfo($"{Destination}.{conn}{Constants.TempDownloadExtension}").Length}");
+                        Log.Debug($"Conn {conn} completed\t\tRead this session = {readThisConn}");
 
                         Interlocked.Decrement(ref _connections);
                     });
@@ -593,7 +600,6 @@ namespace AMDownloader.Models
                 await Task.WhenAll(connTasks);
 
                 // download complete; merge temp files
-
                 MergeFiles(GetTempFiles().Select(o => o.FullName), Destination);
             }
             catch (Exception ex)
@@ -734,8 +740,6 @@ namespace AMDownloader.Models
                 {
                     f.Delete();
                 }
-
-                BytesDownloaded = 0;
             }
         }
 

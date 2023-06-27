@@ -43,12 +43,7 @@ namespace AMDownloader.ViewModels
     internal class MainViewModel : INotifyPropertyChanged, IClosing
     {
         #region Fields
-
-        /// <summary>
-        /// Gets the interval between refreshing the CollectionView.
-        /// </summary>
-        private const int _collectionRefreshDelay = 1000;
-
+        
         private readonly HttpClient _client;
         private readonly IProgress<long> _progressReporter;
         private readonly ClipboardObserver _clipboardService;
@@ -296,7 +291,7 @@ namespace AMDownloader.ViewModels
                                 sourceObjects[i].Destination,
                                 sourceObjects[i].DateCreated,
                                 sourceObjects[i].TotalBytesToDownload,
-                                sourceObjects[i].ConnectionLimit,
+                                sourceObjects[i].ConnLimit,
                                 sourceObjects[i].StatusCode,
                                 sourceObjects[i].Status,
                                 Download_Created,
@@ -830,7 +825,14 @@ namespace AMDownloader.ViewModels
                     return false;
                 }
 
-                _ctsUpdatingList.Cancel();
+                try
+                {
+                    _ctsUpdatingList.Cancel();
+                }
+                catch (ObjectDisposedException)
+                {
+                    // background task may be done by the time cancellation is requested
+                }
             }
             else if (DownloadingCount > 0)
             {
@@ -890,7 +892,7 @@ namespace AMDownloader.ViewModels
                             Url = item.Url,
                             Destination = item.Destination,
                             TotalBytesToDownload = item.TotalBytesToDownload,
-                            ConnectionLimit = item.ConnectionLimit,
+                            ConnLimit = item.ConnLimit,
                             IsQueued = QueueProcessor.IsQueued(item),
                             Status = item.Status,
                             DateCreated = item.DateCreated,
@@ -1024,7 +1026,7 @@ namespace AMDownloader.ViewModels
             Task.Run(async () =>
             {
                 var semTask = _semaphoreRefreshingView.WaitAsync(ct);
-                var throttle = Task.Delay(_collectionRefreshDelay);
+                var throttle = Task.Delay(1000);
                 try
                 {
                     await semTask;
