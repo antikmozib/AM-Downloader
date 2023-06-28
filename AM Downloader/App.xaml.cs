@@ -57,7 +57,7 @@ namespace AMDownloader
 #endif
 
             MainView mainView = new();
-            mainView.DataContext = new MainViewModel(mainView.ShowPrompt, mainView.ShowWindow);
+            mainView.DataContext = new MainViewModel(MainView.ShowPrompt, mainView.ShowWindow);
             mainView.Show();
         }
     }

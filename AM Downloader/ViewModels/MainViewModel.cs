@@ -281,7 +281,7 @@ namespace AMDownloader.ViewModels
 
                             int progress = (int)((double)(i + 1) / total * 100);
                             Progress = progress;
-                            Status = "Loading " + (i + 1) + " of " + total + ": " + sourceObjects[i].Url;
+                            Status = $"Loading {i + 1} of {total}: {Path.GetFileName(sourceObjects[i].Destination)}";
                             RaisePropertyChanged(nameof(Progress));
                             RaisePropertyChanged(nameof(Status));
 
@@ -917,6 +917,7 @@ namespace AMDownloader.ViewModels
                 {
                     Settings.Default.FirstRun = false;
                 }
+
                 Settings.Default.Save();
 
                 return true;
@@ -1050,6 +1051,16 @@ namespace AMDownloader.ViewModels
             }, ct);
         }
 
+        /// <summary>
+        /// Creates new <see cref="DownloaderObjectModel"/>s from the params and adds them to the list.
+        /// </summary>
+        /// <param name="urls">The URLs to the files to add.</param>
+        /// <param name="destination">The folder where to download the files.</param>
+        /// <param name="enqueue">If <see langword="true"/>, the files will be added to the
+        /// <see cref="QueueProcessor"/>.</param>
+        /// <param name="ct">The <see cref="CancellationToken"/> to cancel the process.</param>
+        /// <returns>An array of <see cref="DownloaderObjectModel"/>s which have been successfully
+        /// added to the list.</returns>
         private async Task<DownloaderObjectModel[]> AddItemsAsync(IEnumerable<string> urls, string destination, bool enqueue, CancellationToken ct)
         {
             var existingUrls = from di in DownloadItemsCollection select di.Url;
@@ -1171,6 +1182,7 @@ namespace AMDownloader.ViewModels
             }
             catch
             {
+
             }
             finally
             {
@@ -1294,7 +1306,7 @@ namespace AMDownloader.ViewModels
         /// </summary>
         /// <param name="enqueue">Whether to enqueue the items instead of immediately starting the download.</param>
         /// <param name="items">The items to download.</param>
-        /// <returns></returns>
+        /// <returns>A task that represents the successful completion of all the supplied items.</returns>
         private async Task StartDownloadAsync(bool enqueue, params DownloaderObjectModel[] items)
         {
             bool forceEnqueue = enqueue;

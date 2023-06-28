@@ -323,7 +323,7 @@ namespace AMDownloader.Views
             Settings.Default.SelectedColumnHeaderDirection = direction ?? ListSortDirection.Descending;
         }
 
-        internal bool? ShowPrompt(
+        internal static bool? ShowPrompt(
             string promptText,
             string caption,
             PromptButton button,

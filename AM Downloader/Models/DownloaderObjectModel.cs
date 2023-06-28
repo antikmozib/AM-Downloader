@@ -477,14 +477,10 @@ namespace AMDownloader.Models
                             connLength = connEnd - connStart;
 
                             Log.Debug("{0,1}{1,2}{2,12}{3,12}{4,12}{5,12}{6,12}{7,12}",
-                                "Conn = ",
-                                conn,
-                                "Start = ",
-                                connStart,
-                                "End = ",
-                                connEnd,
-                                "Length = ",
-                                connLength);
+                                "Conn = ", conn,
+                                "Start = ", connStart,
+                                "End = ", connEnd,
+                                "Length = ", connLength);
 
                             // conn already completed its allocated bytes
                             if (connLength <= 0)
@@ -671,10 +667,10 @@ namespace AMDownloader.Models
         /// If the <paramref name="target"/> already exists, it is overwritten.
         /// </summary>
         /// <param name="sources">The list of files to merge.</param>
-        /// <param name="target">The output of the merging operation.</param>
+        /// <param name="target">The output file of the merging operation.</param>
         /// <param name="deleteSource">If <see langword="true"/>, the sources
         /// will be deleted once merged.</param>
-        private void MergeFiles(IEnumerable<string> sources, string target, bool deleteSource = true)
+        private static void MergeFiles(IEnumerable<string> sources, string target, bool deleteSource = true)
         {
             using var writeStream = new FileStream(target, FileMode.OpenOrCreate, FileAccess.Write);
             using var writer = new BinaryWriter(writeStream);
@@ -717,9 +713,9 @@ namespace AMDownloader.Models
         }
 
         /// <summary>
-        /// Gets the sum of the lengths of all the temp files (in bytes).
+        /// Calculates the sum of the lengths of all the temp files (in bytes).
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The combined lengths of all the temp files (in bytes).</returns>
         private long GetTempFilesLength()
         {
             long length = 0;

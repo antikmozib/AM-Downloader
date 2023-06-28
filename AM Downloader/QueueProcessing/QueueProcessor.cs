@@ -119,7 +119,8 @@ namespace AMDownloader.QueueProcessing
         /// <summary>
         /// Starts this <see cref="QueueProcessor"/> unless it is already running.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>A task that represents the successful completion of all 
+        /// enqueued items.</returns>
         public async Task StartAsync()
         {
             bool cancellationRequested;
@@ -224,7 +225,8 @@ namespace AMDownloader.QueueProcessing
         /// specified <paramref name="items"/> at the top.
         /// </summary>
         /// <param name="items">The items to put at the top of the queue.</param>
-        /// <returns></returns>
+        /// <returns>A task that represents the successful completion of all 
+        /// enqueued items.</returns>
         public async Task StartWithAsync(IEnumerable<IQueueable> items)
         {
             List<IQueueable> temp = new();

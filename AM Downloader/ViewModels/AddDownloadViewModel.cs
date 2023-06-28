@@ -167,7 +167,7 @@ namespace AMDownloader.ViewModels
         /// <param name="value">A list of strings (separated by newlines) in which
         /// to scan for valid URLs.</param>
         /// <returns>A list of validated and trimmed URLs (separated by newlines).</returns>
-        private string GenerateValidUrl(string value)
+        private static string GenerateValidUrl(string value)
         {
             var urls = value.Split(Environment.NewLine);
             var output = new List<string>();
