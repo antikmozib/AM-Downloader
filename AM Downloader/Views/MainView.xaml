@@ -19,7 +19,6 @@
         Loaded="Window_Loaded"
         Initialized="Window_Initialized"
         Closing="Window_Closing"
-        Deactivated="Window_Deactivated"
         Icon="pack://application:,,,/Resources/Icons/AMDownloader.ico">
     <Window.Resources>
         <converters:ProgressBarVisibilityConverter x:Key="ProgressBarVisibilityConverter" />

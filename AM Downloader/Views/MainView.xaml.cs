@@ -25,6 +25,7 @@ namespace AMDownloader.Views
     /// </summary>
     public partial class MainView : Window
     {
+        private bool _dataContextClosed = false;
         private ICollectionView _dataView = null;
         private GridViewColumnHeader _lastHeaderClicked = null;
         private ListSortDirection? _lastDirection = null;
@@ -120,51 +121,53 @@ namespace AMDownloader.Views
 
         private void Window_Closing(object sender, CancelEventArgs e)
         {
-            this.IsEnabled = false;
-            var cancel = false;
-
-            if (DataContext is IClosing context)
+            if (DataContext is ICloseable context)
             {
-                cancel = !context.OnClosing();
+                if (!_dataContextClosed)
+                {
+                    e.Cancel = true;
+                    context.Close();
+
+                    return;
+                }
             }
 
-            if (cancel)
+            // save column order and widths
+
+            var columnOrderList = new SerializableUIColumnList();
+
+            foreach (var column in ((GridView)DownloadsListView.View).Columns)
             {
-                e.Cancel = true;
-                this.IsEnabled = true;
+                SerializableUIColumn serializableUIColumnOrder = new()
+                {
+                    Index = ((GridView)DownloadsListView.View).Columns.IndexOf(column),
+                    Name = column.Header.ToString(),
+                    Width = column.Width
+                };
+                columnOrderList.Objects.Add(serializableUIColumnOrder);
             }
-            else
+
+            try
             {
-                // save column order and widths
+                Directory.CreateDirectory(Paths.LocalAppDataFolder);
+                Functions.Serialize(columnOrderList, Paths.UIColumnOrderFile);
+            }
+            catch
+            {
 
-                var columnOrderList = new SerializableUIColumnList();
-
-                foreach (var column in ((GridView)DownloadsListView.View).Columns)
-                {
-                    SerializableUIColumn serializableUIColumnOrder = new()
-                    {
-                        Index = ((GridView)DownloadsListView.View).Columns.IndexOf(column),
-                        Name = column.Header.ToString(),
-                        Width = column.Width
-                    };
-                    columnOrderList.Objects.Add(serializableUIColumnOrder);
-                }
-
-                try
-                {
-                    Directory.CreateDirectory(Paths.LocalAppDataFolder);
-                    Functions.Serialize(columnOrderList, Paths.UIColumnOrderFile);
-                }
-                catch
-                {
-
-                }
             }
         }
 
-        private void Window_Deactivated(object sender, EventArgs e)
+        internal void DataContext_Closing(object sender, EventArgs e)
         {
+            Application.Current.Dispatcher.Invoke(() => MainViewWindow.IsEnabled = false);
+        }
 
+        internal void DataContext_Closed(object sender, EventArgs e)
+        {
+            _dataContextClosed = true;
+
+            Application.Current.Dispatcher.Invoke(() => MainViewWindow.Close());
         }
 
         private void ExitMenu_Click(object sender, RoutedEventArgs e)

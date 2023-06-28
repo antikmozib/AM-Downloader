@@ -7,6 +7,7 @@ using AMDownloader.Models.Serializable;
 using AMDownloader.Properties;
 using AMDownloader.QueueProcessing;
 using Microsoft.VisualBasic.FileIO;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -40,21 +41,22 @@ namespace AMDownloader.ViewModels
         All, Ready, Queued, Downloading, Paused, Finished, Errored
     }
 
-    internal class MainViewModel : INotifyPropertyChanged, IClosing
+    internal class MainViewModel : INotifyPropertyChanged, ICloseable
     {
         #region Fields
 
         private readonly HttpClient _client;
         private readonly IProgress<long> _progressReporter;
         private readonly ClipboardObserver _clipboardService;
-        private readonly SemaphoreSlim _semaphoreUpdatingList;
-        private readonly SemaphoreSlim _semaphoreRefreshingView;
-        private readonly SemaphoreSlim _semaphoreMeasuringSpeed;
+        private readonly SemaphoreSlim _updatingListSemaphore;
+        private readonly SemaphoreSlim _refreshingViewSemaphore;
+        private readonly SemaphoreSlim _measuringSpeedSemaphore;
         private readonly ShowWindowDelegate _showWindow;
         private readonly ShowPromptDelegate _showPrompt;
-        private CancellationTokenSource _ctsUpdatingList;
-        private readonly List<CancellationTokenSource> _ctsRefreshViewList;
-        private readonly object _ctsRefreshViewListLock;
+        private CancellationTokenSource _updatingListCts;
+        private readonly List<CancellationTokenSource> _refreshViewCtsList;
+        private TaskCompletionSource _closingTcs;
+        private readonly object _refreshViewCtsListLock;
         private readonly object _downloadItemsCollectionLock;
         private readonly object _bytesDownloadedLock;
         private readonly object _bytesTransferredOverLifetimeLock;
@@ -83,7 +85,7 @@ namespace AMDownloader.ViewModels
             get
             {
                 // null check necessary as it's always null at launch
-                if (_ctsUpdatingList == null)
+                if (_updatingListCts == null)
                 {
                     return false;
                 }
@@ -91,7 +93,7 @@ namespace AMDownloader.ViewModels
                 {
                     try
                     {
-                        var ct = _ctsUpdatingList.Token;
+                        var ct = _updatingListCts.Token;
                         return true;
                     }
                     catch (ObjectDisposedException)
@@ -109,6 +111,8 @@ namespace AMDownloader.ViewModels
         #region Events
 
         public event PropertyChangedEventHandler PropertyChanged;
+        public event EventHandler Closing;
+        public event EventHandler Closed;
 
         #endregion
 
@@ -137,7 +141,10 @@ namespace AMDownloader.ViewModels
 
         #region Constructors
 
-        public MainViewModel(ShowPromptDelegate showPrompt, ShowWindowDelegate showWindow)
+        public MainViewModel(ShowWindowDelegate showWindow,
+            ShowPromptDelegate showPrompt,
+            EventHandler closing,
+            EventHandler closed)
         {
             DownloadItemsCollection = new();
 
@@ -166,6 +173,9 @@ namespace AMDownloader.ViewModels
             PausedCount = 0;
             Status = "Ready";
 
+            Closing += closing;
+            Closed += closed;
+
             _client = new HttpClient
             {
                 Timeout = TimeSpan.FromMilliseconds(Settings.Default.ConnectionTimeout)
@@ -183,13 +193,13 @@ namespace AMDownloader.ViewModels
                 }
             });
             _clipboardService = new ClipboardObserver();
-            _semaphoreUpdatingList = new SemaphoreSlim(1);
-            _semaphoreRefreshingView = new SemaphoreSlim(1);
-            _semaphoreMeasuringSpeed = new SemaphoreSlim(1);
+            _updatingListSemaphore = new SemaphoreSlim(1);
+            _refreshingViewSemaphore = new SemaphoreSlim(1);
+            _measuringSpeedSemaphore = new SemaphoreSlim(1);
             _showWindow = showWindow;
             _showPrompt = showPrompt;
-            _ctsRefreshViewList = new();
-            _ctsRefreshViewListLock = _ctsRefreshViewList;
+            _refreshViewCtsList = new();
+            _refreshViewCtsListLock = _refreshViewCtsList;
             _downloadItemsCollectionLock = DownloadItemsCollection;
             _bytesDownloadedLock = BytesDownloadedThisSession;
             _bytesTransferredOverLifetimeLock = Settings.Default.BytesTransferredOverLifetime;
@@ -257,14 +267,14 @@ namespace AMDownloader.ViewModels
                 Status = "Loading...";
                 RaisePropertyChanged(nameof(Status));
 
-                _ctsUpdatingList = new CancellationTokenSource();
+                _updatingListCts = new CancellationTokenSource();
                 RaisePropertyChanged(nameof(IsBackgroundWorking));
 
-                var ct = _ctsUpdatingList.Token;
+                var ct = _updatingListCts.Token;
 
                 Task.Run(async () =>
                 {
-                    await _semaphoreUpdatingList.WaitAsync();
+                    await _updatingListSemaphore.WaitAsync();
 
                     try
                     {
@@ -327,7 +337,7 @@ namespace AMDownloader.ViewModels
                     }
                     finally
                     {
-                        _semaphoreUpdatingList.Release();
+                        _updatingListSemaphore.Release();
                     }
 
                     Progress = 0;
@@ -336,7 +346,7 @@ namespace AMDownloader.ViewModels
                     RaisePropertyChanged(nameof(Status));
                 }).ContinueWith(t =>
                 {
-                    _ctsUpdatingList.Dispose();
+                    _updatingListCts.Dispose();
                     RaisePropertyChanged(nameof(IsBackgroundWorking));
 
                     RefreshCollectionView();
@@ -456,10 +466,10 @@ namespace AMDownloader.ViewModels
 
             if (_showWindow.Invoke(addDownloadViewModel) == true)
             {
-                _ctsUpdatingList = new CancellationTokenSource();
+                _updatingListCts = new CancellationTokenSource();
                 RaisePropertyChanged(nameof(IsBackgroundWorking));
 
-                var ct = _ctsUpdatingList.Token;
+                var ct = _updatingListCts.Token;
 
                 Task.Run(async () =>
                 {
@@ -470,7 +480,7 @@ namespace AMDownloader.ViewModels
                 }
                 ).ContinueWith(async t =>
                 {
-                    _ctsUpdatingList.Dispose();
+                    _updatingListCts.Dispose();
                     RaisePropertyChanged(nameof(IsBackgroundWorking));
 
                     RefreshCollectionView();
@@ -513,13 +523,13 @@ namespace AMDownloader.ViewModels
                 }
             }
 
-            _ctsUpdatingList = new CancellationTokenSource();
+            _updatingListCts = new CancellationTokenSource();
             RaisePropertyChanged(nameof(IsBackgroundWorking));
-            var ct = _ctsUpdatingList.Token;
+            var ct = _updatingListCts.Token;
 
             Task.Run(async () => await RemoveObjectsAsync(items, delete, ct)).ContinueWith(t =>
             {
-                _ctsUpdatingList.Dispose();
+                _updatingListCts.Dispose();
                 RaisePropertyChanged(nameof(IsBackgroundWorking));
 
                 RefreshCollectionView();
@@ -758,16 +768,16 @@ namespace AMDownloader.ViewModels
 
         private void ClearFinishedDownloads(object obj)
         {
-            _ctsUpdatingList = new CancellationTokenSource();
+            _updatingListCts = new CancellationTokenSource();
             RaisePropertyChanged(nameof(IsBackgroundWorking));
 
-            var ct = _ctsUpdatingList.Token;
+            var ct = _updatingListCts.Token;
 
             var items = from item in DownloadItemsCollection where item.IsCompleted select item;
 
             Task.Run(async () => await RemoveObjectsAsync(items, false, ct)).ContinueWith(t =>
             {
-                _ctsUpdatingList.Dispose();
+                _updatingListCts.Dispose();
                 RaisePropertyChanged(nameof(IsBackgroundWorking));
 
                 RefreshCollectionView();
@@ -788,7 +798,7 @@ namespace AMDownloader.ViewModels
         {
             try
             {
-                _ctsUpdatingList?.Cancel();
+                _updatingListCts?.Cancel();
             }
             catch (ObjectDisposedException)
             {
@@ -818,8 +828,16 @@ namespace AMDownloader.ViewModels
 
         #region Public methods
 
-        public bool OnClosing()
+        public void Close()
         {
+            if (_closingTcs != null && _closingTcs.Task.Status != TaskStatus.RanToCompletion)
+            {
+                // already closing
+                return;
+            }
+
+            Log.Debug($"Entered {nameof(Close)}");
+
             if (IsBackgroundWorking)
             {
                 if (_showPrompt.Invoke(
@@ -829,12 +847,12 @@ namespace AMDownloader.ViewModels
                     PromptIcon.Exclamation,
                     false) == false)
                 {
-                    return false;
+                    return;
                 }
 
                 try
                 {
-                    _ctsUpdatingList.Cancel();
+                    _updatingListCts.Cancel();
                 }
                 catch (ObjectDisposedException)
                 {
@@ -858,22 +876,25 @@ namespace AMDownloader.ViewModels
                     PromptIcon.Exclamation,
                     false) == false)
                     {
-                        return false;
+                        return;
                     }
                 }
             }
 
             Status = "Saving...";
             RaisePropertyChanged(nameof(Status));
+            RaiseEvent(Closing);
 
-            Task<bool> closingTask = Task.Run(async () =>
+            _closingTcs = new TaskCompletionSource();
+
+            Task.Run(async () =>
             {
                 if (QueueProcessor.IsBusy)
                 {
                     await QueueProcessor.StopAsync();
                 }
 
-                await _semaphoreUpdatingList.WaitAsync();
+                await _updatingListSemaphore.WaitAsync();
 
                 try
                 {
@@ -917,7 +938,7 @@ namespace AMDownloader.ViewModels
                 }
                 finally
                 {
-                    _semaphoreUpdatingList.Release();
+                    _updatingListSemaphore.Release();
                 }
 
                 if (Settings.Default.FirstRun)
@@ -927,10 +948,9 @@ namespace AMDownloader.ViewModels
 
                 Settings.Default.Save();
 
-                return true;
+                _closingTcs.SetResult();
+                RaiseEvent(Closed);
             });
-
-            return closingTask.GetAwaiter().GetResult();
         }
 
         #endregion
@@ -940,6 +960,11 @@ namespace AMDownloader.ViewModels
         protected void RaisePropertyChanged(string prop)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
+        }
+
+        protected virtual void RaiseEvent(EventHandler handler)
+        {
+            handler?.Invoke(this, null);
         }
 
         private void SwitchCategory(Category category)
@@ -1007,33 +1032,33 @@ namespace AMDownloader.ViewModels
 
         private void RefreshCollectionView()
         {
-            if (_semaphoreUpdatingList.CurrentCount == 0)
+            if (_updatingListSemaphore.CurrentCount == 0)
             {
                 return;
             }
 
             // cancel all pending refreshes
 
-            Monitor.Enter(_ctsRefreshViewListLock);
+            Monitor.Enter(_refreshViewCtsListLock);
 
-            foreach (var oldCts in _ctsRefreshViewList)
+            foreach (var oldCts in _refreshViewCtsList)
             {
                 oldCts.Cancel();
                 oldCts.Dispose();
             }
 
-            _ctsRefreshViewList.Clear();
+            _refreshViewCtsList.Clear();
 
             var newCts = new CancellationTokenSource();
             var ct = newCts.Token;
 
-            _ctsRefreshViewList.Add(newCts);
+            _refreshViewCtsList.Add(newCts);
 
-            Monitor.Exit(_ctsRefreshViewListLock);
+            Monitor.Exit(_refreshViewCtsListLock);
 
             Task.Run(async () =>
             {
-                var semTask = _semaphoreRefreshingView.WaitAsync(ct);
+                var semTask = _refreshingViewSemaphore.WaitAsync(ct);
                 var throttle = Task.Delay(1000);
                 try
                 {
@@ -1052,7 +1077,7 @@ namespace AMDownloader.ViewModels
                 {
                     if (semTask.IsCompletedSuccessfully)
                     {
-                        _semaphoreRefreshingView.Release();
+                        _refreshingViewSemaphore.Release();
                     }
                 }
             }, ct);
@@ -1080,7 +1105,7 @@ namespace AMDownloader.ViewModels
             var totalItems = urls.Count();
             var counter = 0;
 
-            await _semaphoreUpdatingList.WaitAsync();
+            await _updatingListSemaphore.WaitAsync();
 
             foreach (var url in urls.Distinct())
             {
@@ -1149,7 +1174,7 @@ namespace AMDownloader.ViewModels
             RaisePropertyChanged(nameof(Progress));
             RaisePropertyChanged(nameof(Status));
 
-            _semaphoreUpdatingList.Release();
+            _updatingListSemaphore.Release();
 
             if (!wasCanceled)
             {
@@ -1211,7 +1236,7 @@ namespace AMDownloader.ViewModels
             int total = items.Count();
             string primaryStatus = delete ? "Deleting" : "Removing";
 
-            await _semaphoreUpdatingList.WaitAsync();
+            await _updatingListSemaphore.WaitAsync();
 
             foreach (var item in items)
             {
@@ -1301,7 +1326,7 @@ namespace AMDownloader.ViewModels
             RaisePropertyChanged(nameof(Progress));
             RaisePropertyChanged(nameof(Status));
 
-            _semaphoreUpdatingList.Release();
+            _updatingListSemaphore.Release();
 
             if (failed.Count > 0)
             {
@@ -1356,11 +1381,14 @@ namespace AMDownloader.ViewModels
 
         private void StartReportingSpeed()
         {
-            if (_semaphoreMeasuringSpeed.CurrentCount == 0) return;
+            if (_measuringSpeedSemaphore.CurrentCount == 0)
+            {
+                return;
+            }
 
             Task.Run(async () =>
             {
-                await _semaphoreMeasuringSpeed.WaitAsync();
+                await _measuringSpeedSemaphore.WaitAsync();
 
                 Stopwatch stopwatch = new();
                 long bytesFrom;
@@ -1384,7 +1412,7 @@ namespace AMDownloader.ViewModels
                 Speed = null;
                 RaisePropertyChanged(nameof(Speed));
 
-                _semaphoreMeasuringSpeed.Release();
+                _measuringSpeedSemaphore.Release();
             });
         }
 
@@ -1510,7 +1538,7 @@ namespace AMDownloader.ViewModels
                 }
                 else
                 {
-                    if (_semaphoreUpdatingList.CurrentCount > 0)
+                    if (_updatingListSemaphore.CurrentCount > 0)
                     {
                         Status = "Ready";
                     }
