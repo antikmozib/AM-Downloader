@@ -82,6 +82,7 @@ namespace AMDownloader.ViewModels
         {
             get
             {
+                // null check necessary as it's always null at launch
                 if (_ctsUpdatingList == null)
                 {
                     return false;
@@ -93,8 +94,7 @@ namespace AMDownloader.ViewModels
                         var ct = _ctsUpdatingList.Token;
                         return true;
                     }
-                    catch (Exception ex)
-                    when (ex is ObjectDisposedException)
+                    catch (ObjectDisposedException)
                     {
                         return false;
                     }
@@ -270,14 +270,21 @@ namespace AMDownloader.ViewModels
                     {
                         var source = Functions.Deserialize<SerializableDownloaderObjectModelList>(Paths.DownloadsHistoryFile);
                         var sourceObjects = source.Objects.ToArray();
-                        var itemsToAdd = new DownloaderObjectModel[sourceObjects.Length];
+                        var itemsToAdd = new List<DownloaderObjectModel>();
                         var itemsToEnqueue = new List<IQueueable>();
                         var total = sourceObjects.Length;
 
                         for (int i = 0; i < sourceObjects.Length; i++)
                         {
-                            if (ct.IsCancellationRequested) break;
-                            if (sourceObjects[i] == null) continue;
+                            if (ct.IsCancellationRequested)
+                            {
+                                break;
+                            }
+
+                            if (sourceObjects[i] == null)
+                            {
+                                continue;
+                            }
 
                             int progress = (int)((double)(i + 1) / total * 100);
                             Progress = progress;
@@ -305,13 +312,13 @@ namespace AMDownloader.ViewModels
                                 itemsToEnqueue.Add(item);
                             }
 
-                            itemsToAdd[i] = item;
+                            itemsToAdd.Add(item);
                         }
 
                         Status = "Refreshing...";
                         RaisePropertyChanged(nameof(Status));
 
-                        AddObjects(itemsToAdd);
+                        AddObjects(itemsToAdd.ToArray());
                         QueueProcessor.Enqueue(itemsToEnqueue.ToArray());
                     }
                     catch
@@ -1166,15 +1173,20 @@ namespace AMDownloader.ViewModels
 
         private void AddObjects(params DownloaderObjectModel[] objects)
         {
-            Monitor.Enter(_downloadItemsCollectionLock);
             int total = objects.Length;
+
+            Monitor.Enter(_downloadItemsCollectionLock);
+
             try
             {
                 Application.Current.Dispatcher.Invoke(() =>
                 {
                     for (int i = 0; i < total; i++)
                     {
-                        if (objects[i] == null) continue;
+                        if (objects[i] == null)
+                        {
+                            continue;
+                        }
 
                         DownloadItemsCollection.Add(objects[i]);
                     }

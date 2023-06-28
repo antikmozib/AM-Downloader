@@ -162,6 +162,11 @@ namespace AMDownloader.Views
             }
         }
 
+        private void Window_Deactivated(object sender, EventArgs e)
+        {
+
+        }
+
         private void ExitMenu_Click(object sender, RoutedEventArgs e)
         {
             this.Close();

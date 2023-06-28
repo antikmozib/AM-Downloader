@@ -34,7 +34,11 @@ namespace AMDownloader.ViewModels
         public bool Enqueue { get; set; }
         public bool MonitorClipboard
         {
-            get { return _monitorClipboard; }
+            get
+            {
+                return _monitorClipboard;
+            }
+
             set
             {
                 _monitorClipboard = value;
@@ -42,14 +46,17 @@ namespace AMDownloader.ViewModels
                 if (value == true)
                 {
                     _ctsClipboard = new CancellationTokenSource();
-                    Task.Run(async () => await MonitorClipboardAsync());
+
+                    Task.Run(async () => await MonitorClipboardAsync()).ContinueWith(t =>
+                    {
+                        _ctsClipboard.Dispose();
+                    });
                 }
                 else
                 {
                     try
                     {
                         _ctsClipboard?.Cancel();
-                        _ctsClipboard.Dispose();
                     }
                     catch (ObjectDisposedException)
                     {
