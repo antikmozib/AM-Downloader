@@ -39,7 +39,7 @@
             <TextBlock Text="Enter the URL or pattern to add. You can enter multiple entries on separate lines." />
             <CheckBox DockPanel.Dock="Right"
                       x:Name="cbMonitorClipboard"
-                      Content="Monitor clipboard"
+                      Content="_Monitor clipboard"
                       IsChecked="{Binding Path=MonitorClipboard, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
                       VerticalAlignment="Center"
                       HorizontalAlignment="Right"
@@ -58,13 +58,12 @@
                  FontSize="{Binding Source={x:Static properties:Settings.Default}, Path=AddDownloadWindowFontSize, Mode=TwoWay}" />
         <DockPanel Grid.Row="4"
                    HorizontalAlignment="Stretch">
-            <TextBlock Margin="0 0 4 0"
-                       VerticalAlignment="Center"
-                       DockPanel.Dock="Left"
-                       Text="Save to:" />
+            <Label Margin="0 0 4 0"
+                   DockPanel.Dock="Left"
+                   Content="_Save to:" />            
             <Button x:Name="btnBrowse"
                     DockPanel.Dock="Right"
-                    Content="Browse"
+                    Content="_Browse"
                     Click="btnBrowse_Click" />
             <ComboBox x:Name="cboDestination"
                       Margin="0 0 8 0"
@@ -79,27 +78,27 @@
                     Orientation="Horizontal"
                     HorizontalAlignment="Right">
             <CheckBox x:Name="cbAddToQueue"
-                      Content="Add to queue"
+                      Content="A_dd to queue"
                       IsChecked="{Binding Path=Enqueue, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
                       VerticalAlignment="Center"
                       Margin="0 0 8 0" />
             <CheckBox x:Name="cbStartDownloadingImmediately"
-                      Content="Start downloading"
+                      Content="S_tart downloading"
                       IsChecked="{Binding Path=StartDownload, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
                       VerticalAlignment="Center"
                       Margin="0 0 16 0" />
             <Button x:Name="btnAdd"
                     Margin="0 0 8 0"
-                    Content="Add"
+                    Content="_Add"
                     Command="{Binding AddCommand}"
                     IsDefault="True"
                     Click="btnAdd_Click" />
             <Button x:Name="btnCancel"
                     Margin="0 0 8 0"
-                    Content="Cancel"
+                    Content="_Cancel"
                     IsCancel="True" />
             <Button Command="{Binding PreviewCommand}"
-                    Content="Preview" />
+                    Content="_Preview" />
         </StackPanel>
     </Grid>
 </Window>
