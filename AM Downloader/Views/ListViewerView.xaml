@@ -20,7 +20,9 @@
     <Grid Margin="8">
         <Grid.RowDefinitions>
             <RowDefinition Height="auto" />
+            <RowDefinition Height="8" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="8" />
             <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
 
@@ -29,9 +31,8 @@
 
         <ListBox ItemsSource="{Binding ListViewerItems}"
                  Name="ItemsListBox"
-                 Grid.Row="1"
-                 SelectionMode="Extended"
-                 Margin="0 8 0 8">
+                 Grid.Row="2"
+                 SelectionMode="Extended">
             <ListBox.ContextMenu>
                 <ContextMenu>
                     <MenuItem Header="Copy"
@@ -58,7 +59,7 @@
             </ListBox.ContextMenu>
         </ListBox>
 
-        <DockPanel Grid.Row="2"
+        <DockPanel Grid.Row="4"
                    LastChildFill="True">
             <TextBlock Text="{Binding Items.Count, ElementName=ItemsListBox, Converter={StaticResource ListViewerItemCountConverter}}"
                        Margin="0 0 8 0"

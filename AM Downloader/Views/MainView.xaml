@@ -459,7 +459,7 @@
                 </StatusBarItem>
                 <StatusBarItem Grid.Column="1"
                                Visibility="{Binding Progress, Converter={StaticResource ProgressBarVisibilityConverter}}"
-                               Margin="16 0 0 0">
+                               Margin="8 0 0 0">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
