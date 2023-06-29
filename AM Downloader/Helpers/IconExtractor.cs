@@ -16,21 +16,20 @@ namespace AMDownloader.Helpers
     {
         private static readonly Dictionary<string, ImageSource> _iconRepo = new();
 
-        public static ImageSource Extract(string destination, bool isDirectory)
+        public static ImageSource Extract(string path, bool isDirectory)
         {
-            Native.Shell32.SHFILEINFO shFileInfo = new();
             ImageSource imageSource;
-            string alternatePath = destination;
-            bool deleteFile = false;
-            string ext = Path.GetExtension(destination).ToLower();
-            string shortFilename = Path.GetFileName(destination);
             Icon icon;
+            Native.Shell32.SHFILEINFO shFileInfo = new();
+            string tempPath = path.ToLower();
+            string shortFileName = Path.GetFileName(path).ToLower();
+            string ext = Path.GetExtension(path).ToLower();
+            bool deleteFile = false;
 
             // have we seen this item before?
-
-            if (isDirectory && _iconRepo.ContainsKey(destination))
+            if (isDirectory && _iconRepo.ContainsKey(path))
             {
-                _iconRepo.TryGetValue(destination, out imageSource);
+                _iconRepo.TryGetValue(path, out imageSource);
 
                 return imageSource;
             }
@@ -40,42 +39,39 @@ namespace AMDownloader.Helpers
 
                 return imageSource;
             }
-            else if (!isDirectory && ext == ".exe" && _iconRepo.ContainsKey(shortFilename))
+            else if (!isDirectory && ext == ".exe" && _iconRepo.ContainsKey(shortFileName))
             {
-                _iconRepo.TryGetValue(shortFilename, out imageSource);
+                _iconRepo.TryGetValue(shortFileName, out imageSource);
 
                 return imageSource;
             }
 
             // we haven't seen this before;
             // check the paths and create the temp files if necessary
-
-            if (isDirectory && !Directory.Exists(destination))
+            if (isDirectory && !Directory.Exists(path))
             {
-                alternatePath = AppDomain.CurrentDomain.BaseDirectory;
+                tempPath = AppDomain.CurrentDomain.BaseDirectory;
             }
-            else if (!isDirectory && !File.Exists(destination))
+            else if (!isDirectory && !File.Exists(path))
             {
-                ext = Path.GetExtension(destination).ToLower();
-                alternatePath = Path.Combine(Path.GetTempPath(), "AMDownloader" + DateTime.Now.ToFileTimeUtc() + ext);
+                ext = Path.GetExtension(path).ToLower();
+                tempPath = Path.Combine(Path.GetTempPath(), "AMDownloader" + DateTime.Now.ToFileTimeUtc() + ext);
 
-                File.Create(alternatePath).Close();
+                File.Create(tempPath).Close();
                 deleteFile = true;
             }
 
             // grab the actual icons
-
             if (!isDirectory)
             {
                 // file icon
-
-                icon = Icon.ExtractAssociatedIcon(alternatePath);
+                icon = Icon.ExtractAssociatedIcon(tempPath);
             }
             else
             {
                 // folder icon
 
-                Native.Shell32.SHGetFileInfo(alternatePath,
+                Native.Shell32.SHGetFileInfo(tempPath,
                     Native.Shell32.FILE_ATTRIBUTE_NORMAL,
                     ref shFileInfo,
                     (uint)Marshal.SizeOf(shFileInfo),
@@ -85,16 +81,14 @@ namespace AMDownloader.Helpers
             }
 
             // create the image from the icon
-
             imageSource = Imaging.CreateBitmapSourceFromHIcon(icon.Handle,
                 new Int32Rect(0, 0, icon.Width, icon.Height),
                 BitmapSizeOptions.FromEmptyOptions());
 
             // save the keys and images
-
-            if (isDirectory && !_iconRepo.ContainsKey(alternatePath))
+            if (isDirectory && !_iconRepo.ContainsKey(tempPath))
             {
-                _iconRepo.Add(alternatePath, imageSource);
+                _iconRepo.Add(tempPath, imageSource);
             }
             else
             {
@@ -102,15 +96,15 @@ namespace AMDownloader.Helpers
                 {
                     _iconRepo.Add(ext, imageSource);
                 }
-                else if (ext == ".exe" && File.Exists(destination))
+                else if (ext == ".exe" && File.Exists(path))
                 {
-                    _iconRepo.Add(shortFilename, imageSource);
+                    _iconRepo.Add(shortFileName, imageSource);
                 }
             }
 
             if (deleteFile)
             {
-                File.Delete(alternatePath);
+                File.Delete(tempPath);
             }
 
             if (isDirectory)
