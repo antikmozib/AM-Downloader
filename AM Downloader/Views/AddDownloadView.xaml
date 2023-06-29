@@ -60,7 +60,7 @@
                    HorizontalAlignment="Stretch">
             <Label Margin="0 0 4 0"
                    DockPanel.Dock="Left"
-                   Content="_Save to:" />            
+                   Content="_Save to:" />
             <Button x:Name="btnBrowse"
                     DockPanel.Dock="Right"
                     Content="_Browse"

@@ -836,7 +836,7 @@ namespace AMDownloader.ViewModels
                 return;
             }
 
-            Log.Debug($"Entered {nameof(Close)}");
+            Log.Debug($"Entered {nameof(Close)}()");
 
             if (IsBackgroundWorking)
             {

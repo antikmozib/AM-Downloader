@@ -6,7 +6,6 @@ using System.Reflection;
 using System.Threading;
 using System.Windows;
 using AMDownloader.Helpers;
-using AMDownloader.ViewModels;
 using AMDownloader.Views;
 using Serilog;
 
@@ -57,12 +56,6 @@ namespace AMDownloader
 #endif
 
             MainView mainView = new();
-
-            mainView.DataContext = new MainViewModel(mainView.ShowWindow, 
-                MainView.ShowPrompt, 
-                mainView.DataContext_Closing, 
-                mainView.DataContext_Closed);
-
             mainView.Show();
         }
     }

@@ -33,6 +33,8 @@ namespace AMDownloader.Views
         public MainView()
         {
             InitializeComponent();
+
+            DataContext = new MainViewModel(ShowWindow, ShowPrompt, DataContext_Closing, DataContext_Closed);
         }
 
         private void Window_Initialized(object sender, EventArgs e)
