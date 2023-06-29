@@ -83,11 +83,11 @@ namespace AMDownloader.Views
 
             // restore column order and widths
 
-            if (File.Exists(Paths.UIColumnOrderFile))
+            if (File.Exists(Common.Paths.UIColumnOrderFile))
             {
                 try
                 {
-                    var restoreCols = Functions.Deserialize<SerializableUIColumnList>(Paths.UIColumnOrderFile);
+                    var restoreCols = Common.Functions.Deserialize<SerializableUIColumnList>(Common.Paths.UIColumnOrderFile);
                     var gridCols = ((GridView)DownloadsListView.View).Columns;
 
                     for (int i = 0; i < restoreCols.Objects.Count; i++)
@@ -149,8 +149,8 @@ namespace AMDownloader.Views
 
             try
             {
-                Directory.CreateDirectory(Paths.LocalAppDataFolder);
-                Functions.Serialize(columnOrderList, Paths.UIColumnOrderFile);
+                Directory.CreateDirectory(Common.Paths.LocalAppDataFolder);
+                Common.Functions.Serialize(columnOrderList, Common.Paths.UIColumnOrderFile);
             }
             catch
             {
@@ -184,7 +184,7 @@ namespace AMDownloader.Views
                 AssemblyCopyrightAttribute), true).OfType<AssemblyCopyrightAttribute>().FirstOrDefault()?.Copyright;
             var website = "https://mozib.io/amdownloader";
             var totalDownloaded = Math.Round(Settings.Default.BytesTransferredOverLifetime
-                / (double)Constants.ByteConstants.MEGABYTE);
+                / (double)Common.Constants.ByteConstants.MEGABYTE);
 
             MessageBox.Show(
                 $"{name}\nVersion {version}\n\n{copyright}\n{website}"

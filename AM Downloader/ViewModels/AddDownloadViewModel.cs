@@ -82,7 +82,7 @@ namespace AMDownloader.ViewModels
             }
             else
             {
-                SaveToFolder = Paths.UserDownloadsFolder;
+                SaveToFolder = Common.Paths.UserDownloadsFolder;
             }
             Enqueue = Settings.Default.EnqueueAddedItems;
             StartDownload = Settings.Default.StartDownloadingAddedItems;

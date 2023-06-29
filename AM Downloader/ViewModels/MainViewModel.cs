@@ -262,7 +262,7 @@ namespace AMDownloader.ViewModels
             Settings.Default.LaunchCount++;
 
             // Populate history
-            if (File.Exists(Paths.DownloadsHistoryFile))
+            if (File.Exists(Common.Paths.DownloadsHistoryFile))
             {
                 Status = "Loading...";
                 RaisePropertyChanged(nameof(Status));
@@ -278,7 +278,7 @@ namespace AMDownloader.ViewModels
 
                     try
                     {
-                        var source = Functions.Deserialize<SerializableDownloaderObjectModelList>(Paths.DownloadsHistoryFile);
+                        var source = Common.Functions.Deserialize<SerializableDownloaderObjectModelList>(Common.Paths.DownloadsHistoryFile);
                         var sourceObjects = source.Objects.ToArray();
                         var itemsToAdd = new List<DownloaderObjectModel>();
                         var itemsToEnqueue = new List<IQueueable>();
@@ -820,7 +820,7 @@ namespace AMDownloader.ViewModels
         {
             if (_resetAllSettingsOnClose)
             {
-                Functions.ResetAllSettings();
+                Common.Functions.ResetAllSettings();
             }
         }
 
@@ -901,7 +901,7 @@ namespace AMDownloader.ViewModels
                     var list = new SerializableDownloaderObjectModelList();
                     var index = 0;
 
-                    Directory.CreateDirectory(Paths.LocalAppDataFolder);
+                    Directory.CreateDirectory(Common.Paths.LocalAppDataFolder);
 
                     foreach (var item in DownloadItemsCollection)
                     {
@@ -930,7 +930,7 @@ namespace AMDownloader.ViewModels
                         list.Objects.Add(sItem);
                     }
 
-                    Functions.Serialize(list, Paths.DownloadsHistoryFile);
+                    Common.Functions.Serialize(list, Common.Paths.DownloadsHistoryFile);
                 }
                 catch
                 {
@@ -1118,7 +1118,7 @@ namespace AMDownloader.ViewModels
                 RaisePropertyChanged(nameof(Status));
                 RaisePropertyChanged(nameof(Progress));
 
-                fileName = Functions.GetFileNameFromUrl(url);
+                fileName = Common.Functions.GetFileNameFromUrl(url);
 
                 if (string.IsNullOrEmpty(fileName))
                 {
@@ -1126,7 +1126,7 @@ namespace AMDownloader.ViewModels
                     continue;
                 }
 
-                filePath = Functions.GetNewFileName(destination + Functions.GetFileNameFromUrl(url));
+                filePath = Common.Functions.GetNewFileName(destination + Common.Functions.GetFileNameFromUrl(url));
 
                 if (existingUrls.Contains(url) || existingDestinations.Contains(filePath))
                 {
@@ -1419,7 +1419,7 @@ namespace AMDownloader.ViewModels
         private async Task TriggerUpdateCheckAsync(bool silent = false)
         {
             string url = await AppUpdateService.GetUpdateUrl(
-                Constants.UpdateServer,
+                Common.Constants.UpdateServer,
                 Assembly.GetExecutingAssembly().GetName().Name,
                 Assembly.GetExecutingAssembly().GetName().Version.ToString(),
                 _client);

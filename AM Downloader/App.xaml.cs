@@ -35,11 +35,11 @@ namespace AMDownloader
             var debugLoggerConfig = new LoggerConfiguration()
                 .MinimumLevel.Debug()
                 .WriteTo.Debug()
-                .WriteTo.File(Paths.LogFile, rollingInterval: RollingInterval.Day)
+                .WriteTo.File(Common.Paths.LogFile, rollingInterval: RollingInterval.Day)
                 .CreateLogger();
             var releaseLoggerConfig = new LoggerConfiguration()
                 .MinimumLevel.Error()
-                .WriteTo.File(Paths.LogFile, rollingInterval: RollingInterval.Day)
+                .WriteTo.File(Common.Paths.LogFile, rollingInterval: RollingInterval.Day)
                 .CreateLogger();
 
 #if DEBUG

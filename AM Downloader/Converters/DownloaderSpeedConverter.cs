@@ -17,7 +17,7 @@ namespace AMDownloader.Converters
 
             if (speed > 1000000)
             {
-                return ((double)speed / (long)Constants.ByteConstants.MEGABYTE).ToString("#0.00") + " MB/s";
+                return ((double)speed / (long)Common.Constants.ByteConstants.MEGABYTE).ToString("#0.00") + " MB/s";
             }
             else
             {
@@ -27,7 +27,7 @@ namespace AMDownloader.Converters
                 }
                 else
                 {
-                    return ((double)speed / (long)Constants.ByteConstants.KILOBYTE).ToString("#0") + " KB/s";
+                    return ((double)speed / (long)Common.Constants.ByteConstants.KILOBYTE).ToString("#0") + " KB/s";
                 }
             }
         }

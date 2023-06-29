@@ -87,20 +87,20 @@ namespace AMDownloader.Views
                 }
                 else
                 {
-                    cboDestination.Text = Paths.UserDownloadsFolder;
+                    cboDestination.Text = Common.Paths.UserDownloadsFolder;
                 }
             }
             else
             {
-                cboDestination.Text = Paths.UserDownloadsFolder;
+                cboDestination.Text = Common.Paths.UserDownloadsFolder;
             }
-            if (!cboDestination.Items.Contains(Paths.UserDownloadsFolder)) cboDestination.Items.Add(Paths.UserDownloadsFolder);
+            if (!cboDestination.Items.Contains(Common.Paths.UserDownloadsFolder)) cboDestination.Items.Add(Common.Paths.UserDownloadsFolder);
 
-            if (File.Exists(Paths.SavedLocationsFile))
+            if (File.Exists(Common.Paths.SavedLocationsFile))
             {
                 try
                 {
-                    var list = Functions.Deserialize<SerializableDownloadPathHistoryList>(Paths.SavedLocationsFile);
+                    var list = Common.Functions.Deserialize<SerializableDownloadPathHistoryList>(Common.Paths.SavedLocationsFile);
 
                     foreach (var item in list.Objects)
                     {
@@ -148,7 +148,7 @@ namespace AMDownloader.Views
 
             try
             {
-                Functions.Serialize(list, Paths.SavedLocationsFile);
+                Common.Functions.Serialize(list, Common.Paths.SavedLocationsFile);
             }
             catch
             {
@@ -171,7 +171,7 @@ namespace AMDownloader.Views
             }
             else
             {
-                dlg.SelectedPath = Paths.UserDownloadsFolder;
+                dlg.SelectedPath = Common.Paths.UserDownloadsFolder;
             }
 
             if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)

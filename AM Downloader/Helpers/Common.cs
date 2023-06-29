@@ -3,185 +3,159 @@
 using AMDownloader.Properties;
 using System;
 using System.IO;
-using System.Net.Http;
 using System.Reflection;
-using System.Threading.Tasks;
 using System.Xml.Serialization;
 
 namespace AMDownloader.Helpers
 {
-    internal static class Constants
+    internal static class Common
     {
-        public const string TempDownloadExtension = ".AMDownload";
-        public const int ParallelDownloadsLimit = 10;
-        public const int ParallelConnPerDownloadLimit = 5;
-        public const string UpdateServer = @"https://mozib.io/downloads/update.php";
-
-        public enum ByteConstants
+        internal static class Constants
         {
-            KILOBYTE = 1024,
-            MEGABYTE = KILOBYTE * KILOBYTE,
-            GIGABYTE = MEGABYTE * KILOBYTE
-        }
-    }
+            public const int ParallelDownloadsLimit = 10;
+            public const int ParallelConnPerDownloadLimit = 5;
+            public const string TempDownloadExtension = ".AMDownload";
+            public const string UpdateServer = @"https://mozib.io/downloads/update.php";
 
-    internal static class Paths
-    {
-        /// <summary>
-        /// Gets the path to the folder where to save the user-specific settings.
-        /// </summary>
-        public static string LocalAppDataFolder =>
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Assembly.GetExecutingAssembly().GetName().Name);
-        public static string DownloadsHistoryFile => Path.Combine(LocalAppDataFolder, "History.xml");
-        public static string SavedLocationsFile => Path.Combine(LocalAppDataFolder, "SavedLocations.xml");
-        public static string UIColumnOrderFile => Path.Combine(LocalAppDataFolder, "UIColumnOrder.xml");
-        public static string UserDownloadsFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
-        public static string LogFile => Path.Combine(LocalAppDataFolder, "logs", "log.log");
-    }
-
-    internal static class Functions
-    {
-        public static string GetNewFileName(string fullPath)
-        {
-            string dirName = Path.GetDirectoryName(fullPath);
-            string fileName = Path.GetFileName(fullPath);
-            string result = dirName + Path.DirectorySeparatorChar + fileName;
-            int i = 0;
-
-            while (File.Exists(result) || File.Exists(result + Constants.TempDownloadExtension))
+            public enum ByteConstants
             {
-                result = Path.Combine(dirName,
-                    $"{Path.GetFileNameWithoutExtension(fileName)} ({++i}){Path.GetExtension(fileName)}");
-            };
-
-            return result;
-        }
-
-        public static string GetFileNameFromUrl(string url)
-        {
-            Uri.TryCreate(url, UriKind.Absolute, out Uri uri);
-
-            if (uri != null)
-            {
-                return Path.GetFileName(uri.LocalPath);
-            }
-            else
-            {
-                return string.Empty;
+                KILOBYTE = 1024,
+                MEGABYTE = KILOBYTE * KILOBYTE,
+                GIGABYTE = MEGABYTE * KILOBYTE
             }
         }
 
-        public static string DriveLetterToName(string rootPath)
+        internal static class Paths
         {
-            var drives = DriveInfo.GetDrives();
+            /// <summary>
+            /// Gets the path to the folder where to save the user-specific settings.
+            /// </summary>
+            public static string LocalAppDataFolder =>
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Assembly.GetExecutingAssembly().GetName().Name);
+            public static string DownloadsHistoryFile => Path.Combine(LocalAppDataFolder, "History.xml");
+            public static string SavedLocationsFile => Path.Combine(LocalAppDataFolder, "SavedLocations.xml");
+            public static string UIColumnOrderFile => Path.Combine(LocalAppDataFolder, "UIColumnOrder.xml");
+            public static string UserDownloadsFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+            public static string LogFile => Path.Combine(LocalAppDataFolder, "logs", "log.log");
+        }
 
-            foreach (var drive in drives)
+        internal static class Functions
+        {
+            public static string GetNewFileName(string fullPath)
             {
-                if (drive.RootDirectory.FullName.TrimEnd(Path.DirectorySeparatorChar) != rootPath.TrimEnd(Path.DirectorySeparatorChar))
+                string dirName = Path.GetDirectoryName(fullPath);
+                string fileName = Path.GetFileName(fullPath);
+                string result = dirName + Path.DirectorySeparatorChar + fileName;
+                int i = 0;
+
+                while (File.Exists(result) || File.Exists(result + Constants.TempDownloadExtension))
                 {
-                    continue;
-                }
+                    result = Path.Combine(dirName,
+                        $"{Path.GetFileNameWithoutExtension(fileName)} ({++i}){Path.GetExtension(fileName)}");
+                };
 
-                if (drive.VolumeLabel == "")
+                return result;
+            }
+
+            public static string GetFileNameFromUrl(string url)
+            {
+                bool success = Uri.TryCreate(url, UriKind.Absolute, out Uri uri);
+
+                if (success)
                 {
-                    switch (drive.DriveType)
-                    {
-                        case DriveType.Fixed:
-                            return "Local Disk (" + drive.RootDirectory.FullName.TrimEnd(Path.DirectorySeparatorChar) + ")";
-
-                        case DriveType.CDRom:
-                        case DriveType.Removable:
-                            return "Removeable Disk (" + drive.RootDirectory.FullName.TrimEnd(Path.DirectorySeparatorChar) + ")";
-
-                        case DriveType.Network:
-                            return "Network Disk (" + drive.RootDirectory.FullName.TrimEnd(Path.DirectorySeparatorChar) + ")";
-
-                        case DriveType.Unknown:
-                        case DriveType.Ram:
-                            return "Disk (" + drive.RootDirectory.FullName.TrimEnd(Path.DirectorySeparatorChar) + ")";
-                    }
+                    return Path.GetFileName(uri.LocalPath);
                 }
                 else
                 {
-                    return drive.VolumeLabel;
+                    return string.Empty;
                 }
             }
 
-            return string.Empty;
-        }
-
-        public static void ResetAllSettings()
-        {
-            Settings.Default.Reset();
-
-            if (Directory.Exists(Paths.LocalAppDataFolder))
+            public static string DriveLetterToName(string rootPath)
             {
+                var drives = DriveInfo.GetDrives();
+
+                foreach (var drive in drives)
+                {
+                    if (drive.RootDirectory.FullName.TrimEnd(Path.DirectorySeparatorChar) != rootPath.TrimEnd(Path.DirectorySeparatorChar))
+                    {
+                        continue;
+                    }
+
+                    if (drive.VolumeLabel == "")
+                    {
+                        switch (drive.DriveType)
+                        {
+                            case DriveType.Fixed:
+                                return "Local Disk (" + drive.RootDirectory.FullName.TrimEnd(Path.DirectorySeparatorChar) + ")";
+
+                            case DriveType.CDRom:
+                            case DriveType.Removable:
+                                return "Removeable Disk (" + drive.RootDirectory.FullName.TrimEnd(Path.DirectorySeparatorChar) + ")";
+
+                            case DriveType.Network:
+                                return "Network Disk (" + drive.RootDirectory.FullName.TrimEnd(Path.DirectorySeparatorChar) + ")";
+
+                            case DriveType.Unknown:
+                            case DriveType.Ram:
+                                return "Disk (" + drive.RootDirectory.FullName.TrimEnd(Path.DirectorySeparatorChar) + ")";
+                        }
+                    }
+                    else
+                    {
+                        return drive.VolumeLabel;
+                    }
+                }
+
+                return string.Empty;
+            }
+
+            public static void ResetAllSettings()
+            {
+                Settings.Default.Reset();
+
+                if (Directory.Exists(Paths.LocalAppDataFolder))
+                {
+                    try
+                    {
+                        File.Delete(Paths.SavedLocationsFile);
+                        File.Delete(Paths.UIColumnOrderFile);
+                    }
+                    catch
+                    {
+
+                    }
+                }
+            }
+
+            public static void Serialize<T>(T obj, string path)
+            {
+                var xmlSerializer = new XmlSerializer(typeof(T));
+                using var streamWriter = new StreamWriter(path, false);
+
                 try
                 {
-                    File.Delete(Paths.SavedLocationsFile);
-                    File.Delete(Paths.UIColumnOrderFile);
+                    xmlSerializer.Serialize(streamWriter, obj);
                 }
-                catch
+                catch (Exception ex)
                 {
-
+                    throw new Exception(null, ex);
                 }
             }
-        }
 
-        public static void Serialize<T>(T obj, string path)
-        {
-            var xmlSerializer = new XmlSerializer(typeof(T));
-            using var streamWriter = new StreamWriter(path, false);
-
-            try
+            public static T Deserialize<T>(string path)
             {
-                xmlSerializer.Serialize(streamWriter, obj);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(null, ex);
-            }
-        }
+                var xmlSerializer = new XmlSerializer(typeof(T));
+                using var streamReader = new StreamReader(path);
 
-        public static T Deserialize<T>(string path)
-        {
-            var xmlSerializer = new XmlSerializer(typeof(T));
-            using var streamReader = new StreamReader(path);
-
-            try
-            {
-                return (T)xmlSerializer.Deserialize(streamReader);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(null, ex);
-            }
-        }
-    }
-
-    internal static class AppUpdateService
-    {
-        public static async Task<string> GetUpdateUrl(
-            string server, string appName, string appVersion, HttpClient httpClient = null)
-        {
-            httpClient ??= new HttpClient();
-
-            appName = appName.Replace(" ", ""); // replace spaces in url
-
-            try
-            {
-                using var response = await httpClient.GetAsync(server + "?appname=" + appName + "&version=" + appVersion);
-
-                if (response.IsSuccessStatusCode)
+                try
                 {
-                    return await response.Content.ReadAsStringAsync();
+                    return (T)xmlSerializer.Deserialize(streamReader);
                 }
-
-                return string.Empty;
-            }
-            catch (Exception)
-            {
-                return string.Empty;
+                catch (Exception ex)
+                {
+                    throw new Exception(null, ex);
+                }
             }
         }
     }

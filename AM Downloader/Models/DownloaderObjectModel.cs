@@ -446,7 +446,7 @@ namespace AMDownloader.Models
 
                     var t = Task.Run(async () =>
                     {
-                        var connFile = $"{Destination}.{conn}{Constants.TempDownloadExtension}";
+                        var connFile = $"{Destination}.{conn}{Common.Constants.TempDownloadExtension}";
                         long connLength = 0;
 
                         using var connRequest = new HttpRequestMessage()
@@ -709,7 +709,7 @@ namespace AMDownloader.Models
         private FileInfo[] GetTempFiles()
         {
             DirectoryInfo d = new(Path.GetDirectoryName(Destination));
-            return d.GetFiles($"{Name}.*{Constants.TempDownloadExtension}");
+            return d.GetFiles($"{Name}.*{Common.Constants.TempDownloadExtension}");
         }
 
         /// <summary>
