@@ -206,8 +206,9 @@ namespace AMDownloader.QueueProcessing
             IsBusy = false;
 
             cancellationRequested = ct.IsCancellationRequested;
-            _cts.Dispose();
+
             _tcs.SetResult();
+            _cts.Dispose();
 
             // keep running the queue recursively until there are
             // no more queued items or cancellation is requested

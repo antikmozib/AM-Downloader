@@ -44,9 +44,11 @@ namespace AMDownloader.ViewModels
 
             foreach (var item in items)
             {
-                var listViewerItem = new ListViewerItem();
+                var listViewerItem = new ListViewerItem
+                {
+                    Content = item
+                };
 
-                listViewerItem.Content = item;
                 ListViewerItems.Add(listViewerItem);
             }
         }

@@ -12,8 +12,6 @@ namespace AMDownloader.Converters
 {
     internal class DownloaderFileIconConverter : IValueConverter
     {
-        private Dictionary<string, ImageSource> _icons = new Dictionary<string, ImageSource>();
-
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             var item = value as DownloaderObjectModel;
