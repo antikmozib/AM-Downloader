@@ -57,6 +57,11 @@ namespace AMDownloader.Helpers
                 return result;
             }
 
+            /// <summary>
+            /// Extracts the filename from an URL.
+            /// </summary>
+            /// <param name="url">The URL to extract the filename from.</param>
+            /// <returns>The extracted filename if the URL is valid, otherwise an empty string.</returns>
             public static string GetFileNameFromUrl(string url)
             {
                 bool success = Uri.TryCreate(url, UriKind.Absolute, out Uri uri);
