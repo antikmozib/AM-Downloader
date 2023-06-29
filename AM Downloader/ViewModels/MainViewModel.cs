@@ -48,13 +48,13 @@ namespace AMDownloader.ViewModels
         private readonly HttpClient _client;
         private readonly IProgress<long> _progressReporter;
         private readonly ClipboardObserver _clipboardService;
-        private readonly SemaphoreSlim _updatingListSemaphore;
         private readonly SemaphoreSlim _refreshingViewSemaphore;
-        private readonly SemaphoreSlim _measuringSpeedSemaphore;
         private readonly ShowWindowDelegate _showWindow;
         private readonly ShowPromptDelegate _showPrompt;
         private CancellationTokenSource _updatingListCts;
         private readonly List<CancellationTokenSource> _refreshViewCtsList;
+        private TaskCompletionSource _updatingListTcs;
+        private TaskCompletionSource _reportingSpeedTcs;
         private TaskCompletionSource _closingTcs;
         private readonly object _refreshViewCtsListLock;
         private readonly object _downloadItemsCollectionLock;
@@ -80,29 +80,7 @@ namespace AMDownloader.ViewModels
         public int FinishedCount { get; private set; }
         public int ErroredCount { get; private set; }
         public int PausedCount { get; private set; }
-        public bool IsBackgroundWorking
-        {
-            get
-            {
-                // null check necessary as it's always null at launch
-                if (_updatingListCts == null)
-                {
-                    return false;
-                }
-                else
-                {
-                    try
-                    {
-                        var ct = _updatingListCts.Token;
-                        return true;
-                    }
-                    catch (ObjectDisposedException)
-                    {
-                        return false;
-                    }
-                }
-            }
-        }
+        public bool IsBackgroundWorking => _updatingListTcs != null && _updatingListTcs.Task.Status != TaskStatus.RanToCompletion;
         public bool IsDownloading => DownloadingCount > 0;
         public string Status { get; private set; }
 
@@ -193,9 +171,7 @@ namespace AMDownloader.ViewModels
                 }
             });
             _clipboardService = new ClipboardObserver();
-            _updatingListSemaphore = new SemaphoreSlim(1);
             _refreshingViewSemaphore = new SemaphoreSlim(1);
-            _measuringSpeedSemaphore = new SemaphoreSlim(1);
             _showWindow = showWindow;
             _showPrompt = showPrompt;
             _refreshViewCtsList = new();
@@ -267,15 +243,14 @@ namespace AMDownloader.ViewModels
                 Status = "Loading...";
                 RaisePropertyChanged(nameof(Status));
 
+                _updatingListTcs = new TaskCompletionSource();
                 _updatingListCts = new CancellationTokenSource();
                 RaisePropertyChanged(nameof(IsBackgroundWorking));
 
                 var ct = _updatingListCts.Token;
 
-                Task.Run(async () =>
+                Task.Run(() =>
                 {
-                    await _updatingListSemaphore.WaitAsync();
-
                     try
                     {
                         var source = Common.Functions.Deserialize<SerializableDownloaderObjectModelList>(Common.Paths.DownloadsHistoryFile);
@@ -335,18 +310,15 @@ namespace AMDownloader.ViewModels
                     {
 
                     }
-                    finally
-                    {
-                        _updatingListSemaphore.Release();
-                    }
 
                     Progress = 0;
                     Status = "Ready";
+
+                    _updatingListCts.Dispose();
+                    _updatingListTcs.SetResult();
+
                     RaisePropertyChanged(nameof(Progress));
                     RaisePropertyChanged(nameof(Status));
-                }).ContinueWith(t =>
-                {
-                    _updatingListCts.Dispose();
                     RaisePropertyChanged(nameof(IsBackgroundWorking));
 
                     RefreshCollectionView();
@@ -370,9 +342,9 @@ namespace AMDownloader.ViewModels
 
         private void Start(object obj)
         {
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>();
+            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
 
-            Task.Run(async () => await StartDownloadAsync(false, items.ToArray()));
+            Task.Run(async () => await StartDownloadAsync(false, items));
         }
 
         private bool Start_CanExecute(object obj)
@@ -397,13 +369,12 @@ namespace AMDownloader.ViewModels
 
         private void Pause(object obj)
         {
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>();
+            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
 
-            foreach (var item in items)
-            {
-                QueueProcessor.Dequeue(item);
-                item.Pause();
-            }
+            QueueProcessor.Dequeue(items);
+            Parallel.ForEach(items, (item) => item.Pause());
+
+            RefreshCollectionView();
         }
 
         private bool Pause_CanExecute(object obj)
@@ -428,13 +399,10 @@ namespace AMDownloader.ViewModels
 
         private void Cancel(object obj)
         {
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>();
+            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
 
-            foreach (var item in items)
-            {
-                QueueProcessor.Dequeue(item);
-                item.Cancel();
-            }
+            QueueProcessor.Dequeue(items);
+            Parallel.ForEach(items, (item) => item.Cancel());
 
             RefreshCollectionView();
         }
@@ -466,6 +434,7 @@ namespace AMDownloader.ViewModels
 
             if (_showWindow.Invoke(addDownloadViewModel) == true)
             {
+                _updatingListTcs = new TaskCompletionSource();
                 _updatingListCts = new CancellationTokenSource();
                 RaisePropertyChanged(nameof(IsBackgroundWorking));
 
@@ -473,14 +442,27 @@ namespace AMDownloader.ViewModels
 
                 Task.Run(async () =>
                 {
-                    itemsAdded = await AddItemsAsync(addDownloadViewModel.GeneratedUrls,
+                    itemsAdded = CreateObjects(addDownloadViewModel.GeneratedUrls,
                         addDownloadViewModel.SaveToFolder,
-                        addDownloadViewModel.Enqueue,
                         ct);
-                }
-                ).ContinueWith(async t =>
-                {
+
+                    if (!_updatingListCts.IsCancellationRequested)
+                    {
+                        Status = "Refreshing...";
+                        RaisePropertyChanged(nameof(Status));
+
+                        AddObjects(itemsAdded);
+
+                        if (addDownloadViewModel.Enqueue)
+                        {
+                            QueueProcessor.Enqueue(itemsAdded);
+                        }
+                    }
+
+                    Status = "Ready";
+                    _updatingListTcs.SetResult();
                     _updatingListCts.Dispose();
+                    RaisePropertyChanged(nameof(Status));
                     RaisePropertyChanged(nameof(IsBackgroundWorking));
 
                     RefreshCollectionView();
@@ -500,14 +482,14 @@ namespace AMDownloader.ViewModels
 
         private void Remove(object obj)
         {
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>();
+            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
             var itemsDeleteable = from item in items where item.IsCompleted select item;
             var delete = true;
 
             if (itemsDeleteable.Any())
             {
                 var result = _showPrompt.Invoke(
-                    $"Also delete the file{(items.Count() > 1 ? "s" : "")} from storage?",
+                    $"Also delete the file{(items.Length > 1 ? "s" : "")} from storage?",
                     "Remove",
                     PromptButton.YesNoCancel,
                     PromptIcon.Warning,
@@ -523,12 +505,23 @@ namespace AMDownloader.ViewModels
                 }
             }
 
+            _updatingListTcs = new TaskCompletionSource();
             _updatingListCts = new CancellationTokenSource();
             RaisePropertyChanged(nameof(IsBackgroundWorking));
+
             var ct = _updatingListCts.Token;
 
-            Task.Run(async () => await RemoveObjectsAsync(items, delete, ct)).ContinueWith(t =>
+            Task.Run(async () =>
             {
+                try
+                {
+                    await RemoveObjectsAsync(items, delete, ct);
+                }
+                catch
+                {
+
+                }
+
                 _updatingListCts.Dispose();
                 RaisePropertyChanged(nameof(IsBackgroundWorking));
 
@@ -550,9 +543,9 @@ namespace AMDownloader.ViewModels
 
         private void Open(object obj)
         {
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>();
+            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
 
-            if (items.Count() > 1)
+            if (items.Length > 1)
             {
                 var result = _showPrompt.Invoke(
                     "Opening too many files at the same file may cause the system to crash.\n\nProceed anyway?",
@@ -567,10 +560,7 @@ namespace AMDownloader.ViewModels
                 }
             }
 
-            foreach (var item in items)
-            {
-                Process.Start("explorer.exe", "\"" + item.Destination + "\"");
-            }
+            Parallel.ForEach(items, (item) => Process.Start("explorer.exe", "\"" + item.Destination + "\""));
         }
 
         private bool Open_CanExecute(object obj)
@@ -595,13 +585,13 @@ namespace AMDownloader.ViewModels
 
         private void OpenContainingFolder(object obj)
         {
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>();
-            var itemsOpenable = from item in items
-                                where File.Exists(item.Destination) ||
-                                Directory.Exists(Path.GetDirectoryName(item.Destination))
-                                select item;
+            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
+            var itemsOpenable = (from item in items
+                                 where File.Exists(item.Destination) ||
+                                 Directory.Exists(Path.GetDirectoryName(item.Destination))
+                                 select item).ToArray();
 
-            if (itemsOpenable.Count() > 1)
+            if (itemsOpenable.Length > 1)
             {
                 var result = _showPrompt.Invoke(
                     "Opening too many folders at the same time may cause the system to crash.\n\nProceed anyway?",
@@ -616,7 +606,7 @@ namespace AMDownloader.ViewModels
                 }
             }
 
-            foreach (var item in itemsOpenable)
+            Parallel.ForEach(itemsOpenable, (item) =>
             {
                 if (File.Exists(item.Destination))
                 {
@@ -626,7 +616,7 @@ namespace AMDownloader.ViewModels
                 {
                     Process.Start("explorer.exe", Path.GetDirectoryName(item.Destination));
                 }
-            }
+            });
         }
 
         private bool OpenContainingFolder_CanExecute(object obj)
@@ -679,12 +669,9 @@ namespace AMDownloader.ViewModels
 
         private void Enqueue(object obj)
         {
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>();
+            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
 
-            foreach (var item in items)
-            {
-                QueueProcessor.Enqueue(item);
-            }
+            QueueProcessor.Enqueue(items);
         }
 
         private bool Enqueue_CanExecute(object obj)
@@ -709,9 +696,9 @@ namespace AMDownloader.ViewModels
 
         private void Dequeue(object obj)
         {
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>();
+            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
 
-            QueueProcessor.Dequeue(items.ToArray());
+            QueueProcessor.Dequeue(items);
         }
 
         private bool Dequeue_CanExecute(object obj)
@@ -736,10 +723,10 @@ namespace AMDownloader.ViewModels
 
         private void CopyLinkToClipboard(object obj)
         {
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>();
+            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
             var clipText = string.Empty;
             var counter = 0;
-            var total = items.Count();
+            var total = items.Length;
 
             foreach (var item in items)
             {
@@ -768,15 +755,17 @@ namespace AMDownloader.ViewModels
 
         private void ClearFinishedDownloads(object obj)
         {
+            _updatingListTcs = new TaskCompletionSource();
             _updatingListCts = new CancellationTokenSource();
             RaisePropertyChanged(nameof(IsBackgroundWorking));
 
             var ct = _updatingListCts.Token;
+            var items = (from item in DownloadItemsCollection where item.IsCompleted select item).ToArray();
 
-            var items = from item in DownloadItemsCollection where item.IsCompleted select item;
-
-            Task.Run(async () => await RemoveObjectsAsync(items, false, ct)).ContinueWith(t =>
+            Task.Run(async () =>
             {
+                await RemoveObjectsAsync(items, false, ct);
+
                 _updatingListCts.Dispose();
                 RaisePropertyChanged(nameof(IsBackgroundWorking));
 
@@ -786,12 +775,7 @@ namespace AMDownloader.ViewModels
 
         private bool ClearFinishedDownloads_CanExecute(object obj)
         {
-            if (IsBackgroundWorking)
-            {
-                return false;
-            }
-
-            return FinishedCount > 0;
+            return !IsBackgroundWorking && FinishedCount > 0;
         }
 
         private void CancelBackgroundTask(object obj)
@@ -881,20 +865,23 @@ namespace AMDownloader.ViewModels
                 }
             }
 
-            Status = "Saving...";
-            RaisePropertyChanged(nameof(Status));
-            RaiseEvent(Closing);
-
             _closingTcs = new TaskCompletionSource();
+            RaiseEvent(Closing);
 
             Task.Run(async () =>
             {
+                if (IsBackgroundWorking)
+                {
+                    await _updatingListTcs.Task;
+                }
+
                 if (QueueProcessor.IsBusy)
                 {
                     await QueueProcessor.StopAsync();
                 }
 
-                await _updatingListSemaphore.WaitAsync();
+                Status = "Saving...";
+                RaisePropertyChanged(nameof(Status));
 
                 try
                 {
@@ -935,10 +922,6 @@ namespace AMDownloader.ViewModels
                 catch
                 {
                     // close even when an exception occurs
-                }
-                finally
-                {
-                    _updatingListSemaphore.Release();
                 }
 
                 if (Settings.Default.FirstRun)
@@ -1032,7 +1015,7 @@ namespace AMDownloader.ViewModels
 
         private void RefreshCollectionView()
         {
-            if (_updatingListSemaphore.CurrentCount == 0)
+            if (IsBackgroundWorking)
             {
                 return;
             }
@@ -1072,6 +1055,7 @@ namespace AMDownloader.ViewModels
                 }
                 catch (OperationCanceledException)
                 {
+
                 }
                 finally
                 {
@@ -1084,28 +1068,23 @@ namespace AMDownloader.ViewModels
         }
 
         /// <summary>
-        /// Creates new <see cref="DownloaderObjectModel"/>s from the params and adds them to the list.
+        /// Creates new <see cref="DownloaderObjectModel"/>s from the params.
         /// </summary>
         /// <param name="urls">The URLs to the files to add.</param>
         /// <param name="destination">The folder where to download the files.</param>
-        /// <param name="enqueue">If <see langword="true"/>, the files will be added to the
-        /// <see cref="QueueProcessor"/>.</param>
         /// <param name="ct">The <see cref="CancellationToken"/> to cancel the process.</param>
         /// <returns>An array of <see cref="DownloaderObjectModel"/>s which have been successfully
-        /// added to the list.</returns>
-        private async Task<DownloaderObjectModel[]> AddItemsAsync(IEnumerable<string> urls, string destination, bool enqueue, CancellationToken ct)
+        /// created.</returns>
+        private DownloaderObjectModel[] CreateObjects(IEnumerable<string> urls, string destination, CancellationToken ct)
         {
             var existingUrls = from di in DownloadItemsCollection select di.Url;
             var existingDestinations = from di in DownloadItemsCollection select di.Destination;
-            var itemsToAdd = new List<DownloaderObjectModel>();
-            var itemsAdded = new List<DownloaderObjectModel>(); // the final list of items added; return this
+            var itemsCreated = new List<DownloaderObjectModel>();
             var itemsExist = new List<string>(); // skipped
             var itemsErrored = new List<string>(); // errored
             var wasCanceled = false;
             var totalItems = urls.Count();
             var counter = 0;
-
-            await _updatingListSemaphore.WaitAsync();
 
             foreach (var url in urls.Distinct())
             {
@@ -1145,7 +1124,7 @@ namespace AMDownloader.ViewModels
                         Download_PropertyChanged,
                         _progressReporter);
 
-                itemsToAdd.Add(item);
+                itemsCreated.Add(item);
 
                 if (ct.IsCancellationRequested)
                 {
@@ -1153,28 +1132,6 @@ namespace AMDownloader.ViewModels
                     break;
                 }
             }
-
-            if (!wasCanceled)
-            {
-                Status = "Refreshing...";
-                RaisePropertyChanged(nameof(Status));
-
-                AddObjects(itemsToAdd.ToArray());
-
-                if (enqueue)
-                {
-                    QueueProcessor.Enqueue(itemsToAdd.ToArray());
-                }
-
-                itemsAdded.AddRange(itemsToAdd);
-            }
-
-            Progress = 0;
-            Status = "Ready";
-            RaisePropertyChanged(nameof(Progress));
-            RaisePropertyChanged(nameof(Status));
-
-            _updatingListSemaphore.Release();
 
             if (!wasCanceled)
             {
@@ -1193,7 +1150,10 @@ namespace AMDownloader.ViewModels
                 }
             }
 
-            return itemsAdded.ToArray();
+            Progress = 0;
+            RaisePropertyChanged(nameof(Progress));
+
+            return itemsCreated.ToArray();
         }
 
         private void AddObjects(params DownloaderObjectModel[] objects)
@@ -1235,8 +1195,6 @@ namespace AMDownloader.ViewModels
             int counter = 0;
             int total = items.Count();
             string primaryStatus = delete ? "Deleting" : "Removing";
-
-            await _updatingListSemaphore.WaitAsync();
 
             foreach (var item in items)
             {
@@ -1323,10 +1281,9 @@ namespace AMDownloader.ViewModels
 
             Progress = 0;
             Status = "Ready";
+            _updatingListTcs.SetResult();
             RaisePropertyChanged(nameof(Progress));
             RaisePropertyChanged(nameof(Status));
-
-            _updatingListSemaphore.Release();
 
             if (failed.Count > 0)
             {
@@ -1381,15 +1338,16 @@ namespace AMDownloader.ViewModels
 
         private void StartReportingSpeed()
         {
-            if (_measuringSpeedSemaphore.CurrentCount == 0)
+            if (_reportingSpeedTcs != null && _reportingSpeedTcs.Task.Status != TaskStatus.RanToCompletion)
             {
+                // already reporting speed
                 return;
             }
 
+            _reportingSpeedTcs = new TaskCompletionSource();
+
             Task.Run(async () =>
             {
-                await _measuringSpeedSemaphore.WaitAsync();
-
                 Stopwatch stopwatch = new();
                 long bytesFrom;
                 long bytesCaptured;
@@ -1410,9 +1368,8 @@ namespace AMDownloader.ViewModels
                 } while (DownloadingCount > 0);
 
                 Speed = null;
+                _reportingSpeedTcs.SetResult();
                 RaisePropertyChanged(nameof(Speed));
-
-                _measuringSpeedSemaphore.Release();
             });
         }
 
@@ -1538,10 +1495,7 @@ namespace AMDownloader.ViewModels
                 }
                 else
                 {
-                    if (_updatingListSemaphore.CurrentCount > 0)
-                    {
-                        Status = "Ready";
-                    }
+                    Status = "Ready";
                 }
 
                 RaisePropertyChanged(nameof(Status));
