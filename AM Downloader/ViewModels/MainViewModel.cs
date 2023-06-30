@@ -446,17 +446,14 @@ namespace AMDownloader.ViewModels
                         addDownloadViewModel.SaveToFolder,
                         ct);
 
-                    if (!_updatingListCts.IsCancellationRequested)
+                    Status = "Refreshing...";
+                    RaisePropertyChanged(nameof(Status));
+
+                    AddObjects(itemsAdded);
+
+                    if (addDownloadViewModel.Enqueue)
                     {
-                        Status = "Refreshing...";
-                        RaisePropertyChanged(nameof(Status));
-
-                        AddObjects(itemsAdded);
-
-                        if (addDownloadViewModel.Enqueue)
-                        {
-                            QueueProcessor.Enqueue(itemsAdded);
-                        }
+                        QueueProcessor.Enqueue(itemsAdded);
                     }
 
                     Status = "Ready";
@@ -1080,7 +1077,6 @@ namespace AMDownloader.ViewModels
             var itemsCreated = new List<DownloaderObjectModel>();
             var itemsExist = new List<string>(); // skipped
             var itemsErrored = new List<string>(); // errored
-            var wasCanceled = false;
             var totalItems = urls.Count();
             var counter = 0;
 
@@ -1126,27 +1122,24 @@ namespace AMDownloader.ViewModels
 
                 if (ct.IsCancellationRequested)
                 {
-                    wasCanceled = true;
                     break;
                 }
             }
 
-            if (!wasCanceled)
+            if (itemsExist.Count > 0)
             {
-                if (itemsExist.Count > 0)
-                {
-                    _showWindow.Invoke(new ListViewerViewModel(itemsExist,
-                        "The following URLs were not added because they are already in the list:",
-                        "Duplicate Entries"));
-                }
-
-                if (itemsErrored.Count > 0)
-                {
-                    _showWindow.Invoke(new ListViewerViewModel(itemsErrored,
-                        "The following URLs were not added because they are invalid:",
-                        "Invalid Entries"));
-                }
+                _showWindow.Invoke(new ListViewerViewModel(itemsExist,
+                    "The following URLs were not added because they are already in the list:",
+                    "Duplicate Entries"));
             }
+
+            if (itemsErrored.Count > 0)
+            {
+                _showWindow.Invoke(new ListViewerViewModel(itemsErrored,
+                    "The following URLs were not added because they are invalid:",
+                    "Invalid Entries"));
+            }
+
 
             Progress = 0;
             RaisePropertyChanged(nameof(Progress));
