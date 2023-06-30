@@ -979,6 +979,25 @@
                         </GridViewColumn>
 
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
+                                        HeaderContainerStyle="{StaticResource HeaderRightAlignedStyle}"
+                                        Header="Speed"
+                                        Width="76">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Style="{StaticResource DownloadsGridRowStyle}" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Style="{StaticResource DownloadsGridTextBlockStyle}"
+                                                   Text="{Binding Speed, Converter={StaticResource DownloaderSpeedConverter}}"
+                                                   HorizontalAlignment="Right" />
+                                    </Grid>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
                                         HeaderContainerStyle="{StaticResource HeaderCenterAlignedStyle}"
                                         Header="Connections"
                                         Width="80">
@@ -1015,24 +1034,6 @@
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
 
-                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
-                                        HeaderContainerStyle="{StaticResource HeaderRightAlignedStyle}"
-                                        Header="Speed"
-                                        Width="76">
-                            <GridViewColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Grid>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Style="{StaticResource DownloadsGridRowStyle}" />
-                                        </Grid.RowDefinitions>
-
-                                        <TextBlock Style="{StaticResource DownloadsGridTextBlockStyle}"
-                                                   Text="{Binding Speed, Converter={StaticResource DownloaderSpeedConverter}}"
-                                                   HorizontalAlignment="Right" />
-                                    </Grid>
-                                </DataTemplate>
-                            </GridViewColumn.CellTemplate>
-                        </GridViewColumn>
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
                                         HeaderContainerStyle="{StaticResource HeaderRightAlignedStyle}"
                                         Header="ETA"
