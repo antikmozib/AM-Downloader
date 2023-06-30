@@ -13,8 +13,6 @@
         ResizeMode="CanResizeWithGrip"
         Height="{Binding Source={x:Static properties:Settings.Default}, Path=AddWindowHeight, Mode=TwoWay}"
         Width="{Binding Source={x:Static properties:Settings.Default}, Path=AddWindowWidth, Mode=TwoWay}"
-        MinWidth="600"
-        MinHeight="250"
         WindowStyle="SingleBorderWindow"
         Loaded="Window_Loaded"
         Closing="Window_Closing">
@@ -78,9 +76,8 @@
                       Width="auto"
                       HorizontalAlignment="Stretch"
                       VerticalContentAlignment="Center"
-                      IsEditable="True"
-                      IsReadOnly="True"
-                      Text="{Binding Path=SaveToFolder, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                      Text="{Binding Path=SaveToFolder, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                      IsEditable="True" />
         </DockPanel>
 
         <StackPanel Grid.Row="6"
@@ -96,7 +93,7 @@
                       Content="S_tart downloading"
                       IsChecked="{Binding Path=StartDownload, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
                       VerticalAlignment="Center"
-                      Margin="0 0 16 0" />
+                      Margin="0 0 8 0" />
 
             <Button x:Name="btnAdd"
                     Margin="0 0 8 0"

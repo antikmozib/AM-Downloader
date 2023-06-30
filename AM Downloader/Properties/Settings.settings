@@ -15,22 +15,22 @@
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="MainWindowHeight" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">450</Value>
+      <Value Profile="(Default)">540</Value>
     </Setting>
     <Setting Name="MainWindowWidth" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">1000</Value>
+      <Value Profile="(Default)">960</Value>
     </Setting>
     <Setting Name="MaxDownloadSpeed" Type="System.Int64" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
     <Setting Name="LeftPaneWidth" Type="System.Windows.GridLength" Scope="User">
-      <Value Profile="(Default)">150</Value>
+      <Value Profile="(Default)">144</Value>
     </Setting>
     <Setting Name="AddWindowHeight" Type="System.String" Scope="User">
-      <Value Profile="(Default)">250</Value>
+      <Value Profile="(Default)">256</Value>
     </Setting>
     <Setting Name="AddWindowWidth" Type="System.String" Scope="User">
-      <Value Profile="(Default)">650</Value>
+      <Value Profile="(Default)">640</Value>
     </Setting>
     <Setting Name="EnqueueAddedItems" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>

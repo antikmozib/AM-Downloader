@@ -73,7 +73,7 @@ namespace AMDownloader.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("450")]
+        [global::System.Configuration.DefaultSettingValueAttribute("540")]
         public int MainWindowHeight {
             get {
                 return ((int)(this["MainWindowHeight"]));
@@ -85,7 +85,7 @@ namespace AMDownloader.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1000")]
+        [global::System.Configuration.DefaultSettingValueAttribute("960")]
         public int MainWindowWidth {
             get {
                 return ((int)(this["MainWindowWidth"]));
@@ -109,7 +109,7 @@ namespace AMDownloader.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("150")]
+        [global::System.Configuration.DefaultSettingValueAttribute("144")]
         public global::System.Windows.GridLength LeftPaneWidth {
             get {
                 return ((global::System.Windows.GridLength)(this["LeftPaneWidth"]));
@@ -121,7 +121,7 @@ namespace AMDownloader.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("250")]
+        [global::System.Configuration.DefaultSettingValueAttribute("256")]
         public string AddWindowHeight {
             get {
                 return ((string)(this["AddWindowHeight"]));
@@ -133,7 +133,7 @@ namespace AMDownloader.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("650")]
+        [global::System.Configuration.DefaultSettingValueAttribute("640")]
         public string AddWindowWidth {
             get {
                 return ((string)(this["AddWindowWidth"]));
