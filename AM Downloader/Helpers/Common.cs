@@ -76,13 +76,18 @@ namespace AMDownloader.Helpers
                 }
             }
 
-            public static string DriveLetterToName(string rootPath)
+            /// <summary>
+            /// Gets the drive type description, such as Local, Removable, Network or RAM Disk, from the drive root path.
+            /// </summary>
+            /// <param name="driveRootPath">The path to the root of the drive.</param>
+            /// <returns>A description of the type of drive, such as Local, Removable, Network or RAM Disk.</returns>
+            public static string GetDriveType(string driveRootPath)
             {
                 var drives = DriveInfo.GetDrives();
 
                 foreach (var drive in drives)
                 {
-                    if (drive.RootDirectory.FullName.TrimEnd(Path.DirectorySeparatorChar) != rootPath.TrimEnd(Path.DirectorySeparatorChar))
+                    if (drive.RootDirectory.FullName.TrimEnd(Path.DirectorySeparatorChar) != driveRootPath.TrimEnd(Path.DirectorySeparatorChar))
                     {
                         continue;
                     }
@@ -96,14 +101,16 @@ namespace AMDownloader.Helpers
 
                             case DriveType.CDRom:
                             case DriveType.Removable:
-                                return "Removeable Disk (" + drive.RootDirectory.FullName.TrimEnd(Path.DirectorySeparatorChar) + ")";
+                                return "Removable Disk (" + drive.RootDirectory.FullName.TrimEnd(Path.DirectorySeparatorChar) + ")";
 
                             case DriveType.Network:
                                 return "Network Disk (" + drive.RootDirectory.FullName.TrimEnd(Path.DirectorySeparatorChar) + ")";
 
-                            case DriveType.Unknown:
                             case DriveType.Ram:
-                                return "Disk (" + drive.RootDirectory.FullName.TrimEnd(Path.DirectorySeparatorChar) + ")";
+                                return "RAM Disk (" + drive.RootDirectory.FullName.TrimEnd(Path.DirectorySeparatorChar) + ")";
+
+                            default:
+                                return "Unknown Disk (" + drive.RootDirectory.FullName.TrimEnd(Path.DirectorySeparatorChar) + ")";
                         }
                     }
                     else
@@ -112,7 +119,23 @@ namespace AMDownloader.Helpers
                     }
                 }
 
-                return string.Empty;
+                return GetDriveRootFromPath(driveRootPath);
+            }
+
+            private static string GetDriveRootFromPath(string path)
+            {
+                if (path.Contains(':'))
+                {
+                    return path.Substring(0, path.IndexOf(":") + 1) + Path.DirectorySeparatorChar;
+                }
+                else if (path.Contains(Path.DirectorySeparatorChar))
+                {
+                    return path.Substring(0, path.IndexOf(Path.DirectorySeparatorChar) + 1);
+                }
+                else
+                {
+                    return path;
+                }
             }
 
             public static void ResetAllSettings()
