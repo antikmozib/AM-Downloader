@@ -517,9 +517,9 @@ namespace AMDownloader.ViewModels
                 {
                     await RemoveObjectsAsync(items, delete, ct);
                 }
-                catch
+                catch (Exception ex)
                 {
-
+                    Log.Error(ex, ex.Message);
                 }
 
                 _updatingListCts.Dispose();
