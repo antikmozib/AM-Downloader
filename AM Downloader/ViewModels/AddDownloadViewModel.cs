@@ -74,7 +74,7 @@ namespace AMDownloader.ViewModels
             _clipboardService = new ClipboardObserver();
 
             AddCommand = new RelayCommand<object>(Add, Add_CanExecute);
-            PreviewCommand = new RelayCommand<object>(Preview, Add_CanExecute);
+            PreviewCommand = new RelayCommand<object>(Preview, Preview_CanExecute);
 
             if (Settings.Default.LastDownloadLocation.Trim().Length > 0)
             {
@@ -102,7 +102,7 @@ namespace AMDownloader.ViewModels
             _showList.Invoke(new ListViewerViewModel(GeneratedUrls.ToList(), "Generated URLs:", "Preview"));
         }
 
-        private bool Add_CanExecute(object obj)
+        private bool Preview_CanExecute(object obj)
         {
             return !string.IsNullOrWhiteSpace(Urls);
         }
@@ -114,6 +114,11 @@ namespace AMDownloader.ViewModels
 
             Settings.Default.EnqueueAddedItems = Enqueue;
             Settings.Default.StartDownloadingAddedItems = StartDownload;
+        }
+
+        private bool Add_CanExecute(object obj)
+        {
+            return !string.IsNullOrWhiteSpace(Urls) && !string.IsNullOrWhiteSpace(SaveToFolder);
         }
 
         /// <summary>

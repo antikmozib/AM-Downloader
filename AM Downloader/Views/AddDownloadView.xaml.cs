@@ -82,19 +82,23 @@ namespace AMDownloader.Views
             {
                 if (Settings.Default.LastDownloadLocation.Trim().Length > 0)
                 {
-                    cboDestination.Items.Add(Settings.Default.LastDownloadLocation);
-                    cboDestination.Text = Settings.Default.LastDownloadLocation;
+                    DestinationComboBox.Items.Add(Settings.Default.LastDownloadLocation);
+                    DestinationComboBox.Text = Settings.Default.LastDownloadLocation;
                 }
                 else
                 {
-                    cboDestination.Text = Common.Paths.UserDownloadsFolder;
+                    DestinationComboBox.Text = Common.Paths.UserDownloadsFolder;
                 }
             }
             else
             {
-                cboDestination.Text = Common.Paths.UserDownloadsFolder;
+                DestinationComboBox.Text = Common.Paths.UserDownloadsFolder;
             }
-            if (!cboDestination.Items.Contains(Common.Paths.UserDownloadsFolder)) cboDestination.Items.Add(Common.Paths.UserDownloadsFolder);
+
+            if (!DestinationComboBox.Items.Contains(Common.Paths.UserDownloadsFolder))
+            {
+                DestinationComboBox.Items.Add(Common.Paths.UserDownloadsFolder);
+            }
 
             if (File.Exists(Common.Paths.SavedLocationsFile))
             {
@@ -104,9 +108,9 @@ namespace AMDownloader.Views
 
                     foreach (var item in list.Objects)
                     {
-                        if (item.FolderPath.Trim().Length > 0 && !cboDestination.Items.Contains(item.FolderPath))
+                        if (item.FolderPath.Trim().Length > 0 && !DestinationComboBox.Items.Contains(item.FolderPath))
                         {
-                            cboDestination.Items.Add(item.FolderPath);
+                            DestinationComboBox.Items.Add(item.FolderPath);
                         }
                     }
                 }
@@ -116,20 +120,32 @@ namespace AMDownloader.Views
                 }
             }
 
-            txtUrl.Select(txtUrl.Text.Length, 0);
-            txtUrl.Focus();
+            UrlTextBox.SelectAll();
+            UrlTextBox.Focus();
         }
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void AddButton_Click(object sender, RoutedEventArgs e)
         {
+            // ensure the selected path is valid
+            try
+            {
+                Directory.CreateDirectory(DestinationComboBox.Text);
+            }
+            catch
+            {
+                MessageBox.Show("The selected location is invalid.", "Add", MessageBoxButton.OK, MessageBoxImage.Error);
+                DestinationComboBox.Focus();
+                return;
+            }
+
             if (Settings.Default.RememberLastDownloadLocation)
             {
-                Settings.Default.LastDownloadLocation = cboDestination.Text;
+                Settings.Default.LastDownloadLocation = DestinationComboBox.Text;
             }
 
             var list = new SerializableDownloadPathHistoryList();
 
-            foreach (var item in cboDestination.Items)
+            foreach (var item in DestinationComboBox.Items)
             {
                 var path = item.ToString();
 
@@ -154,20 +170,17 @@ namespace AMDownloader.Views
             {
 
             }
-        }
 
-        private void btnAdd_Click(object sender, RoutedEventArgs e)
-        {
             DialogResult = true;
         }
 
-        private void btnBrowse_Click(object sender, RoutedEventArgs e)
+        private void BrowseButton_Click(object sender, RoutedEventArgs e)
         {
             System.Windows.Forms.FolderBrowserDialog dlg = new System.Windows.Forms.FolderBrowserDialog();
 
-            if (Directory.Exists(cboDestination.Text))
+            if (Directory.Exists(DestinationComboBox.Text))
             {
-                dlg.SelectedPath = cboDestination.Text;
+                dlg.SelectedPath = DestinationComboBox.Text;
             }
             else
             {
@@ -176,16 +189,16 @@ namespace AMDownloader.Views
 
             if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                if (!cboDestination.Items.Contains(dlg.SelectedPath))
+                if (!DestinationComboBox.Items.Contains(dlg.SelectedPath))
                 {
-                    cboDestination.Items.Add(dlg.SelectedPath);
+                    DestinationComboBox.Items.Add(dlg.SelectedPath);
                 }
 
-                cboDestination.Text = dlg.SelectedPath;
+                DestinationComboBox.Text = dlg.SelectedPath;
             }
         }
 
-        private void txtUrl_PreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
+        private void UrlTextBox_PreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
         {
             if (Keyboard.Modifiers != ModifierKeys.Control)
             {
@@ -194,7 +207,7 @@ namespace AMDownloader.Views
 
             e.Handled = true;
 
-            var fontSize = txtUrl.FontSize;
+            var fontSize = UrlTextBox.FontSize;
 
             if (e.Delta > 0)
             {
@@ -215,7 +228,7 @@ namespace AMDownloader.Views
                 fontSize = 3 * this.FontSize;
             }
 
-            txtUrl.FontSize = fontSize;
+            UrlTextBox.FontSize = fontSize;
         }
     }
 }

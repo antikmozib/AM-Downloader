@@ -14,8 +14,7 @@
         Height="{Binding Source={x:Static properties:Settings.Default}, Path=AddWindowHeight, Mode=TwoWay}"
         Width="{Binding Source={x:Static properties:Settings.Default}, Path=AddWindowWidth, Mode=TwoWay}"
         WindowStyle="SingleBorderWindow"
-        Loaded="Window_Loaded"
-        Closing="Window_Closing">
+        Loaded="Window_Loaded">
     <Window.Resources>
         <converters:DownloaderDestinationFolderNameConverter x:Key="DownloaderDestinationConverter" />
 
@@ -36,19 +35,25 @@
             <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
 
-        <DockPanel>
-            <TextBlock Text="Enter the URL or pattern to add. You can enter multiple entries on separate lines." />
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition Width="auto" />
+            </Grid.ColumnDefinitions>
 
-            <CheckBox DockPanel.Dock="Right"
-                      x:Name="cbMonitorClipboard"
+            <TextBlock Text="Enter the URL or pattern to add. You can enter multiple entries on separate lines."
+                       TextTrimming="CharacterEllipsis" />
+
+            <CheckBox Grid.Column="1"
+                      x:Name="MonitorClipboardCheckBox"
                       Content="_Monitor clipboard"
                       IsChecked="{Binding Path=MonitorClipboard, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
                       VerticalAlignment="Center"
                       HorizontalAlignment="Right"
                       ToolTip="Automatically monitor the clipboard for URLs and add them to the list." />
-        </DockPanel>
+        </Grid>
 
-        <TextBox x:Name="txtUrl"
+        <TextBox x:Name="UrlTextBox"
                  Grid.Row="2"
                  Text="{Binding Path=Urls, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                  Width="auto"
@@ -57,7 +62,7 @@
                  HorizontalScrollBarVisibility="Auto"
                  VerticalScrollBarVisibility="Auto"
                  AcceptsReturn="True"
-                 PreviewMouseWheel="txtUrl_PreviewMouseWheel"
+                 PreviewMouseWheel="UrlTextBox_PreviewMouseWheel"
                  FontSize="{Binding Source={x:Static properties:Settings.Default}, Path=AddDownloadWindowFontSize, Mode=TwoWay}" />
 
         <DockPanel Grid.Row="4"
@@ -66,12 +71,12 @@
                    DockPanel.Dock="Left"
                    Content="_Save to:" />
 
-            <Button x:Name="btnBrowse"
+            <Button x:Name="BrowseButton"
                     DockPanel.Dock="Right"
                     Content="_Browse"
-                    Click="btnBrowse_Click" />
+                    Click="BrowseButton_Click" />
 
-            <ComboBox x:Name="cboDestination"
+            <ComboBox x:Name="DestinationComboBox"
                       Margin="0 0 8 0"
                       Width="auto"
                       HorizontalAlignment="Stretch"
@@ -83,26 +88,26 @@
         <StackPanel Grid.Row="6"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right">
-            <CheckBox x:Name="cbAddToQueue"
+            <CheckBox x:Name="AddToQueueCheckBox"
                       Content="A_dd to queue"
                       IsChecked="{Binding Path=Enqueue, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
                       VerticalAlignment="Center"
                       Margin="0 0 8 0" />
 
-            <CheckBox x:Name="cbStartDownloadingImmediately"
+            <CheckBox x:Name="StartDownloadingCheckBox"
                       Content="S_tart downloading"
                       IsChecked="{Binding Path=StartDownload, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
                       VerticalAlignment="Center"
                       Margin="0 0 8 0" />
 
-            <Button x:Name="btnAdd"
+            <Button x:Name="AddButton"
                     Margin="0 0 8 0"
                     Content="_Add"
                     Command="{Binding AddCommand}"
                     IsDefault="True"
-                    Click="btnAdd_Click" />
+                    Click="AddButton_Click" />
 
-            <Button x:Name="btnCancel"
+            <Button x:Name="CancelButton"
                     Margin="0 0 8 0"
                     Content="_Cancel"
                     IsCancel="True" />
