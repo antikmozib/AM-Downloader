@@ -248,13 +248,16 @@ namespace AMDownloader.Models
             }
             catch
             {
-                if (TempFilesExist())
+                if (Directory.Exists(Path.GetDirectoryName(Destination)))
                 {
-                    BytesDownloaded = GetTempFilesLength();
-                }
-                else
-                {
-                    BytesDownloaded = 0;
+                    if (TempFilesExist())
+                    {
+                        BytesDownloaded = GetTempFilesLength();
+                    }
+                    else
+                    {
+                        BytesDownloaded = 0;
+                    }
                 }
 
                 if (_ctLinked.IsCancellationRequested)
@@ -708,8 +711,19 @@ namespace AMDownloader.Models
 
         private FileInfo[] GetTempFiles()
         {
-            DirectoryInfo d = new(Path.GetDirectoryName(Destination));
-            return d.GetFiles($"{Name}.*{Common.Constants.TempDownloadExtension}");
+            FileInfo[] f = Array.Empty<FileInfo>();
+
+            try
+            {
+                DirectoryInfo d = new(Path.GetDirectoryName(Destination));
+                f = d.GetFiles($"{Name}.*{Common.Constants.TempDownloadExtension}");
+            }
+            catch
+            {
+
+            }
+
+            return f;
         }
 
         /// <summary>
