@@ -1,5 +1,6 @@
 ﻿// Copyright (C) 2020-2023 Antik Mozib. All rights reserved.
 
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -194,9 +195,9 @@ namespace AMDownloader.QueueProcessing
                 {
                     await Task.WhenAll(tasks);
                 }
-                catch
+                catch (Exception ex)
                 {
-
+                    Log.Error(ex, ex.Message);
                 }
             });
 
