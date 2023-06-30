@@ -14,9 +14,11 @@ namespace AMDownloader.QueueProcessing
     {
         #region Fields
 
-        private readonly SemaphoreSlim _semaphore;
-        private readonly object _queueListLock;
         private readonly List<IQueueable> _queueList;
+        private readonly List<IQueueable> _processedItems;
+        private readonly object _queueListLock;
+        private readonly object _processedItemsLock;
+        private readonly SemaphoreSlim _semaphore;
         private TaskCompletionSource _tcs;
         private CancellationTokenSource _cts;
 
@@ -50,9 +52,11 @@ namespace AMDownloader.QueueProcessing
             EventHandler itemEnqueuedEventHandler,
             EventHandler itemDequeuedEventHandler)
         {
-            _semaphore = new SemaphoreSlim(maxParallelDownloads);
             _queueList = new();
+            _processedItems = new();
             _queueListLock = _queueList;
+            _processedItemsLock = _processedItems;
+            _semaphore = new SemaphoreSlim(maxParallelDownloads);
 
             IsBusy = false;
 
@@ -133,73 +137,83 @@ namespace AMDownloader.QueueProcessing
 
             _tcs = new();
             _cts = new();
+
             var ct = _cts.Token;
 
             IsBusy = true;
             RaisePropertyChanged(nameof(IsBusy));
             RaiseEvent(QueueProcessorStarted);
 
-            await Task.Run(async () =>
+            try
             {
-                List<Task> tasks = new();
-
-                foreach (var item in _queueList)
+                await Task.Run(async () =>
                 {
-                    if (item.IsCompleted)
+                    List<Task> tasks = new();
+
+                    foreach (var item in _queueList)
                     {
-                        continue;
+                        if (item.IsCompleted)
+                        {
+                            continue;
+                        }
+
+                        var t = Task.Run(async () =>
+                        {
+                            var semTask = _semaphore.WaitAsync(ct);
+
+                            try
+                            {
+                                await semTask;
+
+                                ct.ThrowIfCancellationRequested();
+
+                                // ensure the item is still enqueued before commencing download
+                                if (!_queueList.Contains(item))
+                                {
+                                    return;
+                                }
+
+                                await item.StartAsync();
+
+                                if (item.IsCompleted || item.IsErrored)
+                                {
+                                    // item processed
+
+                                    Monitor.Enter(_processedItemsLock);
+                                    _processedItems.Add(item);
+                                    Monitor.Exit(_processedItemsLock);
+                                }
+                            }
+                            catch (OperationCanceledException)
+                            {
+                                ct.ThrowIfCancellationRequested();
+                            }
+                            finally
+                            {
+                                if (semTask.IsCompletedSuccessfully)
+                                {
+                                    _semaphore.Release();
+                                }
+                            }
+                        }, ct);
+
+                        tasks.Add(t);
                     }
 
-                    var t = Task.Run(async () =>
-                    {
-                        var semTask = _semaphore.WaitAsync(ct);
-
-                        try
-                        {
-                            await semTask;
-
-                            ct.ThrowIfCancellationRequested();
-
-                            // ensure the item is still enqueued before commencing download
-                            if (!_queueList.Contains(item))
-                            {
-                                return;
-                            }
-
-                            await item.StartAsync();
-
-                            if (item.IsCompleted || item.IsErrored)
-                            {
-                                Monitor.Enter(_queueListLock);
-                                _queueList.Remove(item);
-                                Monitor.Exit(_queueListLock);
-                            }
-                        }
-                        catch (OperationCanceledException)
-                        {
-                            ct.ThrowIfCancellationRequested();
-                        }
-                        finally
-                        {
-                            if (semTask.IsCompletedSuccessfully)
-                            {
-                                _semaphore.Release();
-                            }
-                        }
-                    }, ct);
-
-                    tasks.Add(t);
-                }
-
-                try
-                {
                     await Task.WhenAll(tasks);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, ex.Message);
-                }
-            });
+                });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+            }
+
+            // remove processed items from the queue list
+            foreach (var item in _processedItems)
+            {
+                _queueList.Remove(item);
+            }
+            _processedItems.Clear();
 
             // must be set before auto restarting the queue;
             // also, must be set before setting _tcs due to a race
@@ -267,6 +281,7 @@ namespace AMDownloader.QueueProcessing
             }
             catch
             {
+
             }
         }
 
