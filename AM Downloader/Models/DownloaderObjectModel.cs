@@ -248,7 +248,7 @@ namespace AMDownloader.Models
 
                 RaisePropertyChanged(nameof(TotalBytesToDownload));
             }
-            catch (Exception ex)
+            catch
             {
                 if (Directory.Exists(Path.GetDirectoryName(Destination)))
                 {
