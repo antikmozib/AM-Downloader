@@ -20,11 +20,13 @@
         Closing="Window_Closing">
     <Window.Resources>
         <converters:DownloaderDestinationFolderNameConverter x:Key="DownloaderDestinationConverter" />
+
         <Style TargetType="MenuItem">
             <Setter Property="TextBlock.FontSize"
                     Value="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=FontSize}" />
         </Style>
     </Window.Resources>
+
     <Grid Margin="8">
         <Grid.RowDefinitions>
             <RowDefinition Height="auto" />
@@ -35,8 +37,10 @@
             <RowDefinition Height="8" />
             <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
+
         <DockPanel>
             <TextBlock Text="Enter the URL or pattern to add. You can enter multiple entries on separate lines." />
+
             <CheckBox DockPanel.Dock="Right"
                       x:Name="cbMonitorClipboard"
                       Content="_Monitor clipboard"
@@ -45,6 +49,7 @@
                       HorizontalAlignment="Right"
                       ToolTip="Automatically monitor the clipboard for URLs and add them to the list." />
         </DockPanel>
+
         <TextBox x:Name="txtUrl"
                  Grid.Row="2"
                  Text="{Binding Path=Urls, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -56,15 +61,18 @@
                  AcceptsReturn="True"
                  PreviewMouseWheel="txtUrl_PreviewMouseWheel"
                  FontSize="{Binding Source={x:Static properties:Settings.Default}, Path=AddDownloadWindowFontSize, Mode=TwoWay}" />
+
         <DockPanel Grid.Row="4"
                    HorizontalAlignment="Stretch">
             <Label Margin="0 0 4 0"
                    DockPanel.Dock="Left"
                    Content="_Save to:" />
+
             <Button x:Name="btnBrowse"
                     DockPanel.Dock="Right"
                     Content="_Browse"
                     Click="btnBrowse_Click" />
+
             <ComboBox x:Name="cboDestination"
                       Margin="0 0 8 0"
                       Width="auto"
@@ -74,6 +82,7 @@
                       IsReadOnly="True"
                       Text="{Binding Path=SaveToFolder, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </DockPanel>
+
         <StackPanel Grid.Row="6"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right">
@@ -82,21 +91,25 @@
                       IsChecked="{Binding Path=Enqueue, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
                       VerticalAlignment="Center"
                       Margin="0 0 8 0" />
+
             <CheckBox x:Name="cbStartDownloadingImmediately"
                       Content="S_tart downloading"
                       IsChecked="{Binding Path=StartDownload, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
                       VerticalAlignment="Center"
                       Margin="0 0 16 0" />
+
             <Button x:Name="btnAdd"
                     Margin="0 0 8 0"
                     Content="_Add"
                     Command="{Binding AddCommand}"
                     IsDefault="True"
                     Click="btnAdd_Click" />
+
             <Button x:Name="btnCancel"
                     Margin="0 0 8 0"
                     Content="_Cancel"
                     IsCancel="True" />
+
             <Button Command="{Binding PreviewCommand}"
                     Content="_Preview" />
         </StackPanel>
