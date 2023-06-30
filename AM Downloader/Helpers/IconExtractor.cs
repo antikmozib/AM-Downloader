@@ -24,7 +24,7 @@ namespace AMDownloader.Helpers
             string tempPath = path.ToLower();
             string shortFileName = Path.GetFileName(path).ToLower();
             string ext = Path.GetExtension(path).ToLower();
-            bool deleteFile = false;
+            bool deleteTempFile = false;
 
             // have we seen this item before?
             if (isDirectory && _iconRepo.ContainsKey(path))
@@ -58,7 +58,7 @@ namespace AMDownloader.Helpers
                 tempPath = Path.Combine(Path.GetTempPath(), "AMDownloader" + DateTime.Now.ToFileTimeUtc() + ext);
 
                 File.Create(tempPath).Close();
-                deleteFile = true;
+                deleteTempFile = true;
             }
 
             // grab the actual icons
@@ -102,7 +102,7 @@ namespace AMDownloader.Helpers
                 }
             }
 
-            if (deleteFile)
+            if (deleteTempFile)
             {
                 File.Delete(tempPath);
             }
