@@ -197,6 +197,8 @@ namespace AMDownloader.Models
             PropertyChanged += propertyChanged;
 
             RaiseEvent(DownloadCreated);
+
+            Log.Debug($"Created {Name}");
         }
 
         #endregion
@@ -246,7 +248,7 @@ namespace AMDownloader.Models
 
                 RaisePropertyChanged(nameof(TotalBytesToDownload));
             }
-            catch
+            catch (Exception ex)
             {
                 if (Directory.Exists(Path.GetDirectoryName(Destination)))
                 {
@@ -292,6 +294,8 @@ namespace AMDownloader.Models
             RaisePropertyChanged(nameof(Progress));
             RaisePropertyChanged(nameof(Status));
             RaiseEvent(DownloadStopped);
+
+            Log.Debug($"Processed {Name}, Status = {Status}");
         }
 
         public void Pause()
@@ -603,8 +607,6 @@ namespace AMDownloader.Models
             }
             catch (Exception ex)
             {
-                Log.Error($"{ex.GetType().Name}: {ex.Message} ({Name})");
-
                 if (!SupportsResume || BytesDownloaded == 0 || _ctCancel.IsCancellationRequested)
                 {
                     // cleanup if download wasn't paused or can't be resumed

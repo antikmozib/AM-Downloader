@@ -820,8 +820,6 @@ namespace AMDownloader.ViewModels
                 return;
             }
 
-            Log.Debug($"Entered {nameof(Close)}()");
-
             if (IsBackgroundWorking)
             {
                 if (_showPrompt.Invoke(
