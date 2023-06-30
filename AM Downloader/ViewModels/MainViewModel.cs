@@ -1263,6 +1263,7 @@ namespace AMDownloader.ViewModels
             Application.Current.Dispatcher.Invoke(() =>
             {
                 Monitor.Enter(_downloadItemsCollectionLock);
+
                 if (itemsToRemove.Count == DownloadItemsCollection.Count)
                 {
                     DownloadItemsCollection.Clear();
@@ -1274,6 +1275,7 @@ namespace AMDownloader.ViewModels
                         DownloadItemsCollection.Remove(itemsToRemove[i]);
                     }
                 }
+
                 Monitor.Exit(_downloadItemsCollectionLock);
             });
 
