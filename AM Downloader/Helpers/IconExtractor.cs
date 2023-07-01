@@ -55,7 +55,7 @@ namespace AMDownloader.Helpers
             else if (!isDirectory && !File.Exists(path))
             {
                 ext = Path.GetExtension(path).ToLower();
-                tempPath = Path.Combine(Path.GetTempPath(), "AMDownloader" + DateTime.Now.ToFileTimeUtc() + ext);
+                tempPath = Path.Combine(Path.GetTempPath(), DateTime.Now.ToFileTimeUtc() + ext);
 
                 File.Create(tempPath).Close();
                 deleteTempFile = true;
