@@ -121,7 +121,11 @@ namespace AMDownloader.Views
                 }
             }
 
-            UrlTextBox.Select(UrlTextBox.Text.Length - 1, 0); // move cursor to the end of the TextBox
+            if (UrlTextBox.Text.Length > 0)
+            {
+                // move cursor to the end of the TextBox
+                UrlTextBox.Select(UrlTextBox.Text.Length - 1, 0);
+            }
             UrlTextBox.Focus();
         }
 
