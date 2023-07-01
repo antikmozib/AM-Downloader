@@ -2,7 +2,9 @@
 
 using AMDownloader.Properties;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Xml.Serialization;
 
@@ -41,14 +43,28 @@ namespace AMDownloader.Helpers
 
         internal static class Functions
         {
-            public static string GetNewFileName(string fullPath)
+            /// <summary>
+            /// Generates a new filename based on the supplied <paramref name="fullPath"/> if the supplied 
+            /// <paramref name="fullPath"/> already exists on disk.
+            /// </summary>
+            /// <param name="fullPath">The full path to the file for which to generate a new and available 
+            /// filename.</param>
+            /// <param name="supplementaryPaths">A supplementary list of paths against which to perform
+            /// checks, in addition to the directory of the supplied <paramref name="fullPath"/>.</param>
+            /// <returns>A new filename, based on <paramref name="fullPath"/>, which is guaranteed to 
+            /// not exist in the directory of the supplied <paramref name="fullPath"/>.</returns>
+            public static string GetNewFileName(string fullPath, IEnumerable<string> supplementaryPaths = null)
             {
                 string dirName = Path.GetDirectoryName(fullPath);
                 string fileName = Path.GetFileName(fullPath);
                 string result = dirName + Path.DirectorySeparatorChar + fileName;
                 int i = 0;
 
-                while (File.Exists(result) || File.Exists(result + Constants.TempDownloadExtension))
+                supplementaryPaths ??= Enumerable.Empty<string>();
+
+                while (File.Exists(result)
+                    || File.Exists(result + Constants.TempDownloadExtension)
+                    || supplementaryPaths.Select(o => o.ToLower()).Contains(result.ToLower()))
                 {
                     result = Path.Combine(dirName,
                         $"{Path.GetFileNameWithoutExtension(fileName)} ({++i}){Path.GetExtension(fileName)}");
