@@ -15,7 +15,7 @@
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="MainWindowHeight" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">540</Value>
+      <Value Profile="(Default)">420</Value>
     </Setting>
     <Setting Name="MainWindowWidth" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">960</Value>

@@ -73,7 +73,7 @@ namespace AMDownloader.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("540")]
+        [global::System.Configuration.DefaultSettingValueAttribute("420")]
         public int MainWindowHeight {
             get {
                 return ((int)(this["MainWindowHeight"]));
