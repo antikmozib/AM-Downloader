@@ -29,34 +29,38 @@ namespace AMDownloader
                     name, MessageBoxButton.OK, MessageBoxImage.Error);
                 Current.Shutdown();
             }
-
-            string[] args = Environment.GetCommandLineArgs();
-            var debugLoggerConfig = new LoggerConfiguration()
-                .MinimumLevel.Debug()
-                .WriteTo.Debug()
-                .WriteTo.File(Common.Paths.LogFile, rollingInterval: RollingInterval.Day)
-                .CreateLogger();
-            var releaseLoggerConfig = new LoggerConfiguration()
-                .MinimumLevel.Error()
-                .WriteTo.File(Common.Paths.LogFile, rollingInterval: RollingInterval.Day)
-                .CreateLogger();
-
-#if DEBUG
-            Log.Logger = debugLoggerConfig;
-#else
-            if (args.Select(o => o.ToLower()).Contains("-debug"))
-            {
-                Log.Logger = debugLoggerConfig;
-                Log.Debug("Debug logging configuration enabled.");
-            }
             else
             {
-                Log.Logger = releaseLoggerConfig;
-            }
+                Log.Debug("Starting app...");
+
+                string[] args = Environment.GetCommandLineArgs();
+                var debugLoggerConfig = new LoggerConfiguration()
+                    .MinimumLevel.Debug()
+                    .WriteTo.Debug()
+                    .WriteTo.File(Common.Paths.LogFile, rollingInterval: RollingInterval.Day)
+                    .CreateLogger();
+                var releaseLoggerConfig = new LoggerConfiguration()
+                    .MinimumLevel.Error()
+                    .WriteTo.File(Common.Paths.LogFile, rollingInterval: RollingInterval.Day)
+                    .CreateLogger();
+
+#if DEBUG
+                Log.Logger = debugLoggerConfig;
+#else
+                if (args.Select(o => o.ToLower()).Contains("-debug"))
+                {
+                    Log.Logger = debugLoggerConfig;
+                    Log.Debug("Debug logging configuration enabled.");
+                }
+                else
+                {
+                    Log.Logger = releaseLoggerConfig;
+                }
 #endif
 
-            MainView mainView = new();
-            mainView.Show();
+                MainView mainView = new();
+                mainView.Show();
+            }
         }
     }
 }
