@@ -398,8 +398,8 @@ namespace AMDownloader.Views
             Window window = null;
             bool? result = null;
 
-            // ViewModels must be assigned and the window must
-            // be shown explicitly from the main thread
+            // ViewModels must be assigned and the window must be
+            // initialized and shown explicitly from the main thread
             Application.Current.Dispatcher.Invoke(() =>
             {
                 if (viewModel is AddDownloadViewModel)
