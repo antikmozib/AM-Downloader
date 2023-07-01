@@ -23,14 +23,6 @@ namespace AMDownloader.ViewModels
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public string Urls { get; set; }
-        /// <summary>
-        /// Returns the list of full URLs generated from the URL patterns.
-        /// </summary>
-        public List<string> GeneratedUrls => BuildUrlsFromPatterns(Urls.Split('\n').ToArray());
-        public string SaveToFolder { get; set; }
-        public bool StartDownload { get; set; }
-        public bool Enqueue { get; set; }
         public bool MonitorClipboard
         {
             get
@@ -41,6 +33,7 @@ namespace AMDownloader.ViewModels
             set
             {
                 _monitorClipboard = value;
+                Settings.Default.MonitorClipboard = value;
 
                 if (value == true)
                 {
@@ -64,6 +57,14 @@ namespace AMDownloader.ViewModels
                 }
             }
         }
+        public string Urls { get; set; }
+        /// <summary>
+        /// Returns the list of full URLs generated from the URL patterns.
+        /// </summary>
+        public List<string> GeneratedUrls => BuildUrlsFromPatterns(Urls.Split('\n').ToArray());
+        public string SaveToFolder { get; set; }
+        public bool Enqueue { get; set; }
+        public bool StartDownload { get; set; }
 
         public ICommand AddCommand { get; private set; }
         public ICommand PreviewCommand { get; private set; }
@@ -75,6 +76,8 @@ namespace AMDownloader.ViewModels
             AddCommand = new RelayCommand<object>(Add, Add_CanExecute);
             PreviewCommand = new RelayCommand<object>(Preview, Preview_CanExecute);
 
+            MonitorClipboard = Settings.Default.MonitorClipboard;
+            Urls = string.Empty;
             if (Settings.Default.LastDownloadLocation.Trim().Length > 0)
             {
                 SaveToFolder = Settings.Default.LastDownloadLocation;
@@ -85,7 +88,6 @@ namespace AMDownloader.ViewModels
             }
             Enqueue = Settings.Default.EnqueueAddedItems;
             StartDownload = Settings.Default.StartDownloadingAddedItems;
-            Urls = string.Empty;
 
             var clipText = GenerateValidUrl(ClipboardObserver.GetText());
 

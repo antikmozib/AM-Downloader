@@ -1,5 +1,6 @@
 ﻿// Copyright (C) 2020-2023 Antik Mozib. All rights reserved.
 
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows;
 
@@ -21,18 +22,25 @@ namespace AMDownloader.ClipboardObservation
 
         public static string GetText()
         {
-            string val = string.Empty;
+            string value = string.Empty;
 
-            Thread t = new Thread(() =>
+            Thread t = new(() =>
             {
-                val = Clipboard.GetText();
+                try
+                {
+                    value = Clipboard.GetText();
+                }
+                catch (COMException)
+                {
+
+                }
             });
 
             t.SetApartmentState(ApartmentState.STA);
             t.Start();
             t.Join();
 
-            return val;
+            return value;
         }
 
         public static void Clear()
