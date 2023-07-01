@@ -28,9 +28,9 @@ namespace AMDownloader.Helpers
 
                 return string.Empty;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return string.Empty;
+                throw new Exception(ex.Message, ex);
             }
         }
     }

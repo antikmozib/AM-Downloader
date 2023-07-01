@@ -32,8 +32,8 @@ namespace AMDownloader.ViewModels
     internal delegate bool? ShowPromptDelegate(
         string promptText,
         string caption,
-        PromptButton button,
-        PromptIcon icon,
+        PromptButton button = PromptButton.OK,
+        PromptIcon icon = PromptIcon.None,
         bool defaultResult = true);
 
     internal enum Category
@@ -1368,33 +1368,47 @@ namespace AMDownloader.ViewModels
 
         private async Task TriggerUpdateCheckAsync(bool silent = false)
         {
-            string url = await AppUpdateService.GetUpdateUrl(
-                Common.Constants.UpdateServer,
-                Assembly.GetExecutingAssembly().GetName().Name,
-                Assembly.GetExecutingAssembly().GetName().Version.ToString(),
-                _client);
+            try
+            {
+                string url = await AppUpdateService.GetUpdateUrl(
+                    Common.Constants.UpdateServer,
+                    Assembly.GetExecutingAssembly().GetName().Name,
+                    Assembly.GetExecutingAssembly().GetName().Version.ToString(),
+                    _client);
 
-            if (string.IsNullOrEmpty(url))
+                if (string.IsNullOrEmpty(url))
+                {
+                    if (!silent)
+                    {
+                        _showPrompt.Invoke(
+                            "No new updates are available.",
+                            "Update",
+                            PromptButton.OK,
+                            PromptIcon.Information);
+                    }
+                    return;
+                }
+
+                if (_showPrompt.Invoke(
+                    "An update is available.\n\nWould you like to download it now?",
+                    "Update",
+                    PromptButton.YesNo,
+                    PromptIcon.Information,
+                    true) == true)
+                {
+                    Process.Start("explorer.exe", url);
+                }
+            }
+            catch
             {
                 if (!silent)
                 {
                     _showPrompt.Invoke(
-                        "No new updates are available.",
+                        "An error occurred while trying to check for updates.",
                         "Update",
                         PromptButton.OK,
-                        PromptIcon.Information);
+                        PromptIcon.Error);
                 }
-                return;
-            }
-
-            if (_showPrompt.Invoke(
-                "An update is available.\n\nWould you like to download it now?",
-                "Update",
-                PromptButton.YesNo,
-                PromptIcon.Information,
-                true) == true)
-            {
-                Process.Start("explorer.exe", url);
             }
         }
 
