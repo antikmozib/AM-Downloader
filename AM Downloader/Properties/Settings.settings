@@ -2,35 +2,44 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="AMDownloader.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <Setting Name="MaxParallelDownloads" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">5</Value>
-    </Setting>
-    <Setting Name="ClearFinishedDownloadsOnExit" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
-    <Setting Name="LastDownloadLocation" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
-    </Setting>
-    <Setting Name="RememberLastDownloadLocation" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
+    <Setting Name="MainWindowWidth" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">960</Value>
     </Setting>
     <Setting Name="MainWindowHeight" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">420</Value>
     </Setting>
-    <Setting Name="MainWindowWidth" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">960</Value>
-    </Setting>
-    <Setting Name="MaxDownloadSpeed" Type="System.Int64" Scope="User">
+    <Setting Name="MainWindowLeft" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="MainWindowTop" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="MainWindowState" Type="System.Windows.WindowState" Scope="User">
+      <Value Profile="(Default)">Normal</Value>
     </Setting>
     <Setting Name="LeftPaneWidth" Type="System.Windows.GridLength" Scope="User">
       <Value Profile="(Default)">144</Value>
     </Setting>
-    <Setting Name="AddWindowHeight" Type="System.String" Scope="User">
-      <Value Profile="(Default)">256</Value>
+    <Setting Name="LastSelectedCatagory" Type="System.String" Scope="User">
+      <Value Profile="(Default)">All</Value>
+    </Setting>
+    <Setting Name="SelectedColumnHeader" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="SelectedColumnHeaderDirection" Type="System.ComponentModel.ListSortDirection" Scope="User">
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="AddWindowWidth" Type="System.String" Scope="User">
       <Value Profile="(Default)">640</Value>
+    </Setting>
+    <Setting Name="AddWindowHeight" Type="System.String" Scope="User">
+      <Value Profile="(Default)">256</Value>
+    </Setting>
+    <Setting Name="AddDownloadWindowFontSize" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">14</Value>
+    </Setting>
+    <Setting Name="LastDownloadLocation" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="EnqueueAddedItems" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
@@ -38,44 +47,35 @@
     <Setting Name="StartDownloadingAddedItems" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="MainWindowTop" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">50</Value>
-    </Setting>
-    <Setting Name="MainWindowLeft" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">50</Value>
-    </Setting>
-    <Setting Name="BytesTransferredOverLifetime" Type="System.UInt64" Scope="User">
-      <Value Profile="(Default)">0</Value>
-    </Setting>
-    <Setting Name="MainWindowState" Type="System.Windows.WindowState" Scope="User">
-      <Value Profile="(Default)">Normal</Value>
-    </Setting>
-    <Setting Name="AddDownloadWindowFontSize" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">14</Value>
-    </Setting>
-    <Setting Name="SelectedColumnHeader" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
-    </Setting>
-    <Setting Name="SelectedColumnHeaderDirection" Type="System.ComponentModel.ListSortDirection" Scope="User">
-      <Value Profile="(Default)">Descending</Value>
-    </Setting>
-    <Setting Name="AutoCheckForUpdates" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
-    </Setting>
-    <Setting Name="LastSelectedCatagory" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
-    </Setting>
     <Setting Name="FirstRun" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
-    </Setting>
-    <Setting Name="ConnectionTimeout" Type="System.Int64" Scope="User">
-      <Value Profile="(Default)">15000</Value>
     </Setting>
     <Setting Name="LaunchCount" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
+    <Setting Name="BytesTransferredOverLifetime" Type="System.UInt64" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="MaxParallelDownloads" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">5</Value>
+    </Setting>
     <Setting Name="MaxParallelConnPerDownload" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">3</Value>
+    </Setting>
+    <Setting Name="MaxDownloadSpeed" Type="System.Int64" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="ConnectionTimeout" Type="System.Int64" Scope="User">
+      <Value Profile="(Default)">15000</Value>
+    </Setting>
+    <Setting Name="RememberLastDownloadLocation" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="ClearFinishedDownloadsOnExit" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="AutoCheckForUpdates" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
     </Setting>
   </Settings>
 </SettingsFile>

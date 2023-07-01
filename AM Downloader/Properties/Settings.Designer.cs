@@ -25,49 +25,13 @@ namespace AMDownloader.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("5")]
-        public int MaxParallelDownloads {
+        [global::System.Configuration.DefaultSettingValueAttribute("960")]
+        public int MainWindowWidth {
             get {
-                return ((int)(this["MaxParallelDownloads"]));
+                return ((int)(this["MainWindowWidth"]));
             }
             set {
-                this["MaxParallelDownloads"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool ClearFinishedDownloadsOnExit {
-            get {
-                return ((bool)(this["ClearFinishedDownloadsOnExit"]));
-            }
-            set {
-                this["ClearFinishedDownloadsOnExit"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string LastDownloadLocation {
-            get {
-                return ((string)(this["LastDownloadLocation"]));
-            }
-            set {
-                this["LastDownloadLocation"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool RememberLastDownloadLocation {
-            get {
-                return ((bool)(this["RememberLastDownloadLocation"]));
-            }
-            set {
-                this["RememberLastDownloadLocation"] = value;
+                this["MainWindowWidth"] = value;
             }
         }
         
@@ -85,25 +49,37 @@ namespace AMDownloader.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("960")]
-        public int MainWindowWidth {
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int MainWindowLeft {
             get {
-                return ((int)(this["MainWindowWidth"]));
+                return ((int)(this["MainWindowLeft"]));
             }
             set {
-                this["MainWindowWidth"] = value;
+                this["MainWindowLeft"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public long MaxDownloadSpeed {
+        public int MainWindowTop {
             get {
-                return ((long)(this["MaxDownloadSpeed"]));
+                return ((int)(this["MainWindowTop"]));
             }
             set {
-                this["MaxDownloadSpeed"] = value;
+                this["MainWindowTop"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Normal")]
+        public global::System.Windows.WindowState MainWindowState {
+            get {
+                return ((global::System.Windows.WindowState)(this["MainWindowState"]));
+            }
+            set {
+                this["MainWindowState"] = value;
             }
         }
         
@@ -121,13 +97,36 @@ namespace AMDownloader.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("256")]
-        public string AddWindowHeight {
+        [global::System.Configuration.DefaultSettingValueAttribute("All")]
+        public string LastSelectedCatagory {
             get {
-                return ((string)(this["AddWindowHeight"]));
+                return ((string)(this["LastSelectedCatagory"]));
             }
             set {
-                this["AddWindowHeight"] = value;
+                this["LastSelectedCatagory"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string SelectedColumnHeader {
+            get {
+                return ((string)(this["SelectedColumnHeader"]));
+            }
+            set {
+                this["SelectedColumnHeader"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public global::System.ComponentModel.ListSortDirection SelectedColumnHeaderDirection {
+            get {
+                return ((global::System.ComponentModel.ListSortDirection)(this["SelectedColumnHeaderDirection"]));
+            }
+            set {
+                this["SelectedColumnHeaderDirection"] = value;
             }
         }
         
@@ -140,6 +139,42 @@ namespace AMDownloader.Properties {
             }
             set {
                 this["AddWindowWidth"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("256")]
+        public string AddWindowHeight {
+            get {
+                return ((string)(this["AddWindowHeight"]));
+            }
+            set {
+                this["AddWindowHeight"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("14")]
+        public int AddDownloadWindowFontSize {
+            get {
+                return ((int)(this["AddDownloadWindowFontSize"]));
+            }
+            set {
+                this["AddDownloadWindowFontSize"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LastDownloadLocation {
+            get {
+                return ((string)(this["LastDownloadLocation"]));
+            }
+            set {
+                this["LastDownloadLocation"] = value;
             }
         }
         
@@ -169,114 +204,6 @@ namespace AMDownloader.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("50")]
-        public int MainWindowTop {
-            get {
-                return ((int)(this["MainWindowTop"]));
-            }
-            set {
-                this["MainWindowTop"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("50")]
-        public int MainWindowLeft {
-            get {
-                return ((int)(this["MainWindowLeft"]));
-            }
-            set {
-                this["MainWindowLeft"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public ulong BytesTransferredOverLifetime {
-            get {
-                return ((ulong)(this["BytesTransferredOverLifetime"]));
-            }
-            set {
-                this["BytesTransferredOverLifetime"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Normal")]
-        public global::System.Windows.WindowState MainWindowState {
-            get {
-                return ((global::System.Windows.WindowState)(this["MainWindowState"]));
-            }
-            set {
-                this["MainWindowState"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("14")]
-        public int AddDownloadWindowFontSize {
-            get {
-                return ((int)(this["AddDownloadWindowFontSize"]));
-            }
-            set {
-                this["AddDownloadWindowFontSize"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string SelectedColumnHeader {
-            get {
-                return ((string)(this["SelectedColumnHeader"]));
-            }
-            set {
-                this["SelectedColumnHeader"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Descending")]
-        public global::System.ComponentModel.ListSortDirection SelectedColumnHeaderDirection {
-            get {
-                return ((global::System.ComponentModel.ListSortDirection)(this["SelectedColumnHeaderDirection"]));
-            }
-            set {
-                this["SelectedColumnHeaderDirection"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool AutoCheckForUpdates {
-            get {
-                return ((bool)(this["AutoCheckForUpdates"]));
-            }
-            set {
-                this["AutoCheckForUpdates"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string LastSelectedCatagory {
-            get {
-                return ((string)(this["LastSelectedCatagory"]));
-            }
-            set {
-                this["LastSelectedCatagory"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool FirstRun {
             get {
@@ -284,18 +211,6 @@ namespace AMDownloader.Properties {
             }
             set {
                 this["FirstRun"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("15000")]
-        public long ConnectionTimeout {
-            get {
-                return ((long)(this["ConnectionTimeout"]));
-            }
-            set {
-                this["ConnectionTimeout"] = value;
             }
         }
         
@@ -313,6 +228,30 @@ namespace AMDownloader.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public ulong BytesTransferredOverLifetime {
+            get {
+                return ((ulong)(this["BytesTransferredOverLifetime"]));
+            }
+            set {
+                this["BytesTransferredOverLifetime"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("5")]
+        public int MaxParallelDownloads {
+            get {
+                return ((int)(this["MaxParallelDownloads"]));
+            }
+            set {
+                this["MaxParallelDownloads"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("3")]
         public int MaxParallelConnPerDownload {
             get {
@@ -320,6 +259,66 @@ namespace AMDownloader.Properties {
             }
             set {
                 this["MaxParallelConnPerDownload"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public long MaxDownloadSpeed {
+            get {
+                return ((long)(this["MaxDownloadSpeed"]));
+            }
+            set {
+                this["MaxDownloadSpeed"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("15000")]
+        public long ConnectionTimeout {
+            get {
+                return ((long)(this["ConnectionTimeout"]));
+            }
+            set {
+                this["ConnectionTimeout"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool RememberLastDownloadLocation {
+            get {
+                return ((bool)(this["RememberLastDownloadLocation"]));
+            }
+            set {
+                this["RememberLastDownloadLocation"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ClearFinishedDownloadsOnExit {
+            get {
+                return ((bool)(this["ClearFinishedDownloadsOnExit"]));
+            }
+            set {
+                this["ClearFinishedDownloadsOnExit"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool AutoCheckForUpdates {
+            get {
+                return ((bool)(this["AutoCheckForUpdates"]));
+            }
+            set {
+                this["AutoCheckForUpdates"] = value;
             }
         }
     }
