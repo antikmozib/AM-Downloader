@@ -19,7 +19,6 @@ namespace AMDownloader.ViewModels
     {
         private bool _monitorClipboard;
         private CancellationTokenSource _ctsClipboard;
-        private readonly ClipboardObserver _clipboardService;
         private readonly ShowWindowDelegate _showList;
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -71,7 +70,7 @@ namespace AMDownloader.ViewModels
 
         public AddDownloadViewModel(ShowWindowDelegate showList)
         {
-            _clipboardService = new ClipboardObserver();
+            _showList = showList;
 
             AddCommand = new RelayCommand<object>(Add, Add_CanExecute);
             PreviewCommand = new RelayCommand<object>(Preview, Preview_CanExecute);
@@ -87,9 +86,8 @@ namespace AMDownloader.ViewModels
             Enqueue = Settings.Default.EnqueueAddedItems;
             StartDownload = Settings.Default.StartDownloadingAddedItems;
             Urls = string.Empty;
-            _showList = showList;
 
-            var clipText = GenerateValidUrl(_clipboardService.GetText());
+            var clipText = GenerateValidUrl(ClipboardObserver.GetText());
 
             if (!string.IsNullOrEmpty(clipText))
             {
@@ -203,7 +201,7 @@ namespace AMDownloader.ViewModels
             {
                 var delay = Task.Delay(1000);
                 List<string> source = Regex
-                    .Replace(_clipboardService.GetText(), @"\t|\r", "")
+                    .Replace(ClipboardObserver.GetText(), @"\t|\r", "")
                     .Split('\n')
                     .Where(o => o.Trim().Length > 0).ToList();
                 List<string> dest = Regex

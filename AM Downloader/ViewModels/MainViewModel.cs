@@ -47,7 +47,6 @@ namespace AMDownloader.ViewModels
 
         private readonly HttpClient _client;
         private readonly IProgress<long> _progressReporter;
-        private readonly ClipboardObserver _clipboardService;
         private readonly SemaphoreSlim _refreshingViewSemaphore;
         private readonly ShowWindowDelegate _showWindow;
         private readonly ShowPromptDelegate _showPrompt;
@@ -170,7 +169,6 @@ namespace AMDownloader.ViewModels
                     Monitor.Exit(_bytesDownloadedLock);
                 }
             });
-            _clipboardService = new ClipboardObserver();
             _refreshingViewSemaphore = new SemaphoreSlim(1);
             _showWindow = showWindow;
             _showPrompt = showPrompt;
@@ -735,7 +733,7 @@ namespace AMDownloader.ViewModels
                 counter++;
             }
 
-            _clipboardService.SetText(clipText);
+            ClipboardObserver.SetText(clipText);
         }
 
         private bool CopyLinkToClipboardCommand_CanExecute(object obj)
@@ -1105,7 +1103,7 @@ namespace AMDownloader.ViewModels
                 }
 
                 filePath = Common.Functions.GetNewFileName(
-                    destination + Common.Functions.GetFileNameFromUrl(url), 
+                    destination + Common.Functions.GetFileNameFromUrl(url),
                     existingDestinations);
 
                 if (existingUrls.Contains(url))

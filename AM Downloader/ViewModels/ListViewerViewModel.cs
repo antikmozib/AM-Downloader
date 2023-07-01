@@ -10,7 +10,7 @@ using System.Windows.Input;
 
 namespace AMDownloader.ViewModels
 {
-    public class ListViewerViewModel : INotifyPropertyChanged
+    internal class ListViewerViewModel : INotifyPropertyChanged
     {
         public struct ListViewerItem
         {
@@ -21,8 +21,6 @@ namespace AMDownloader.ViewModels
                 return Content;
             }
         }
-
-        private readonly ClipboardObserver _clipboard;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -35,8 +33,6 @@ namespace AMDownloader.ViewModels
         public ListViewerViewModel(List<string> items, string description, string title)
         {
             CopyCommand = new RelayCommand<object>(Copy, Copy_CanExecute);
-
-            _clipboard = new ClipboardObserver();
 
             Title = title;
             Description = description;
@@ -63,8 +59,8 @@ namespace AMDownloader.ViewModels
                 output += item.Content + '\n';
             }
 
-            _clipboard.Clear();
-            _clipboard.SetText(output);
+            ClipboardObserver.Clear();
+            ClipboardObserver.SetText(output);
         }
 
         private bool Copy_CanExecute(object obj)

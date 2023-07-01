@@ -5,11 +5,11 @@ using System.Windows;
 
 namespace AMDownloader.ClipboardObservation
 {
-    internal class ClipboardObserver
+    internal static class ClipboardObserver
     {
-        public void SetText(string value)
+        public static void SetText(string value)
         {
-            Thread t = new Thread(() =>
+            Thread t = new(() =>
             {
                 Clipboard.SetText(value);
             });
@@ -19,7 +19,7 @@ namespace AMDownloader.ClipboardObservation
             t.Join();
         }
 
-        public string GetText()
+        public static string GetText()
         {
             string val = string.Empty;
 
@@ -35,9 +35,9 @@ namespace AMDownloader.ClipboardObservation
             return val;
         }
 
-        public void Clear()
+        public static void Clear()
         {
-            Thread t = new Thread(() =>
+            Thread t = new(() =>
             {
                 Clipboard.Clear();
             });
