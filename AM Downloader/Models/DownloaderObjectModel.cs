@@ -265,7 +265,7 @@ namespace AMDownloader.Models
                 if (_ctLinked.IsCancellationRequested)
                 {
                     // interrupted by user
-                    if (_ctPause.IsCancellationRequested && SupportsResume)
+                    if (_ctPause.IsCancellationRequested && SupportsResume && BytesDownloaded > 0)
                     {
                         Status = DownloadStatus.Paused;
                     }

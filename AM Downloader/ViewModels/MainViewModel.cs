@@ -464,7 +464,7 @@ namespace AMDownloader.ViewModels
 
                     RefreshCollectionView();
 
-                    if (addDownloadViewModel.StartDownload)
+                    if (addDownloadViewModel.StartDownload && itemsAdded.Length > 0)
                     {
                         await StartDownloadAsync(addDownloadViewModel.Enqueue, itemsAdded);
                     }
@@ -1082,6 +1082,11 @@ namespace AMDownloader.ViewModels
 
             foreach (var url in urls.Distinct())
             {
+                if (ct.IsCancellationRequested)
+                {
+                    break;
+                }
+
                 string fileName, filePath;
 
                 counter++;
@@ -1099,9 +1104,11 @@ namespace AMDownloader.ViewModels
                     continue;
                 }
 
-                filePath = Common.Functions.GetNewFileName(destination + Common.Functions.GetFileNameFromUrl(url));
+                filePath = Common.Functions.GetNewFileName(
+                    destination + Common.Functions.GetFileNameFromUrl(url), 
+                    existingDestinations);
 
-                if (existingUrls.Contains(url) || existingDestinations.Contains(filePath))
+                if (existingUrls.Contains(url))
                 {
                     itemsExist.Add(url);
                     continue;
@@ -1119,11 +1126,6 @@ namespace AMDownloader.ViewModels
                         _progressReporter);
 
                 itemsCreated.Add(item);
-
-                if (ct.IsCancellationRequested)
-                {
-                    break;
-                }
             }
 
             if (itemsExist.Count > 0)
@@ -1189,6 +1191,11 @@ namespace AMDownloader.ViewModels
 
             foreach (var item in items)
             {
+                if (ct.IsCancellationRequested)
+                {
+                    break;
+                }
+
                 counter++;
 
                 Status = $"{primaryStatus} {counter} of {total}: {item.Name}";
@@ -1241,11 +1248,6 @@ namespace AMDownloader.ViewModels
                 }
 
                 itemsToRemove.Add(item);
-
-                if (ct.IsCancellationRequested)
-                {
-                    break;
-                }
             }
 
             Status = "Refreshing...";
