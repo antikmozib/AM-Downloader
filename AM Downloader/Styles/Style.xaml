@@ -1,19 +1,39 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <SolidColorBrush x:Key="AddButtonIconColor" Color="SteelBlue" />
-    <SolidColorBrush x:Key="RemoveButtonIconColor" Color="SteelBlue" />
-    <SolidColorBrush x:Key="StartButtonIconColor" Color="Green" />
-    <SolidColorBrush x:Key="PauseButtonIconColor" Color="Orange" />
-    <SolidColorBrush x:Key="StopButtonIconColor" Color="Red" />
-    <SolidColorBrush x:Key="StartQueueButtonIconColor" Color="DarkGreen" />
-    <SolidColorBrush x:Key="StopQueueButtonIconColor" Color="DarkRed" />
-    <SolidColorBrush x:Key="CategoryAllColor" Color="Black" />
-    <SolidColorBrush x:Key="CategoryReadyColor" Color="Green" />
-    <SolidColorBrush x:Key="CategoryQueuedColor" Color="Orange" />
-    <SolidColorBrush x:Key="CategoryPausedColor" Color="Gold" />
-    <SolidColorBrush x:Key="CategoryFinishedColor" Color="SlateGray" />
-    <SolidColorBrush x:Key="CategoryErroredColor" Color="Red" />
-    <SolidColorBrush x:Key="CategoryDownloadingColor" Color="LimeGreen" />
-    <SolidColorBrush x:Key="ColumnHeaderSortDirectionColor" Color="DarkGreen" />
-    <SolidColorBrush x:Key="StausBarEllipseReadyColor" Color="MediumSeaGreen" />
-    <SolidColorBrush x:Key="StausBarEllipseBusyColor" Color="DarkOrange" />
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <SolidColorBrush x:Key="AddButtonIconColor"
+                     Color="SteelBlue" />
+    <SolidColorBrush x:Key="RemoveButtonIconColor"
+                     Color="SteelBlue" />
+    <SolidColorBrush x:Key="StartButtonIconColor"
+                     Color="Green" />
+    <SolidColorBrush x:Key="PauseButtonIconColor"
+                     Color="Orange" />
+    <SolidColorBrush x:Key="StopButtonIconColor"
+                     Color="Red" />
+    <SolidColorBrush x:Key="StartQueueButtonIconColor"
+                     Color="DarkGreen" />
+    <SolidColorBrush x:Key="StopQueueButtonIconColor"
+                     Color="DarkRed" />
+    <SolidColorBrush x:Key="CategoryAllColor"
+                     Color="Black" />
+    <SolidColorBrush x:Key="CategoryReadyColor"
+                     Color="Green" />
+    <SolidColorBrush x:Key="CategoryQueuedColor"
+                     Color="Orange" />
+    <SolidColorBrush x:Key="CategoryPausedColor"
+                     Color="Gold" />
+    <SolidColorBrush x:Key="CategoryFinishedColor"
+                     Color="SlateGray" />
+    <SolidColorBrush x:Key="CategoryErroredColor"
+                     Color="Red" />
+    <SolidColorBrush x:Key="CategoryDownloadingColor"
+                     Color="LimeGreen" />
+    <SolidColorBrush x:Key="ColumnHeaderSortDirectionColor"
+                     Color="DarkGreen" />
+    <SolidColorBrush x:Key="StausBarEllipseReadyColor"
+                     Color="MediumSeaGreen" />
+    <SolidColorBrush x:Key="StausBarEllipseBusyColor"
+                     Color="DarkOrange" />
+    <SolidColorBrush x:Key="StausBarCancelButtonHoverColor"
+                     Color="Red" />
 </ResourceDictionary>

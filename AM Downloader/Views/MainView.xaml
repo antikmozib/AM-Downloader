@@ -317,6 +317,7 @@
             </ToolBar>
         </ToolBarTray>
         <!--#endregion-->
+        
         <!--#region STATUSBAR -->
         <DockPanel DockPanel.Dock="Bottom">
             <StatusBar Padding="4">
@@ -325,15 +326,20 @@
                         <Setter Property="Height"
                                 Value="16" />
                     </Style>
+                    
                     <Style TargetType="{x:Type Button}">
                         <Setter Property="HorizontalContentAlignment"
                                 Value="Center" />
+                        
                         <Setter Property="VerticalContentAlignment"
                                 Value="Center" />
+                        
                         <Setter Property="Width"
                                 Value="16" />
+                        
                         <Setter Property="Height"
                                 Value="16" />
+                        
                         <Style.Triggers>
                             <Trigger Property="IsEnabled"
                                      Value="False">
@@ -343,6 +349,7 @@
                         </Style.Triggers>
                     </Style>
                 </StatusBar.Resources>
+                
                 <StatusBar.ItemsPanel>
                     <ItemsPanelTemplate>
                         <Grid>
@@ -359,42 +366,54 @@
                         </Grid>
                     </ItemsPanelTemplate>
                 </StatusBar.ItemsPanel>
+                
                 <StatusBarItem>
                     <Grid>
                         <Grid.Resources>
                             <Style TargetType="{x:Type Ellipse}">
                                 <Setter Property="Fill"
                                         Value="{StaticResource StausBarEllipseBusyColor}" />
+                                
                                 <Setter Property="Width"
                                         Value="16" />
+                                
                                 <Setter Property="Height"
                                         Value="16" />
+                                
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding Status}"
                                                  Value="Ready">
                                         <Setter Property="Fill"
                                                 Value="{StaticResource StausBarEllipseReadyColor}" />
                                     </DataTrigger>
+                                    
                                     <DataTrigger Binding="{Binding Path=Visibility, ElementName=CancelBackgroundTaskButton}"
                                                  Value="Visible">
                                         <Setter Property="Visibility"
                                                 Value="Collapsed" />
                                     </DataTrigger>
+                                    
                                 </Style.Triggers>
                             </Style>
+                            
                             <Style x:Key="CancelButtonStyle"
                                    TargetType="Button"
                                    BasedOn="{StaticResource {x:Type Button}}">
                                 <Setter Property="Width"
                                         Value="16" />
+                                
                                 <Setter Property="Height"
                                         Value="16" />
+                                
                                 <Setter Property="BorderBrush"
                                         Value="{StaticResource StausBarEllipseBusyColor}" />
+                                
                                 <Setter Property="Background"
                                         Value="{StaticResource StausBarEllipseBusyColor}" />
+                                
                                 <Setter Property="Foreground"
                                         Value="{Binding Path=Background,RelativeSource={RelativeSource AncestorType=StatusBar}}" />
+                                
                                 <Setter Property="Template">
                                     <Setter.Value>
                                         <ControlTemplate TargetType="{x:Type Button}">
@@ -403,39 +422,42 @@
                                                          Width="{TemplateBinding Width}"
                                                          Fill="{TemplateBinding Background}"
                                                          Stroke="{TemplateBinding BorderBrush}" />
+                                                
                                                 <ContentPresenter HorizontalAlignment="Center"
                                                                   VerticalAlignment="Center" />
                                             </Grid>
                                         </ControlTemplate>
                                     </Setter.Value>
                                 </Setter>
+                                
                                 <Style.Triggers>
                                     <Trigger Property="IsMouseOver"
                                              Value="True">
                                         <Setter Property="Background"
-                                                Value="Transparent" />
-                                        <Setter Property="Foreground"
-                                                Value="{StaticResource StausBarEllipseBusyColor}" />
+                                                Value="{StaticResource StausBarCancelButtonHoverColor}" />
+                                        
                                         <Setter Property="BorderBrush"
-                                                Value="{StaticResource StausBarEllipseBusyColor}" />
+                                                Value="{StaticResource StausBarCancelButtonHoverColor}" />
                                     </Trigger>
+                                    
                                     <Trigger Property="IsFocused"
                                              Value="True">
                                         <Setter Property="BorderBrush"
                                                 Value="DarkGray" />
+                                        
                                         <Setter Property="Background"
                                                 Value="DarkGray" />
-                                        <Setter Property="Foreground"
-                                                Value="{Binding Path=Background,RelativeSource={RelativeSource AncestorType=StatusBar}}" />
                                     </Trigger>
                                 </Style.Triggers>
                             </Style>
                         </Grid.Resources>
+                        
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="auto" />
                             <ColumnDefinition Width="auto" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
+                        
                         <Button x:Name="CancelBackgroundTaskButton"
                                 Content="&#xF00D;"
                                 Command="{Binding CancelBackgroundTaskCommand}"
@@ -444,9 +466,11 @@
                                 ToolTip="Cancel operation"
                                 Cursor="Hand"
                                 Style="{StaticResource CancelButtonStyle}" />
+                        
                         <Ellipse x:Name="BackgroundTaskEllipse"
                                  Grid.Column="1"
                                  Margin="0 0 4 0" />
+                        
                         <TextBlock x:Name="PriamryStatusTextBlock"
                                    TextTrimming="CharacterEllipsis"
                                    Grid.Column="2"
@@ -455,18 +479,20 @@
                                    VerticalAlignment="Center" />
                     </Grid>
                 </StatusBarItem>
+                
                 <StatusBarItem Grid.Column="1"
-                               Visibility="{Binding Progress, Converter={StaticResource ProgressBarVisibilityConverter}}"
-                               Margin="8 0 0 0">
+                               Visibility="{Binding Progress, Converter={StaticResource ProgressBarVisibilityConverter}}">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="auto" />
                         </Grid.ColumnDefinitions>
+                        
                         <TextBlock VerticalAlignment="Center"
                                    Text="{Binding Progress, StringFormat=\{0:0\}%}"
                                    d:Text="50%"
-                                   Margin="4 0 4 0" />
+                                   Margin="0 0 4 0" />
+                        
                         <ProgressBar Grid.Column="1"
                                      x:Name="ProgressProgressBar"
                                      Value="{Binding Progress, Mode=OneWay}"
@@ -474,6 +500,7 @@
                                      Width="100" />
                     </Grid>
                 </StatusBarItem>
+                
                 <StatusBarItem Margin="16 0 0 0"
                                Grid.Column="6"
                                Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=SpeedTextBlock}"
@@ -482,6 +509,7 @@
                         <TextBlock Margin="0 0 4 0"
                                    Text="&#xF3FD;"
                                    FontFamily="{StaticResource FontAwesomeSolid}" />
+                        
                         <TextBlock TextAlignment="Right"
                                    x:Name="SpeedTextBlock"
                                    Text="{Binding Speed, Converter={StaticResource DownloaderSpeedConverter}}"
@@ -489,6 +517,7 @@
                                    ToolTip="Current data transfer rate" />
                     </TextBlock>
                 </StatusBarItem>
+                
                 <StatusBarItem Margin="16 0 0 0"
                                Grid.Column="7"
                                Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=BytesDownloadedTextBlock}">
@@ -496,6 +525,7 @@
                         <TextBlock Margin="0 0 4 0"
                                    Text="&#xF019;"
                                    FontFamily="{StaticResource FontAwesomeSolid}" />
+                        
                         <TextBlock x:Name="BytesDownloadedTextBlock"
                                    Text="{Binding BytesDownloadedThisSession, Converter={StaticResource DownloaderSizeConverter}}"
                                    d:Text="Downloaded"
@@ -505,6 +535,7 @@
             </StatusBar>
         </DockPanel>
         <!--#endregion-->
+        
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="{Binding LeftPaneWidth, Mode=TwoWay, Source={x:Static properties:Settings.Default}}" />

@@ -98,22 +98,22 @@
         <StackPanel HorizontalAlignment="Right"
                     Orientation="Horizontal"
                     Grid.ColumnSpan="3">
-            <Button x:Name="btnOK"
+            <Button x:Name="OkButton"
                     Content="_OK"
                     Margin="0 0 8 0"
                     IsDefault="True"
                     Command="{Binding SaveCommand}"
-                    Click="btnOK_Click" />
-            <Button x:Name="btnCancel"
+                    Click="OkButton_Click" />
+            <Button x:Name="CancelButton"
                     Content="_Cancel"
                     Margin="0 0 8 0"
                     IsCancel="True"
                     Command="{Binding CancelCommand}"
-                    Click="btnCancel_Click" />
-            <Button x:Name="btnReset"
+                    Click="CancelButton_Click" />
+            <Button x:Name="ResetButton"
                     Content="_Reset"
                     Command="{Binding ResetCommand}"
-                    Click="btnReset_Click" />
+                    Click="ResetButton_Click" />
         </StackPanel>
     </StackPanel>
 </Window>

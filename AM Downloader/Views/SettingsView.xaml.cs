@@ -14,23 +14,23 @@ namespace AMDownloader.Views
             InitializeComponent();
         }
 
-        private void btnReset_Click(object sender, RoutedEventArgs e)
+        private void ResetButton_Click(object sender, RoutedEventArgs e)
         {
             MessageBox.Show(
-                "Please restart the app for the changes to take effect.", 
-                "Reset", 
-                MessageBoxButton.OK, 
+                "Please restart the app for the changes to take effect.",
+                "Reset",
+                MessageBoxButton.OK,
                 MessageBoxImage.Information);
 
             DialogResult = true;
         }
 
-        private void btnOK_Click(object sender, RoutedEventArgs e)
+        private void OkButton_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = true;
         }
 
-        private void btnCancel_Click(object sender, RoutedEventArgs e)
+        private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = false;
         }
