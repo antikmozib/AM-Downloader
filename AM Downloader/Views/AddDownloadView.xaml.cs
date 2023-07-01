@@ -8,6 +8,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
+using WinForms = System.Windows.Forms;
 
 namespace AMDownloader.Views
 {
@@ -181,29 +182,29 @@ namespace AMDownloader.Views
 
         private void BrowseButton_Click(object sender, RoutedEventArgs e)
         {
-            System.Windows.Forms.FolderBrowserDialog dlg = new System.Windows.Forms.FolderBrowserDialog();
+            WinForms.FolderBrowserDialog folderBrowser = new();
 
             if (Directory.Exists(DestinationComboBox.Text))
             {
-                dlg.SelectedPath = DestinationComboBox.Text;
+                folderBrowser.SelectedPath = DestinationComboBox.Text;
             }
             else
             {
-                dlg.SelectedPath = Common.Paths.UserDownloadsFolder;
+                folderBrowser.SelectedPath = Common.Paths.UserDownloadsFolder;
             }
 
-            if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            if (folderBrowser.ShowDialog() == WinForms.DialogResult.OK)
             {
-                if (!DestinationComboBox.Items.Contains(dlg.SelectedPath))
+                if (!DestinationComboBox.Items.Contains(folderBrowser.SelectedPath))
                 {
-                    DestinationComboBox.Items.Add(dlg.SelectedPath);
+                    DestinationComboBox.Items.Add(folderBrowser.SelectedPath);
                 }
 
-                DestinationComboBox.Text = dlg.SelectedPath;
+                DestinationComboBox.Text = folderBrowser.SelectedPath;
             }
         }
 
-        private void UrlTextBox_PreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
+        private void UrlTextBox_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         {
             if (Keyboard.Modifiers != ModifierKeys.Control)
             {
