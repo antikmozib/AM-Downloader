@@ -60,11 +60,11 @@ namespace AMDownloader.Helpers
                 string result = dirName + Path.DirectorySeparatorChar + fileName;
                 int i = 0;
 
-                supplementaryPaths ??= Enumerable.Empty<string>();
+                supplementaryPaths = supplementaryPaths.Select(o => o.ToLower()) ?? Enumerable.Empty<string>();
 
                 while (File.Exists(result)
                     || File.Exists(result + Constants.TempDownloadExtension)
-                    || supplementaryPaths.Select(o => o.ToLower()).Contains(result.ToLower()))
+                    || supplementaryPaths.Contains(result.ToLower()))
                 {
                     result = Path.Combine(dirName,
                         $"{Path.GetFileNameWithoutExtension(fileName)} ({++i}){Path.GetExtension(fileName)}");
