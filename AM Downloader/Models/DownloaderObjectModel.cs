@@ -198,7 +198,7 @@ namespace AMDownloader.Models
 
             RaiseEvent(DownloadCreated);
 
-            Log.Debug($"Created {Name}");
+            Log.Debug($"Created {Name}, Status = {Status}");
         }
 
         #endregion
@@ -248,7 +248,7 @@ namespace AMDownloader.Models
 
                 RaisePropertyChanged(nameof(TotalBytesToDownload));
             }
-            catch
+            catch (Exception ex)
             {
                 if (Directory.Exists(Path.GetDirectoryName(Destination)))
                 {
@@ -279,6 +279,8 @@ namespace AMDownloader.Models
                     // interrupted due an exception not related to user cancellation
                     // e.g. no connection, invalid url
                     Status = DownloadStatus.Errored;
+
+                    Log.Error(ex, Name);
                 }
             }
 
@@ -592,7 +594,7 @@ namespace AMDownloader.Models
                             }
                         }
 
-                        Log.Debug($"Conn {conn} completed\t\tRead this session = {readThisConn}");
+                        Log.Debug($"Conn {conn} completed, Read this session = {readThisConn}");
 
                         Interlocked.Decrement(ref _connections);
                     });
@@ -613,7 +615,7 @@ namespace AMDownloader.Models
                     CleanupTempFiles();
                 }
 
-                throw new Exception(null, ex);
+                throw new Exception(ex.Message, ex);
             }
         }
 

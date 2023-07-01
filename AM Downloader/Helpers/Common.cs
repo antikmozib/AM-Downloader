@@ -167,7 +167,7 @@ namespace AMDownloader.Helpers
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception(null, ex);
+                    throw new Exception(ex.Message, ex);
                 }
             }
 
@@ -182,7 +182,7 @@ namespace AMDownloader.Helpers
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception(null, ex);
+                    throw new Exception(ex.Message, ex);
                 }
             }
         }
