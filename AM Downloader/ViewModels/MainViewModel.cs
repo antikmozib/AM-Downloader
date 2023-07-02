@@ -53,6 +53,7 @@ namespace AMDownloader.ViewModels
         private CancellationTokenSource _updatingListCts;
         private readonly List<CancellationTokenSource> _refreshViewCtsList;
         private TaskCompletionSource _updatingListTcs;
+        private TaskCompletionSource _refreshingViewTcs;
         private TaskCompletionSource _reportingSpeedTcs;
         private TaskCompletionSource _closingTcs;
         private readonly object _refreshViewCtsListLock;
@@ -239,15 +240,14 @@ namespace AMDownloader.ViewModels
             if (File.Exists(Common.Paths.DownloadsHistoryFile))
             {
                 Status = "Loading...";
-                RaisePropertyChanged(nameof(Status));
-
                 _updatingListTcs = new TaskCompletionSource();
                 _updatingListCts = new CancellationTokenSource();
+                RaisePropertyChanged(nameof(Status));
                 RaisePropertyChanged(nameof(IsBackgroundWorking));
 
                 var ct = _updatingListCts.Token;
 
-                Task.Run(() =>
+                Task.Run(async () =>
                 {
                     try
                     {
@@ -298,7 +298,9 @@ namespace AMDownloader.ViewModels
                             itemsToAdd.Add(item);
                         }
 
-                        Status = "Refreshing...";
+                        Progress = 0;
+                        Status = "Updating...";
+                        RaisePropertyChanged(nameof(Progress));
                         RaisePropertyChanged(nameof(Status));
 
                         AddObjects(itemsToAdd.ToArray());
@@ -309,17 +311,13 @@ namespace AMDownloader.ViewModels
 
                     }
 
-                    Progress = 0;
-                    Status = "Ready";
-
                     _updatingListCts.Dispose();
                     _updatingListTcs.SetResult();
-
-                    RaisePropertyChanged(nameof(Progress));
-                    RaisePropertyChanged(nameof(Status));
+                    Status = "Refreshing...";
                     RaisePropertyChanged(nameof(IsBackgroundWorking));
+                    RaisePropertyChanged(nameof(Status));
 
-                    RefreshCollectionView();
+                    await RefreshCollectionViewAsync();
                 });
             }
         }
@@ -428,7 +426,7 @@ namespace AMDownloader.ViewModels
         private void Add(object obj)
         {
             AddDownloadViewModel addDownloadViewModel = new(_showWindow);
-            DownloaderObjectModel[] itemsAdded = null;
+            DownloaderObjectModel[] itemsCreated = null;
 
             if (_showWindow.Invoke(addDownloadViewModel) == true)
             {
@@ -440,31 +438,31 @@ namespace AMDownloader.ViewModels
 
                 Task.Run(async () =>
                 {
-                    itemsAdded = CreateObjects(addDownloadViewModel.GeneratedUrls,
+                    itemsCreated = CreateObjects(addDownloadViewModel.GeneratedUrls,
                         addDownloadViewModel.SaveToFolder,
                         ct);
 
-                    Status = "Refreshing...";
+                    Status = "Updating...";
                     RaisePropertyChanged(nameof(Status));
 
-                    AddObjects(itemsAdded);
+                    AddObjects(itemsCreated);
 
                     if (addDownloadViewModel.Enqueue)
                     {
-                        QueueProcessor.Enqueue(itemsAdded);
+                        QueueProcessor.Enqueue(itemsCreated);
                     }
 
-                    Status = "Ready";
                     _updatingListTcs.SetResult();
                     _updatingListCts.Dispose();
-                    RaisePropertyChanged(nameof(Status));
+                    Status = "Refreshing...";
                     RaisePropertyChanged(nameof(IsBackgroundWorking));
+                    RaisePropertyChanged(nameof(Status));
 
-                    RefreshCollectionView();
+                    await RefreshCollectionViewAsync();
 
-                    if (addDownloadViewModel.StartDownload && itemsAdded.Length > 0)
+                    if (addDownloadViewModel.StartDownload && itemsCreated.Length > 0)
                     {
-                        await StartDownloadAsync(addDownloadViewModel.Enqueue, itemsAdded);
+                        await StartDownloadAsync(addDownloadViewModel.Enqueue, itemsCreated);
                     }
                 });
             }
@@ -518,9 +516,11 @@ namespace AMDownloader.ViewModels
                 }
 
                 _updatingListCts.Dispose();
-                RaisePropertyChanged(nameof(IsBackgroundWorking));
 
-                RefreshCollectionView();
+                Status = "Refreshing...";
+                RaisePropertyChanged(nameof(Status));
+
+                await RefreshCollectionViewAsync();
             });
         }
 
@@ -762,7 +762,6 @@ namespace AMDownloader.ViewModels
                 await RemoveObjectsAsync(items, false, ct);
 
                 _updatingListCts.Dispose();
-                RaisePropertyChanged(nameof(IsBackgroundWorking));
 
                 RefreshCollectionView();
             });
@@ -1025,6 +1024,8 @@ namespace AMDownloader.ViewModels
 
             _refreshViewCtsList.Clear();
 
+            _refreshingViewTcs = new TaskCompletionSource();
+
             var newCts = new CancellationTokenSource();
             var ct = newCts.Token;
 
@@ -1057,7 +1058,16 @@ namespace AMDownloader.ViewModels
                         _refreshingViewSemaphore.Release();
                     }
                 }
+
+                _refreshingViewTcs.SetResult();
+                Log.Debug($"{nameof(_refreshingViewTcs)} result set.");
             }, ct);
+        }
+
+        private async Task RefreshCollectionViewAsync()
+        {
+            RefreshCollectionView();
+            await _refreshingViewTcs.Task;
         }
 
         /// <summary>
@@ -1139,7 +1149,6 @@ namespace AMDownloader.ViewModels
                     "The following URLs were not added because they are invalid:",
                     "Invalid Entries"));
             }
-
 
             Progress = 0;
             RaisePropertyChanged(nameof(Progress));
@@ -1248,7 +1257,7 @@ namespace AMDownloader.ViewModels
                 itemsToRemove.Add(item);
             }
 
-            Status = "Refreshing...";
+            Status = "Updating...";
             RaisePropertyChanged(nameof(Status));
 
             Application.Current.Dispatcher.Invoke(() =>
@@ -1272,11 +1281,10 @@ namespace AMDownloader.ViewModels
 
             QueueProcessor.Dequeue(itemsToDequeue.ToArray());
 
-            Progress = 0;
-            Status = "Ready";
             _updatingListTcs.SetResult();
+            Progress = 0;
+            RaisePropertyChanged(nameof(IsBackgroundWorking));
             RaisePropertyChanged(nameof(Progress));
-            RaisePropertyChanged(nameof(Status));
 
             if (failed.Count > 0)
             {
@@ -1455,12 +1463,6 @@ namespace AMDownloader.ViewModels
 
         private void Download_Stopped(object sender, EventArgs e)
         {
-            if (DownloadingCount == 0)
-            {
-                Status = "Ready";
-                RaisePropertyChanged(nameof(Status));
-            }
-
             RefreshCollectionView();
 
             Monitor.Enter(_bytesTransferredOverLifetimeLock);
