@@ -17,8 +17,8 @@ namespace AMDownloader.ViewModels
 {
     internal class AddDownloadViewModel : INotifyPropertyChanged
     {
-        private bool _monitorClipboard;
-        private CancellationTokenSource _ctsClipboard;
+        private CancellationTokenSource _monitorClipboardCts;
+        private TaskCompletionSource _monitorClipboardTcs;
         private readonly ShowWindowDelegate _showList;
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -27,34 +27,38 @@ namespace AMDownloader.ViewModels
         {
             get
             {
-                return _monitorClipboard;
+                return _monitorClipboardTcs != null && _monitorClipboardTcs.Task.Status != TaskStatus.RanToCompletion;
             }
 
             set
             {
-                _monitorClipboard = value;
-                Settings.Default.MonitorClipboard = value;
-
                 if (value == true)
                 {
-                    _ctsClipboard = new CancellationTokenSource();
-
-                    Task.Run(async () => await MonitorClipboardAsync()).ContinueWith(t =>
+                    if (_monitorClipboardTcs == null || _monitorClipboardTcs.Task.Status == TaskStatus.RanToCompletion)
                     {
-                        _ctsClipboard.Dispose();
-                    });
+                        _monitorClipboardTcs = new TaskCompletionSource();
+                        _monitorClipboardCts = new CancellationTokenSource();
+
+                        var ct = _monitorClipboardCts.Token;
+
+                        Task.Run(async () =>
+                        {
+                            await MonitorClipboardAsync(ct);
+
+                            _monitorClipboardCts.Dispose();
+                            RaisePropertyChanged(nameof(MonitorClipboard));
+                        });
+                    }
                 }
                 else
                 {
-                    try
+                    if (_monitorClipboardTcs != null && _monitorClipboardTcs.Task.Status != TaskStatus.RanToCompletion)
                     {
-                        _ctsClipboard?.Cancel();
-                    }
-                    catch (ObjectDisposedException)
-                    {
-
+                        _monitorClipboardCts.Cancel();
                     }
                 }
+
+                Settings.Default.MonitorClipboard = value;
             }
         }
         public string Urls { get; set; }
@@ -89,11 +93,14 @@ namespace AMDownloader.ViewModels
             Enqueue = Settings.Default.EnqueueAddedItems;
             StartDownload = Settings.Default.StartDownloadingAddedItems;
 
-            var clipText = GenerateValidUrl(ClipboardObserver.GetText());
-
-            if (!string.IsNullOrEmpty(clipText))
+            if (!MonitorClipboard)
             {
-                Urls += clipText + '\n';
+                var clipText = GenerateValidUrl(ClipboardObserver.GetText());
+
+                if (!string.IsNullOrEmpty(clipText))
+                {
+                    Urls += clipText + '\n';
+                }
             }
         }
 
@@ -197,11 +204,11 @@ namespace AMDownloader.ViewModels
             return string.Join(Environment.NewLine, output);
         }
 
-        private async Task MonitorClipboardAsync()
+        private async Task MonitorClipboardAsync(CancellationToken ct)
         {
-            while (!_ctsClipboard.IsCancellationRequested)
+            while (!ct.IsCancellationRequested)
             {
-                var delay = Task.Delay(1000);
+                var delay = Task.Delay(1000, ct);
                 List<string> source = Regex
                     .Replace(ClipboardObserver.GetText(), @"\t|\r", "")
                     .Split('\n')
@@ -223,8 +230,20 @@ namespace AMDownloader.ViewModels
 
                 RaisePropertyChanged(nameof(Urls));
 
-                await delay;
+                // must await within try/catch otherwise an OperationCanceledException
+                // will be thrown and the Task will exit abruptly without setting
+                // the result of _monitorClipboardTcs
+                try
+                {
+                    await delay;
+                }
+                catch (OperationCanceledException)
+                {
+
+                }
             }
+
+            _monitorClipboardTcs.SetResult();
         }
 
         protected void RaisePropertyChanged(string prop)
