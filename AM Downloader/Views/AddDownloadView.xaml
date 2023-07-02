@@ -14,7 +14,8 @@
         Height="{Binding Source={x:Static properties:Settings.Default}, Path=AddWindowHeight, Mode=TwoWay}"
         Width="{Binding Source={x:Static properties:Settings.Default}, Path=AddWindowWidth, Mode=TwoWay}"
         WindowStyle="SingleBorderWindow"
-        Loaded="Window_Loaded">
+        Loaded="Window_Loaded"
+        x:Name="AddDownloadViewWindow">
     <Window.Resources>
         <converters:DownloaderDestinationFolderNameConverter x:Key="DownloaderDestinationConverter" />
 
@@ -54,7 +55,7 @@
                 <CheckBox.Style>
                     <Style TargetType="{x:Type CheckBox}">
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsClipboardSwitchingState}"
+                            <DataTrigger Binding="{Binding IsClipboardMonitorSwitchingState}"
                                          Value="True">
                                 <Setter Property="IsEnabled"
                                         Value="False" />

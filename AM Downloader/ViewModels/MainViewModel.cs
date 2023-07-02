@@ -427,9 +427,16 @@ namespace AMDownloader.ViewModels
         {
             AddDownloadViewModel addDownloadViewModel = new(_showWindow);
             DownloaderObjectModel[] itemsCreated = null;
+            bool? dialogResult = _showWindow.Invoke(addDownloadViewModel);
 
-            if (_showWindow.Invoke(addDownloadViewModel) == true)
+            // kill the ClipboardObserver task, otherwise it will keep running
+            // in the background and consuming resources
+            addDownloadViewModel.KillClipboardObserver();
+
+            if (dialogResult == true)
             {
+                addDownloadViewModel.MonitorClipboard = false;
+
                 _updatingListTcs = new TaskCompletionSource();
                 _updatingListCts = new CancellationTokenSource();
                 RaisePropertyChanged(nameof(IsBackgroundWorking));
@@ -1040,11 +1047,15 @@ namespace AMDownloader.ViewModels
                 try
                 {
                     await semTask;
+
+                    Log.Debug($"Refreshing {nameof(DownloadItemsView)}...");
+
                     Application.Current?.Dispatcher?.Invoke(() =>
                     {
                         DownloadItemsView.Refresh();
                         CommandManager.InvalidateRequerySuggested();
                     });
+
                     await throttle;
                 }
                 catch (OperationCanceledException)

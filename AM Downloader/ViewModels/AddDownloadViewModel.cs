@@ -3,9 +3,11 @@
 using AMDownloader.ClipboardObservation;
 using AMDownloader.Helpers;
 using AMDownloader.Properties;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -47,7 +49,7 @@ namespace AMDownloader.ViewModels
 
                             _monitorClipboardCts.Dispose();
                             RaisePropertyChanged(nameof(MonitorClipboard));
-                            RaisePropertyChanged(nameof(IsClipboardSwitchingState));
+                            RaisePropertyChanged(nameof(IsClipboardMonitorSwitchingState));
                         });
                     }
                 }
@@ -57,14 +59,14 @@ namespace AMDownloader.ViewModels
                     {
                         _monitorClipboardCts.Cancel();
 
-                        RaisePropertyChanged(nameof(IsClipboardSwitchingState));
+                        RaisePropertyChanged(nameof(IsClipboardMonitorSwitchingState));
                     }
                 }
 
                 Settings.Default.MonitorClipboard = value;
             }
         }
-        public bool IsClipboardSwitchingState
+        public bool IsClipboardMonitorSwitchingState
         {
             get
             {
@@ -124,6 +126,18 @@ namespace AMDownloader.ViewModels
                 {
                     Urls += clipText + Environment.NewLine;
                 }
+            }
+        }
+
+        public void KillClipboardObserver()
+        {
+            try
+            {
+                _monitorClipboardCts?.Cancel();
+            }
+            catch (ObjectDisposedException)
+            {
+
             }
         }
 
@@ -229,23 +243,40 @@ namespace AMDownloader.ViewModels
 
         private async Task MonitorClipboardAsync(CancellationToken ct)
         {
-            while (!ct.IsCancellationRequested)
+            while (!ct.IsCancellationRequested && this is not null)
             {
-                List<string> incomingUrls = GenerateValidUrl(ClipboardObserver.GetText()).Split(Environment.NewLine).ToList();
-                List<string> existingUrls = Urls.Split(Environment.NewLine).ToList();
-                Task delay = Task.Delay(1000, ct);
+                var newUrls = string.Empty;
+                var delay = Task.Delay(1000, ct);
+                var stopwatch = new Stopwatch();
 
-                foreach (var url in incomingUrls)
+                stopwatch.Start();
+
+                if (string.IsNullOrWhiteSpace(Urls))
                 {
-                    if (existingUrls.Contains(url))
-                    {
-                        continue;
-                    }
+                    newUrls = string.Join(Environment.NewLine, GenerateValidUrl(ClipboardObserver.GetText()));
+                }
+                else
+                {
+                    var existingUrls = Urls.Split(Environment.NewLine);
+                    var incomingUrls = GenerateValidUrl(ClipboardObserver.GetText())
+                        .Split(Environment.NewLine);
 
-                    Urls += url + Environment.NewLine;
+                    foreach (var url in incomingUrls)
+                    {
+                        if (existingUrls.Contains(url))
+                        {
+                            continue;
+                        }
+
+                        newUrls += Environment.NewLine + url;
+                    }
                 }
 
+                Urls += newUrls;
                 RaisePropertyChanged(nameof(Urls));
+
+                stopwatch.Stop();
+                Log.Debug(stopwatch.ElapsedMilliseconds.ToString());
 
                 // must await within try/catch otherwise an OperationCanceledException
                 // will be thrown and the Task will exit abruptly without setting
@@ -256,7 +287,7 @@ namespace AMDownloader.ViewModels
                 }
                 catch (OperationCanceledException)
                 {
-
+                    break;
                 }
             }
 
