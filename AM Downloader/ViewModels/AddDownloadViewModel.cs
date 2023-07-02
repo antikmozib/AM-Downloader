@@ -75,7 +75,7 @@ namespace AMDownloader.ViewModels
                         return false;
                     }
 
-                    return _monitorClipboardCts.IsCancellationRequested 
+                    return _monitorClipboardCts.IsCancellationRequested
                         && _monitorClipboardTcs.Task.Status != TaskStatus.RanToCompletion;
                 }
                 catch (ObjectDisposedException)
