@@ -728,7 +728,7 @@ namespace AMDownloader.ViewModels
                 clipText += item.Url;
                 if (counter < total - 1)
                 {
-                    clipText += '\n';
+                    clipText += Environment.NewLine;
                 }
                 counter++;
             }

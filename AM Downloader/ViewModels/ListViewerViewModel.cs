@@ -2,6 +2,7 @@
 
 using AMDownloader.ClipboardObservation;
 using AMDownloader.Helpers;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -52,12 +53,7 @@ namespace AMDownloader.ViewModels
         private void Copy(object obj)
         {
             var items = (obj as ObservableCollection<object>).Cast<ListViewerItem>();
-            var output = "";
-
-            foreach (var item in items)
-            {
-                output += item.Content + '\n';
-            }
+            var output = string.Join(Environment.NewLine, items.Select(o => o.Content));
 
             ClipboardObserver.Clear();
             ClipboardObserver.SetText(output);

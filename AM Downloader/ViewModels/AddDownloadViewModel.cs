@@ -86,9 +86,9 @@ namespace AMDownloader.ViewModels
         }
         public string Urls { get; set; }
         /// <summary>
-        /// Returns the list of full URLs generated from the URL patterns.
+        /// Returns the list of full URLs generated from the supplied patterned URLs.
         /// </summary>
-        public List<string> GeneratedUrls => BuildUrlsFromPatterns(Urls.Split('\n').ToArray());
+        public List<string> GeneratedUrls => BuildUrlsFromPatterns(Urls.Split(Environment.NewLine).ToArray());
         public string SaveToFolder { get; set; }
         public bool Enqueue { get; set; }
         public bool StartDownload { get; set; }
@@ -122,7 +122,7 @@ namespace AMDownloader.ViewModels
 
                 if (!string.IsNullOrEmpty(clipText))
                 {
-                    Urls += clipText + '\n';
+                    Urls += clipText + Environment.NewLine;
                 }
             }
         }
@@ -152,10 +152,10 @@ namespace AMDownloader.ViewModels
         }
 
         /// <summary>
-        /// Builds and returns a list of URLs from a given list of URL patterns.
+        /// Builds a list of full URLs from a list of patterned URLs.
         /// </summary>
-        /// <param name="urls">A list of URL patterns.</param>
-        /// <returns>A list of URLs built from the provided URL patterns.</returns>
+        /// <param name="urls">A list of patterned URLs.</param>
+        /// <returns>The list of URLs built from the supplied patterned URLs.</returns>
         private static List<string> BuildUrlsFromPatterns(params string[] urls)
         {
             var filteredUrls = urls.Select(o => o.Trim()).Where(o => o.Length > 0); // trim and discard empty
@@ -172,7 +172,7 @@ namespace AMDownloader.ViewModels
                     string bounds = regex.Match(url).Value;
 
                     // patterns can be [1:20] or [01:20] - account for this difference
-                    int minLength = bounds.Substring(1, bounds.IndexOf(":") - 1).Length;
+                    int minLength = bounds.Substring(1, bounds.IndexOf(':') - 1).Length;
                     int.TryParse(bounds.Substring(1, bounds.IndexOf(':') - 1), out int lBound);
                     int.TryParse(bounds.Substring(bounds.IndexOf(':') + 1, bounds.Length - bounds.IndexOf(':') - 2), out int uBound);
 
@@ -203,7 +203,7 @@ namespace AMDownloader.ViewModels
         }
 
         /// <summary>
-        /// Extracts any valid URLs from the provided <paramref name="value"/>,
+        /// Extracts any valid URLs from the supplied <paramref name="value"/>,
         /// and then trims and returns them as a string separated by newlines.
         /// </summary>
         /// <param name="value">A list of strings (separated by newlines) in which
@@ -231,24 +231,18 @@ namespace AMDownloader.ViewModels
         {
             while (!ct.IsCancellationRequested)
             {
-                var delay = Task.Delay(1000, ct);
-                List<string> source = Regex
-                    .Replace(ClipboardObserver.GetText(), @"\t|\r", "")
-                    .Split('\n')
-                    .Where(o => o.Trim().Length > 0).ToList();
-                List<string> dest = Regex
-                    .Replace(Urls, @"\r|\t", "")
-                    .ToLower()
-                    .Split('\n').ToList();
+                List<string> incomingUrls = GenerateValidUrl(ClipboardObserver.GetText()).Split(Environment.NewLine).ToList();
+                List<string> existingUrls = Urls.Split(Environment.NewLine).ToList();
+                Task delay = Task.Delay(1000, ct);
 
-                for (int i = 0; i < source.Count; i++)
+                foreach (var url in incomingUrls)
                 {
-                    var url = GenerateValidUrl(source[i]);
-
-                    if (!string.IsNullOrEmpty(url) && !dest.Contains(url.ToLower()))
+                    if (existingUrls.Contains(url))
                     {
-                        Urls += url + '\n';
+                        continue;
                     }
+
+                    Urls += url + Environment.NewLine;
                 }
 
                 RaisePropertyChanged(nameof(Urls));
