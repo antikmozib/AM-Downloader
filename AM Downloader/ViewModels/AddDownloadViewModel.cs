@@ -7,7 +7,6 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -245,11 +244,10 @@ namespace AMDownloader.ViewModels
         {
             while (!ct.IsCancellationRequested && this is not null)
             {
+                Log.Debug("Polling clipboard...");
+
                 var newUrls = string.Empty;
                 var delay = Task.Delay(1000, ct);
-                var stopwatch = new Stopwatch();
-
-                stopwatch.Start();
 
                 if (string.IsNullOrWhiteSpace(Urls))
                 {
@@ -272,11 +270,11 @@ namespace AMDownloader.ViewModels
                     }
                 }
 
-                Urls = Urls.TrimEnd() + newUrls + Environment.NewLine;
-                RaisePropertyChanged(nameof(Urls));
-
-                stopwatch.Stop();
-                Log.Debug(stopwatch.ElapsedMilliseconds.ToString());
+                if (newUrls.Trim().Length > 0)
+                {
+                    Urls = Urls.TrimEnd() + newUrls + Environment.NewLine;
+                    RaisePropertyChanged(nameof(Urls));
+                }
 
                 // must await within try/catch otherwise an OperationCanceledException
                 // will be thrown and the Task will exit abruptly without setting
