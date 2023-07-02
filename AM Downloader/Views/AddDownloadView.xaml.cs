@@ -109,9 +109,12 @@ namespace AMDownloader.Views
 
                     foreach (var item in list.Objects)
                     {
-                        if (item.FolderPath.Trim().Length > 0 && !DestinationComboBox.Items.Contains(item.FolderPath))
+                        if (item.FolderPath is not null)
                         {
-                            DestinationComboBox.Items.Add(item.FolderPath);
+                            if (item.FolderPath.Trim().Length > 0 && !DestinationComboBox.Items.Contains(item.FolderPath))
+                            {
+                                DestinationComboBox.Items.Add(item.FolderPath);
+                            }
                         }
                     }
                 }
