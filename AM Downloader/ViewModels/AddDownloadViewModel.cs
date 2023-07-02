@@ -272,7 +272,7 @@ namespace AMDownloader.ViewModels
                     }
                 }
 
-                Urls = Urls.TrimEnd() + newUrls;
+                Urls = Urls.TrimEnd() + newUrls + Environment.NewLine;
                 RaisePropertyChanged(nameof(Urls));
 
                 stopwatch.Stop();
