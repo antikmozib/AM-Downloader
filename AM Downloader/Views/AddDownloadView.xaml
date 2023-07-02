@@ -50,7 +50,19 @@
                       IsChecked="{Binding Path=MonitorClipboard, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
                       VerticalAlignment="Center"
                       HorizontalAlignment="Right"
-                      ToolTip="Automatically monitor the clipboard for URLs and add them to the list" />
+                      ToolTip="Automatically monitor the clipboard for URLs and add them to the list">
+                <CheckBox.Style>
+                    <Style TargetType="{x:Type CheckBox}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsClipboardSwitchingState}"
+                                         Value="True">
+                                <Setter Property="IsEnabled"
+                                        Value="False" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </CheckBox.Style>
+            </CheckBox>
         </Grid>
 
         <TextBox x:Name="UrlTextBox"

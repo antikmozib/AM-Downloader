@@ -47,6 +47,7 @@ namespace AMDownloader.ViewModels
 
                             _monitorClipboardCts.Dispose();
                             RaisePropertyChanged(nameof(MonitorClipboard));
+                            RaisePropertyChanged(nameof(IsClipboardSwitchingState));
                         });
                     }
                 }
@@ -55,10 +56,32 @@ namespace AMDownloader.ViewModels
                     if (_monitorClipboardTcs != null && _monitorClipboardTcs.Task.Status != TaskStatus.RanToCompletion)
                     {
                         _monitorClipboardCts.Cancel();
+
+                        RaisePropertyChanged(nameof(IsClipboardSwitchingState));
                     }
                 }
 
                 Settings.Default.MonitorClipboard = value;
+            }
+        }
+        public bool IsClipboardSwitchingState
+        {
+            get
+            {
+                try
+                {
+                    if (_monitorClipboardTcs == null || _monitorClipboardCts == null)
+                    {
+                        return false;
+                    }
+
+                    return _monitorClipboardCts.IsCancellationRequested 
+                        && _monitorClipboardTcs.Task.Status != TaskStatus.RanToCompletion;
+                }
+                catch (ObjectDisposedException)
+                {
+                    return false;
+                }
             }
         }
         public string Urls { get; set; }
