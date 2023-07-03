@@ -429,14 +429,8 @@ namespace AMDownloader.ViewModels
             DownloaderObjectModel[] itemsCreated = null;
             bool? dialogResult = _showWindow.Invoke(addDownloadViewModel);
 
-            // kill the ClipboardObserver task, otherwise it will keep running
-            // in the background and consuming resources
-            addDownloadViewModel.KillClipboardObserver();
-
             if (dialogResult == true)
             {
-                addDownloadViewModel.MonitorClipboard = false;
-
                 _updatingListTcs = new TaskCompletionSource();
                 _updatingListCts = new CancellationTokenSource();
                 RaisePropertyChanged(nameof(IsBackgroundWorking));
@@ -1091,8 +1085,7 @@ namespace AMDownloader.ViewModels
         /// created.</returns>
         private DownloaderObjectModel[] CreateObjects(IEnumerable<string> urls, string destination, CancellationToken ct)
         {
-            var existingUrls = from di in DownloadItemsCollection select di.Url;
-            var existingDestinations = from di in DownloadItemsCollection select di.Destination;
+            var existingItems = DownloadItemsCollection.ToArray();
             var itemsCreated = new List<DownloaderObjectModel>();
             var itemsExist = new List<string>(); // skipped
             var itemsErrored = new List<string>(); // errored
@@ -1123,15 +1116,26 @@ namespace AMDownloader.ViewModels
                     continue;
                 }
 
-                filePath = Common.Functions.GetNewFileName(
-                    destination + Common.Functions.GetFileNameFromUrl(url),
-                    existingDestinations);
-
-                if (existingUrls.Contains(url))
+                // check if an item already exists with the same url and destination
+                if (existingItems.Where(o =>
+                    o.Url.ToLower() == url.ToLower()
+                    && Path.GetDirectoryName(o.Destination.ToLower()) == destination.ToLower()).Any())
                 {
                     itemsExist.Add(url);
                     continue;
                 }
+
+                // ensure the filename is unique, even in cases where the links may
+                // resolve to paths already present in the downloads list but which
+                // have not started yet
+                // e.g. if adding www.abc.com/xyz.jpg when a pending item with the
+                // url www.def.com/xyz.jpg already exists and they're both being
+                // downloaded to the same folder, the former must be added with
+                // the name xyz (1).jpg even though xyz.jpg doesn't exist in the
+                // disk yet
+                filePath = Common.Functions.GetNewFileName(
+                    Path.Combine(destination, Common.Functions.GetFileNameFromUrl(url)),
+                    existingItems.Select(o => o.Destination));
 
                 DownloaderObjectModel item;
                 item = new DownloaderObjectModel(
