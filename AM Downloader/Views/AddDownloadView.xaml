@@ -15,7 +15,8 @@
         Width="{Binding Source={x:Static properties:Settings.Default}, Path=AddWindowWidth, Mode=TwoWay}"
         WindowStyle="SingleBorderWindow"
         Loaded="Window_Loaded"
-        x:Name="AddDownloadViewWindow">
+        x:Name="AddDownloadViewWindow"
+        Closing="Window_Closing">
     <Window.Resources>
         <converters:DownloaderDestinationFolderNameConverter x:Key="DownloaderDestinationConverter" />
 
@@ -48,22 +49,11 @@
             <CheckBox Grid.Column="1"
                       x:Name="MonitorClipboardCheckBox"
                       Content="_Monitor clipboard"
-                      IsChecked="{Binding Path=MonitorClipboard, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
                       VerticalAlignment="Center"
                       HorizontalAlignment="Right"
-                      ToolTip="Automatically monitor the clipboard for URLs and add them to the list">
-                <CheckBox.Style>
-                    <Style TargetType="{x:Type CheckBox}">
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsClipboardMonitorSwitchingState}"
-                                         Value="True">
-                                <Setter Property="IsEnabled"
-                                        Value="False" />
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </CheckBox.Style>
-            </CheckBox>
+                      ToolTip="Automatically monitor the clipboard for URLs and add them to the list"
+                      Checked="MonitorClipboardCheckBox_Checked"
+                      Unchecked="MonitorClipboardCheckBox_Unchecked" />
         </Grid>
 
         <TextBox x:Name="UrlTextBox"

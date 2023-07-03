@@ -1,10 +1,16 @@
 ﻿// Copyright (C) 2020-2023 Antik Mozib. All rights reserved.
 
+using AMDownloader.ClipboardObservation;
 using AMDownloader.Helpers;
 using AMDownloader.Models.Serializable;
 using AMDownloader.Properties;
+using AMDownloader.ViewModels;
+using Serilog;
 using System;
 using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
@@ -17,6 +23,11 @@ namespace AMDownloader.Views
     /// </summary>
     public partial class AddDownloadView : Window
     {
+        private CancellationTokenSource _monitorClipboardCts;
+        private TaskCompletionSource _monitorClipboardTcs;
+
+        private bool IsClipboardMonitorRunning => _monitorClipboardTcs != null && _monitorClipboardTcs.Task.Status != TaskStatus.RanToCompletion;
+
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);
@@ -79,28 +90,10 @@ namespace AMDownloader.Views
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            if (Settings.Default.RememberLastDownloadLocation)
-            {
-                if (Settings.Default.LastDownloadLocation.Trim().Length > 0)
-                {
-                    DestinationComboBox.Items.Add(Settings.Default.LastDownloadLocation);
-                    DestinationComboBox.Text = Settings.Default.LastDownloadLocation;
-                }
-                else
-                {
-                    DestinationComboBox.Text = Common.Paths.UserDownloadsFolder;
-                }
-            }
-            else
-            {
-                DestinationComboBox.Text = Common.Paths.UserDownloadsFolder;
-            }
+            // add the default %USERPROFILE%/Downloads folder
+            DestinationComboBox.Items.Add(Common.Paths.UserDownloadsFolder);
 
-            if (!DestinationComboBox.Items.Contains(Common.Paths.UserDownloadsFolder))
-            {
-                DestinationComboBox.Items.Add(Common.Paths.UserDownloadsFolder);
-            }
-
+            // restore all previous download folders
             if (File.Exists(Common.Paths.SavedLocationsFile))
             {
                 try
@@ -121,9 +114,19 @@ namespace AMDownloader.Views
                 }
             }
 
+            // restore clipboard observer settings
+            if (Settings.Default.MonitorClipboard)
+            {
+                MonitorClipboardCheckBox.IsChecked = true;
+            }
+            else
+            {
+                UrlTextBox.Text = AddDownloadViewModel.GenerateValidUrl(ClipboardObserver.GetText());
+            }
+
+            // move cursor to the end of the TextBox
             if (UrlTextBox.Text.Length > 0)
             {
-                // move cursor to the end of the TextBox
                 UrlTextBox.Select(UrlTextBox.Text.Length - 1, 0);
             }
             UrlTextBox.Focus();
@@ -146,11 +149,6 @@ namespace AMDownloader.Views
                 MessageBox.Show("The selected location is inaccessible.", "Add", MessageBoxButton.OK, MessageBoxImage.Error);
                 DestinationComboBox.Focus();
                 return;
-            }
-
-            if (Settings.Default.RememberLastDownloadLocation)
-            {
-                Settings.Default.LastDownloadLocation = DestinationComboBox.Text;
             }
 
             var list = new SerializableDownloadPathHistoryList();
@@ -239,6 +237,114 @@ namespace AMDownloader.Views
             }
 
             UrlTextBox.FontSize = fontSize;
+        }
+
+        private async Task MonitorClipboardAsync(CancellationToken ct)
+        {
+            while (!ct.IsCancellationRequested)
+            {
+                Log.Debug("Polling clipboard...");
+
+                var textBlockUrls = string.Empty;
+                var newUrls = string.Empty;
+                var delay = Task.Delay(1000, ct);
+
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    textBlockUrls = UrlTextBox.Text;
+                });
+
+                if (string.IsNullOrWhiteSpace(textBlockUrls))
+                {
+                    newUrls = string.Join(Environment.NewLine, AddDownloadViewModel.GenerateValidUrl(ClipboardObserver.GetText()));
+                }
+                else
+                {
+                    var existingUrls = textBlockUrls.Split(Environment.NewLine);
+                    var incomingUrls = AddDownloadViewModel.GenerateValidUrl(ClipboardObserver.GetText())
+                        .Split(Environment.NewLine);
+
+                    foreach (var url in incomingUrls)
+                    {
+                        if (existingUrls.Contains(url))
+                        {
+                            continue;
+                        }
+
+                        newUrls += Environment.NewLine + url;
+                    }
+                }
+
+                if (newUrls.Trim().Length > 0)
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        UrlTextBox.Text = textBlockUrls.TrimEnd() + newUrls + Environment.NewLine;
+                    });
+                }
+
+                // must await within try/catch otherwise an OperationCanceledException
+                // will be thrown and the Task will exit abruptly without setting
+                // the result of _monitorClipboardTcs
+                try
+                {
+                    await delay;
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
+            }
+
+            _monitorClipboardTcs.SetResult();
+        }
+
+        private void MonitorClipboardCheckBox_Checked(object sender, RoutedEventArgs e)
+        {
+            Settings.Default.MonitorClipboard = true;
+
+            if (IsClipboardMonitorRunning)
+            {
+                return;
+            }
+
+            _monitorClipboardTcs = new TaskCompletionSource();
+            _monitorClipboardCts = new CancellationTokenSource();
+            var ct = _monitorClipboardCts.Token;
+
+            Task.Run(async () =>
+            {
+                try
+                {
+                    await MonitorClipboardAsync(ct);
+                }
+                catch
+                {
+
+                }
+
+                _monitorClipboardCts.Dispose();
+            });
+        }
+
+        private void MonitorClipboardCheckBox_Unchecked(object sender, RoutedEventArgs e)
+        {
+            Settings.Default.MonitorClipboard = false;
+
+            if (!IsClipboardMonitorRunning)
+            {
+                return;
+            }
+
+            _monitorClipboardCts.Cancel();
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (IsClipboardMonitorRunning)
+            {
+                _monitorClipboardCts.Cancel();
+            }
         }
     }
 }

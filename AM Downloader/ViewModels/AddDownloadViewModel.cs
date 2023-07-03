@@ -1,90 +1,22 @@
 ﻿// Copyright (C) 2020-2023 Antik Mozib. All rights reserved.
 
-using AMDownloader.ClipboardObservation;
 using AMDownloader.Helpers;
 using AMDownloader.Properties;
-using Serilog;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace AMDownloader.ViewModels
 {
     internal class AddDownloadViewModel : INotifyPropertyChanged
     {
-        private CancellationTokenSource _monitorClipboardCts;
-        private TaskCompletionSource _monitorClipboardTcs;
         private readonly ShowWindowDelegate _showList;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public bool MonitorClipboard
-        {
-            get
-            {
-                return _monitorClipboardTcs != null && _monitorClipboardTcs.Task.Status != TaskStatus.RanToCompletion;
-            }
-
-            set
-            {
-                if (value == true)
-                {
-                    if (_monitorClipboardTcs == null || _monitorClipboardTcs.Task.Status == TaskStatus.RanToCompletion)
-                    {
-                        _monitorClipboardTcs = new TaskCompletionSource();
-                        _monitorClipboardCts = new CancellationTokenSource();
-
-                        var ct = _monitorClipboardCts.Token;
-
-                        Task.Run(async () =>
-                        {
-                            await MonitorClipboardAsync(ct);
-
-                            _monitorClipboardCts.Dispose();
-                            RaisePropertyChanged(nameof(MonitorClipboard));
-                            RaisePropertyChanged(nameof(IsClipboardMonitorSwitchingState));
-                        });
-                    }
-                }
-                else
-                {
-                    if (_monitorClipboardTcs != null && _monitorClipboardTcs.Task.Status != TaskStatus.RanToCompletion)
-                    {
-                        _monitorClipboardCts.Cancel();
-
-                        RaisePropertyChanged(nameof(IsClipboardMonitorSwitchingState));
-                    }
-                }
-
-                Settings.Default.MonitorClipboard = value;
-            }
-        }
-        public bool IsClipboardMonitorSwitchingState
-        {
-            get
-            {
-                try
-                {
-                    if (_monitorClipboardTcs == null || _monitorClipboardCts == null)
-                    {
-                        return false;
-                    }
-
-                    return _monitorClipboardCts.IsCancellationRequested
-                        && _monitorClipboardTcs.Task.Status != TaskStatus.RanToCompletion;
-                }
-                catch (ObjectDisposedException)
-                {
-                    return false;
-                }
-            }
-        }
         public string Urls { get; set; }
         /// <summary>
         /// Returns the list of full URLs generated from the supplied patterned URLs.
@@ -104,9 +36,8 @@ namespace AMDownloader.ViewModels
             AddCommand = new RelayCommand<object>(Add, Add_CanExecute);
             PreviewCommand = new RelayCommand<object>(Preview, Preview_CanExecute);
 
-            MonitorClipboard = Settings.Default.MonitorClipboard;
             Urls = string.Empty;
-            if (Settings.Default.LastDownloadLocation.Trim().Length > 0)
+            if (Settings.Default.RememberLastDownloadLocation && Settings.Default.LastDownloadLocation.Trim().Length > 0)
             {
                 SaveToFolder = Settings.Default.LastDownloadLocation;
             }
@@ -116,28 +47,6 @@ namespace AMDownloader.ViewModels
             }
             Enqueue = Settings.Default.EnqueueAddedItems;
             StartDownload = Settings.Default.StartDownloadingAddedItems;
-
-            if (!MonitorClipboard)
-            {
-                var clipText = GenerateValidUrl(ClipboardObserver.GetText());
-
-                if (!string.IsNullOrEmpty(clipText))
-                {
-                    Urls += clipText + Environment.NewLine;
-                }
-            }
-        }
-
-        public void KillClipboardObserver()
-        {
-            try
-            {
-                _monitorClipboardCts?.Cancel();
-            }
-            catch (ObjectDisposedException)
-            {
-
-            }
         }
 
         private void Preview(object obj)
@@ -152,11 +61,9 @@ namespace AMDownloader.ViewModels
 
         private void Add(object item)
         {
-            if (SaveToFolder.LastIndexOf(Path.DirectorySeparatorChar) != SaveToFolder.Length - 1)
-                SaveToFolder += Path.DirectorySeparatorChar;
-
             Settings.Default.EnqueueAddedItems = Enqueue;
             Settings.Default.StartDownloadingAddedItems = StartDownload;
+            Settings.Default.LastDownloadLocation = SaveToFolder;
         }
 
         private bool Add_CanExecute(object obj)
@@ -222,7 +129,7 @@ namespace AMDownloader.ViewModels
         /// <param name="value">A list of strings (separated by newlines) in which
         /// to scan for valid URLs.</param>
         /// <returns>A list of validated and trimmed URLs (separated by newlines).</returns>
-        private static string GenerateValidUrl(string value)
+        public static string GenerateValidUrl(string value)
         {
             var urls = value.Split(Environment.NewLine);
             var output = new List<string>();
@@ -238,58 +145,6 @@ namespace AMDownloader.ViewModels
             }
 
             return string.Join(Environment.NewLine, output);
-        }
-
-        private async Task MonitorClipboardAsync(CancellationToken ct)
-        {
-            while (!ct.IsCancellationRequested && this is not null)
-            {
-                Log.Debug("Polling clipboard...");
-
-                var newUrls = string.Empty;
-                var delay = Task.Delay(1000, ct);
-
-                if (string.IsNullOrWhiteSpace(Urls))
-                {
-                    newUrls = string.Join(Environment.NewLine, GenerateValidUrl(ClipboardObserver.GetText()));
-                }
-                else
-                {
-                    var existingUrls = Urls.Split(Environment.NewLine);
-                    var incomingUrls = GenerateValidUrl(ClipboardObserver.GetText())
-                        .Split(Environment.NewLine);
-
-                    foreach (var url in incomingUrls)
-                    {
-                        if (existingUrls.Contains(url))
-                        {
-                            continue;
-                        }
-
-                        newUrls += Environment.NewLine + url;
-                    }
-                }
-
-                if (newUrls.Trim().Length > 0)
-                {
-                    Urls = Urls.TrimEnd() + newUrls + Environment.NewLine;
-                    RaisePropertyChanged(nameof(Urls));
-                }
-
-                // must await within try/catch otherwise an OperationCanceledException
-                // will be thrown and the Task will exit abruptly without setting
-                // the result of _monitorClipboardTcs
-                try
-                {
-                    await delay;
-                }
-                catch (OperationCanceledException)
-                {
-                    break;
-                }
-            }
-
-            _monitorClipboardTcs.SetResult();
         }
 
         protected void RaisePropertyChanged(string prop)
