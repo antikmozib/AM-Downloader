@@ -121,7 +121,8 @@ namespace AMDownloader.Views
             }
             else
             {
-                UrlTextBox.Text = AddDownloadViewModel.GenerateValidUrl(ClipboardObserver.GetText()) + Environment.NewLine;
+                var clipUrls = AddDownloadViewModel.GenerateValidUrl(ClipboardObserver.GetText());
+                UrlTextBox.Text = clipUrls.Trim().Length > 0 ? clipUrls + Environment.NewLine : string.Empty;
             }
 
             // move cursor to the end of the TextBox
@@ -256,17 +257,24 @@ namespace AMDownloader.Views
 
                 if (string.IsNullOrWhiteSpace(textBlockUrls))
                 {
-                    newUrls = string.Join(Environment.NewLine, AddDownloadViewModel.GenerateValidUrl(ClipboardObserver.GetText()));
+                    // TextBlock is empty
+                    newUrls = string.Join(Environment.NewLine, AddDownloadViewModel
+                        .GenerateValidUrl(ClipboardObserver.GetText()));
                 }
                 else
                 {
-                    var existingUrls = textBlockUrls.Split(Environment.NewLine);
-                    var incomingUrls = AddDownloadViewModel.GenerateValidUrl(ClipboardObserver.GetText())
+                    // TextBlock contains items
+
+                    var existingUrls = textBlockUrls
+                        .Split(Environment.NewLine)
+                        .Select(o => o.ToLower());
+                    var incomingUrls = AddDownloadViewModel
+                        .GenerateValidUrl(ClipboardObserver.GetText())
                         .Split(Environment.NewLine);
 
                     foreach (var url in incomingUrls)
                     {
-                        if (existingUrls.Contains(url))
+                        if (existingUrls.Contains(url.ToLower()))
                         {
                             continue;
                         }
