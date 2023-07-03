@@ -121,7 +121,7 @@ namespace AMDownloader.Views
             }
             else
             {
-                UrlTextBox.Text = AddDownloadViewModel.GenerateValidUrl(ClipboardObserver.GetText());
+                UrlTextBox.Text = AddDownloadViewModel.GenerateValidUrl(ClipboardObserver.GetText()) + Environment.NewLine;
             }
 
             // move cursor to the end of the TextBox
@@ -324,6 +324,8 @@ namespace AMDownloader.Views
                 }
 
                 _monitorClipboardCts.Dispose();
+
+                Log.Debug("Stopped polling clipboard.");
             });
         }
 
