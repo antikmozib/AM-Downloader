@@ -96,7 +96,7 @@ namespace AMDownloader.Views
             // add the last used download location
             if (Settings.Default.RememberLastDownloadLocation
                 && !string.IsNullOrWhiteSpace(Settings.Default.LastDownloadLocation)
-                && Settings.Default.LastDownloadLocation != Common.Paths.UserDownloadsFolder)
+                && !SameLocation(Settings.Default.LastDownloadLocation, Common.Paths.UserDownloadsFolder))
             {
                 DestinationComboBox.Items.Add(Settings.Default.LastDownloadLocation);
                 DestinationComboBox.Text = Settings.Default.LastDownloadLocation;
@@ -116,7 +116,7 @@ namespace AMDownloader.Views
                     foreach (var item in list.Objects)
                     {
                         if (!string.IsNullOrWhiteSpace(item.FolderPath)
-                            && !DestinationComboBox.Items.Contains(item.FolderPath))
+                            && !DestinationComboBoxContains(item.FolderPath))
                         {
                             DestinationComboBox.Items.Add(item.FolderPath);
                         }
@@ -145,6 +145,14 @@ namespace AMDownloader.Views
                 UrlTextBox.Select(UrlTextBox.Text.Length - 1, 0);
             }
             UrlTextBox.Focus();
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (IsClipboardMonitorRunning)
+            {
+                _monitorClipboardCts.Cancel();
+            }
         }
 
         private void AddButton_Click(object sender, RoutedEventArgs e)
@@ -208,7 +216,7 @@ namespace AMDownloader.Views
 
             if (folderBrowser.ShowDialog() == WinForms.DialogResult.OK)
             {
-                if (!DestinationComboBox.Items.Contains(folderBrowser.SelectedPath))
+                if (!DestinationComboBoxContains(folderBrowser.SelectedPath))
                 {
                     DestinationComboBox.Items.Add(folderBrowser.SelectedPath);
                 }
@@ -356,12 +364,34 @@ namespace AMDownloader.Views
             _monitorClipboardCts.Cancel();
         }
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private bool DestinationComboBoxContains(string value)
         {
-            if (IsClipboardMonitorRunning)
+            value = value.Trim();
+
+            foreach (var item in DestinationComboBox.Items)
             {
-                _monitorClipboardCts.Cancel();
+                var comboText = item.ToString().Trim();
+
+                if (SameLocation(value, comboText))
+                {
+                    return true;
+                }
             }
+
+            return false;
+        }
+
+        private static bool SameLocation(string locA, string locB)
+        {
+            locA = locA.Trim();
+            locB = locB.Trim();
+
+            if (string.Compare(locA, locB, true) == 0)
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }

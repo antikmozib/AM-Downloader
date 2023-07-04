@@ -85,8 +85,7 @@
                       HorizontalAlignment="Stretch"
                       VerticalContentAlignment="Center"
                       Text="{Binding Path=SaveToFolder, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}"
-                      IsEditable="True"
-                      IsReadOnly="True" />
+                      IsEditable="True" />
         </DockPanel>
 
         <StackPanel Grid.Row="6"
