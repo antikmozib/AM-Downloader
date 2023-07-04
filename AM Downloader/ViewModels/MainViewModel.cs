@@ -1440,31 +1440,26 @@ namespace AMDownloader.ViewModels
         }
 
         /// <summary>
-        /// Recursively generates a new path if <paramref name="originalDestination"/> already exists on disk or in
+        /// Generates a new path if <paramref name="originalDestination"/> already exists on disk or in
         /// <paramref name="existingDestinations"/>.
         /// </summary>
         /// <param name="originalDestination">The path to the file for which to generate a new path.</param>
         /// <param name="existingDestinations">The list of existing paths against which to perform checks.</param>
-        /// <param name="count">The current iteration of the recursion.</param>
         /// <returns>A new path which is guaranteed to not exist on disk or in <paramref name="existingDestinations"/>.
         /// </returns>
-        private static string GenerateNewDestination(string originalDestination, string[] existingDestinations, int count = 0)
+        private static string GenerateNewDestination(string originalDestination, string[] existingDestinations)
         {
-            string dirName = Path.GetDirectoryName(originalDestination);
-            string originalFileName = Path.GetFileName(originalDestination);
-            string newFileName = $"{Path.GetFileNameWithoutExtension(originalFileName)}" +
-                $"{(count == 0 ? "" : $" ({count})")}" +
-                $"{Path.GetExtension(originalFileName)}";
-            string newDestination = Path.Combine(dirName, newFileName);
+            string dirPath = Path.GetDirectoryName(originalDestination);
+            string newDestination = originalDestination;
+            int i = 0;
 
-            if (count == 0)
-            {
-                existingDestinations = existingDestinations.Select(o => o.ToLower()).ToArray();
-            }
+            existingDestinations = existingDestinations.Select(o => o.ToLower()).ToArray();
 
-            if (File.Exists(newDestination) || existingDestinations.Contains(newDestination.ToLower()))
+            while (File.Exists(newDestination) || existingDestinations.Contains(newDestination.ToLower()))
             {
-                return GenerateNewDestination(originalDestination, existingDestinations, ++count);
+                newDestination = Path.Combine(
+                    dirPath,
+                    $"{Path.GetFileNameWithoutExtension(originalDestination)} ({++i}){Path.GetExtension(originalDestination)}");
             }
 
             return newDestination;
