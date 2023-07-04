@@ -306,9 +306,9 @@ namespace AMDownloader.ViewModels
                         AddObjects(itemsToAdd.ToArray());
                         QueueProcessor.Enqueue(itemsToEnqueue.ToArray());
                     }
-                    catch
+                    catch (Exception ex)
                     {
-
+                        Log.Error(ex.Message, ex);
                     }
 
                     _updatingListCts.Dispose();
@@ -604,13 +604,20 @@ namespace AMDownloader.ViewModels
 
             Parallel.ForEach(itemsOpenable, (item) =>
             {
+                string explorerParam = string.Empty;
+
                 if (File.Exists(item.Destination))
                 {
-                    Process.Start("explorer.exe", "/select, \"\"" + item.Destination + "\"\"");
+                    explorerParam = "/select, \"\"" + item.Destination + "\"\"";
                 }
                 else if (Directory.Exists(Path.GetDirectoryName(item.Destination)))
                 {
-                    Process.Start("explorer.exe", Path.GetDirectoryName(item.Destination));
+                    explorerParam = Path.GetDirectoryName(item.Destination);
+                }
+
+                if (!string.IsNullOrWhiteSpace(explorerParam))
+                {
+                    Process.Start("explorer.exe", explorerParam);
                 }
             });
         }
@@ -912,8 +919,10 @@ namespace AMDownloader.ViewModels
 
                     Common.Functions.Serialize(list, Common.Paths.DownloadsHistoryFile);
                 }
-                catch
+                catch (Exception ex)
                 {
+                    Log.Error(ex.Message, ex);
+
                     // close even when an exception occurs
                 }
 
@@ -1079,13 +1088,13 @@ namespace AMDownloader.ViewModels
         /// Creates new <see cref="DownloaderObjectModel"/>s from the params.
         /// </summary>
         /// <param name="urls">The URLs to the files to add.</param>
-        /// <param name="destination">The folder where to download the files.</param>
+        /// <param name="saveToFolder">The folder where to download the files.</param>
         /// <param name="ct">The <see cref="CancellationToken"/> to cancel the process.</param>
         /// <returns>An array of <see cref="DownloaderObjectModel"/>s which have been successfully
         /// created.</returns>
-        private DownloaderObjectModel[] CreateObjects(IEnumerable<string> urls, string destination, CancellationToken ct)
+        private DownloaderObjectModel[] CreateObjects(IEnumerable<string> urls, string saveToFolder, CancellationToken ct)
         {
-            var existingItems = DownloadItemsCollection.ToArray();
+            var existingItems = DownloadItemsCollection.ToList();
             var itemsCreated = new List<DownloaderObjectModel>();
             var itemsExist = new List<string>(); // skipped
             var itemsErrored = new List<string>(); // errored
@@ -1119,23 +1128,15 @@ namespace AMDownloader.ViewModels
                 // check if an item already exists with the same url and destination
                 if (existingItems.Where(o =>
                     o.Url.ToLower() == url.ToLower()
-                    && Path.GetDirectoryName(o.Destination.ToLower()) == destination.ToLower()).Any())
+                    && Path.GetDirectoryName(o.Destination.ToLower()) == saveToFolder.ToLower()).Any())
                 {
                     itemsExist.Add(url);
                     continue;
                 }
 
-                // ensure the filename is unique, even in cases where the links may
-                // resolve to paths already present in the downloads list but which
-                // have not started yet
-                // e.g. if adding www.abc.com/xyz.jpg when a pending item with the
-                // url www.def.com/xyz.jpg already exists and they're both being
-                // downloaded to the same folder, the former must be added with
-                // the name xyz (1).jpg even though xyz.jpg doesn't exist in the
-                // disk yet
-                filePath = Common.Functions.GetNewFileName(
-                    Path.Combine(destination, Common.Functions.GetFileNameFromUrl(url)),
-                    existingItems.Select(o => o.Destination));
+                filePath = GenerateNewDestination(
+                    Path.Combine(saveToFolder, Common.Functions.GetFileNameFromUrl(url)),
+                    existingItems.Select(o => o.Destination).ToArray());
 
                 DownloaderObjectModel item;
                 item = new DownloaderObjectModel(
@@ -1148,6 +1149,7 @@ namespace AMDownloader.ViewModels
                         Download_PropertyChanged,
                         _progressReporter);
 
+                existingItems.Add(item);
                 itemsCreated.Add(item);
             }
 
@@ -1192,9 +1194,9 @@ namespace AMDownloader.ViewModels
                     }
                 });
             }
-            catch
+            catch (Exception ex)
             {
-
+                Log.Error(ex.Message, ex);
             }
             finally
             {
@@ -1422,8 +1424,10 @@ namespace AMDownloader.ViewModels
                     Process.Start("explorer.exe", url);
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                Log.Error(ex.Message, ex);
+
                 if (!silent)
                 {
                     _showPrompt.Invoke(
@@ -1435,20 +1439,54 @@ namespace AMDownloader.ViewModels
             }
         }
 
+        /// <summary>
+        /// Recursively generates a new path if <paramref name="originalDestination"/> already exists on disk or in
+        /// <paramref name="existingDestinations"/>.
+        /// </summary>
+        /// <param name="originalDestination">The path to the file for which to generate a new path.</param>
+        /// <param name="existingDestinations">The list of existing paths against which to perform checks.</param>
+        /// <param name="count">The current iteration of the recursion.</param>
+        /// <returns>A new path which is guaranteed to not exist on disk or in <paramref name="existingDestinations"/>.
+        /// </returns>
+        private static string GenerateNewDestination(string originalDestination, string[] existingDestinations, int count = 0)
+        {
+            string dirName = Path.GetDirectoryName(originalDestination);
+            string originalFileName = Path.GetFileName(originalDestination);
+            string newFileName = $"{Path.GetFileNameWithoutExtension(originalFileName)}" +
+                $"{(count == 0 ? "" : $" ({count})")}" +
+                $"{Path.GetExtension(originalFileName)}";
+            string newDestination = Path.Combine(dirName, newFileName);
+
+            if (count == 0)
+            {
+                existingDestinations = existingDestinations.Select(o => o.ToLower()).ToArray();
+            }
+
+            if (File.Exists(newDestination) || existingDestinations.Contains(newDestination.ToLower()))
+            {
+                return GenerateNewDestination(originalDestination, existingDestinations, ++count);
+            }
+
+            return newDestination;
+        }
+
         #endregion
 
         #region Event handlers
 
         private void QueueProcessor_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
+
         }
 
         private void QueueProcessor_Stopped(object sender, EventArgs e)
         {
+
         }
 
         private void QueueProcessor_Started(object sender, EventArgs e)
         {
+
         }
 
         private void QueueProcessor_ItemEnqueued(object sender, EventArgs e)
@@ -1463,6 +1501,7 @@ namespace AMDownloader.ViewModels
 
         private void Download_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
+
         }
 
         private void Download_Created(object sender, EventArgs e)

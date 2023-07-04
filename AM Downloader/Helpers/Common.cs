@@ -30,49 +30,22 @@ namespace AMDownloader.Helpers
         internal static class Paths
         {
             /// <summary>
-            /// Gets the path to the folder where to save the user-specific settings.
+            /// Gets the path to the %LOCALAPPDATA% folder.
             /// </summary>
             public static string LocalAppDataFolder =>
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Assembly.GetExecutingAssembly().GetName().Name);
             public static string DownloadsHistoryFile => Path.Combine(LocalAppDataFolder, "History.xml");
             public static string SavedLocationsFile => Path.Combine(LocalAppDataFolder, "SavedLocations.xml");
             public static string UIColumnOrderFile => Path.Combine(LocalAppDataFolder, "UIColumnOrder.xml");
+            /// <summary>
+            /// Gets the path to the %USERPROFILE%/Downloads folder.
+            /// </summary>
             public static string UserDownloadsFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
             public static string LogFile => Path.Combine(LocalAppDataFolder, "logs", "log.log");
         }
 
         internal static class Functions
         {
-            /// <summary>
-            /// Generates a new filename based on the supplied <paramref name="fullPath"/> if the supplied 
-            /// <paramref name="fullPath"/> already exists on disk.
-            /// </summary>
-            /// <param name="fullPath">The full path to the file for which to generate a new and available 
-            /// filename.</param>
-            /// <param name="supplementaryPaths">A supplementary list of paths against which to perform
-            /// checks, in addition to the directory of the supplied <paramref name="fullPath"/>.</param>
-            /// <returns>A new filename, based on <paramref name="fullPath"/>, which is guaranteed to 
-            /// not exist in the directory of the supplied <paramref name="fullPath"/>.</returns>
-            public static string GetNewFileName(string fullPath, IEnumerable<string> supplementaryPaths = null)
-            {
-                string dirName = Path.GetDirectoryName(fullPath);
-                string fileName = Path.GetFileName(fullPath);
-                string result = dirName + Path.DirectorySeparatorChar + fileName;
-                int i = 0;
-
-                supplementaryPaths = supplementaryPaths.Select(o => o.ToLower()) ?? Enumerable.Empty<string>();
-
-                while (File.Exists(result)
-                    || File.Exists(result + Constants.TempDownloadExtension)
-                    || supplementaryPaths.Contains(result.ToLower()))
-                {
-                    result = Path.Combine(dirName,
-                        $"{Path.GetFileNameWithoutExtension(fileName)} ({++i}){Path.GetExtension(fileName)}");
-                };
-
-                return result;
-            }
-
             /// <summary>
             /// Extracts the filename from an URL.
             /// </summary>
@@ -135,23 +108,7 @@ namespace AMDownloader.Helpers
                     }
                 }
 
-                return GetDriveRootFromPath(driveRootPath);
-            }
-
-            private static string GetDriveRootFromPath(string path)
-            {
-                if (path.Contains(':'))
-                {
-                    return path.Substring(0, path.IndexOf(":") + 1) + Path.DirectorySeparatorChar;
-                }
-                else if (path.Contains(Path.DirectorySeparatorChar))
-                {
-                    return path.Substring(0, path.IndexOf(Path.DirectorySeparatorChar) + 1);
-                }
-                else
-                {
-                    return path;
-                }
+                return Path.GetPathRoot(driveRootPath);
             }
 
             public static void ResetAllSettings()
