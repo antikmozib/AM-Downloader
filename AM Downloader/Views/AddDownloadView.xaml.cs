@@ -90,10 +90,23 @@ namespace AMDownloader.Views
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            // add the default %USERPROFILE%/Downloads folder
+            // add the default download location
             DestinationComboBox.Items.Add(Common.Paths.UserDownloadsFolder);
 
-            // restore all previous download folders
+            // add the last used download location
+            if (Settings.Default.RememberLastDownloadLocation
+                && !string.IsNullOrWhiteSpace(Settings.Default.LastDownloadLocation)
+                && Settings.Default.LastDownloadLocation != Common.Paths.UserDownloadsFolder)
+            {
+                DestinationComboBox.Items.Add(Settings.Default.LastDownloadLocation);
+                DestinationComboBox.Text = Settings.Default.LastDownloadLocation;
+            }
+            else
+            {
+                DestinationComboBox.Text = Common.Paths.UserDownloadsFolder;
+            }
+
+            // add all previously used download locations
             if (File.Exists(Common.Paths.SavedLocationsFile))
             {
                 try
@@ -102,7 +115,8 @@ namespace AMDownloader.Views
 
                     foreach (var item in list.Objects)
                     {
-                        if (!string.IsNullOrWhiteSpace(item.FolderPath) && !DestinationComboBox.Items.Contains(item.FolderPath))
+                        if (!string.IsNullOrWhiteSpace(item.FolderPath)
+                            && !DestinationComboBox.Items.Contains(item.FolderPath))
                         {
                             DestinationComboBox.Items.Add(item.FolderPath);
                         }
@@ -114,7 +128,7 @@ namespace AMDownloader.Views
                 }
             }
 
-            // restore clipboard observer settings
+            // restore ClipboardObserver settings
             if (Settings.Default.MonitorClipboard)
             {
                 MonitorClipboardCheckBox.IsChecked = true;
@@ -152,25 +166,19 @@ namespace AMDownloader.Views
                 return;
             }
 
-            // save all destinations
+            // save download locations
+
+            Settings.Default.LastDownloadLocation = DestinationComboBox.Text;
 
             var list = new SerializableDownloadPathHistoryList();
 
             foreach (var item in DestinationComboBox.Items)
             {
-                var path = item.ToString();
-
-                if (string.IsNullOrWhiteSpace(path))
+                var listItem = new SerializableDownloadPathHistory
                 {
-                    continue;
-                }
-
-                var model = new SerializableDownloadPathHistory
-                {
-                    FolderPath = path
+                    FolderPath = item.ToString()
                 };
-
-                list.Objects.Add(model);
+                list.Objects.Add(listItem);
             }
 
             try
