@@ -497,7 +497,6 @@ namespace AMDownloader.Models
                             if (connLength <= 0)
                             {
                                 Log.Debug($"Conn {conn} already completed.");
-
                                 return;
                             }
 
