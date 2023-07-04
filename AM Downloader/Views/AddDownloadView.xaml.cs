@@ -102,15 +102,15 @@ namespace AMDownloader.Views
 
                     foreach (var item in list.Objects)
                     {
-                        if (item.FolderPath.Trim().Length > 0 && !DestinationComboBox.Items.Contains(item.FolderPath))
+                        if (!string.IsNullOrWhiteSpace(item.FolderPath) && !DestinationComboBox.Items.Contains(item.FolderPath))
                         {
                             DestinationComboBox.Items.Add(item.FolderPath);
                         }
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
-
+                    Log.Error(ex.Message, ex);
                 }
             }
 
@@ -122,7 +122,7 @@ namespace AMDownloader.Views
             else
             {
                 var clipUrls = AddDownloadViewModel.GenerateValidUrl(ClipboardObserver.GetText());
-                UrlTextBox.Text = clipUrls.Trim().Length > 0 ? clipUrls + Environment.NewLine : string.Empty;
+                UrlTextBox.Text = !string.IsNullOrWhiteSpace(clipUrls) ? clipUrls + Environment.NewLine : string.Empty;
             }
 
             // move cursor to the end of the TextBox
@@ -152,13 +152,15 @@ namespace AMDownloader.Views
                 return;
             }
 
+            // save all destinations
+
             var list = new SerializableDownloadPathHistoryList();
 
             foreach (var item in DestinationComboBox.Items)
             {
                 var path = item.ToString();
 
-                if (path.Trim().Length == 0)
+                if (string.IsNullOrWhiteSpace(path))
                 {
                     continue;
                 }
@@ -175,9 +177,9 @@ namespace AMDownloader.Views
             {
                 Common.Functions.Serialize(list, Common.Paths.SavedLocationsFile);
             }
-            catch
+            catch (Exception ex)
             {
-
+                Log.Error(ex.Message, ex);
             }
 
             DialogResult = true;
@@ -242,66 +244,63 @@ namespace AMDownloader.Views
 
         private async Task MonitorClipboardAsync(CancellationToken ct)
         {
-            while (!ct.IsCancellationRequested)
+            try
             {
-                Log.Debug("Polling clipboard...");
-
-                var textBlockUrls = string.Empty;
-                var newUrls = string.Empty;
-                var delay = Task.Delay(1000, ct);
-
-                Application.Current.Dispatcher.Invoke(() =>
+                while (!ct.IsCancellationRequested)
                 {
-                    textBlockUrls = UrlTextBox.Text;
-                });
+                    Log.Debug("Polling clipboard...");
 
-                if (string.IsNullOrWhiteSpace(textBlockUrls))
-                {
-                    // TextBlock is empty
-                    newUrls = string.Join(Environment.NewLine, AddDownloadViewModel
-                        .GenerateValidUrl(ClipboardObserver.GetText()));
-                }
-                else
-                {
-                    // TextBlock contains items
+                    var textBlockUrls = string.Empty;
+                    var newUrls = string.Empty;
+                    var delay = Task.Delay(2000, ct);
 
-                    var existingUrls = textBlockUrls
-                        .Split(Environment.NewLine)
-                        .Select(o => o.ToLower());
-                    var incomingUrls = AddDownloadViewModel
-                        .GenerateValidUrl(ClipboardObserver.GetText())
-                        .Split(Environment.NewLine);
-
-                    foreach (var url in incomingUrls)
-                    {
-                        if (existingUrls.Contains(url.ToLower()))
-                        {
-                            continue;
-                        }
-
-                        newUrls += Environment.NewLine + url;
-                    }
-                }
-
-                if (newUrls.Trim().Length > 0)
-                {
                     Application.Current.Dispatcher.Invoke(() =>
                     {
-                        UrlTextBox.Text = textBlockUrls.TrimEnd() + newUrls + Environment.NewLine;
+                        textBlockUrls = UrlTextBox.Text;
                     });
-                }
 
-                // must await within try/catch otherwise an OperationCanceledException
-                // will be thrown and the Task will exit abruptly without setting
-                // the result of _monitorClipboardTcs
-                try
-                {
+                    if (string.IsNullOrWhiteSpace(textBlockUrls))
+                    {
+                        // TextBlock is empty
+                        newUrls = string.Join(Environment.NewLine, AddDownloadViewModel
+                            .GenerateValidUrl(ClipboardObserver.GetText()));
+                    }
+                    else
+                    {
+                        // TextBlock contains items
+
+                        var existingUrls = textBlockUrls
+                            .Split(Environment.NewLine)
+                            .Select(o => o.ToLower());
+                        var incomingUrls = AddDownloadViewModel
+                            .GenerateValidUrl(ClipboardObserver.GetText())
+                            .Split(Environment.NewLine);
+
+                        foreach (var url in incomingUrls)
+                        {
+                            if (existingUrls.Contains(url.ToLower()))
+                            {
+                                continue;
+                            }
+
+                            newUrls += Environment.NewLine + url;
+                        }
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(newUrls))
+                    {
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            UrlTextBox.Text = textBlockUrls.TrimEnd() + newUrls + Environment.NewLine;
+                        });
+                    }
+
                     await delay;
                 }
-                catch (OperationCanceledException)
-                {
-                    break;
-                }
+            }
+            catch (OperationCanceledException)
+            {
+
             }
 
             _monitorClipboardTcs.SetResult();

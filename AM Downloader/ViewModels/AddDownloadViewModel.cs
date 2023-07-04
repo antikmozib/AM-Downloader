@@ -37,7 +37,8 @@ namespace AMDownloader.ViewModels
             PreviewCommand = new RelayCommand<object>(Preview, Preview_CanExecute);
 
             Urls = string.Empty;
-            if (Settings.Default.RememberLastDownloadLocation && Settings.Default.LastDownloadLocation.Trim().Length > 0)
+            if (Settings.Default.RememberLastDownloadLocation
+                && !string.IsNullOrWhiteSpace(Settings.Default.LastDownloadLocation))
             {
                 SaveToFolder = Settings.Default.LastDownloadLocation;
             }
@@ -63,7 +64,14 @@ namespace AMDownloader.ViewModels
         {
             Settings.Default.EnqueueAddedItems = Enqueue;
             Settings.Default.StartDownloadingAddedItems = StartDownload;
-            Settings.Default.LastDownloadLocation = SaveToFolder;
+            if (Settings.Default.RememberLastDownloadLocation)
+            {
+                Settings.Default.LastDownloadLocation = SaveToFolder;
+            }
+            else
+            {
+                Settings.Default.LastDownloadLocation = string.Empty;
+            }
         }
 
         private bool Add_CanExecute(object obj)
