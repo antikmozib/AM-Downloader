@@ -11,7 +11,10 @@ namespace AMDownloader.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value.ToString().Trim().Length > 0) return Visibility.Visible;
+            if (!string.IsNullOrWhiteSpace(value.ToString()))
+            {
+                return Visibility.Visible;
+            }
             return Visibility.Collapsed;
         }
 
