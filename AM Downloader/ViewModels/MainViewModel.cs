@@ -276,19 +276,19 @@ namespace AMDownloader.ViewModels
                             RaisePropertyChanged(nameof(Status));
 
                             var item = new DownloaderObjectModel(
-                                _client,
-                                sourceObjects[i].Url,
-                                sourceObjects[i].Destination,
-                                sourceObjects[i].DateCreated,
-                                sourceObjects[i].TotalBytesToDownload,
-                                sourceObjects[i].ConnLimit,
-                                sourceObjects[i].StatusCode,
-                                sourceObjects[i].Status,
-                                Download_Created,
-                                Download_Started,
-                                Download_Stopped,
-                                Download_PropertyChanged,
-                                _progressReporter);
+                                httpClient: _client,
+                                url: sourceObjects[i].Url,
+                                destination: sourceObjects[i].Destination,
+                                dateCreated: sourceObjects[i].DateCreated,
+                                bytesToDownload: sourceObjects[i].TotalBytesToDownload,
+                                connLimit: sourceObjects[i].ConnLimit,
+                                httpStatusCode: sourceObjects[i].StatusCode,
+                                status: sourceObjects[i].Status,
+                                downloadCreated: Download_Created,
+                                downloadStarted: Download_Started,
+                                downloadStopped: Download_Stopped,
+                                propertyChanged: Download_PropertyChanged,
+                                bytesReporter: _progressReporter);
 
                             if (sourceObjects[i].IsQueued)
                             {
@@ -439,7 +439,8 @@ namespace AMDownloader.ViewModels
 
                 Task.Run(async () =>
                 {
-                    itemsCreated = CreateObjects(addDownloadViewModel.GeneratedUrls,
+                    itemsCreated = CreateObjects(
+                        addDownloadViewModel.ExplodedUrls,
                         addDownloadViewModel.SaveToFolder,
                         ct);
 
@@ -1139,14 +1140,14 @@ namespace AMDownloader.ViewModels
 
                 DownloaderObjectModel item;
                 item = new DownloaderObjectModel(
-                        _client,
-                        url,
-                        filePath,
-                        Download_Created,
-                        Download_Started,
-                        Download_Stopped,
-                        Download_PropertyChanged,
-                        _progressReporter);
+                        httpClient: _client,
+                        url: url,
+                        destination: filePath,
+                        downloadCreated: Download_Created,
+                        downloadStarted: Download_Started,
+                        downloadStopped: Download_Stopped,
+                        propertyChanged: Download_PropertyChanged,
+                        bytesReporter: _progressReporter);
 
                 existingItems.Add(item);
                 itemsCreated.Add(item);
