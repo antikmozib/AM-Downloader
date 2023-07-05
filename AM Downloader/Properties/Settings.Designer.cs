@@ -109,7 +109,7 @@ namespace AMDownloader.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Created")]
         public string SelectedColumnHeader {
             get {
                 return ((string)(this["SelectedColumnHeader"]));
@@ -121,6 +121,7 @@ namespace AMDownloader.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Descending")]
         public global::System.ComponentModel.ListSortDirection SelectedColumnHeaderDirection {
             get {
                 return ((global::System.ComponentModel.ListSortDirection)(this["SelectedColumnHeaderDirection"]));
