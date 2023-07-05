@@ -1,6 +1,5 @@
 ﻿// Copyright (C) 2020-2023 Antik Mozib. All rights reserved.
 
-using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
