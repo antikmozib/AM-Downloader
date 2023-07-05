@@ -46,13 +46,14 @@ namespace AMDownloader.Views
             styles |= Helpers.Native.User32.WS_EX_DLGMODALFRAME;
             Helpers.Native.User32.SetWindowLong(hwnd, Helpers.Native.User32.GWL_EXSTYLE, styles);
 
-            Helpers.Native.User32.SetWindowPos(hwnd,
-                IntPtr.Zero,
-                0,
-                0,
-                0,
-                0,
-                Helpers.Native.User32.SWP_NOMOVE
+            Helpers.Native.User32.SetWindowPos(
+                hwnd: hwnd,
+                hwndInsertAfter: IntPtr.Zero,
+                x: 0,
+                y: 0,
+                width: 0,
+                height: 0,
+                flags: Helpers.Native.User32.SWP_NOMOVE
                     | Helpers.Native.User32.SWP_NOSIZE
                     | Helpers.Native.User32.SWP_NOZORDER
                     | Helpers.Native.User32.SWP_FRAMECHANGED);
