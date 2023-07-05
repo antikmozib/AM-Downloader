@@ -216,15 +216,24 @@ namespace AMDownloader.Views
         private void BrowseButton_Click(object sender, RoutedEventArgs e)
         {
             WinForms.FolderBrowserDialog folderBrowser = new();
+            string openWithFolder;
 
             if (Directory.Exists(DestinationComboBox.Text))
             {
-                folderBrowser.SelectedPath = DestinationComboBox.Text;
+                openWithFolder = DestinationComboBox.Text;
             }
             else
             {
-                folderBrowser.SelectedPath = Common.Paths.UserDownloadsFolder;
+                openWithFolder = Common.Paths.UserDownloadsFolder;
             }
+
+            // ensure there's a trailing slash so that FolderBrowserDialog opens inside SelectedPath
+            if (openWithFolder.LastIndexOf(Path.DirectorySeparatorChar) != openWithFolder.Length - 1)
+            {
+                openWithFolder += Path.DirectorySeparatorChar;
+            }
+
+            folderBrowser.SelectedPath = openWithFolder;
 
             if (folderBrowser.ShowDialog() == WinForms.DialogResult.OK)
             {
