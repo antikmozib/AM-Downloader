@@ -44,7 +44,7 @@ namespace AMDownloader.ViewModels
 
         private void Preview(object obj)
         {
-            _showList.Invoke(new ListViewerViewModel(ExplodedUrls.ToList(), "Generated URLs:", "Preview"));
+            _showList.Invoke(new ListViewerViewModel(ExplodedUrls.ToList(), "URLs exploded from their patterns:", "Preview"));
         }
 
         private bool Preview_CanExecute(object obj)
