@@ -1051,8 +1051,6 @@ namespace AMDownloader.ViewModels
                 {
                     await semTask;
 
-                    Log.Debug($"Refreshing {nameof(DownloadItemsView)}...");
-
                     Application.Current?.Dispatcher?.Invoke(() =>
                     {
                         DownloadItemsView.Refresh();
@@ -1074,7 +1072,8 @@ namespace AMDownloader.ViewModels
                 }
 
                 _refreshingViewTcs.SetResult();
-                Log.Debug($"{nameof(_refreshingViewTcs)} result set.");
+
+                Log.Debug($"{nameof(DownloadItemsView)} refreshed.");
             }, ct);
         }
 
