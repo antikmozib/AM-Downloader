@@ -162,14 +162,14 @@ namespace AMDownloader.Views
 
         internal void DataContext_Closing(object sender, EventArgs e)
         {
-            Application.Current.Dispatcher.Invoke(() => MainViewWindow.IsEnabled = false);
+            Dispatcher.Invoke(() => MainViewWindow.IsEnabled = false);
         }
 
         internal void DataContext_Closed(object sender, EventArgs e)
         {
             _dataContextClosed = true;
 
-            Application.Current.Dispatcher.Invoke(() => MainViewWindow.Close());
+            Dispatcher.Invoke(() => MainViewWindow.Close());
         }
 
         private void ExitMenu_Click(object sender, RoutedEventArgs e)
@@ -340,57 +340,7 @@ namespace AMDownloader.Views
             PromptIcon icon,
             bool defaultResult = true)
         {
-            var messageBoxButton = button switch
-            {
-                PromptButton.OK => MessageBoxButton.OK,
-                PromptButton.OKCancel => MessageBoxButton.OKCancel,
-                PromptButton.YesNo => MessageBoxButton.YesNo,
-                PromptButton.YesNoCancel => MessageBoxButton.YesNoCancel,
-                _ => throw new ArgumentOutOfRangeException(nameof(button))
-            };
-            var messageBoxImage = icon switch
-            {
-                PromptIcon.None => MessageBoxImage.None,
-                PromptIcon.Error => MessageBoxImage.Error,
-                PromptIcon.Question => MessageBoxImage.Question,
-                PromptIcon.Exclamation => MessageBoxImage.Exclamation,
-                PromptIcon.Warning => MessageBoxImage.Warning,
-                PromptIcon.Asterisk => MessageBoxImage.Asterisk,
-                PromptIcon.Information => MessageBoxImage.Information,
-                _ => throw new ArgumentOutOfRangeException(nameof(icon))
-            };
-            var messageBoxDefaultResult = defaultResult switch
-            {
-                true => messageBoxButton == MessageBoxButton.OK || messageBoxButton == MessageBoxButton.OKCancel
-                    ? MessageBoxResult.OK
-                    : MessageBoxResult.Yes,
-                false => messageBoxButton == MessageBoxButton.OKCancel
-                    ? MessageBoxResult.Cancel
-                    : MessageBoxResult.No
-            };
-            var result = messageBoxDefaultResult;
-
-            Application.Current.Dispatcher.Invoke(() =>
-                result = MessageBox.Show(
-                    promptText,
-                    caption,
-                    messageBoxButton,
-                    messageBoxImage,
-                    messageBoxDefaultResult));
-
-            if (result == MessageBoxResult.OK || result == MessageBoxResult.Yes)
-            {
-                return true;
-            }
-            else if (result == MessageBoxResult.No
-                || (result == MessageBoxResult.Cancel && messageBoxButton == MessageBoxButton.OKCancel))
-            {
-                return false;
-            }
-            else
-            {
-                return null;
-            }
+            return Prompt.Show(promptText, caption, button, icon, defaultResult);
         }
 
         internal bool? ShowWindow(object viewModel)
@@ -400,7 +350,7 @@ namespace AMDownloader.Views
 
             // ViewModels must be assigned and the window must be
             // initialized and shown explicitly from the main thread
-            Application.Current.Dispatcher.Invoke(() =>
+            Dispatcher.Invoke(() =>
             {
                 if (viewModel is AddDownloadViewModel)
                 {
