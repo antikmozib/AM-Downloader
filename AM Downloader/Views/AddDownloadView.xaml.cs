@@ -129,6 +129,10 @@ namespace AMDownloader.Views
                 }
             }
 
+            // restore CheckBox states
+            AddToQueueCheckBox.IsChecked = Settings.Default.EnqueueAddedItems;
+            StartDownloadingCheckBox.IsChecked = Settings.Default.StartDownloadingAddedItems;
+
             // restore ClipboardObserver settings
             if (Settings.Default.MonitorClipboard)
             {
@@ -186,6 +190,10 @@ namespace AMDownloader.Views
                 DestinationComboBox.Focus();
                 return;
             }
+
+            // save CheckBox states
+            Settings.Default.EnqueueAddedItems = (bool)AddToQueueCheckBox.IsChecked;
+            Settings.Default.StartDownloadingAddedItems = (bool)StartDownloadingCheckBox.IsChecked;
 
             // save download locations
 

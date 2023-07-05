@@ -1,7 +1,6 @@
 ﻿// Copyright (C) 2020-2023 Antik Mozib. All rights reserved.
 
 using AMDownloader.Helpers;
-using AMDownloader.Properties;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -35,11 +34,6 @@ namespace AMDownloader.ViewModels
 
             AddCommand = new RelayCommand<object>(Add, Add_CanExecute);
             PreviewCommand = new RelayCommand<object>(Preview, Preview_CanExecute);
-
-            Urls = string.Empty;
-            SaveToFolder = string.Empty;
-            Enqueue = Settings.Default.EnqueueAddedItems;
-            StartDownload = Settings.Default.StartDownloadingAddedItems;
         }
 
         private void Preview(object obj)
@@ -54,8 +48,7 @@ namespace AMDownloader.ViewModels
 
         private void Add(object item)
         {
-            Settings.Default.EnqueueAddedItems = Enqueue;
-            Settings.Default.StartDownloadingAddedItems = StartDownload;
+
         }
 
         private bool Add_CanExecute(object obj)

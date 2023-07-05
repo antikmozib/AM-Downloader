@@ -58,7 +58,7 @@
 
         <TextBox x:Name="UrlTextBox"
                  Grid.Row="2"
-                 Text="{Binding Path=Urls, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                 Text="{Binding Path=Urls, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}"
                  Width="auto"
                  Height="auto"
                  ScrollViewer.CanContentScroll="True"
@@ -93,13 +93,13 @@
                     HorizontalAlignment="Right">
             <CheckBox x:Name="AddToQueueCheckBox"
                       Content="A_dd to queue"
-                      IsChecked="{Binding Path=Enqueue, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                      IsChecked="{Binding Path=Enqueue, UpdateSourceTrigger=PropertyChanged, Mode=OneWayToSource}"
                       VerticalAlignment="Center"
                       Margin="0 0 8 0" />
 
             <CheckBox x:Name="StartDownloadingCheckBox"
                       Content="S_tart downloading"
-                      IsChecked="{Binding Path=StartDownload, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                      IsChecked="{Binding Path=StartDownload, UpdateSourceTrigger=PropertyChanged, Mode=OneWayToSource}"
                       VerticalAlignment="Center"
                       Margin="0 0 8 0" />
 
