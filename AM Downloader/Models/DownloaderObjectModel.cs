@@ -53,6 +53,7 @@ namespace AMDownloader.Models
         public string Destination { get; }
         public string Extension => Path.GetExtension(Destination);
         public DateTime DateCreated { get; }
+        public DateTime? DateFinished { get; private set; }
         /// <summary>
         /// Gets the total number of bytes of the file.
         /// </summary>
@@ -114,19 +115,20 @@ namespace AMDownloader.Models
             EventHandler downloadStopped,
             PropertyChangedEventHandler propertyChanged,
             IProgress<long> bytesReporter) : this(
-                httpClient,
-                url,
-                destination,
-                DateTime.Now,
-                null,
-                Settings.Default.MaxParallelConnPerDownload,
-                null,
-                DownloadStatus.Ready,
-                downloadCreated,
-                downloadStarted,
-                downloadStopped,
-                propertyChanged,
-                bytesReporter)
+                httpClient: httpClient,
+                url: url,
+                destination: destination,
+                dateCreated: DateTime.Now,
+                dateFinished: null,
+                bytesToDownload: null,
+                connLimit: Settings.Default.MaxParallelConnPerDownload,
+                httpStatusCode: null,
+                status: DownloadStatus.Ready,
+                downloadCreated: downloadCreated,
+                downloadStarted: downloadStarted,
+                downloadStopped: downloadStopped,
+                propertyChanged: propertyChanged,
+                bytesReporter: bytesReporter)
         { }
 
         public DownloaderObjectModel(
@@ -134,6 +136,7 @@ namespace AMDownloader.Models
             string url,
             string destination,
             DateTime dateCreated,
+            DateTime? dateFinished,
             long? bytesToDownload,
             int connLimit,
             HttpStatusCode? httpStatusCode,
@@ -153,6 +156,7 @@ namespace AMDownloader.Models
             Url = url;
             Destination = destination;
             DateCreated = dateCreated;
+            DateFinished = dateFinished;
             TotalBytesToDownload = bytesToDownload;
             BytesDownloaded = 0;
             BytesDownloadedThisSession = 0;
@@ -241,11 +245,13 @@ namespace AMDownloader.Models
 
                 await DownloadAsync();
 
+                DateFinished = DateTime.Now;
                 // update sizes to reflect actual size on disk
                 BytesDownloaded = new FileInfo(Destination).Length;
                 TotalBytesToDownload = BytesDownloaded;
                 Status = DownloadStatus.Finished;
 
+                RaisePropertyChanged(nameof(DateFinished));
                 RaisePropertyChanged(nameof(TotalBytesToDownload));
             }
             catch (Exception ex)

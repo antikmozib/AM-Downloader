@@ -285,6 +285,10 @@ namespace AMDownloader.Views
                     columnToSort = "DateCreated";
                     break;
 
+                case "finished":
+                    columnToSort = "DateFinished";
+                    break;
+
                 case "http status":
                     columnToSort = "StatusCode";
                     break;

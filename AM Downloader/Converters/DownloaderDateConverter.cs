@@ -10,8 +10,15 @@ namespace AMDownloader.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
+            if (value == null)
+            {
+                return string.Empty;
+            }
+
             DateTime date = DateTime.Parse(value.ToString());
-            return date.ToString(CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern + " " + CultureInfo.CurrentCulture.DateTimeFormat.LongTimePattern);
+
+            return date.ToString(
+                $"{CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern} {CultureInfo.CurrentCulture.DateTimeFormat.LongTimePattern}");
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

@@ -12,12 +12,13 @@ namespace AMDownloader.Models.Serializable
         public int Index { get; set; }
         public string Url { get; set; }
         public string Destination { get; set; }
+        public DateTime DateCreated { get; set; }
+        public DateTime? DateFinished { get; set; }
         public long? TotalBytesToDownload { get; set; }
         public int ConnLimit { get; set; }
-        public bool IsQueued { get; set; }
-        public DownloadStatus Status { get; set; }
-        public DateTime DateCreated { get; set; }
         public HttpStatusCode? StatusCode { get; set; }
+        public DownloadStatus Status { get; set; }
+        public bool IsQueued { get; set; }
     }
 
     [Serializable]

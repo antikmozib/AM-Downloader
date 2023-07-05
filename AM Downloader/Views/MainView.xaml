@@ -1178,6 +1178,25 @@
                         </GridViewColumn>
 
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
+                                        HeaderContainerStyle="{StaticResource HeaderRightAlignedStyle}"
+                                        Header="Finished"
+                                        Width="148">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Style="{StaticResource DownloadsGridRowStyle}" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Style="{StaticResource DownloadsGridTextBlockStyle}"
+                                                   Text="{Binding DateFinished, Converter={StaticResource DownloaderDateConverter}}"
+                                                   TextAlignment="Right" />
+                                    </Grid>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+
+                        <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
                                         HeaderContainerStyle="{StaticResource HeaderLeftAlignedStyle}"
                                         Header="HTTP Status"
                                         Width="80">

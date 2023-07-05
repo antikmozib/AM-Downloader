@@ -280,6 +280,7 @@ namespace AMDownloader.ViewModels
                                 url: sourceObjects[i].Url,
                                 destination: sourceObjects[i].Destination,
                                 dateCreated: sourceObjects[i].DateCreated,
+                                dateFinished: sourceObjects[i].DateFinished,
                                 bytesToDownload: sourceObjects[i].TotalBytesToDownload,
                                 connLimit: sourceObjects[i].ConnLimit,
                                 httpStatusCode: sourceObjects[i].StatusCode,
@@ -907,12 +908,13 @@ namespace AMDownloader.ViewModels
                             Index = index++,
                             Url = item.Url,
                             Destination = item.Destination,
+                            DateCreated = item.DateCreated,
+                            DateFinished = item.DateFinished,
                             TotalBytesToDownload = item.TotalBytesToDownload,
                             ConnLimit = item.ConnLimit,
-                            IsQueued = QueueProcessor.IsQueued(item),
+                            StatusCode = item.StatusCode,
                             Status = item.Status,
-                            DateCreated = item.DateCreated,
-                            StatusCode = item.StatusCode
+                            IsQueued = QueueProcessor.IsQueued(item)
                         };
 
                         list.Objects.Add(sItem);
