@@ -21,96 +21,77 @@ namespace AMDownloader.Helpers
             ImageSource imageSource;
             Icon icon;
             Native.Shell32.SHFILEINFO shFileInfo = new();
-            string tempPath = path.ToLower();
             string shortFileName = Path.GetFileName(path).ToLower();
             string ext = Path.GetExtension(path).ToLower();
-            bool deleteTempFile = false;
+            path = path.ToLower();
 
             // have we seen this item before?
             if (isDirectory && _iconRepo.ContainsKey(path))
             {
                 _iconRepo.TryGetValue(path, out imageSource);
-
                 return imageSource;
             }
             else if (!isDirectory && ext != ".exe" && _iconRepo.ContainsKey(ext))
             {
                 _iconRepo.TryGetValue(ext, out imageSource);
-
                 return imageSource;
             }
             else if (!isDirectory && ext == ".exe" && _iconRepo.ContainsKey(shortFileName))
             {
                 _iconRepo.TryGetValue(shortFileName, out imageSource);
-
                 return imageSource;
             }
 
-            // we haven't seen this before;
-            // check the paths and create the temp files if necessary
-            if (isDirectory && !Directory.Exists(path))
+            uint fileAttributes;
+            uint flags = Native.Shell32.SHGFI_USEFILEATTRIBUTES
+                | Native.Shell32.SHGFI_ICON
+                | Native.Shell32.SHGFI_LARGEICON;
+            if (isDirectory)
             {
-                tempPath = AppDomain.CurrentDomain.BaseDirectory;
-            }
-            else if (!isDirectory && !File.Exists(path))
-            {
-                ext = Path.GetExtension(path).ToLower();
-                tempPath = Path.Combine(Path.GetTempPath(), DateTime.Now.ToFileTimeUtc() + ext);
+                fileAttributes = Native.Shell32.FILE_ATTRIBUTE_DIRECTORY;
 
-                File.Create(tempPath).Close();
-                deleteTempFile = true;
-            }
-
-            // grab the actual icons
-            if (!isDirectory)
-            {
-                // file icon
-                icon = Icon.ExtractAssociatedIcon(tempPath);
+                if (Directory.Exists(path))
+                {
+                    flags = Native.Shell32.SHGFI_ICON | Native.Shell32.SHGFI_LARGEICON;
+                }
             }
             else
             {
-                // folder icon
-
-                Native.Shell32.SHGetFileInfo(tempPath,
-                    Native.Shell32.FILE_ATTRIBUTE_NORMAL,
-                    ref shFileInfo,
-                    (uint)Marshal.SizeOf(shFileInfo),
-                    Native.Shell32.SHGFI_ICON | Native.Shell32.SHGFI_LARGEICON);
-
-                icon = Icon.FromHandle(shFileInfo.hIcon);
+                fileAttributes = Native.Shell32.FILE_ATTRIBUTE_NORMAL;
             }
 
+            // grab the actual icons
+            Native.Shell32.SHGetFileInfo(
+                pszPath: path,
+                dwFileAttributes: fileAttributes,
+                psfi: ref shFileInfo,
+                cbFileInfo: (uint)Marshal.SizeOf(shFileInfo),
+                uFlags: flags);
+            icon = Icon.FromHandle(shFileInfo.hIcon);
             // create the image from the icon
             imageSource = Imaging.CreateBitmapSourceFromHIcon(icon.Handle,
                 new Int32Rect(0, 0, icon.Width, icon.Height),
                 BitmapSizeOptions.FromEmptyOptions());
 
             // save the keys and images
-            if (isDirectory && !_iconRepo.ContainsKey(tempPath))
+            if (isDirectory)
             {
-                _iconRepo.Add(tempPath, imageSource);
+                _iconRepo.Add(path, imageSource);
             }
             else
             {
-                if (ext != ".exe" && !_iconRepo.ContainsKey(ext))
+                if (ext != ".exe")
                 {
                     _iconRepo.Add(ext, imageSource);
                 }
-                else if (ext == ".exe" && File.Exists(path))
+                else if (ext == ".exe")
                 {
                     _iconRepo.Add(shortFileName, imageSource);
                 }
             }
 
-            if (deleteTempFile)
-            {
-                File.Delete(tempPath);
-            }
-
-            if (isDirectory)
-            {
-                Native.User32.DestroyIcon(shFileInfo.hIcon);
-            }
+            // cleanup
+            Native.User32.DestroyIcon(shFileInfo.hIcon);
 
             return imageSource;
         }
