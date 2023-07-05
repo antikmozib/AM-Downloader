@@ -21,7 +21,7 @@ namespace AMDownloader.ViewModels
         /// <summary>
         /// Returns the list of full URLs generated from the supplied patterned URLs.
         /// </summary>
-        public List<string> GeneratedUrls => BuildUrlsFromPatterns(Urls.Split(Environment.NewLine).ToArray());
+        public List<string> ExplodedUrls => ExplodeUrlsFromPatterns(Urls.Split(Environment.NewLine).ToArray());
         public string SaveToFolder { get; set; }
         public bool Enqueue { get; set; }
         public bool StartDownload { get; set; }
@@ -44,7 +44,7 @@ namespace AMDownloader.ViewModels
 
         private void Preview(object obj)
         {
-            _showList.Invoke(new ListViewerViewModel(GeneratedUrls.ToList(), "Generated URLs:", "Preview"));
+            _showList.Invoke(new ListViewerViewModel(ExplodedUrls.ToList(), "Generated URLs:", "Preview"));
         }
 
         private bool Preview_CanExecute(object obj)
@@ -64,11 +64,11 @@ namespace AMDownloader.ViewModels
         }
 
         /// <summary>
-        /// Builds a list of full URLs from a list of patterned URLs.
+        /// Explodes and builds a list of URLs from a list of patterned URLs.
         /// </summary>
         /// <param name="urls">A list of patterned URLs.</param>
-        /// <returns>The list of URLs built from the supplied patterned URLs.</returns>
-        private static List<string> BuildUrlsFromPatterns(params string[] urls)
+        /// <returns>The list of URLs exploded from the supplied patterned URLs.</returns>
+        private static List<string> ExplodeUrlsFromPatterns(params string[] urls)
         {
             var filteredUrls = urls.Select(o => o.Trim()).Where(o => o.Length > 0); // trim and discard empty
             var fullUrls = new List<string>();
