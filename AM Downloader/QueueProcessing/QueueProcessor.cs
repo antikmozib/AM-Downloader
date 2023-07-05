@@ -184,10 +184,6 @@ namespace AMDownloader.QueueProcessing
                                     Monitor.Exit(_processedItemsLock);
                                 }
                             }
-                            catch (OperationCanceledException)
-                            {
-                                ct.ThrowIfCancellationRequested();
-                            }
                             finally
                             {
                                 if (semTask.IsCompletedSuccessfully)
@@ -203,9 +199,9 @@ namespace AMDownloader.QueueProcessing
                     await Task.WhenAll(tasks);
                 });
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException ex)
             {
-                Log.Debug($"{nameof(QueueProcessor)} stopped.");
+                Log.Debug(ex.Message, ex);
             }
             catch (Exception ex)
             {
