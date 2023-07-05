@@ -327,7 +327,7 @@ namespace AMDownloader.Views
 
                     if (!string.IsNullOrWhiteSpace(newUrls))
                     {
-                        Application.Current.Dispatcher.Invoke(() =>
+                        Dispatcher.Invoke(() =>
                         {
                             UrlTextBox.Text = textBlockUrls.TrimEnd() + newUrls + Environment.NewLine;
                         });
