@@ -27,6 +27,7 @@
         </Grid.RowDefinitions>
 
         <TextBlock Text="{Binding Description}"
+                   TextWrapping="Wrap"
                    d:Text="Description..." />
 
         <ListBox ItemsSource="{Binding ListViewerItems}"
