@@ -158,16 +158,28 @@ namespace AMDownloader.Views
         private void AddButton_Click(object sender, RoutedEventArgs e)
         {
             // ensure the selected path is valid and accessible
-            try
+
+            bool isDirAccessible = false;
+
+            if (Path.IsPathFullyQualified(DestinationComboBox.Text))
             {
-                Directory.CreateDirectory(DestinationComboBox.Text);
+                try
+                {
+                    Directory.CreateDirectory(DestinationComboBox.Text);
 
-                var f = File.Create(Path.Combine(DestinationComboBox.Text, DateTime.Now.ToFileTimeUtc().ToString()));
+                    var f = File.Create(Path.Combine(DestinationComboBox.Text, Path.GetRandomFileName()));
+                    f.Close();
+                    File.Delete(f.Name);
 
-                f.Close();
-                File.Delete(f.Name);
+                    isDirAccessible = true;
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex.Message, ex);
+                }
             }
-            catch
+
+            if (!isDirAccessible)
             {
                 MessageBox.Show("The selected location is inaccessible.", "Add", MessageBoxButton.OK, MessageBoxImage.Error);
                 DestinationComboBox.Focus();
