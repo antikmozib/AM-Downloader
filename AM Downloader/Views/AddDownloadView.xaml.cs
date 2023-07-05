@@ -155,6 +155,11 @@ namespace AMDownloader.Views
             {
                 _monitorClipboardCts.Cancel();
             }
+
+            // save CheckBox states
+            Settings.Default.MonitorClipboard = (bool)MonitorClipboardCheckBox.IsChecked;
+            Settings.Default.EnqueueAddedItems = (bool)AddToQueueCheckBox.IsChecked;
+            Settings.Default.StartDownloadingAddedItems = (bool)StartDownloadingCheckBox.IsChecked;
         }
 
         private void AddButton_Click(object sender, RoutedEventArgs e)
@@ -187,11 +192,6 @@ namespace AMDownloader.Views
                 DestinationComboBox.Focus();
                 return;
             }
-
-            // save CheckBox states
-            Settings.Default.MonitorClipboard = (bool)MonitorClipboardCheckBox.IsChecked;
-            Settings.Default.EnqueueAddedItems = (bool)AddToQueueCheckBox.IsChecked;
-            Settings.Default.StartDownloadingAddedItems = (bool)StartDownloadingCheckBox.IsChecked;
 
             // save download locations
 
