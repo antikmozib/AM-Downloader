@@ -205,7 +205,7 @@ namespace AMDownloader.QueueProcessing
             }
             catch (OperationCanceledException)
             {
-
+                Log.Debug($"{nameof(QueueProcessor)} stopped.");
             }
             catch (Exception ex)
             {
