@@ -130,15 +130,12 @@ namespace AMDownloader.Views
             }
 
             // restore CheckBox states
+            MonitorClipboardCheckBox.IsChecked = Settings.Default.MonitorClipboard;
             AddToQueueCheckBox.IsChecked = Settings.Default.EnqueueAddedItems;
             StartDownloadingCheckBox.IsChecked = Settings.Default.StartDownloadingAddedItems;
 
-            // restore ClipboardObserver settings
-            if (Settings.Default.MonitorClipboard)
-            {
-                MonitorClipboardCheckBox.IsChecked = true;
-            }
-            else
+            // add any urls from the clipboard
+            if (!IsClipboardMonitorRunning)
             {
                 var clipUrls = AddDownloadViewModel.GenerateValidUrl(ClipboardObserver.GetText());
                 UrlTextBox.Text = !string.IsNullOrWhiteSpace(clipUrls) ? clipUrls + Environment.NewLine : string.Empty;
@@ -192,6 +189,7 @@ namespace AMDownloader.Views
             }
 
             // save CheckBox states
+            Settings.Default.MonitorClipboard = (bool)MonitorClipboardCheckBox.IsChecked;
             Settings.Default.EnqueueAddedItems = (bool)AddToQueueCheckBox.IsChecked;
             Settings.Default.StartDownloadingAddedItems = (bool)StartDownloadingCheckBox.IsChecked;
 
@@ -354,8 +352,6 @@ namespace AMDownloader.Views
 
         private void MonitorClipboardCheckBox_Checked(object sender, RoutedEventArgs e)
         {
-            Settings.Default.MonitorClipboard = true;
-
             if (IsClipboardMonitorRunning)
             {
                 return;
@@ -384,8 +380,6 @@ namespace AMDownloader.Views
 
         private void MonitorClipboardCheckBox_Unchecked(object sender, RoutedEventArgs e)
         {
-            Settings.Default.MonitorClipboard = false;
-
             if (!IsClipboardMonitorRunning)
             {
                 return;
