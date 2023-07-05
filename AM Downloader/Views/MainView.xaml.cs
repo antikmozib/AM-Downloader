@@ -301,12 +301,12 @@ namespace AMDownloader.Views
             }
             else
             {
-                // if we're unsorting, store the selected column header as null
-                // so that sorting isn't applied incorrectly when the app is relaunched
+                // if we're unsorting, store SelectedColumnHeader as null so that sorting isn't
+                // applied incorrectly when the app is relaunched
                 Settings.Default.SelectedColumnHeader = null;
             }
 
-            // remove the arrow from the previously sorted column
+            // remove the arrow from the last sorted column
             if (_lastHeaderClicked != null)
             {
                 _lastHeaderClicked.Column.HeaderTemplate = Resources["HeaderTemplate"] as DataTemplate;

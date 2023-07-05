@@ -139,7 +139,7 @@ namespace AMDownloader.Views
                 UrlTextBox.Text = !string.IsNullOrWhiteSpace(clipUrls) ? clipUrls + Environment.NewLine : string.Empty;
             }
 
-            // move cursor to the end of the TextBox
+            // move cursor to the end of UrlTextBox
             if (UrlTextBox.Text.Length > 0)
             {
                 UrlTextBox.Select(UrlTextBox.Text.Length - 1, 0);
@@ -157,7 +157,7 @@ namespace AMDownloader.Views
 
         private void AddButton_Click(object sender, RoutedEventArgs e)
         {
-            // ensure the selected path is valid and accessible
+            // ensure the selected location is valid and accessible
 
             bool isDirAccessible = false;
 
@@ -298,13 +298,13 @@ namespace AMDownloader.Views
 
                     if (string.IsNullOrWhiteSpace(textBlockUrls))
                     {
-                        // TextBlock is empty
+                        // UrlTextBox is empty
                         newUrls = string.Join(Environment.NewLine, AddDownloadViewModel
                             .GenerateValidUrl(ClipboardObserver.GetText()));
                     }
                     else
                     {
-                        // TextBlock contains items
+                        // UrlTextBox isn't empty
 
                         var existingUrls = textBlockUrls
                             .Split(Environment.NewLine)
@@ -407,12 +407,7 @@ namespace AMDownloader.Views
             locA = locA.Trim();
             locB = locB.Trim();
 
-            if (string.Compare(locA, locB, true) == 0)
-            {
-                return true;
-            }
-
-            return false;
+            return string.Compare(locA, locB, true) == 0;
         }
     }
 }
