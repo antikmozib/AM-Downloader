@@ -160,12 +160,12 @@ namespace AMDownloader.Views
             }
         }
 
-        internal void DataContext_Closing(object sender, EventArgs e)
+        public void DataContext_Closing(object sender, EventArgs e)
         {
             Dispatcher.Invoke(() => MainViewWindow.IsEnabled = false);
         }
 
-        internal void DataContext_Closed(object sender, EventArgs e)
+        public void DataContext_Closed(object sender, EventArgs e)
         {
             _dataContextClosed = true;
 
@@ -337,7 +337,7 @@ namespace AMDownloader.Views
             Settings.Default.SelectedColumnHeaderDirection = direction ?? ListSortDirection.Descending;
         }
 
-        internal static bool? ShowPrompt(
+        public static bool? ShowPrompt(
             string promptText,
             string caption,
             PromptButton button,
@@ -347,7 +347,7 @@ namespace AMDownloader.Views
             return Prompt.Show(promptText, caption, button, icon, defaultResult);
         }
 
-        internal bool? ShowWindow(object viewModel)
+        public bool? ShowWindow(object viewModel)
         {
             Window window = null;
             bool? result = null;

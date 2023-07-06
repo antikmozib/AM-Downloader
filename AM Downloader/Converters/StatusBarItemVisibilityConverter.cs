@@ -7,7 +7,7 @@ using System.Windows.Data;
 
 namespace AMDownloader.Converters
 {
-    internal class StatusBarItemVisibilityConverter : IValueConverter
+    public class StatusBarItemVisibilityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {

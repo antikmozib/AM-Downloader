@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace AMDownloader.Helpers.Native
 {
-    internal static class User32
+    public static class User32
     {
         public const uint WS_EX_CONTEXTHELP = 0x00000400;
         public const uint WS_MINIMIZEBOX = 0x00020000;

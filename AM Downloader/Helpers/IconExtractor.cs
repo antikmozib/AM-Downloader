@@ -11,7 +11,7 @@ using System.Windows.Media.Imaging;
 
 namespace AMDownloader.Helpers
 {
-    internal static class IconExtractor
+    public static class IconExtractor
     {
         private static readonly Dictionary<string, ImageSource> _iconRepo = new();
 

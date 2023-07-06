@@ -6,7 +6,7 @@ using System.Windows.Data;
 
 namespace AMDownloader.Converters
 {
-    internal class ListViewerItemCountConverter : IValueConverter
+    public class ListViewerItemCountConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {

@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace AMDownloader.Helpers.Native
 {
-    internal static class Shell32
+    public static class Shell32
     {
         public const int MAX_PATH = 256;
 

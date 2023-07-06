@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace AMDownloader.QueueProcessing
 {
-    internal interface IQueueable
+    public interface IQueueable
     {
         Task StartAsync();
         void Pause();

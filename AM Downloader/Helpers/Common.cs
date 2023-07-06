@@ -8,9 +8,9 @@ using System.Xml.Serialization;
 
 namespace AMDownloader.Helpers
 {
-    internal static class Common
+    public static class Common
     {
-        internal static class Constants
+        public static class Constants
         {
             public const int ParallelDownloadsLimit = 10;
             public const int ParallelConnPerDownloadLimit = 5;
@@ -25,7 +25,7 @@ namespace AMDownloader.Helpers
             }
         }
 
-        internal static class Paths
+        public static class Paths
         {
             /// <summary>
             /// Gets the path to the %LOCALAPPDATA% folder.
@@ -42,7 +42,7 @@ namespace AMDownloader.Helpers
             public static string LogFile => Path.Combine(LocalAppDataFolder, "logs", "log.log");
         }
 
-        internal static class Functions
+        public static class Functions
         {
             /// <summary>
             /// Extracts the filename from an URL.

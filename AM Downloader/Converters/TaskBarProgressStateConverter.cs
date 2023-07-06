@@ -7,7 +7,7 @@ using System.Windows.Shell;
 
 namespace AMDownloader.Converters
 {
-    internal class TaskBarProgressStateConverter : IValueConverter
+    public class TaskBarProgressStateConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {

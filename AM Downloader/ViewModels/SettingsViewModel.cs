@@ -6,7 +6,7 @@ using System.Windows.Input;
 
 namespace AMDownloader.ViewModels
 {
-    internal class SettingsViewModel
+    public class SettingsViewModel
     {
         #region Fields
 

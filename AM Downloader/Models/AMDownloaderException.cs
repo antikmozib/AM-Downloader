@@ -7,7 +7,7 @@ namespace AMDownloader.Models
     /// <summary>
     /// Represents errors related to the processing of downloads.
     /// </summary>
-    internal class AMDownloaderException : Exception
+    public class AMDownloaderException : Exception
     {
         public AMDownloaderException()
         {
@@ -27,7 +27,7 @@ namespace AMDownloader.Models
     /// <summary>
     /// The exception that is thrown if an URL returns an invalid status.
     /// </summary>
-    internal class AMDownloaderUrlException : AMDownloaderException
+    public class AMDownloaderUrlException : AMDownloaderException
     {
         public AMDownloaderUrlException()
         {

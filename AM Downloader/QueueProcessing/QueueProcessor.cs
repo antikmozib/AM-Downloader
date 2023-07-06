@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace AMDownloader.QueueProcessing
 {
-    internal class QueueProcessor : INotifyPropertyChanged
+    public class QueueProcessor : INotifyPropertyChanged
     {
         #region Fields
 

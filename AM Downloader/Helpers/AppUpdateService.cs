@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AMDownloader.Helpers
 {
-    internal static class AppUpdateService
+    public static class AppUpdateService
     {
         public static async Task<string> GetUpdateUrl(string server,
             string appName,

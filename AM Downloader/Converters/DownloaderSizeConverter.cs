@@ -6,7 +6,7 @@ using System.Windows.Data;
 
 namespace AMDownloader.Converters
 {
-    internal class DownloaderSizeConverter : IValueConverter
+    public class DownloaderSizeConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {

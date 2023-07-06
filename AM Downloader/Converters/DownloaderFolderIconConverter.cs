@@ -8,7 +8,7 @@ using System.Windows.Data;
 
 namespace AMDownloader.Converters
 {
-    internal class DownloaderFolderIconConverter : IValueConverter
+    public class DownloaderFolderIconConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {

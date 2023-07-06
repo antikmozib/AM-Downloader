@@ -5,17 +5,17 @@ using System;
 
 namespace AMDownloader.Models
 {
-    internal enum PromptButton
+    public enum PromptButton
     {
         OK, OKCancel, YesNo, YesNoCancel
     }
 
-    internal enum PromptIcon
+    public enum PromptIcon
     {
         None, Error, Question, Exclamation, Warning, Asterisk, Information
     }
 
-    internal static class Prompt
+    public static class Prompt
     {
         public static bool? Show(
             string promptText,

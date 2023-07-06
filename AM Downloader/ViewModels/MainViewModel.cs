@@ -25,23 +25,23 @@ using System.Windows.Input;
 
 namespace AMDownloader.ViewModels
 {
-    internal delegate Task AddItemsAsyncDelegate(string destination, bool enqueue, bool start, params string[] urls);
+    public delegate Task AddItemsAsyncDelegate(string destination, bool enqueue, bool start, params string[] urls);
 
-    internal delegate bool? ShowWindowDelegate(object viewModel);
+    public delegate bool? ShowWindowDelegate(object viewModel);
 
-    internal delegate bool? ShowPromptDelegate(
+    public delegate bool? ShowPromptDelegate(
         string promptText,
         string caption,
         PromptButton button = PromptButton.OK,
         PromptIcon icon = PromptIcon.None,
         bool defaultResult = true);
 
-    internal enum Category
+    public enum Category
     {
         All, Ready, Queued, Downloading, Paused, Finished, Errored
     }
 
-    internal class MainViewModel : INotifyPropertyChanged, ICloseable
+    public class MainViewModel : INotifyPropertyChanged, ICloseable
     {
         #region Fields
 

@@ -4,7 +4,7 @@ using System;
 
 namespace AMDownloader.Models
 {
-    internal interface ICloseable
+    public interface ICloseable
     {
         event EventHandler Closing;
         event EventHandler Closed;

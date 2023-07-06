@@ -10,7 +10,7 @@ using System.Windows.Input;
 
 namespace AMDownloader.ViewModels
 {
-    internal class AddDownloadViewModel : INotifyPropertyChanged
+    public class AddDownloadViewModel : INotifyPropertyChanged
     {
         private readonly ShowWindowDelegate _showList;
 

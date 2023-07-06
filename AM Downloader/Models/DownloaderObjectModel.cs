@@ -24,7 +24,7 @@ namespace AMDownloader.Models
         Ready, Downloading, Paused, Finished, Errored
     }
 
-    internal class DownloaderObjectModel : IQueueable, INotifyPropertyChanged
+    public class DownloaderObjectModel : IQueueable, INotifyPropertyChanged
     {
         #region Fields
 

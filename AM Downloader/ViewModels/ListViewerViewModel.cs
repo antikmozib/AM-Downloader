@@ -11,7 +11,7 @@ using System.Windows.Input;
 
 namespace AMDownloader.ViewModels
 {
-    internal class ListViewerViewModel : INotifyPropertyChanged
+    public class ListViewerViewModel : INotifyPropertyChanged
     {
         public struct ListViewerItem
         {

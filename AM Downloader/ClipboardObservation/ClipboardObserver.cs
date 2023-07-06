@@ -6,7 +6,7 @@ using System.Windows;
 
 namespace AMDownloader.ClipboardObservation
 {
-    internal static class ClipboardObserver
+    public static class ClipboardObserver
     {
         public static void SetText(string value)
         {
