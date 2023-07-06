@@ -1116,7 +1116,7 @@ namespace AMDownloader.ViewModels
                 counter++;
 
                 Progress = (int)((double)counter / totalItems * 100);
-                Status = $"Creating download {counter} of {totalItems}: {url}";
+                Status = $"Adding {counter} of {totalItems}: {url}";
                 RaisePropertyChanged(nameof(Status));
                 RaisePropertyChanged(nameof(Progress));
 

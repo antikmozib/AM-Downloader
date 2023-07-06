@@ -64,22 +64,7 @@
 
     <ItemGroup>
         <Page Remove="Converters.xaml" />
-        <Page Remove="Resources\Icons\AddRow_16x.xaml" />
         <Page Remove="Resources\Icons\ASPWebSite_16x.xaml" />
-        <Page Remove="Resources\Icons\Checklist_16x.xaml" />
-        <Page Remove="Resources\Icons\CopyLongTextToClipboard_16x.xaml" />
-        <Page Remove="Resources\Icons\GetWebSite_16x.xaml" />
-        <Page Remove="Resources\Icons\OpenFolder_16x.xaml" />
-        <Page Remove="Resources\Icons\Open_16x.xaml" />
-        <Page Remove="Resources\Icons\Pause_16x.xaml" />
-        <Page Remove="Resources\Icons\RemoveRow_16x.xaml" />
-        <Page Remove="Resources\Icons\Remove_16x.xaml" />
-        <Page Remove="Resources\Icons\Run_16x.xaml" />
-        <Page Remove="Resources\Icons\Settings_16x.xaml" />
-        <Page Remove="Resources\Icons\ShutDown_16x.xaml" />
-        <Page Remove="Resources\Icons\Stop_16x.xaml" />
-        <Page Remove="Resources\Icons\Trash_16x.xaml" />
-        <Page Remove="Styles\Style.xaml" />
     </ItemGroup>
 
     <ItemGroup>
@@ -99,54 +84,8 @@
         <Resource Include="Resources\Fonts\fontawesomesolid.otf">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Resource>
-        <Resource Include="Resources\Icons\AddRow_16x.xaml">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Resource>
         <Resource Include="Resources\Icons\AMDownloader.ico">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Resource>
-        <Resource Include="Resources\Icons\Checklist_16x.xaml">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Resource>
-        <Resource Include="Resources\Icons\CopyLongTextToClipboard_16x.xaml">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Resource>
-        <Resource Include="Resources\Icons\GetWebSite_16x.xaml">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Resource>
-        <Resource Include="Resources\Icons\OpenFolder_16x.xaml">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Resource>
-        <Resource Include="Resources\Icons\Open_16x.xaml">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Resource>
-        <Resource Include="Resources\Icons\Pause_16x.xaml">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Resource>
-        <Resource Include="Resources\Icons\RemoveRow_16x.xaml">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Resource>
-        <Resource Include="Resources\Icons\Remove_16x.xaml">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Resource>
-        <Resource Include="Resources\Icons\Run_16x.xaml">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Resource>
-        <Resource Include="Resources\Icons\Settings_16x.xaml">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Resource>
-        <Resource Include="Resources\Icons\ShutDown_16x.xaml">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Resource>
-        <Resource Include="Resources\Icons\Stop_16x.xaml">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Resource>
-        <Resource Include="Resources\Icons\Trash_16x.xaml">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Resource>
-        <Resource Include="Styles\Style.xaml">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-            <Generator>MSBuild:Compile</Generator>
         </Resource>
     </ItemGroup>
 
@@ -167,5 +106,54 @@
     
     <ItemGroup>
       <Folder Include="Properties\PublishProfiles\" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <Page Update="Resources\Icons\AddRow_16x.xaml">
+        <CopyToOutputDirectory></CopyToOutputDirectory>
+      </Page>
+      <Page Update="Resources\Icons\Checklist_16x.xaml">
+        <CopyToOutputDirectory></CopyToOutputDirectory>
+      </Page>
+      <Page Update="Resources\Icons\CopyLongTextToClipboard_16x.xaml">
+        <CopyToOutputDirectory></CopyToOutputDirectory>
+      </Page>
+      <Page Update="Resources\Icons\GetWebSite_16x.xaml">
+        <CopyToOutputDirectory></CopyToOutputDirectory>
+      </Page>
+      <Page Update="Resources\Icons\OpenFolder_16x.xaml">
+        <CopyToOutputDirectory></CopyToOutputDirectory>
+      </Page>
+      <Page Update="Resources\Icons\Open_16x.xaml">
+        <CopyToOutputDirectory></CopyToOutputDirectory>
+      </Page>
+      <Page Update="Resources\Icons\Pause_16x.xaml">
+        <CopyToOutputDirectory></CopyToOutputDirectory>
+      </Page>
+      <Page Update="Resources\Icons\RemoveRow_16x.xaml">
+        <CopyToOutputDirectory></CopyToOutputDirectory>
+      </Page>
+      <Page Update="Resources\Icons\Remove_16x.xaml">
+        <CopyToOutputDirectory></CopyToOutputDirectory>
+      </Page>
+      <Page Update="Resources\Icons\Run_16x.xaml">
+        <CopyToOutputDirectory></CopyToOutputDirectory>
+      </Page>
+      <Page Update="Resources\Icons\Settings_16x.xaml">
+        <CopyToOutputDirectory></CopyToOutputDirectory>
+      </Page>
+      <Page Update="Resources\Icons\ShutDown_16x.xaml">
+        <CopyToOutputDirectory></CopyToOutputDirectory>
+      </Page>
+      <Page Update="Resources\Icons\Stop_16x.xaml">
+        <CopyToOutputDirectory></CopyToOutputDirectory>
+      </Page>
+      <Page Update="Resources\Icons\Trash_16x.xaml">
+        <CopyToOutputDirectory></CopyToOutputDirectory>
+      </Page>
+      <Page Update="Styles\Style.xaml">
+        <CopyToOutputDirectory></CopyToOutputDirectory>
+        <Generator>MSBuild:Compile</Generator>
+      </Page>
     </ItemGroup>
 </Project>

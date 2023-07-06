@@ -16,11 +16,8 @@ namespace AMDownloader.Views
 
         private void ResetButton_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show(
-                "Please restart the app for the changes to take effect.",
-                "Reset",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            string msg = (string)Application.Current.FindResource("resetSettingsMsg");
+            MessageBox.Show(msg, "Reset", MessageBoxButton.OK, MessageBoxImage.Information);
 
             DialogResult = true;
         }
