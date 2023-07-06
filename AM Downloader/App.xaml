@@ -6,8 +6,8 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="Styles/Style.xaml" />
-                <ResourceDictionary Source="StringResources.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/Resources/Styles/Style.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/Resources/StringResources.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
             <FontFamily x:Key="FontAwesomeRegular">/AM Downloader;component/Resources/Fonts/fontawesomeregular.otf#Font Awesome 5 Free Regular</FontFamily>

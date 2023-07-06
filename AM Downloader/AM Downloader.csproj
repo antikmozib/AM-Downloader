@@ -54,19 +54,7 @@
         <Prefer32Bit>true</Prefer32Bit>
         <PlatformTarget>x86</PlatformTarget>
     </PropertyGroup>
-
-    <ItemGroup>
-        <None Remove="Resources\Fonts\fontawesome-webfont.ttf" />
-        <None Remove="Resources\Fonts\fontawesome.otf" />
-        <None Remove="Resources\Fonts\fontawesomeregular.otf" />
-        <None Remove="Resources\Fonts\fontawesomesolid.otf" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <Page Remove="Converters.xaml" />
-        <Page Remove="Resources\Icons\ASPWebSite_16x.xaml" />
-    </ItemGroup>
-
+            
     <ItemGroup>
         <PackageReference Include="Microsoft.NETCore.Platforms" Version="7.0.3" />
         <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.39" />
@@ -75,18 +63,6 @@
         <PackageReference Include="Serilog.Sinks.Debug" Version="2.0.0" />
         <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
         <PackageReference Include="System.Threading.Tasks" Version="4.3.0" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <Resource Include="Resources\Fonts\fontawesomeregular.otf">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Resource>
-        <Resource Include="Resources\Fonts\fontawesomesolid.otf">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Resource>
-        <Resource Include="Resources\Icons\AMDownloader.ico">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Resource>
     </ItemGroup>
 
     <ItemGroup>
@@ -109,51 +85,8 @@
     </ItemGroup>
     
     <ItemGroup>
-      <Page Update="Resources\Icons\AddRow_16x.xaml">
-        <CopyToOutputDirectory></CopyToOutputDirectory>
-      </Page>
-      <Page Update="Resources\Icons\Checklist_16x.xaml">
-        <CopyToOutputDirectory></CopyToOutputDirectory>
-      </Page>
-      <Page Update="Resources\Icons\CopyLongTextToClipboard_16x.xaml">
-        <CopyToOutputDirectory></CopyToOutputDirectory>
-      </Page>
-      <Page Update="Resources\Icons\GetWebSite_16x.xaml">
-        <CopyToOutputDirectory></CopyToOutputDirectory>
-      </Page>
-      <Page Update="Resources\Icons\OpenFolder_16x.xaml">
-        <CopyToOutputDirectory></CopyToOutputDirectory>
-      </Page>
-      <Page Update="Resources\Icons\Open_16x.xaml">
-        <CopyToOutputDirectory></CopyToOutputDirectory>
-      </Page>
-      <Page Update="Resources\Icons\Pause_16x.xaml">
-        <CopyToOutputDirectory></CopyToOutputDirectory>
-      </Page>
-      <Page Update="Resources\Icons\RemoveRow_16x.xaml">
-        <CopyToOutputDirectory></CopyToOutputDirectory>
-      </Page>
-      <Page Update="Resources\Icons\Remove_16x.xaml">
-        <CopyToOutputDirectory></CopyToOutputDirectory>
-      </Page>
-      <Page Update="Resources\Icons\Run_16x.xaml">
-        <CopyToOutputDirectory></CopyToOutputDirectory>
-      </Page>
-      <Page Update="Resources\Icons\Settings_16x.xaml">
-        <CopyToOutputDirectory></CopyToOutputDirectory>
-      </Page>
-      <Page Update="Resources\Icons\ShutDown_16x.xaml">
-        <CopyToOutputDirectory></CopyToOutputDirectory>
-      </Page>
-      <Page Update="Resources\Icons\Stop_16x.xaml">
-        <CopyToOutputDirectory></CopyToOutputDirectory>
-      </Page>
-      <Page Update="Resources\Icons\Trash_16x.xaml">
-        <CopyToOutputDirectory></CopyToOutputDirectory>
-      </Page>
-      <Page Update="Styles\Style.xaml">
-        <CopyToOutputDirectory></CopyToOutputDirectory>
-        <Generator>MSBuild:Compile</Generator>
-      </Page>
+      <Resource Include="Resources\Fonts\fontawesomeregular.otf" />
+      <Resource Include="Resources\Fonts\fontawesomesolid.otf" />
+      <Resource Include="Resources\Icons\AMDownloader.ico" />
     </ItemGroup>
 </Project>
