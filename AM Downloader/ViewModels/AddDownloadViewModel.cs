@@ -1,44 +1,131 @@
 ﻿// Copyright (C) 2020-2023 Antik Mozib. All rights reserved.
 
 using AMDownloader.Helpers;
+using AMDownloader.Models.Serializable;
+using AMDownloader.Properties;
+using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Input;
+using AMDownloader.Models;
 
 namespace AMDownloader.ViewModels
 {
-    public class AddDownloadViewModel : INotifyPropertyChanged
+    public delegate (bool, string) ShowFolderBrowserDelegate();
+
+    public class AddDownloadViewModel : INotifyPropertyChanged, ICloseable
     {
-        private readonly ShowWindowDelegate _showList;
-
         public event PropertyChangedEventHandler PropertyChanged;
+        public event EventHandler Closing;
+        public event EventHandler Closed;
 
+        public ShowWindowDelegate ShowList { get; set; }
+        public ShowPromptDelegate ShowPrompt { get; set; }
+        public ShowFolderBrowserDelegate ShowFolderBrowser { get; set; }
+        public bool MonitorClipboard { get; set; }
         public string Urls { get; set; }
         /// <summary>
-        /// Returns the list of full URLs generated from the supplied patterned URLs.
+        /// Returns the list of URLs exploded from the supplied patterned URLs.
         /// </summary>
         public List<string> ExplodedUrls => ExplodeUrlsFromPatterns(Urls.Split(Environment.NewLine).ToArray());
-        public string SaveToFolder { get; set; }
+        /// <summary>
+        /// Contains the list of locations where files have been previously downloaded and saved to.
+        /// </summary>
+        public ObservableCollection<string> SavedLocations { get; }
+        /// <summary>
+        /// Gets or sets the location where the files will be downloaded and saved to.
+        /// </summary>
+        public string SaveLocation { get; set; }
         public bool Enqueue { get; set; }
         public bool StartDownload { get; set; }
+        /// <summary>
+        /// Returns <see langword="true"/> if <see cref="AddCommand"/> has been executed successfully.
+        /// </summary>
+        public bool ItemsAdded { get; private set; }
 
+        public ICommand BrowseCommand { get; private set; }
         public ICommand AddCommand { get; private set; }
         public ICommand PreviewCommand { get; private set; }
 
-        public AddDownloadViewModel(ShowWindowDelegate showList)
+        public AddDownloadViewModel()
         {
-            _showList = showList;
+            MonitorClipboard = Settings.Default.MonitorClipboard;
+            SavedLocations = new();
+            Enqueue = Settings.Default.EnqueueAddedItems;
+            StartDownload = Settings.Default.StartDownloadingAddedItems;
+            ItemsAdded = false;
 
+            BrowseCommand = new RelayCommand<object>(Browse, Browse_CanExecute);
             AddCommand = new RelayCommand<object>(Add, Add_CanExecute);
             PreviewCommand = new RelayCommand<object>(Preview, Preview_CanExecute);
+
+            // add the default download location
+            SavedLocations.Add(Common.Paths.UserDownloadsFolder);
+            SaveLocation = Common.Paths.UserDownloadsFolder;
+
+            if (Settings.Default.RememberLastDownloadLocation)
+            {
+                // add the last used download location
+                if (!string.IsNullOrWhiteSpace(Settings.Default.LastDownloadLocation)
+                    && !IsSameLocation(Settings.Default.LastDownloadLocation, Common.Paths.UserDownloadsFolder))
+                {
+                    SavedLocations.Add(Settings.Default.LastDownloadLocation);
+                    SaveLocation = Settings.Default.LastDownloadLocation;
+                }
+
+                // add all previously used download locations
+                if (File.Exists(Common.Paths.SavedLocationsFile))
+                {
+                    try
+                    {
+                        var list = Common.Functions.Deserialize<SerializableSavedLocationList>(Common.Paths.SavedLocationsFile);
+                        foreach (var item in list.Objects)
+                        {
+                            if (SavedLocationsContains(item.Path))
+                            {
+                                continue;
+                            }
+                            SavedLocations.Add(item.Path);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex.Message, ex);
+                    }
+                }
+            }
+        }
+
+        private void Browse(object obj)
+        {
+            var (selected, selectedPath) = ShowFolderBrowser.Invoke();
+
+            if (selected)
+            {
+                if (!SavedLocationsContains(selectedPath))
+                {
+                    SavedLocations.Add(selectedPath);
+                }
+                SaveLocation = selectedPath;
+
+                RaisePropertyChanged(nameof(SavedLocations));
+                RaisePropertyChanged(nameof(SaveLocation));
+            }
+        }
+
+        private bool Browse_CanExecute(object obj)
+        {
+            return true;
         }
 
         private void Preview(object obj)
         {
-            _showList.Invoke(new ListViewerViewModel(ExplodedUrls.ToList(), "URLs exploded from their patterns:", "Preview"));
+            ShowList.Invoke(new ListViewerViewModel(ExplodedUrls.ToList(), "URLs exploded from their patterns:", "Preview"));
         }
 
         private bool Preview_CanExecute(object obj)
@@ -46,14 +133,43 @@ namespace AMDownloader.ViewModels
             return !string.IsNullOrWhiteSpace(Urls);
         }
 
-        private void Add(object item)
+        private void Add(object obj)
         {
+            // ensure the selected location is valid and accessible
 
+            bool isDirAccessible = false;
+
+            if (Path.IsPathFullyQualified(SaveLocation))
+            {
+                try
+                {
+                    Directory.CreateDirectory(SaveLocation);
+
+                    var f = File.Create(Path.Combine(SaveLocation, Path.GetRandomFileName()));
+                    f.Close();
+                    File.Delete(f.Name);
+
+                    isDirAccessible = true;
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex.Message, ex);
+                }
+            }
+
+            if (!isDirAccessible)
+            {
+                ShowPrompt?.Invoke("The selected location is inaccessible.", "Add", PromptButton.OK, PromptIcon.Error);
+                return;
+            }
+
+            ItemsAdded = true;
+            Close();
         }
 
         private bool Add_CanExecute(object obj)
         {
-            return !string.IsNullOrWhiteSpace(Urls) && !string.IsNullOrWhiteSpace(SaveToFolder);
+            return !string.IsNullOrWhiteSpace(Urls) && !string.IsNullOrWhiteSpace(SaveLocation);
         }
 
         /// <summary>
@@ -64,7 +180,7 @@ namespace AMDownloader.ViewModels
         private static List<string> ExplodeUrlsFromPatterns(params string[] urls)
         {
             var filteredUrls = urls.Select(o => o.Trim()).Where(o => o.Length > 0); // trim and discard empty
-            var fullUrls = new List<string>();
+            var explodedUrls = new List<string>();
             var pattern = @"(\[\d+:\d+\])";
             var regex = new Regex(pattern);
 
@@ -94,17 +210,17 @@ namespace AMDownloader.ViewModels
                         }
 
                         replacedData += i.ToString();
-                        fullUrls.Add(regex.Replace(url, replacedData));
+                        explodedUrls.Add(regex.Replace(url, replacedData));
                     }
                 }
                 else
                 {
                     // normal url
-                    fullUrls.Add(url);
+                    explodedUrls.Add(url);
                 }
             }
 
-            return fullUrls;
+            return explodedUrls;
         }
 
         /// <summary>
@@ -132,9 +248,62 @@ namespace AMDownloader.ViewModels
             return string.Join(Environment.NewLine, output);
         }
 
+        public bool SavedLocationsContains(string value)
+        {
+            return SavedLocations.Where(o => IsSameLocation(o, value)).Any();
+        }
+
+        public static bool IsSameLocation(string locA, string locB)
+        {
+            locA = locA.Trim();
+            locB = locB.Trim();
+
+            return string.Compare(locA, locB, true) == 0;
+        }
+
+        public void Close()
+        {
+            RaiseEvent(Closing);
+
+            // save settings
+            Settings.Default.MonitorClipboard = MonitorClipboard;
+            Settings.Default.EnqueueAddedItems = Enqueue;
+            Settings.Default.StartDownloadingAddedItems = StartDownload;
+
+            // save download locations
+
+            Settings.Default.LastDownloadLocation = SaveLocation;
+
+            var list = new SerializableSavedLocationList();
+            foreach (var savedLocation in SavedLocations)
+            {
+                var item = new SerializableSavedLocation
+                {
+                    Path = savedLocation.ToString()
+                };
+                list.Objects.Add(item);
+            }
+
+            try
+            {
+                Common.Functions.Serialize(list, Common.Paths.SavedLocationsFile);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.Message, ex);
+            }
+
+            RaiseEvent(Closed);
+        }
+
         protected void RaisePropertyChanged(string prop)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
+        }
+
+        protected virtual void RaiseEvent(EventHandler handler)
+        {
+            handler?.Invoke(this, null);
         }
     }
 }

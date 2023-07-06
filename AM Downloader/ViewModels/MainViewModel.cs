@@ -426,11 +426,12 @@ namespace AMDownloader.ViewModels
 
         private void Add(object obj)
         {
-            AddDownloadViewModel addDownloadViewModel = new(_showWindow);
+            AddDownloadViewModel addDownloadViewModel = new();
             DownloaderObjectModel[] itemsCreated = null;
-            bool? dialogResult = _showWindow.Invoke(addDownloadViewModel);
 
-            if (dialogResult == true)
+            _showWindow.Invoke(addDownloadViewModel);
+
+            if (addDownloadViewModel.ItemsAdded)
             {
                 _updatingListTcs = new TaskCompletionSource();
                 _updatingListCts = new CancellationTokenSource();
@@ -442,7 +443,7 @@ namespace AMDownloader.ViewModels
                 {
                     itemsCreated = CreateObjects(
                         addDownloadViewModel.ExplodedUrls,
-                        addDownloadViewModel.SaveToFolder,
+                        addDownloadViewModel.SaveLocation,
                         ct);
 
                     Status = "Updating...";

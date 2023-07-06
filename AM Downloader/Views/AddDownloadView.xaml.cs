@@ -2,8 +2,7 @@
 
 using AMDownloader.ClipboardObservation;
 using AMDownloader.Helpers;
-using AMDownloader.Models.Serializable;
-using AMDownloader.Properties;
+using AMDownloader.Models;
 using AMDownloader.ViewModels;
 using Serilog;
 using System;
@@ -23,10 +22,14 @@ namespace AMDownloader.Views
     /// </summary>
     public partial class AddDownloadView : Window
     {
+        private AddDownloadViewModel _context;
+        private bool _isContextClosed = false;
         private CancellationTokenSource _monitorClipboardCts;
         private TaskCompletionSource _monitorClipboardTcs;
 
-        private bool IsClipboardMonitorRunning => _monitorClipboardTcs != null && _monitorClipboardTcs.Task.Status != TaskStatus.RanToCompletion;
+        private bool IsClipboardMonitorRunning =>
+            _monitorClipboardTcs != null
+            && _monitorClipboardTcs.Task.Status != TaskStatus.RanToCompletion;
 
         protected override void OnSourceInitialized(EventArgs e)
         {
@@ -91,48 +94,11 @@ namespace AMDownloader.Views
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            // add the default download location
-            DestinationComboBox.Items.Add(Common.Paths.UserDownloadsFolder);
-
-            // add the last used download location
-            if (Settings.Default.RememberLastDownloadLocation
-                && !string.IsNullOrWhiteSpace(Settings.Default.LastDownloadLocation)
-                && !SameLocation(Settings.Default.LastDownloadLocation, Common.Paths.UserDownloadsFolder))
-            {
-                DestinationComboBox.Items.Add(Settings.Default.LastDownloadLocation);
-                DestinationComboBox.Text = Settings.Default.LastDownloadLocation;
-            }
-            else
-            {
-                DestinationComboBox.Text = Common.Paths.UserDownloadsFolder;
-            }
-
-            // add all previously used download locations
-            if (File.Exists(Common.Paths.SavedLocationsFile))
-            {
-                try
-                {
-                    var list = Common.Functions.Deserialize<SerializableDownloadPathHistoryList>(Common.Paths.SavedLocationsFile);
-
-                    foreach (var item in list.Objects)
-                    {
-                        if (!string.IsNullOrWhiteSpace(item.FolderPath)
-                            && !DestinationComboBoxContains(item.FolderPath))
-                        {
-                            DestinationComboBox.Items.Add(item.FolderPath);
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex.Message, ex);
-                }
-            }
-
-            // restore CheckBox states
-            MonitorClipboardCheckBox.IsChecked = Settings.Default.MonitorClipboard;
-            AddToQueueCheckBox.IsChecked = Settings.Default.EnqueueAddedItems;
-            StartDownloadingCheckBox.IsChecked = Settings.Default.StartDownloadingAddedItems;
+            _context = (AddDownloadViewModel)DataContext;
+            _context.ShowList = ShowList;
+            _context.ShowPrompt = ShowPrompt;
+            _context.ShowFolderBrowser = ShowFolderBrowser;
+            _context.Closed += Context_Closed;
 
             // add any urls from the clipboard
             if (!IsClipboardMonitorRunning)
@@ -156,101 +122,22 @@ namespace AMDownloader.Views
                 _monitorClipboardCts.Cancel();
             }
 
-            // save CheckBox states
-            Settings.Default.MonitorClipboard = (bool)MonitorClipboardCheckBox.IsChecked;
-            Settings.Default.EnqueueAddedItems = (bool)AddToQueueCheckBox.IsChecked;
-            Settings.Default.StartDownloadingAddedItems = (bool)StartDownloadingCheckBox.IsChecked;
+            if (!_isContextClosed)
+            {
+                e.Cancel = true;
+                _context.Close();
+            }
+        }
+
+        private void Context_Closed(object sender, EventArgs e)
+        {
+            _isContextClosed = true;
+            Dispatcher.BeginInvoke(() => Close());
         }
 
         private void AddButton_Click(object sender, RoutedEventArgs e)
         {
-            // ensure the selected location is valid and accessible
-
-            bool isDirAccessible = false;
-
-            if (Path.IsPathFullyQualified(DestinationComboBox.Text))
-            {
-                try
-                {
-                    Directory.CreateDirectory(DestinationComboBox.Text);
-
-                    var f = File.Create(Path.Combine(DestinationComboBox.Text, Path.GetRandomFileName()));
-                    f.Close();
-                    File.Delete(f.Name);
-
-                    isDirAccessible = true;
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex.Message, ex);
-                }
-            }
-
-            if (!isDirAccessible)
-            {
-                MessageBox.Show("The selected location is inaccessible.", "Add", MessageBoxButton.OK, MessageBoxImage.Error);
-                DestinationComboBox.Focus();
-                return;
-            }
-
-            // save download locations
-
-            Settings.Default.LastDownloadLocation = DestinationComboBox.Text;
-
-            var list = new SerializableDownloadPathHistoryList();
-
-            foreach (var item in DestinationComboBox.Items)
-            {
-                var listItem = new SerializableDownloadPathHistory
-                {
-                    FolderPath = item.ToString()
-                };
-                list.Objects.Add(listItem);
-            }
-
-            try
-            {
-                Common.Functions.Serialize(list, Common.Paths.SavedLocationsFile);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex.Message, ex);
-            }
-
-            DialogResult = true;
-        }
-
-        private void BrowseButton_Click(object sender, RoutedEventArgs e)
-        {
-            WinForms.FolderBrowserDialog folderBrowser = new();
-            string openWithFolder;
-
-            if (Directory.Exists(DestinationComboBox.Text))
-            {
-                openWithFolder = DestinationComboBox.Text;
-            }
-            else
-            {
-                openWithFolder = Common.Paths.UserDownloadsFolder;
-            }
-
-            // ensure there's a trailing slash so that FolderBrowserDialog opens inside SelectedPath
-            if (openWithFolder.LastIndexOf(Path.DirectorySeparatorChar) != openWithFolder.Length - 1)
-            {
-                openWithFolder += Path.DirectorySeparatorChar;
-            }
-
-            folderBrowser.SelectedPath = openWithFolder;
-
-            if (folderBrowser.ShowDialog() == WinForms.DialogResult.OK)
-            {
-                if (!DestinationComboBoxContains(folderBrowser.SelectedPath))
-                {
-                    DestinationComboBox.Items.Add(folderBrowser.SelectedPath);
-                }
-
-                DestinationComboBox.Text = folderBrowser.SelectedPath;
-            }
+            DestinationComboBox.Focus();
         }
 
         private void UrlTextBox_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
@@ -273,17 +160,55 @@ namespace AMDownloader.Views
                 --fontSize;
             }
 
-            if (fontSize < this.FontSize)
+            if (fontSize < FontSize)
             {
-                fontSize = this.FontSize;
+                fontSize = FontSize;
             }
 
-            if (fontSize > (3 * this.FontSize))
+            if (fontSize > (3 * FontSize))
             {
-                fontSize = 3 * this.FontSize;
+                fontSize = 3 * FontSize;
             }
 
             UrlTextBox.FontSize = fontSize;
+        }
+
+        private void MonitorClipboardCheckBox_Checked(object sender, RoutedEventArgs e)
+        {
+            if (IsClipboardMonitorRunning)
+            {
+                return;
+            }
+
+            _monitorClipboardTcs = new TaskCompletionSource();
+            _monitorClipboardCts = new CancellationTokenSource();
+            var ct = _monitorClipboardCts.Token;
+
+            Task.Run(async () =>
+            {
+                try
+                {
+                    await MonitorClipboardAsync(ct);
+                }
+                catch
+                {
+
+                }
+
+                _monitorClipboardCts.Dispose();
+
+                Log.Debug("Stopped polling clipboard.");
+            });
+        }
+
+        private void MonitorClipboardCheckBox_Unchecked(object sender, RoutedEventArgs e)
+        {
+            if (!IsClipboardMonitorRunning)
+            {
+                return;
+            }
+
+            _monitorClipboardCts.Cancel();
         }
 
         private async Task MonitorClipboardAsync(CancellationToken ct)
@@ -350,67 +275,63 @@ namespace AMDownloader.Views
             _monitorClipboardTcs.SetResult();
         }
 
-        private void MonitorClipboardCheckBox_Checked(object sender, RoutedEventArgs e)
+        public bool? ShowList(object viewModel)
         {
-            if (IsClipboardMonitorRunning)
+            Window window = null;
+            Dispatcher.Invoke(() =>
             {
-                return;
-            }
-
-            _monitorClipboardTcs = new TaskCompletionSource();
-            _monitorClipboardCts = new CancellationTokenSource();
-            var ct = _monitorClipboardCts.Token;
-
-            Task.Run(async () =>
-            {
-                try
+                window = new ListViewerView
                 {
-                    await MonitorClipboardAsync(ct);
-                }
-                catch
-                {
-
-                }
-
-                _monitorClipboardCts.Dispose();
-
-                Log.Debug("Stopped polling clipboard.");
+                    DataContext = viewModel,
+                    Owner = this
+                };
+                window.ShowDialog();
             });
+            return true;
         }
 
-        private void MonitorClipboardCheckBox_Unchecked(object sender, RoutedEventArgs e)
+        public bool? ShowPrompt(
+            string promptText,
+            string caption,
+            PromptButton button,
+            PromptIcon icon,
+            bool defaultResult = true)
         {
-            if (!IsClipboardMonitorRunning)
+            bool? result = null;
+
+            Dispatcher.Invoke(() => result = Prompt.Show(promptText, caption, button, icon, defaultResult));
+
+            return result;
+        }
+
+        private (bool, string) ShowFolderBrowser()
+        {
+            WinForms.FolderBrowserDialog folderBrowser = new();
+            string openWithFolder;
+
+            if (Directory.Exists(DestinationComboBox.Text))
             {
-                return;
+                openWithFolder = DestinationComboBox.Text;
+            }
+            else
+            {
+                openWithFolder = Common.Paths.UserDownloadsFolder;
             }
 
-            _monitorClipboardCts.Cancel();
-        }
-
-        private bool DestinationComboBoxContains(string value)
-        {
-            value = value.Trim();
-
-            foreach (var item in DestinationComboBox.Items)
+            // ensure there's a trailing slash so that FolderBrowserDialog opens inside SelectedPath
+            if (openWithFolder.LastIndexOf(Path.DirectorySeparatorChar) != openWithFolder.Length - 1)
             {
-                var comboText = item.ToString().Trim();
-
-                if (SameLocation(value, comboText))
-                {
-                    return true;
-                }
+                openWithFolder += Path.DirectorySeparatorChar;
             }
 
-            return false;
-        }
+            folderBrowser.SelectedPath = openWithFolder;
 
-        private static bool SameLocation(string locA, string locB)
-        {
-            locA = locA.Trim();
-            locB = locB.Trim();
+            if (folderBrowser.ShowDialog() == WinForms.DialogResult.OK)
+            {
+                return (true, folderBrowser.SelectedPath);
+            }
 
-            return string.Compare(locA, locB, true) == 0;
+            return (false, string.Empty);
         }
     }
 }

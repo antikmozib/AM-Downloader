@@ -52,13 +52,14 @@
                       VerticalAlignment="Center"
                       HorizontalAlignment="Right"
                       ToolTip="Automatically monitor the clipboard for URLs and add them to the list"
+                      IsChecked="{Binding MonitorClipboard}"
                       Checked="MonitorClipboardCheckBox_Checked"
                       Unchecked="MonitorClipboardCheckBox_Unchecked" />
         </Grid>
 
         <TextBox x:Name="UrlTextBox"
                  Grid.Row="2"
-                 Text="{Binding Path=Urls, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}"
+                 Text="{Binding Urls, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                  Width="auto"
                  Height="auto"
                  ScrollViewer.CanContentScroll="True"
@@ -77,14 +78,15 @@
             <Button x:Name="BrowseButton"
                     DockPanel.Dock="Right"
                     Content="_Browse"
-                    Click="BrowseButton_Click" />
+                    Command="{Binding BrowseCommand}" />
 
             <ComboBox x:Name="DestinationComboBox"
                       Margin="0 0 8 0"
                       Width="auto"
                       HorizontalAlignment="Stretch"
                       VerticalContentAlignment="Center"
-                      Text="{Binding Path=SaveToFolder, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}"
+                      ItemsSource="{Binding SavedLocations}"
+                      Text="{Binding SaveLocation, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                       IsEditable="True" />
         </DockPanel>
 
@@ -93,13 +95,13 @@
                     HorizontalAlignment="Right">
             <CheckBox x:Name="AddToQueueCheckBox"
                       Content="A_dd to queue"
-                      IsChecked="{Binding Path=Enqueue, UpdateSourceTrigger=PropertyChanged, Mode=OneWayToSource}"
+                      IsChecked="{Binding Enqueue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                       VerticalAlignment="Center"
                       Margin="0 0 8 0" />
 
             <CheckBox x:Name="StartDownloadingCheckBox"
                       Content="S_tart downloading"
-                      IsChecked="{Binding Path=StartDownload, UpdateSourceTrigger=PropertyChanged, Mode=OneWayToSource}"
+                      IsChecked="{Binding StartDownload, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                       VerticalAlignment="Center"
                       Margin="0 0 8 0" />
 
