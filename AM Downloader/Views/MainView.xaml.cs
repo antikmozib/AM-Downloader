@@ -16,6 +16,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media;
+using System.Windows.Threading;
 using WinForms = System.Windows.Forms;
 
 namespace AMDownloader.Views
@@ -337,14 +338,18 @@ namespace AMDownloader.Views
             Settings.Default.SelectedColumnHeaderDirection = direction ?? ListSortDirection.Descending;
         }
 
-        public static bool? ShowPrompt(
+        public bool? ShowPrompt(
             string promptText,
             string caption,
             PromptButton button,
             PromptIcon icon,
             bool defaultResult = true)
         {
-            return Prompt.Show(promptText, caption, button, icon, defaultResult);
+            bool? result = null;
+
+            Dispatcher.Invoke(() => result = Prompt.Show(promptText, caption, button, icon, defaultResult));
+
+            return result;
         }
 
         public bool? ShowWindow(object viewModel)

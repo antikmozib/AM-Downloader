@@ -22,8 +22,7 @@ namespace AMDownloader.Models
             string caption,
             PromptButton button,
             PromptIcon icon,
-            bool defaultResult = true,
-            bool invokeAsync = false)
+            bool defaultResult = true)
         {
             var messageBoxButton = button switch
             {
@@ -53,28 +52,12 @@ namespace AMDownloader.Models
                     ? MessageBoxResult.Cancel
                     : MessageBoxResult.No
             };
-            var result = messageBoxDefaultResult;
-
-            if (!invokeAsync)
-            {
-                Application.Current.Dispatcher.Invoke(() =>
-                result = MessageBox.Show(
-                    promptText,
-                    caption,
-                    messageBoxButton,
-                    messageBoxImage,
-                    messageBoxDefaultResult));
-            }
-            else
-            {
-                Application.Current.Dispatcher.BeginInvoke(() =>
-                result = MessageBox.Show(
-                    promptText,
-                    caption,
-                    messageBoxButton,
-                    messageBoxImage,
-                    messageBoxDefaultResult));
-            }
+            var result = MessageBox.Show(
+                   promptText,
+                   caption,
+                   messageBoxButton,
+                   messageBoxImage,
+                   messageBoxDefaultResult);
 
             if (result == MessageBoxResult.OK || result == MessageBoxResult.Yes)
             {
