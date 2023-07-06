@@ -16,7 +16,6 @@ namespace AMDownloader.QueueProcessing
 
         private readonly List<IQueueable> _queueList;
         private readonly List<IQueueable> _processedItems;
-        private readonly object _queueListLock;
         private readonly object _processedItemsLock;
         private readonly SemaphoreSlim _semaphore;
         private TaskCompletionSource _tcs;
@@ -54,7 +53,6 @@ namespace AMDownloader.QueueProcessing
         {
             _queueList = new();
             _processedItems = new();
-            _queueListLock = _queueList;
             _processedItemsLock = _processedItems;
             _semaphore = new SemaphoreSlim(maxParallelDownloads);
 
