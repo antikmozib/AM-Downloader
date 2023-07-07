@@ -255,7 +255,7 @@
                                    Foreground="{StaticResource ResourceKey=StartButtonIconColor}" />
                         <TextBlock Margin="4 0 0 0"
                                    VerticalAlignment="Center"
-                                   Text="Start" />
+                                   Text="Resume" />
                     </StackPanel>
                 </Button>
                 <Button Padding="4"

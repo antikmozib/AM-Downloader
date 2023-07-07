@@ -3,6 +3,7 @@
                     xmlns:system="clr-namespace:System;assembly=mscorlib">
     <system:String x:Key="productUrl">https://mozib.io/amdownloader/</system:String>
     <system:String x:Key="resetSettingsMsg">App restart required for changes to take effect.</system:String>
+    <system:String x:Key="addDownloadHelpTitle">How to use URL patterns</system:String>
     <system:String x:Key="addDownloadHelpText"
                    xml:space="preserve">Patterns can be applied to download multiple files from a single URL. For example, entering the following pattern:&#x0a;&#x0a;&#x09;http://www.example.com/file[1:10].png&#x0a;&#x0a;will download the following ten files: &#x0a;&#x0a;&#x09;file1.png&#x0a;&#x09;file2.png&#x0a;&#x09;...&#x0a;&#x0a;&#x09;file10.png</system:String>
 </ResourceDictionary>
