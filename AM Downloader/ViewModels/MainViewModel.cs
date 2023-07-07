@@ -234,8 +234,6 @@ namespace AMDownloader.ViewModels
                 Task.Run(async () => await TriggerUpdateCheckAsync(true));
             }
 
-            Settings.Default.LaunchCount++;
-
             // Populate history
             if (File.Exists(Common.Paths.DownloadsHistoryFile))
             {

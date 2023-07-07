@@ -1,6 +1,7 @@
 ﻿// Copyright (C) 2020-2023 Antik Mozib. All rights reserved.
 
 using AMDownloader.Helpers;
+using AMDownloader.Models;
 using AMDownloader.Models.Serializable;
 using AMDownloader.Properties;
 using Serilog;
@@ -12,7 +13,6 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Input;
-using AMDownloader.Models;
 
 namespace AMDownloader.ViewModels
 {

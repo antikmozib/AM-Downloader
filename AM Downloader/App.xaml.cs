@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Threading;
 using System.Windows;
 using AMDownloader.Helpers;
+using AMDownloader.Properties;
 using AMDownloader.Views;
 using Serilog;
 
@@ -32,6 +33,8 @@ namespace AMDownloader
             else
             {
                 Log.Debug("Starting app...");
+
+                ++Settings.Default.LaunchCount;
 
                 string[] args = Environment.GetCommandLineArgs();
                 var debugLoggerConfig = new LoggerConfiguration()
