@@ -5,9 +5,11 @@ using AMDownloader.Models;
 using AMDownloader.Models.Serializable;
 using AMDownloader.Properties;
 using AMDownloader.ViewModels;
+using Ookii.Dialogs.Wpf;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -47,8 +49,8 @@ namespace AMDownloader.Views
                 int desktopWidth = WinForms.Screen.AllScreens.FirstOrDefault().WorkingArea.Width;
                 int desktopHeight = WinForms.Screen.AllScreens.FirstOrDefault().WorkingArea.Height;
 
-                this.Left = desktopWidth / 2 - this.Width / 2;
-                this.Top = desktopHeight / 2 - this.Height / 2;
+                Left = desktopWidth / 2 - Width / 2;
+                Top = desktopHeight / 2 - Height / 2;
             }
         }
 
@@ -163,19 +165,19 @@ namespace AMDownloader.Views
 
         public void DataContext_Closing(object sender, EventArgs e)
         {
-            Dispatcher.Invoke(() => MainViewWindow.IsEnabled = false);
+            Dispatcher.Invoke(() => IsEnabled = false);
         }
 
         public void DataContext_Closed(object sender, EventArgs e)
         {
             _dataContextClosed = true;
 
-            Dispatcher.Invoke(() => MainViewWindow.Close());
+            Dispatcher.Invoke(() => Close());
         }
 
         private void ExitMenu_Click(object sender, RoutedEventArgs e)
         {
-            this.Close();
+            Close();
         }
 
         private void AboutMenu_Click(object sender, RoutedEventArgs e)
@@ -185,17 +187,27 @@ namespace AMDownloader.Views
             var version = Assembly.GetExecutingAssembly().GetName().Version;
             var copyright = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(
                 AssemblyCopyrightAttribute), true).OfType<AssemblyCopyrightAttribute>().FirstOrDefault()?.Copyright;
-            var website = "https://mozib.io/amdownloader";
+            var website = (string)Application.Current.FindResource("productUrl");
+            var websiteDisplay = $"<a href=\"{website}\">{website}</a>";
             var totalDownloaded = Math.Round(Settings.Default.BytesTransferredOverLifetime
                 / (double)Common.Constants.ByteConstants.MEGABYTE);
 
-            MessageBox.Show(
-                $"{name}\nVersion {version}\n\n{copyright}\n{website}"
-                + $"\n\nTotal downloaded since installation: {totalDownloaded.ToString("n0", cultureInfo)} MB"
-                + $"\nNumber of times launched: {Settings.Default.LaunchCount}",
-                "About",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            var aboutDialog = new TaskDialog
+            {
+                CenterParent = true,
+                EnableHyperlinks = true,
+                WindowTitle = "About",
+                MainInstruction = name,
+                Content = $"Version {version}\n\n{copyright}\n{websiteDisplay}",
+                ExpandedInformation = $"\n\nTotal downloaded since installation: {totalDownloaded.ToString("n0", cultureInfo)} MB"
+                    + $"\nNumber of times launched: {Settings.Default.LaunchCount}"
+            };
+            aboutDialog.HyperlinkClicked += (s, e) =>
+            {
+                Process.Start("explorer.exe", website);
+            };
+            aboutDialog.Buttons.Add(new TaskDialogButton(ButtonType.Ok));
+            aboutDialog.ShowDialog(this);
         }
 
         private void CategoriesList_Loaded(object sender, RoutedEventArgs e)

@@ -4,6 +4,7 @@ using AMDownloader.ClipboardObservation;
 using AMDownloader.Helpers;
 using AMDownloader.Models;
 using AMDownloader.ViewModels;
+using Ookii.Dialogs.Wpf;
 using Serilog;
 using System;
 using System.IO;
@@ -70,13 +71,16 @@ namespace AMDownloader.Views
                 if (msg == Helpers.Native.User32.WM_SYSCOMMAND
                     && ((int)wParam & 0xFFF0) == Helpers.Native.User32.SC_CONTEXTHELP)
                 {
-                    MessageBox.Show(
-                        "Patterns can be applied to download multiple files from a single URL."
-                        + "\nFor example, entering the following pattern:"
-                        + "\n\n\thttp://www.example.com/file[1:10].png"
-                        + "\n\nwill download the following ten files:"
-                        + "\n\n\tfile1.png\n\tfile2.png\n\t...\n\n\tfile10.png",
-                        "Help", MessageBoxButton.OK, MessageBoxImage.Information);
+                    TaskDialog helpDialog = new()
+                    {
+                        WindowTitle = "Help",
+                        CenterParent = true,
+                        MainInstruction = "How to enter URL patterns",
+                        Content = (string)Application.Current.FindResource("addDownloadHelpText")
+                    };
+                    helpDialog.Buttons.Add(new TaskDialogButton(ButtonType.Ok));
+                    helpDialog.ShowDialog(this);
+
                     handled = true;
                 }
 
