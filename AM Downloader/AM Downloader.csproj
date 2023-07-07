@@ -16,8 +16,6 @@
         <AssemblyVersion>1.3.3.0</AssemblyVersion>
         <Platforms>AnyCPU;x86;x64</Platforms>
         <Authors>Antik Mozib</Authors>
-        <SignAssembly>false</SignAssembly>
-        <AssemblyOriginatorKeyFile>AM.snk</AssemblyOriginatorKeyFile>
         <DelaySign>true</DelaySign>
         <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
         <ApplicationManifest>app.manifest</ApplicationManifest>
