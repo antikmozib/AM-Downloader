@@ -10,8 +10,8 @@
                 <ResourceDictionary Source="pack://application:,,,/Resources/StringResources.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
-            <FontFamily x:Key="FontAwesomeRegular">pack://application:,,,/;component/Resources/Fonts/fontawesomeregular.otf#Font Awesome 5 Free Regular</FontFamily>
-            <FontFamily x:Key="FontAwesomeSolid">pack://application:,,,/;component/Resources/Fonts/fontawesomesolid.otf#Font Awesome 5 Free Solid</FontFamily>
+            <FontFamily x:Key="FontAwesomeRegular">pack://application:,,,/;component/Resources/Fonts/Font Awesome 5 Free-Regular-400.otf#Font Awesome 5 Free Regular</FontFamily>
+            <FontFamily x:Key="FontAwesomeSolid">pack://application:,,,/;component/Resources/Fonts/Font Awesome 5 Free-Solid-900.otf#Font Awesome 5 Free Solid</FontFamily>
 
             <Style TargetType="Button">
                 <Setter Property="Height"
