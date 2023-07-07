@@ -23,7 +23,6 @@ namespace AMDownloader.Views
     /// </summary>
     public partial class AddDownloadView : Window
     {
-        private AddDownloadViewModel _context;
         private bool _isContextClosed = false;
         private CancellationTokenSource _monitorClipboardCts;
         private TaskCompletionSource _monitorClipboardTcs;
@@ -75,7 +74,7 @@ namespace AMDownloader.Views
                     {
                         WindowTitle = "Help",
                         CenterParent = true,
-                        MainInstruction = "How to enter URL patterns",
+                        MainInstruction = (string)Application.Current.FindResource("addDownloadHelpTitle"),
                         Content = (string)Application.Current.FindResource("addDownloadHelpText")
                     };
                     helpDialog.Buttons.Add(new TaskDialogButton(ButtonType.Ok));
@@ -98,11 +97,11 @@ namespace AMDownloader.Views
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            _context = (AddDownloadViewModel)DataContext;
-            _context.ShowList = ShowList;
-            _context.ShowPrompt = ShowPrompt;
-            _context.ShowFolderBrowser = ShowFolderBrowser;
-            _context.Closed += Context_Closed;
+            var context = (AddDownloadViewModel)DataContext;
+            context.ShowList = ShowList;
+            context.ShowPrompt = ShowPrompt;
+            context.ShowFolderBrowser = ShowFolderBrowser;
+            context.Closed += Context_Closed;
 
             // add any urls from the clipboard
             if (!IsClipboardMonitorRunning)
@@ -126,10 +125,10 @@ namespace AMDownloader.Views
                 _monitorClipboardCts.Cancel();
             }
 
-            if (!_isContextClosed)
+            if (DataContext is ICloseable context && !_isContextClosed)
             {
                 e.Cancel = true;
-                _context.Close();
+                context.Close();
             }
         }
 
