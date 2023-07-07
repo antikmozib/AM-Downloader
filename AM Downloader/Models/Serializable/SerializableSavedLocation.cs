@@ -14,7 +14,7 @@ namespace AMDownloader.Models.Serializable
     [Serializable]
     public class SerializableSavedLocationList
     {
-        public List<SerializableSavedLocation> Objects;
+        public List<SerializableSavedLocation> Objects { get; set; }
 
         public SerializableSavedLocationList()
         {

@@ -24,7 +24,7 @@ namespace AMDownloader.Models.Serializable
     [Serializable]
     public class SerializableDownloaderObjectModelList
     {
-        public List<SerializableDownloaderObjectModel> Objects;
+        public List<SerializableDownloaderObjectModel> Objects { get; set; }
 
         public SerializableDownloaderObjectModelList()
         {

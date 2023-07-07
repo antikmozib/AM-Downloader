@@ -4,7 +4,7 @@ using AMDownloader.Properties;
 using System;
 using System.IO;
 using System.Reflection;
-using System.Xml.Serialization;
+using System.Text.Json;
 
 namespace AMDownloader.Helpers
 {
@@ -15,7 +15,6 @@ namespace AMDownloader.Helpers
             public const int ParallelDownloadsLimit = 10;
             public const int ParallelConnPerDownloadLimit = 5;
             public const string TempDownloadExtension = ".AMDownload";
-            public const string UpdateServer = @"https://mozib.io/downloads/update.php";
 
             public enum ByteConstants
             {
@@ -32,9 +31,9 @@ namespace AMDownloader.Helpers
             /// </summary>
             public static string LocalAppDataFolder =>
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Assembly.GetExecutingAssembly().GetName().Name);
-            public static string DownloadsHistoryFile => Path.Combine(LocalAppDataFolder, "History.xml");
-            public static string SavedLocationsFile => Path.Combine(LocalAppDataFolder, "SavedLocations.xml");
-            public static string UIColumnOrderFile => Path.Combine(LocalAppDataFolder, "UIColumnOrder.xml");
+            public static string DownloadsHistoryFile => Path.Combine(LocalAppDataFolder, "History.json");
+            public static string SavedLocationsFile => Path.Combine(LocalAppDataFolder, "SavedLocations.json");
+            public static string UIColumnOrderFile => Path.Combine(LocalAppDataFolder, "UIColumnOrder.json");
             /// <summary>
             /// Gets the path to the %USERPROFILE%/Downloads folder.
             /// </summary>
@@ -129,12 +128,11 @@ namespace AMDownloader.Helpers
 
             public static void Serialize<T>(T obj, string path)
             {
-                var xmlSerializer = new XmlSerializer(typeof(T));
-                using var streamWriter = new StreamWriter(path, false);
+                using var fileStream = new FileStream(path, FileMode.Create, FileAccess.Write);
 
                 try
                 {
-                    xmlSerializer.Serialize(streamWriter, obj);
+                    JsonSerializer.Serialize(fileStream, obj, new JsonSerializerOptions { WriteIndented = true });
                 }
                 catch (Exception ex)
                 {
@@ -144,12 +142,11 @@ namespace AMDownloader.Helpers
 
             public static T Deserialize<T>(string path)
             {
-                var xmlSerializer = new XmlSerializer(typeof(T));
-                using var streamReader = new StreamReader(path);
+                using var fs = new FileStream(path, FileMode.Open, FileAccess.Read);
 
                 try
                 {
-                    return (T)xmlSerializer.Deserialize(streamReader);
+                    return JsonSerializer.Deserialize<T>(fs);
                 }
                 catch (Exception ex)
                 {

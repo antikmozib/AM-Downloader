@@ -16,7 +16,7 @@ namespace AMDownloader.Models.Serializable
     [Serializable]
     public class SerializableUIColumnList
     {
-        public List<SerializableUIColumn> Objects;
+        public List<SerializableUIColumn> Objects { get; set; }
 
         public SerializableUIColumnList()
         {
