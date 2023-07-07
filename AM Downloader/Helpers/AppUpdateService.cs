@@ -8,18 +8,21 @@ namespace AMDownloader.Helpers
 {
     public static class AppUpdateService
     {
-        public static async Task<string> GetUpdateUrl(string server,
-            string appName,
-            string appVersion,
-            HttpClient httpClient = null)
-        {
-            httpClient ??= new HttpClient();
+        public const string ApiAddress = @"https://mozib.io/downloads/update.php";
 
-            appName = appName.Replace(" ", ""); // replace spaces in url
+        public static async Task<string> GetUpdateUrl(string appName, string appVersion, HttpClient httpClient = null)
+        {
+            if (appName.Contains(' ') || appVersion.Contains(' '))
+            {
+                throw new ArgumentException(
+                    $"Parameters {nameof(appName)} and {nameof(appVersion)} must not contain spaces.");
+            }
+
+            httpClient ??= new HttpClient();
 
             try
             {
-                using var response = await httpClient.GetAsync(server + "?appname=" + appName + "&version=" + appVersion);
+                using var response = await httpClient.GetAsync(ApiAddress + "?appname=" + appName + "&version=" + appVersion);
 
                 if (response.IsSuccessStatusCode)
                 {

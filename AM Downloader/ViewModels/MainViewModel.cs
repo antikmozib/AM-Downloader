@@ -1398,11 +1398,9 @@ namespace AMDownloader.ViewModels
         {
             try
             {
-                string url = await AppUpdateService.GetUpdateUrl(
-                    Common.Constants.UpdateServer,
-                    Assembly.GetExecutingAssembly().GetName().Name,
-                    Assembly.GetExecutingAssembly().GetName().Version.ToString(),
-                    _client);
+                var appName = Assembly.GetExecutingAssembly().GetName().Name.Replace(" ", "");
+                var appVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+                string url = await AppUpdateService.GetUpdateUrl(appName, appVersion, _client);
 
                 if (string.IsNullOrEmpty(url))
                 {
