@@ -1413,7 +1413,7 @@ namespace AMDownloader.ViewModels
             {
                 var appName = Assembly.GetExecutingAssembly().GetName().Name;
                 var currentVer = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-                var latestUpdateInfo = await UpdateService.GetLatestUpdateInfo(appName, _client);
+                var latestUpdateInfo = await UpdateService.GetLatestUpdateInfoAsync(appName, _client);
 
                 if (UpdateService.IsUpdateAvailable(latestUpdateInfo, currentVer))
                 {

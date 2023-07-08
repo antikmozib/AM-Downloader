@@ -50,7 +50,7 @@ namespace AMDownloader.Updating
     {
         private const string ApiAddress = @"https://mozib.io/downloads/update.php";
 
-        public static async Task<UpdateInfo> GetLatestUpdateInfo(string appName, HttpClient httpClient = null)
+        public static async Task<UpdateInfo> GetLatestUpdateInfoAsync(string appName, HttpClient httpClient = null)
         {
             httpClient ??= new HttpClient();
             appName = HttpUtility.UrlEncode(appName);
@@ -61,7 +61,7 @@ namespace AMDownloader.Updating
 
                 if (response.IsSuccessStatusCode)
                 {
-                    return await JsonSerializer.DeserializeAsync<UpdateInfo>(response.Content.ReadAsStream());
+                    return await JsonSerializer.DeserializeAsync<UpdateInfo>(await response.Content.ReadAsStreamAsync());
                 }
                 else
                 {
