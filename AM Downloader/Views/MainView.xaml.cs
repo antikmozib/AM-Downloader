@@ -4,6 +4,7 @@ using AMDownloader.Helpers;
 using AMDownloader.Models;
 using AMDownloader.Models.Serializable;
 using AMDownloader.Properties;
+using AMDownloader.Updating;
 using AMDownloader.ViewModels;
 using Ookii.Dialogs.Wpf;
 using System;
@@ -37,7 +38,7 @@ namespace AMDownloader.Views
         {
             InitializeComponent();
 
-            DataContext = new MainViewModel(ShowWindow, ShowPrompt, DataContext_Closing, DataContext_Closed);
+            DataContext = new MainViewModel(ShowWindow, ShowPrompt, NotifyUpdateAvailable, DataContext_Closing, DataContext_Closed);
         }
 
         private void Window_Initialized(object sender, EventArgs e)
@@ -196,6 +197,7 @@ namespace AMDownloader.Views
             {
                 CenterParent = true,
                 EnableHyperlinks = true,
+                MainIcon = TaskDialogIcon.Information,
                 WindowTitle = "About",
                 MainInstruction = name,
                 Content = $"Version {version}\n\n{copyright}\n{websiteDisplay}",
@@ -396,6 +398,57 @@ namespace AMDownloader.Views
             });
 
             return result;
+        }
+
+        private void NotifyUpdateAvailable(bool updateAvailable, UpdateInfo latestUpdateInfo, bool silentIfLatest)
+        {
+            if (updateAvailable)
+            {
+                TaskDialog taskDialog = new()
+                {
+                    WindowTitle = "Update",
+                    CenterParent = true,
+                    MainInstruction = "An update is available.",
+                    Content = $"Latest version: {latestUpdateInfo.Versions}\n" +
+                        $"Current version: {Assembly.GetExecutingAssembly().GetName().Version}",
+                    MainIcon = TaskDialogIcon.Information
+                };
+                TaskDialogButton downloadButton = new("Download")
+                {
+                    Default = true
+                };
+                TaskDialogButton moreInfoButton = new("More Information");
+                TaskDialogButton result = null;
+
+                taskDialog.Buttons.Add(downloadButton);
+                taskDialog.Buttons.Add(moreInfoButton);
+                taskDialog.Buttons.Add(new TaskDialogButton(ButtonType.Cancel));
+
+                Dispatcher.Invoke(() => result = taskDialog.ShowDialog(this));
+
+                if (result == downloadButton)
+                {
+                    Process.Start("explorer.exe", latestUpdateInfo.FileUrl);
+                }
+                else if (result == moreInfoButton)
+                {
+                    Process.Start("explorer.exe", latestUpdateInfo.UpdateInfoUrl);
+                }
+            }
+            else
+            {
+                if (!silentIfLatest)
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        MessageBox.Show(
+                            "No new updates are available.",
+                            "Update",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Information);
+                    });
+                }
+            }
         }
 
         private static IEnumerable<T> GetVisualChildren<T>(DependencyObject parent) where T : DependencyObject

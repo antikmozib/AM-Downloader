@@ -6,6 +6,7 @@ using AMDownloader.Models;
 using AMDownloader.Models.Serializable;
 using AMDownloader.Properties;
 using AMDownloader.QueueProcessing;
+using AMDownloader.Updating;
 using Microsoft.VisualBasic.FileIO;
 using Serilog;
 using System;
@@ -36,6 +37,16 @@ namespace AMDownloader.ViewModels
         PromptIcon icon = PromptIcon.None,
         bool defaultResult = true);
 
+    /// <summary>
+    /// Invokes the handler with information about the latest available update.
+    /// </summary>
+    /// <param name="updateAvailable"><see langword="true"/> if an update is available.</param>
+    /// <param name="latestUpdateInfo">Information provided by the update API about the latest available update.</param>
+    /// <param name="silentIfLatest">if <see langword="true"/>, no notification is provided to the user if the current 
+    /// version is the latest one available.</param>
+    public delegate void NotifyUpdateAvailableDelegate(
+        bool updateAvailable, UpdateInfo latestUpdateInfo, bool silentIfLatest = false);
+
     public enum Category
     {
         All, Ready, Queued, Downloading, Paused, Finished, Errored
@@ -50,6 +61,7 @@ namespace AMDownloader.ViewModels
         private readonly SemaphoreSlim _refreshingViewSemaphore;
         private readonly ShowWindowDelegate _showWindow;
         private readonly ShowPromptDelegate _showPrompt;
+        private readonly NotifyUpdateAvailableDelegate _notifyUpdateAvailable;
         private CancellationTokenSource _updatingListCts;
         private readonly List<CancellationTokenSource> _refreshViewCtsList;
         private TaskCompletionSource _updatingListTcs;
@@ -80,7 +92,8 @@ namespace AMDownloader.ViewModels
         public int FinishedCount { get; private set; }
         public int ErroredCount { get; private set; }
         public int PausedCount { get; private set; }
-        public bool IsBackgroundWorking => _updatingListTcs != null && _updatingListTcs.Task.Status != TaskStatus.RanToCompletion;
+        public bool IsBackgroundWorking => _updatingListTcs != null
+            && _updatingListTcs.Task.Status != TaskStatus.RanToCompletion;
         public bool IsDownloading => DownloadingCount > 0;
         public string Status { get; private set; }
 
@@ -121,6 +134,7 @@ namespace AMDownloader.ViewModels
 
         public MainViewModel(ShowWindowDelegate showWindow,
             ShowPromptDelegate showPrompt,
+            NotifyUpdateAvailableDelegate notifyUpdateAvailable,
             EventHandler closing,
             EventHandler closed)
         {
@@ -173,6 +187,7 @@ namespace AMDownloader.ViewModels
             _refreshingViewSemaphore = new SemaphoreSlim(1);
             _showWindow = showWindow;
             _showPrompt = showPrompt;
+            _notifyUpdateAvailable = notifyUpdateAvailable;
             _refreshViewCtsList = new();
             _refreshViewCtsListLock = _refreshViewCtsList;
             _downloadItemsCollectionLock = DownloadItemsCollection;
@@ -1392,42 +1407,28 @@ namespace AMDownloader.ViewModels
             });
         }
 
-        private async Task TriggerUpdateCheckAsync(bool silent = false)
+        private async Task TriggerUpdateCheckAsync(bool silentIfLatest = false)
         {
             try
             {
-                var appName = Assembly.GetExecutingAssembly().GetName().Name.Replace(" ", "");
-                var appVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-                string url = await AppUpdateService.GetUpdateUrl(appName, appVersion, _client);
+                var appName = Assembly.GetExecutingAssembly().GetName().Name;
+                var currentVer = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+                var latestUpdateInfo = await UpdateService.GetLatestUpdateInfo(appName, _client);
 
-                if (string.IsNullOrEmpty(url))
+                if (UpdateService.IsUpdateAvailable(latestUpdateInfo, currentVer))
                 {
-                    if (!silent)
-                    {
-                        _showPrompt.Invoke(
-                            "No new updates are available.",
-                            "Update",
-                            PromptButton.OK,
-                            PromptIcon.Information);
-                    }
-                    return;
+                    _notifyUpdateAvailable.Invoke(true, latestUpdateInfo);
                 }
-
-                if (_showPrompt.Invoke(
-                    "An update is available.\n\nWould you like to download it now?",
-                    "Update",
-                    PromptButton.YesNo,
-                    PromptIcon.Information,
-                    true) == true)
+                else
                 {
-                    Process.Start("explorer.exe", url);
+                    _notifyUpdateAvailable.Invoke(false, latestUpdateInfo, silentIfLatest);
                 }
             }
             catch (Exception ex)
             {
                 Log.Error(ex.Message, ex);
 
-                if (!silent)
+                if (!silentIfLatest)
                 {
                     _showPrompt.Invoke(
                         "An error occurred while trying to check for updates.",
