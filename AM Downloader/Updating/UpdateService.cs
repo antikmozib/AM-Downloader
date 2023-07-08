@@ -50,6 +50,15 @@ namespace AMDownloader.Updating
     {
         private const string ApiAddress = @"https://mozib.io/downloads/update.php";
 
+        /// <summary>
+        /// Requests the update API to send information about the latest available update to the app <paramref name="appName"/>.
+        /// </summary>
+        /// <param name="appName">The name of the app for which to get the latest update information.</param>
+        /// <param name="httpClient">The <see cref="HttpClient"/> through which to establish communication. A new one is created
+        /// if none is supplied.</param>
+        /// <returns>A <see cref="Task"/> representing an <see cref="UpdateInfo"/> which contains information about the latest 
+        /// available update to <paramref name="appName"/>.</returns>
+        /// <exception cref="Exception"></exception>
         public static async Task<UpdateInfo> GetLatestUpdateInfoAsync(string appName, HttpClient httpClient = null)
         {
             httpClient ??= new HttpClient();
@@ -74,6 +83,13 @@ namespace AMDownloader.Updating
             }
         }
 
+        /// <summary>
+        /// Compares two versions to determine if an update is available.
+        /// </summary>
+        /// <param name="latestUpdateInfo">An <see cref="UpdateInfo"/> containing information about the latest available
+        /// update.</param>
+        /// <param name="currentVer">The version which is currently installed on the system.</param>
+        /// <returns><see langword="true"/> if an update is available.</returns>
         public static bool IsUpdateAvailable(UpdateInfo latestUpdateInfo, string currentVer)
         {
             Version newVer = new(latestUpdateInfo.Versions.ToString());
