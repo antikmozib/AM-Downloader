@@ -439,14 +439,11 @@ namespace AMDownloader.Views
             {
                 if (!silentIfLatest)
                 {
-                    Dispatcher.Invoke(() =>
-                    {
-                        MessageBox.Show(
-                            "No new updates are available.",
-                            "Update",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Information);
-                    });
+                    ShowPrompt(
+                        "No new updates are available.",
+                        "Update",
+                        PromptButton.OK,
+                        PromptIcon.Information);
                 }
             }
         }
