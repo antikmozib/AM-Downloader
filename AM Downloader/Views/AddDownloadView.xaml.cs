@@ -74,6 +74,7 @@ namespace AMDownloader.Views
                     {
                         WindowTitle = "Help",
                         CenterParent = true,
+                        MainIcon = TaskDialogIcon.Information,
                         MainInstruction = (string)Application.Current.FindResource("addDownloadHelpTitle"),
                         Content = (string)Application.Current.FindResource("addDownloadHelpText")
                     };
