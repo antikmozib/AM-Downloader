@@ -1075,6 +1075,8 @@ namespace AMDownloader.ViewModels
                     });
 
                     await throttle;
+
+                    Log.Debug($"{nameof(DownloadItemsView)} refreshed.");
                 }
                 catch (OperationCanceledException)
                 {
@@ -1089,8 +1091,6 @@ namespace AMDownloader.ViewModels
                 }
 
                 _refreshingViewTcs.SetResult();
-
-                Log.Debug($"{nameof(DownloadItemsView)} refreshed.");
             }, ct);
         }
 
