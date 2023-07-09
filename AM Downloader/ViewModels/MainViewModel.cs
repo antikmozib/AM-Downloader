@@ -1415,7 +1415,7 @@ namespace AMDownloader.ViewModels
                 var currentVer = Assembly.GetExecutingAssembly().GetName().Version.ToString();
                 var latestUpdateInfo = await UpdateService.GetLatestUpdateInfoAsync(appName, _client);
 
-                if (UpdateService.IsUpdateAvailable(latestUpdateInfo, currentVer))
+                if (UpdateService.IsUpdateAvailable(latestUpdateInfo.Versions, currentVer))
                 {
                     _notifyUpdateAvailable.Invoke(true, latestUpdateInfo);
                 }

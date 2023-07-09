@@ -23,10 +23,10 @@ namespace AMDownloader.Updating
         [JsonPropertyName("released")]
         public string Released { get; set; }
 
-        [JsonPropertyName("file_url")]
+        [JsonPropertyName("fileUrl")]
         public string FileUrl { get; set; }
 
-        [JsonPropertyName("update_info_url")]
+        [JsonPropertyName("updateInfoUrl")]
         public string UpdateInfoUrl { get; set; }
     }
 
@@ -40,7 +40,7 @@ namespace AMDownloader.Updating
         public int Build { get; set; }
         [JsonPropertyName("revision")]
         public int Revision { get; set; }
-        public override string ToString()
+        public override readonly string ToString()
         {
             return $"{Major}.{Minor}.{Build}.{Revision}";
         }
@@ -51,7 +51,7 @@ namespace AMDownloader.Updating
         private const string ApiAddress = @"https://mozib.io/downloads/update.php";
 
         /// <summary>
-        /// Requests the update API to send information about the latest available update to the app <paramref name="appName"/>.
+        /// Requests the update API to send information about the latest available update for <paramref name="appName"/>.
         /// </summary>
         /// <param name="appName">The name of the app for which to get the latest update information.</param>
         /// <param name="httpClient">The <see cref="HttpClient"/> through which to establish communication. A new one is created
@@ -86,13 +86,12 @@ namespace AMDownloader.Updating
         /// <summary>
         /// Compares two versions to determine if an update is available.
         /// </summary>
-        /// <param name="latestUpdateInfo">An <see cref="UpdateInfo"/> containing information about the latest available
-        /// update.</param>
+        /// <param name="latestVer">The latest available version.</param>
         /// <param name="currentVer">The version which is currently installed on the system.</param>
         /// <returns><see langword="true"/> if an update is available.</returns>
-        public static bool IsUpdateAvailable(UpdateInfo latestUpdateInfo, string currentVer)
+        public static bool IsUpdateAvailable(VersionInfo latestVer, string currentVer)
         {
-            Version newVer = new(latestUpdateInfo.Versions.ToString());
+            Version newVer = new(latestVer.ToString());
             Version oldVer = new(currentVer);
             return newVer.CompareTo(oldVer) > 0;
         }
