@@ -400,27 +400,39 @@ namespace AMDownloader.Views
             return result;
         }
 
-        private void NotifyUpdateAvailable(UpdateInfo latestUpdateInfo)
+        private void NotifyUpdateAvailable(UpdateInfo latestUpdateInfo, bool showReminderButton)
         {
             TaskDialog taskDialog = new()
             {
                 WindowTitle = "Update",
                 CenterParent = true,
                 MainInstruction = "An update is available.",
-                Content = $"Latest version: {latestUpdateInfo.Versions}\n" +
-                        $"Current version: {Assembly.GetExecutingAssembly().GetName().Version}",
-                MainIcon = TaskDialogIcon.Information
+                Content = $"Latest version: {latestUpdateInfo.Versions}" +
+                    $"\nCurrent version: {Assembly.GetExecutingAssembly().GetName().Version}" +
+                    $"\n\n<a href=\"{latestUpdateInfo.UpdateInfoUrl}\">More information</a>",
+                MainIcon = TaskDialogIcon.Information,
+                EnableHyperlinks = true
             };
             TaskDialogButton downloadButton = new("Download")
             {
                 Default = true
             };
-            TaskDialogButton moreInfoButton = new("More Information");
+            TaskDialogButton noReminderButton = new()
+            {
+                Text = "Don't Remind Again"
+            };
             TaskDialogButton result = null;
 
+            taskDialog.HyperlinkClicked += (s, e) =>
+            {
+                Process.Start("explorer.exe", latestUpdateInfo.UpdateInfoUrl);
+            };
             taskDialog.Buttons.Add(downloadButton);
-            taskDialog.Buttons.Add(moreInfoButton);
             taskDialog.Buttons.Add(new TaskDialogButton(ButtonType.Cancel));
+            if (showReminderButton)
+            {
+                taskDialog.Buttons.Add(noReminderButton);
+            }
 
             Dispatcher.Invoke(() => result = taskDialog.ShowDialog(this));
 
@@ -428,9 +440,9 @@ namespace AMDownloader.Views
             {
                 Process.Start("explorer.exe", latestUpdateInfo.FileUrl);
             }
-            else if (result == moreInfoButton)
+            else if (result == noReminderButton)
             {
-                Process.Start("explorer.exe", latestUpdateInfo.UpdateInfoUrl);
+                Settings.Default.AutoCheckForUpdates = false;
             }
         }
 

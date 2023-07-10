@@ -40,8 +40,10 @@ namespace AMDownloader.ViewModels
     /// <summary>
     /// Invokes the handler with information about the latest available update.
     /// </summary>
-    /// <param name="latestUpdateInfo">Information provided by the update API about the latest available update.</param>    
-    public delegate void NotifyUpdateAvailableDelegate(UpdateInfo latestUpdateInfo);
+    /// <param name="latestUpdateInfo">Information provided by the update API about the latest available update.</param>
+    /// <param name="showReminderButton">If <see langword="true"/>, a button to stop reminding about updates will
+    /// be shown.</param>
+    public delegate void NotifyUpdateAvailableDelegate(UpdateInfo latestUpdateInfo, bool showReminderButton = false);
 
     public enum Category
     {
@@ -1413,7 +1415,7 @@ namespace AMDownloader.ViewModels
 
                 if (UpdateService.IsUpdateAvailable(latestUpdateInfo.Versions, currentVer))
                 {
-                    _notifyUpdateAvailable.Invoke(latestUpdateInfo);
+                    _notifyUpdateAvailable.Invoke(latestUpdateInfo, silent);
                 }
                 else
                 {
@@ -1433,7 +1435,7 @@ namespace AMDownloader.ViewModels
                 if (!silent)
                 {
                     _showPrompt.Invoke(
-                        "An error occurred while trying to check for updates.",
+                        (string)Application.Current.FindResource("erroredUpdateMsg"),
                         "Update",
                         icon: PromptIcon.Error);
                 }
