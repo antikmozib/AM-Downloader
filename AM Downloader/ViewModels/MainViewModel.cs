@@ -37,12 +37,6 @@ namespace AMDownloader.ViewModels
         PromptIcon icon = PromptIcon.None,
         bool defaultResult = true);
 
-    /// <summary>
-    /// Invokes the handler with information about the latest available update.
-    /// </summary>
-    /// <param name="latestUpdateInfo">Information provided by the update API about the latest available update.</param>
-    /// <param name="showReminderButton">If <see langword="true"/>, a button to stop reminding about updates will
-    /// be shown.</param>
     public delegate void NotifyUpdateAvailableDelegate(UpdateInfo latestUpdateInfo, bool showReminderButton = false);
 
     public enum Category
