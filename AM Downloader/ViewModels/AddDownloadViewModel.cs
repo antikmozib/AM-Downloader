@@ -237,11 +237,9 @@ namespace AMDownloader.ViewModels
 
             for (int i = 0; i < urls.Length; i++)
             {
-                var url = urls[i].Trim();
-
-                if ((url.StartsWith("http") || url.StartsWith("ftp") || url.StartsWith("www.")) && !url.Contains(' '))
+                if (Uri.TryCreate(urls[i], UriKind.Absolute, out var url))
                 {
-                    output.Add(url);
+                    output.Add(url.AbsoluteUri);
                 }
             }
 
