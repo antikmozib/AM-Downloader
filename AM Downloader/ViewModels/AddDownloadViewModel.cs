@@ -159,7 +159,7 @@ namespace AMDownloader.ViewModels
 
             if (!isDirAccessible)
             {
-                ShowPrompt?.Invoke("The selected location is inaccessible.", "Add", PromptButton.OK, PromptIcon.Error);
+                ShowPrompt?.Invoke("The selected location is inaccessible.", "Add", icon: PromptIcon.Error);
                 return;
             }
 

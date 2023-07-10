@@ -357,7 +357,7 @@ namespace AMDownloader.Views
             string caption,
             PromptButton button,
             PromptIcon icon,
-            bool defaultResult = true)
+            bool defaultResult)
         {
             bool? result = null;
 
@@ -400,51 +400,37 @@ namespace AMDownloader.Views
             return result;
         }
 
-        private void NotifyUpdateAvailable(bool updateAvailable, UpdateInfo latestUpdateInfo, bool silentIfLatest)
+        private void NotifyUpdateAvailable(UpdateInfo latestUpdateInfo)
         {
-            if (updateAvailable)
+            TaskDialog taskDialog = new()
             {
-                TaskDialog taskDialog = new()
-                {
-                    WindowTitle = "Update",
-                    CenterParent = true,
-                    MainInstruction = "An update is available.",
-                    Content = $"Latest version: {latestUpdateInfo.Versions}\n" +
+                WindowTitle = "Update",
+                CenterParent = true,
+                MainInstruction = "An update is available.",
+                Content = $"Latest version: {latestUpdateInfo.Versions}\n" +
                         $"Current version: {Assembly.GetExecutingAssembly().GetName().Version}",
-                    MainIcon = TaskDialogIcon.Information
-                };
-                TaskDialogButton downloadButton = new("Download")
-                {
-                    Default = true
-                };
-                TaskDialogButton moreInfoButton = new("More Information");
-                TaskDialogButton result = null;
-
-                taskDialog.Buttons.Add(downloadButton);
-                taskDialog.Buttons.Add(moreInfoButton);
-                taskDialog.Buttons.Add(new TaskDialogButton(ButtonType.Cancel));
-
-                Dispatcher.Invoke(() => result = taskDialog.ShowDialog(this));
-
-                if (result == downloadButton)
-                {
-                    Process.Start("explorer.exe", latestUpdateInfo.FileUrl);
-                }
-                else if (result == moreInfoButton)
-                {
-                    Process.Start("explorer.exe", latestUpdateInfo.UpdateInfoUrl);
-                }
-            }
-            else
+                MainIcon = TaskDialogIcon.Information
+            };
+            TaskDialogButton downloadButton = new("Download")
             {
-                if (!silentIfLatest)
-                {
-                    ShowPrompt(
-                        "No new updates are available.",
-                        "Update",
-                        PromptButton.OK,
-                        PromptIcon.Information);
-                }
+                Default = true
+            };
+            TaskDialogButton moreInfoButton = new("More Information");
+            TaskDialogButton result = null;
+
+            taskDialog.Buttons.Add(downloadButton);
+            taskDialog.Buttons.Add(moreInfoButton);
+            taskDialog.Buttons.Add(new TaskDialogButton(ButtonType.Cancel));
+
+            Dispatcher.Invoke(() => result = taskDialog.ShowDialog(this));
+
+            if (result == downloadButton)
+            {
+                Process.Start("explorer.exe", latestUpdateInfo.FileUrl);
+            }
+            else if (result == moreInfoButton)
+            {
+                Process.Start("explorer.exe", latestUpdateInfo.UpdateInfoUrl);
             }
         }
 

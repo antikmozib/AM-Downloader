@@ -32,7 +32,7 @@ namespace AMDownloader.ViewModels
 
     public delegate bool? ShowPromptDelegate(
         string promptText,
-        string caption,
+        string caption = "",
         PromptButton button = PromptButton.OK,
         PromptIcon icon = PromptIcon.None,
         bool defaultResult = true);
@@ -40,12 +40,8 @@ namespace AMDownloader.ViewModels
     /// <summary>
     /// Invokes the handler with information about the latest available update.
     /// </summary>
-    /// <param name="updateAvailable"><see langword="true"/> if an update is available.</param>
-    /// <param name="latestUpdateInfo">Information provided by the update API about the latest available update.</param>
-    /// <param name="silentIfLatest">if <see langword="true"/>, no notification is provided to the user if the current 
-    /// version is the latest one available.</param>
-    public delegate void NotifyUpdateAvailableDelegate(
-        bool updateAvailable, UpdateInfo latestUpdateInfo, bool silentIfLatest = false);
+    /// <param name="latestUpdateInfo">Information provided by the update API about the latest available update.</param>    
+    public delegate void NotifyUpdateAvailableDelegate(UpdateInfo latestUpdateInfo);
 
     public enum Category
     {
@@ -1407,7 +1403,7 @@ namespace AMDownloader.ViewModels
             });
         }
 
-        private async Task TriggerUpdateCheckAsync(bool silentIfLatest = false)
+        private async Task TriggerUpdateCheckAsync(bool silent = false)
         {
             try
             {
@@ -1417,24 +1413,29 @@ namespace AMDownloader.ViewModels
 
                 if (UpdateService.IsUpdateAvailable(latestUpdateInfo.Versions, currentVer))
                 {
-                    _notifyUpdateAvailable.Invoke(true, latestUpdateInfo);
+                    _notifyUpdateAvailable.Invoke(latestUpdateInfo);
                 }
                 else
                 {
-                    _notifyUpdateAvailable.Invoke(false, latestUpdateInfo, silentIfLatest);
+                    if (!silent)
+                    {
+                        _showPrompt.Invoke(
+                            (string)Application.Current.FindResource("noUpdateMsg"),
+                            "Update",
+                            icon: PromptIcon.Information);
+                    }
                 }
             }
             catch (Exception ex)
             {
                 Log.Error(ex.Message, ex);
 
-                if (!silentIfLatest)
+                if (!silent)
                 {
                     _showPrompt.Invoke(
                         "An error occurred while trying to check for updates.",
                         "Update",
-                        PromptButton.OK,
-                        PromptIcon.Error);
+                        icon: PromptIcon.Error);
                 }
             }
         }

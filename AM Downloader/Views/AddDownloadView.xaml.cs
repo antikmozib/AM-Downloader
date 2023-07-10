@@ -299,7 +299,7 @@ namespace AMDownloader.Views
             string caption,
             PromptButton button,
             PromptIcon icon,
-            bool defaultResult = true)
+            bool defaultResult)
         {
             bool? result = null;
 

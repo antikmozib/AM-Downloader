@@ -20,8 +20,8 @@ namespace AMDownloader.Models
         public static bool? Show(
             string promptText,
             string caption,
-            PromptButton button,
-            PromptIcon icon,
+            PromptButton button = PromptButton.OK,
+            PromptIcon icon = PromptIcon.None,
             bool defaultResult = true)
         {
             var messageBoxButton = button switch
