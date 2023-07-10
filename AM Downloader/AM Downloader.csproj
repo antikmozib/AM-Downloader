@@ -19,7 +19,7 @@
         <DelaySign>true</DelaySign>
         <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
         <ApplicationManifest>app.manifest</ApplicationManifest>
-        <PackageProjectUrl>https://mozib.io/amdownloader/</PackageProjectUrl>
+        <PackageProjectUrl>https://mozib.io/amdownloader</PackageProjectUrl>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
