@@ -358,15 +358,12 @@
                                 <ColumnDefinition Width="auto" />
                                 <ColumnDefinition Width="auto" />
                                 <ColumnDefinition Width="auto" />
-                                <ColumnDefinition Width="auto" />
-                                <ColumnDefinition Width="auto" />
-                                <ColumnDefinition Width="auto" />
-                                <ColumnDefinition Width="auto" />
                             </Grid.ColumnDefinitions>
                         </Grid>
                     </ItemsPanelTemplate>
                 </StatusBar.ItemsPanel>
 
+                <!--#region Status -->
                 <StatusBarItem>
                     <Grid>
                         <Grid.Resources>
@@ -479,8 +476,47 @@
                                    VerticalAlignment="Center" />
                     </Grid>
                 </StatusBarItem>
+                <!--#endregion-->
 
-                <StatusBarItem Grid.Column="1"
+                <!--#region Speed Indicator -->
+                <StatusBarItem Margin="16 0 0 0"
+                               Grid.Column="1"
+                               Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=SpeedTextBlock}"
+                               HorizontalAlignment="Right">
+                    <TextBlock>
+                        <TextBlock Margin="0 0 4 0"
+                                   Text="&#xF3FD;"
+                                   FontFamily="{StaticResource FontAwesomeSolid}" />
+                        
+                        <TextBlock TextAlignment="Right"
+                                   x:Name="SpeedTextBlock"
+                                   Text="{Binding Speed, Converter={StaticResource DownloaderSpeedConverter}}"
+                                   d:Text="Speed"
+                                   ToolTip="Download speed" />
+                    </TextBlock>
+                </StatusBarItem>
+                <!--#endregion-->
+
+                <!--#region Bytes Transferred Indicator -->
+                <StatusBarItem Margin="16 0 0 0"
+                               Grid.Column="2"
+                               Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=BytesDownloadedTextBlock}">
+                    <TextBlock>
+                        <TextBlock Margin="0 0 4 0"
+                                   Text="&#xF019;"
+                                   FontFamily="{StaticResource FontAwesomeSolid}" />
+                        
+                        <TextBlock x:Name="BytesDownloadedTextBlock"
+                                   Text="{Binding BytesDownloadedThisSession, Converter={StaticResource DownloaderSizeConverter}}"
+                                   d:Text="Downloaded"
+                                   ToolTip="Downloaded this session" />
+                    </TextBlock>
+                </StatusBarItem>
+                <!--#endregion-->
+
+                <!--#region ProgressBar -->
+                <StatusBarItem Grid.Column="3"
+                               Margin="16 0 0 0"
                                Visibility="{Binding Progress, Converter={StaticResource ProgressBarVisibilityConverter}}">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -500,38 +536,8 @@
                                      Width="100" />
                     </Grid>
                 </StatusBarItem>
+                <!--#endregion-->
 
-                <StatusBarItem Margin="16 0 0 0"
-                               Grid.Column="6"
-                               Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=SpeedTextBlock}"
-                               HorizontalAlignment="Right">
-                    <TextBlock>
-                        <TextBlock Margin="0 0 4 0"
-                                   Text="&#xF3FD;"
-                                   FontFamily="{StaticResource FontAwesomeSolid}" />
-                        
-                        <TextBlock TextAlignment="Right"
-                                   x:Name="SpeedTextBlock"
-                                   Text="{Binding Speed, Converter={StaticResource DownloaderSpeedConverter}}"
-                                   d:Text="Speed"
-                                   ToolTip="Current data transfer rate" />
-                    </TextBlock>
-                </StatusBarItem>
-
-                <StatusBarItem Margin="16 0 0 0"
-                               Grid.Column="7"
-                               Visibility="{Binding Text, Converter={StaticResource StatusBarItemVisibilityConverter}, ElementName=BytesDownloadedTextBlock}">
-                    <TextBlock>
-                        <TextBlock Margin="0 0 4 0"
-                                   Text="&#xF019;"
-                                   FontFamily="{StaticResource FontAwesomeSolid}" />
-                        
-                        <TextBlock x:Name="BytesDownloadedTextBlock"
-                                   Text="{Binding BytesDownloadedThisSession, Converter={StaticResource DownloaderSizeConverter}}"
-                                   d:Text="Downloaded"
-                                   ToolTip="Data transferred this session" />
-                    </TextBlock>
-                </StatusBarItem>
             </StatusBar>
         </DockPanel>
         <!--#endregion-->
