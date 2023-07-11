@@ -66,7 +66,7 @@ namespace AMDownloader.Updating
 
             try
             {
-                using var response = await httpClient.GetAsync(ApiAddress + "?appname=" + appName);
+                using var response = await httpClient.GetAsync(ApiAddress + "?app=" + appName);
 
                 if (response.IsSuccessStatusCode)
                 {
