@@ -15,8 +15,7 @@ namespace AMDownloader.QueueProcessing
         #region Fields
 
         private readonly List<IQueueable> _queueList;
-        private readonly List<IQueueable> _processedItems;
-        private readonly object _processedItemsLock;
+        private readonly object _queueListLock;
         private readonly SemaphoreSlim _semaphore;
         private TaskCompletionSource _tcs;
         private CancellationTokenSource _cts;
@@ -52,8 +51,7 @@ namespace AMDownloader.QueueProcessing
             EventHandler itemDequeuedEventHandler)
         {
             _queueList = new();
-            _processedItems = new();
-            _processedItemsLock = _processedItems;
+            _queueListLock = _queueList;
             _semaphore = new SemaphoreSlim(maxParallelDownloads);
 
             IsBusy = false;
@@ -147,8 +145,13 @@ namespace AMDownloader.QueueProcessing
                 await Task.Run(async () =>
                 {
                     List<Task> tasks = new();
+                    // _queueList must be copied before enumerating and setting up the tasks;
+                    // otherwise, if adding too many items, some items may be processed and
+                    // removed from _queueList while we're still enumerating over _queueList,
+                    // raising an exception
+                    List<IQueueable> cached = _queueList.ToList();
 
-                    foreach (var item in _queueList)
+                    foreach (var item in cached)
                     {
                         if (item.IsCompleted)
                         {
@@ -177,9 +180,9 @@ namespace AMDownloader.QueueProcessing
                                 {
                                     // item processed
 
-                                    Monitor.Enter(_processedItemsLock);
-                                    _processedItems.Add(item);
-                                    Monitor.Exit(_processedItemsLock);
+                                    Monitor.Enter(_queueListLock);
+                                    _queueList.Remove(item);
+                                    Monitor.Exit(_queueListLock);
                                 }
                             }
                             finally
@@ -205,13 +208,6 @@ namespace AMDownloader.QueueProcessing
             {
                 Log.Error(ex, ex.Message);
             }
-
-            // remove processed items from the queue list
-            foreach (var item in _processedItems)
-            {
-                _queueList.Remove(item);
-            }
-            _processedItems.Clear();
 
             // must be set before auto restarting the queue;
             // also, must be set before setting _tcs due to a race
