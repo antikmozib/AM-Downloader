@@ -11,11 +11,11 @@ using System.Windows.Media.Imaging;
 
 namespace AMDownloader.Helpers
 {
-    public static class IconExtractor
+    public static class IconUtils
     {
         private static readonly Dictionary<string, ImageSource> _iconRepo = new();
 
-        public static ImageSource Extract(string path, bool isDirectory)
+        public static ImageSource ExtractFromFile(string path, bool isDirectory)
         {
             ImageSource imageSource;
             Icon icon;
