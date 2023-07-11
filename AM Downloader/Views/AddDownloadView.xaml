@@ -13,7 +13,6 @@
         ResizeMode="CanResizeWithGrip"
         Height="{Binding Source={x:Static properties:Settings.Default}, Path=AddWindowHeight, Mode=TwoWay}"
         Width="{Binding Source={x:Static properties:Settings.Default}, Path=AddWindowWidth, Mode=TwoWay}"
-        WindowStyle="ThreeDBorderWindow"
         Loaded="Window_Loaded"
         x:Name="AddDownloadViewWindow"
         Closing="Window_Closing">

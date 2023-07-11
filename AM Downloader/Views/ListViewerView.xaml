@@ -8,7 +8,6 @@
         Height="320"
         Width="640"
         ShowInTaskbar="False"
-        WindowStyle="ThreeDBorderWindow"
         WindowStartupLocation="CenterOwner"
         Title="{Binding Title}"
         d:Title="List Viewer"

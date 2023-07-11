@@ -10,8 +10,7 @@
         ShowInTaskbar="False"
         SizeToContent="WidthAndHeight"
         ResizeMode="NoResize"
-        SourceInitialized="Window_SourceInitialized"
-        WindowStyle="ThreeDBorderWindow">
+        SourceInitialized="Window_SourceInitialized">
     <Window.Resources>
         <converters:SettingsSpeedConverter x:Key="SettingsSpeedConverter" />
         <converters:SettingsConnectionTimeoutConverter x:Key="SettingsConnectionTimeoutConverter" />
