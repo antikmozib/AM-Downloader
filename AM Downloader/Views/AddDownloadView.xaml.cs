@@ -35,31 +35,15 @@ namespace AMDownloader.Views
         {
             base.OnSourceInitialized(e);
 
-            IntPtr hwnd = new WindowInteropHelper(this).Handle;
-            uint styles = Helpers.Native.User32.GetWindowLong(hwnd, Helpers.Native.User32.GWL_STYLE);
+            WindowUtils.RemoveIcon(this);
+            WindowUtils.RemoveMaxMinBox(this);
 
-            styles &= 0xFFFFFFFF ^ (Helpers.Native.User32.WS_MINIMIZEBOX | Helpers.Native.User32.WS_MAXIMIZEBOX);
-            Helpers.Native.User32.SetWindowLong(hwnd, Helpers.Native.User32.GWL_STYLE, styles);
+            // Show the help box
 
-            styles = Helpers.Native.User32.GetWindowLong(hwnd, Helpers.Native.User32.GWL_EXSTYLE);
-            styles |= Helpers.Native.User32.WS_EX_CONTEXTHELP;
-            Helpers.Native.User32.SetWindowLong(hwnd, Helpers.Native.User32.GWL_EXSTYLE, styles);
+            var hwnd = WindowUtils.GetWindowHandle(this);
+            var extendedStyle = Helpers.Native.User32.GetWindowLong(hwnd, Helpers.Native.User32.GWL_EXSTYLE);
 
-            styles = Helpers.Native.User32.GetWindowLong(hwnd, Helpers.Native.User32.GWL_EXSTYLE);
-            styles |= Helpers.Native.User32.WS_EX_DLGMODALFRAME;
-            Helpers.Native.User32.SetWindowLong(hwnd, Helpers.Native.User32.GWL_EXSTYLE, styles);
-
-            Helpers.Native.User32.SetWindowPos(
-                hwnd: hwnd,
-                hwndInsertAfter: IntPtr.Zero,
-                x: 0,
-                y: 0,
-                width: 0,
-                height: 0,
-                flags: Helpers.Native.User32.SWP_NOMOVE
-                    | Helpers.Native.User32.SWP_NOSIZE
-                    | Helpers.Native.User32.SWP_NOZORDER
-                    | Helpers.Native.User32.SWP_FRAMECHANGED);
+            Helpers.Native.User32.SetWindowLong(hwnd, Helpers.Native.User32.GWL_EXSTYLE, extendedStyle | Helpers.Native.User32.WS_EX_CONTEXTHELP);
 
             ((HwndSource)PresentationSource.FromVisual(this)).AddHook((IntPtr hwnd,
                 int msg,
@@ -86,9 +70,6 @@ namespace AMDownloader.Views
 
                 return IntPtr.Zero;
             });
-
-            Helpers.Native.User32.SendMessage(hwnd, Helpers.Native.User32.WM_SETICON, new IntPtr(1), IntPtr.Zero);
-            Helpers.Native.User32.SendMessage(hwnd, Helpers.Native.User32.WM_SETICON, IntPtr.Zero, IntPtr.Zero);
         }
 
         public AddDownloadView()
@@ -104,14 +85,14 @@ namespace AMDownloader.Views
             context.ShowFolderBrowser = ShowFolderBrowser;
             context.Closed += Context_Closed;
 
-            // add any urls from the clipboard
+            // Add any urls from the clipboard
             if (!IsClipboardMonitorRunning)
             {
                 var clipUrls = AddDownloadViewModel.GenerateValidUrl(ClipboardObserver.GetText());
                 UrlTextBox.Text = !string.IsNullOrWhiteSpace(clipUrls) ? clipUrls + Environment.NewLine : string.Empty;
             }
 
-            // move cursor to the end of UrlTextBox
+            // Move cursor to the end of UrlTextBox
             if (UrlTextBox.Text.Length > 0)
             {
                 UrlTextBox.Select(UrlTextBox.Text.Length - 1, 0);
@@ -322,7 +303,7 @@ namespace AMDownloader.Views
                 openWithFolder = Common.Paths.UserDownloadsFolder;
             }
 
-            // ensure there's a trailing slash so that FolderBrowserDialog opens inside SelectedPath
+            // Ensure there's a trailing slash so that FolderBrowserDialog opens inside SelectedPath
             if (openWithFolder.LastIndexOf(Path.DirectorySeparatorChar) != openWithFolder.Length - 1)
             {
                 openWithFolder += Path.DirectorySeparatorChar;

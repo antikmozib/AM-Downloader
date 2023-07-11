@@ -17,7 +17,8 @@
         Loaded="Window_Loaded"
         Initialized="Window_Initialized"
         Closing="Window_Closing"
-        Icon="pack://application:,,,/Resources/Icons/AMDownloader.ico">
+        Icon="pack://application:,,,/Resources/Icons/AMDownloader.ico"
+        WindowStyle="ThreeDBorderWindow">
     <Window.Resources>
         <converters:ProgressBarVisibilityConverter x:Key="ProgressBarVisibilityConverter" />
         <converters:DownloaderSizeConverter x:Key="DownloaderSizeConverter" />

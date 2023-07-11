@@ -1,5 +1,6 @@
 ﻿// Copyright (C) 2020-2023 Antik Mozib. All rights reserved.
 
+using AMDownloader.Helpers;
 using System.Windows;
 
 namespace AMDownloader.Views
@@ -22,6 +23,12 @@ namespace AMDownloader.Views
         private void SelectAllMenuItem(object sender, RoutedEventArgs e)
         {
             ItemsListBox.SelectAll();
+        }
+
+        private void Window_SourceInitialized(object sender, System.EventArgs e)
+        {
+            WindowUtils.RemoveIcon(this);
+            WindowUtils.RemoveMaxMinBox(this);
         }
     }
 }

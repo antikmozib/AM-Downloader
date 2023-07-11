@@ -8,11 +8,12 @@
         Height="320"
         Width="640"
         ShowInTaskbar="False"
-        WindowStyle="ToolWindow"
+        WindowStyle="ThreeDBorderWindow"
         WindowStartupLocation="CenterOwner"
         Title="{Binding Title}"
         d:Title="List Viewer"
-        ResizeMode="CanResizeWithGrip">
+        ResizeMode="CanResizeWithGrip"
+        SourceInitialized="Window_SourceInitialized">
     <Window.Resources>
         <converters:ListViewerItemCountConverter x:Key="ListViewerItemCountConverter" />
     </Window.Resources>
