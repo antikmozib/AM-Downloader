@@ -57,7 +57,7 @@ namespace AMDownloader.Updating
         /// <param name="httpClient">The <see cref="HttpClient"/> through which to establish communication. A new one is created
         /// if none is supplied.</param>
         /// <returns>A <see cref="Task"/> representing an <see cref="UpdateInfo"/> which contains information about the latest 
-        /// available update to <paramref name="appName"/>.</returns>
+        /// update available for <paramref name="appName"/>.</returns>
         /// <exception cref="Exception"></exception>
         public static async Task<UpdateInfo> GetLatestUpdateInfoAsync(string appName, HttpClient httpClient = null)
         {
