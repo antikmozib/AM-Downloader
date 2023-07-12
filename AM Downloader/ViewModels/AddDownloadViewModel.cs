@@ -32,7 +32,7 @@ namespace AMDownloader.ViewModels
         /// <summary>
         /// Returns the list of URLs exploded from the supplied patterned URLs.
         /// </summary>
-        public List<string> ExplodedUrls => ExplodeUrlsFromPatterns(Urls.Split(Environment.NewLine).ToArray());
+        public List<string> ExplodedUrls => ExplodePatterns(Urls.Split(Environment.NewLine).ToArray());
         /// <summary>
         /// Contains the list of locations where files have been previously downloaded and saved to.
         /// </summary>
@@ -173,24 +173,24 @@ namespace AMDownloader.ViewModels
         }
 
         /// <summary>
-        /// Explodes and builds a list of URLs from a list of patterned URLs.
+        /// Explodes and builds a list of strings from a list of patterned strings.
         /// </summary>
-        /// <param name="urls">A list of patterned URLs.</param>
-        /// <returns>The list of URLs exploded from the supplied patterned URLs.</returns>
-        private static List<string> ExplodeUrlsFromPatterns(params string[] urls)
+        /// <param name="patterns">A list of patterned strings.</param>
+        /// <returns>The list of strings exploded from the supplied patterned strings.</returns>
+        private static List<string> ExplodePatterns(params string[] patterns)
         {
-            var filteredUrls = urls.Select(o => o.Trim()).Where(o => o.Length > 0); // trim and discard empty
-            var explodedUrls = new List<string>();
+            var filteredStrings = patterns.Select(o => o.Trim()).Where(o => o.Length > 0); // trim and discard empty
+            var explodedStrings = new List<string>();
             var pattern = @"(\[\d+:\d+\])";
             var regex = new Regex(pattern);
 
-            foreach (var url in filteredUrls)
+            foreach (var value in filteredStrings)
             {
-                if (regex.Match(url).Success)
+                if (regex.Match(value).Success)
                 {
-                    // url has patterns
+                    // string has patterns
 
-                    string bounds = regex.Match(url).Value;
+                    string bounds = regex.Match(value).Value;
 
                     // patterns can be [1:20] or [01:20] - account for this difference
                     int minLength = bounds.Substring(1, bounds.IndexOf(':') - 1).Length;
@@ -210,26 +210,25 @@ namespace AMDownloader.ViewModels
                         }
 
                         replacedData += i.ToString();
-                        explodedUrls.Add(regex.Replace(url, replacedData));
+                        explodedStrings.Add(regex.Replace(value, replacedData));
                     }
                 }
                 else
                 {
-                    // normal url
-                    explodedUrls.Add(url);
+                    // normal string
+                    explodedStrings.Add(value);
                 }
             }
 
-            return explodedUrls;
+            return explodedStrings;
         }
 
         /// <summary>
-        /// Extracts any valid URLs from the supplied <paramref name="value"/>,
-        /// and then trims and returns them as a string separated by newlines.
+        /// Extracts all valid URLs out of <paramref name="value"/>.
         /// </summary>
-        /// <param name="value">A list of strings (separated by newlines) in which
-        /// to scan for valid URLs.</param>
-        /// <returns>A list of validated and trimmed URLs (separated by newlines).</returns>
+        /// <param name="value">A list of strings, separated by newlines, to 
+        /// check for the existence of valid URLs.</param>
+        /// <returns>A list of validated URLs separated by newlines.</returns>
         public static string GenerateValidUrl(string value)
         {
             var urls = value.Split(Environment.NewLine);
