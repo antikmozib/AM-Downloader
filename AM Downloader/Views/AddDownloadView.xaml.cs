@@ -14,7 +14,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
-using WinForms = System.Windows.Forms;
 
 namespace AMDownloader.Views
 {
@@ -178,11 +177,11 @@ namespace AMDownloader.Views
                 catch
                 {
 
+                    Log.Debug("Stopped polling clipboard.");
                 }
 
+                _monitorClipboardTcs.SetResult();
                 _monitorClipboardCts.Dispose();
-
-                Log.Debug("Stopped polling clipboard.");
             });
         }
 
@@ -198,66 +197,57 @@ namespace AMDownloader.Views
 
         private async Task MonitorClipboardAsync(CancellationToken ct)
         {
-            try
+            while (!ct.IsCancellationRequested)
             {
-                while (!ct.IsCancellationRequested)
+                Log.Debug("Polling clipboard...");
+
+                var textBlockUrls = string.Empty;
+                var newUrls = string.Empty;
+                var delay = Task.Delay(2000, ct);
+
+                Application.Current.Dispatcher.Invoke(() =>
                 {
-                    Log.Debug("Polling clipboard...");
+                    textBlockUrls = UrlTextBox.Text;
+                });
 
-                    var textBlockUrls = string.Empty;
-                    var newUrls = string.Empty;
-                    var delay = Task.Delay(2000, ct);
-
-                    Application.Current.Dispatcher.Invoke(() =>
-                    {
-                        textBlockUrls = UrlTextBox.Text;
-                    });
-
-                    if (string.IsNullOrWhiteSpace(textBlockUrls))
-                    {
-                        // UrlTextBox is empty
-                        newUrls = string.Join(Environment.NewLine, AddDownloadViewModel
-                            .GenerateValidUrl(ClipboardObserver.GetText()));
-                    }
-                    else
-                    {
-                        // UrlTextBox isn't empty
-
-                        var existingUrls = textBlockUrls
-                            .Split(Environment.NewLine)
-                            .Select(o => o.ToLower());
-                        var incomingUrls = AddDownloadViewModel
-                            .GenerateValidUrl(ClipboardObserver.GetText())
-                            .Split(Environment.NewLine);
-
-                        foreach (var url in incomingUrls)
-                        {
-                            if (existingUrls.Contains(url.ToLower()))
-                            {
-                                continue;
-                            }
-
-                            newUrls += Environment.NewLine + url;
-                        }
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(newUrls))
-                    {
-                        Dispatcher.Invoke(() =>
-                        {
-                            UrlTextBox.Text = textBlockUrls.TrimEnd() + newUrls + Environment.NewLine;
-                        });
-                    }
-
-                    await delay;
+                if (string.IsNullOrWhiteSpace(textBlockUrls))
+                {
+                    // UrlTextBox is empty
+                    newUrls = string.Join(Environment.NewLine, AddDownloadViewModel
+                        .GenerateValidUrl(ClipboardObserver.GetText()));
                 }
-            }
-            catch (OperationCanceledException)
-            {
+                else
+                {
+                    // UrlTextBox isn't empty
 
-            }
+                    var existingUrls = textBlockUrls
+                        .Split(Environment.NewLine)
+                        .Select(o => o.ToLower());
+                    var incomingUrls = AddDownloadViewModel
+                        .GenerateValidUrl(ClipboardObserver.GetText())
+                        .Split(Environment.NewLine);
 
-            _monitorClipboardTcs.SetResult();
+                    foreach (var url in incomingUrls)
+                    {
+                        if (existingUrls.Contains(url.ToLower()))
+                        {
+                            continue;
+                        }
+
+                        newUrls += Environment.NewLine + url;
+                    }
+                }
+
+                if (!string.IsNullOrWhiteSpace(newUrls))
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        UrlTextBox.Text = textBlockUrls.TrimEnd() + newUrls + Environment.NewLine;
+                    });
+                }
+
+                await delay;
+            }
         }
 
         public bool? ShowList(object viewModel)
@@ -291,7 +281,7 @@ namespace AMDownloader.Views
 
         private (bool, string) ShowFolderBrowser()
         {
-            WinForms.FolderBrowserDialog folderBrowser = new();
+            VistaFolderBrowserDialog folderBrowser = new();
             string openWithFolder;
 
             if (Directory.Exists(DestinationComboBox.Text))
@@ -311,7 +301,7 @@ namespace AMDownloader.Views
 
             folderBrowser.SelectedPath = openWithFolder;
 
-            if (folderBrowser.ShowDialog() == WinForms.DialogResult.OK)
+            if (folderBrowser.ShowDialog(this) == true)
             {
                 return (true, folderBrowser.SelectedPath);
             }
