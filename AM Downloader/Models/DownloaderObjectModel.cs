@@ -381,7 +381,7 @@ namespace AMDownloader.Models
 
         public bool TempFilesExist()
         {
-            return GetTempFiles().Length > 0;
+            return GetTempFiles().Count > 0;
         }
 
         #endregion
@@ -720,21 +720,21 @@ namespace AMDownloader.Models
             }
         }
 
-        private FileInfo[] GetTempFiles()
+        private List<FileInfo> GetTempFiles()
         {
-            FileInfo[] f = Array.Empty<FileInfo>();
+            List<FileInfo> files = new();
 
-            try
+            for (int i = 0; i < ConnLimit; i++)
             {
-                DirectoryInfo d = new(Path.GetDirectoryName(Destination));
-                f = d.GetFiles($"{Name}.*{Common.Constants.TempDownloadExtension}");
-            }
-            catch
-            {
+                var tempFile = $"{Destination}.{i}{Common.Constants.TempDownloadExtension}";
 
+                if (File.Exists(tempFile))
+                {
+                    files.Add(new FileInfo(tempFile));
+                }
             }
 
-            return f;
+            return files;
         }
 
         /// <summary>
