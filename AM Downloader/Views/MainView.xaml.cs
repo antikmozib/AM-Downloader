@@ -7,6 +7,7 @@ using AMDownloader.Properties;
 using AMDownloader.Updating;
 using AMDownloader.ViewModels;
 using Ookii.Dialogs.Wpf;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -118,9 +119,9 @@ namespace AMDownloader.Views
                         }
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
-
+                    Log.Error(ex.Message, ex);
                 }
             }
         }
@@ -158,9 +159,9 @@ namespace AMDownloader.Views
                 Directory.CreateDirectory(Common.Paths.LocalAppDataFolder);
                 Common.Functions.Serialize(columnOrderList, Common.Paths.UIColumnOrderFile);
             }
-            catch
+            catch (Exception ex)
             {
-
+                Log.Error(ex.Message, ex);
             }
         }
 
@@ -206,7 +207,7 @@ namespace AMDownloader.Views
             };
             aboutDialog.HyperlinkClicked += (s, e) =>
             {
-                Process.Start("explorer.exe", website);
+                Process.Start("explorer.exe", e.Href);
             };
             aboutDialog.Buttons.Add(new TaskDialogButton(ButtonType.Ok));
             aboutDialog.ShowDialog(this);
@@ -458,8 +459,8 @@ namespace AMDownloader.Views
             for (int i = 0; i < childrenCount; i++)
             {
                 DependencyObject child = VisualTreeHelper.GetChild(parent, i);
-                if (child is T)
-                    yield return (T)child;
+                if (child is T t)
+                    yield return t;
 
                 foreach (var descendant in GetVisualChildren<T>(child))
                     yield return descendant;
