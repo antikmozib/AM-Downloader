@@ -17,4 +17,5 @@ will download the following ten files:
         file10.png</system:String>
     <system:String x:Key="noUpdateMsg">No new updates are available.</system:String>
     <system:String x:Key="erroredUpdateMsg">An error occurred while trying to check for updates.</system:String>
+    <system:String x:Key="addDownloadUrlLabel">Enter the URL(s). You can enter multiple entries on separate lines, and use patterns.</system:String>
 </ResourceDictionary>
