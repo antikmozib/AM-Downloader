@@ -1055,7 +1055,7 @@ namespace AMDownloader.ViewModels
             Task.Run(async () =>
             {
                 var semTask = _refreshingViewSemaphore.WaitAsync(ct);
-                var throttle = Task.Delay(1000);
+                var throttle = Task.Delay(2000);
                 try
                 {
                     await semTask;
