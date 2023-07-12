@@ -317,8 +317,9 @@ namespace AMDownloader.ViewModels
                         Log.Error(ex.Message, ex);
                     }
 
-                    _updatingListCts.Dispose();
                     _updatingListTcs.SetResult();
+                    _updatingListCts.Dispose();
+
                     Status = "Refreshing...";
                     RaisePropertyChanged(nameof(IsBackgroundWorking));
                     RaisePropertyChanged(nameof(Status));
@@ -444,7 +445,7 @@ namespace AMDownloader.ViewModels
 
                 var ct = _updatingListCts.Token;
 
-                Task.Run(async () =>
+                Task.Run(() =>
                 {
                     itemsCreated = CreateObjects(
                         addDownloadViewModel.ExplodedUrls,
@@ -461,8 +462,11 @@ namespace AMDownloader.ViewModels
                         QueueProcessor.Enqueue(itemsCreated);
                     }
 
+                }).ContinueWith(async (t) =>
+                {
                     _updatingListTcs.SetResult();
                     _updatingListCts.Dispose();
+
                     Status = "Refreshing...";
                     RaisePropertyChanged(nameof(IsBackgroundWorking));
                     RaisePropertyChanged(nameof(Status));
@@ -523,7 +527,9 @@ namespace AMDownloader.ViewModels
                 {
                     Log.Error(ex, ex.Message);
                 }
-
+            }).ContinueWith(async (t) =>
+            {
+                _updatingListTcs.SetResult();
                 _updatingListCts.Dispose();
 
                 Status = "Refreshing...";
@@ -775,8 +781,17 @@ namespace AMDownloader.ViewModels
 
             Task.Run(async () =>
             {
-                await RemoveObjectsAsync(items, false, ct);
-
+                try
+                {
+                    await RemoveObjectsAsync(items, false, ct);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex.Message, ex);
+                }
+            }).ContinueWith(t =>
+            {
+                _updatingListTcs.SetResult();
                 _updatingListCts.Dispose();
 
                 RefreshCollectionView();
@@ -1306,7 +1321,6 @@ namespace AMDownloader.ViewModels
 
             QueueProcessor.Dequeue(itemsToDequeue.ToArray());
 
-            _updatingListTcs.SetResult();
             Progress = 0;
             RaisePropertyChanged(nameof(IsBackgroundWorking));
             RaisePropertyChanged(nameof(Progress));
