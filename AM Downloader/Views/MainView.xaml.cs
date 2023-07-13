@@ -44,7 +44,7 @@ namespace AMDownloader.Views
 
         private void Window_Initialized(object sender, EventArgs e)
         {
-            // if running for the 1st time, center window
+            // If running for the 1st time, center window
 
             if (Settings.Default.FirstRun)
             {
@@ -58,11 +58,11 @@ namespace AMDownloader.Views
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            // restore column sort direction
+            // Restore column sort direction
 
             if (Settings.Default.SelectedColumnHeader != null)
             {
-                // get the column to sort
+                // Get the column to sort
                 GridViewColumn gridViewColumn =
                     ((GridView)DownloadsListView.View).Columns.FirstOrDefault(
                         x => (string)x.Header == Settings.Default.SelectedColumnHeader);
@@ -72,7 +72,7 @@ namespace AMDownloader.Views
                     List<GridViewColumnHeader> headers = GetVisualChildren<GridViewColumnHeader>(DownloadsListView).ToList();
                     GridViewColumnHeader gridViewColumnHeader = null;
 
-                    // get the header of the column to sort
+                    // Get the header of the column to sort
                     foreach (GridViewColumnHeader header in headers)
                     {
                         if (header.Column == null || header.Column.Header == null) continue;
@@ -88,7 +88,7 @@ namespace AMDownloader.Views
                 }
             }
 
-            // restore column order and widths
+            // Restore column order and widths
 
             if (File.Exists(Common.Paths.UIColumnOrderFile))
             {
@@ -139,7 +139,7 @@ namespace AMDownloader.Views
                 }
             }
 
-            // save column order and widths
+            // Save column order and widths
 
             var columnOrderList = new SerializingUIColumnList();
 
@@ -228,7 +228,7 @@ namespace AMDownloader.Views
 
         private void DownloadsListView_HeaderClick(object sender, RoutedEventArgs e)
         {
-            // default sorting direction for a previously unsorted column
+            // Default sorting direction for a previously unsorted column
             ListSortDirection? direction = ListSortDirection.Descending;
 
             var headerClicked = e.OriginalSource as GridViewColumnHeader;
@@ -238,7 +238,7 @@ namespace AMDownloader.Views
                 return;
             }
 
-            // change the sorting direction if the column is already sorted
+            // Change the sorting direction if the column is already sorted
             if (headerClicked == _lastHeaderClicked)
             {
                 if (_lastDirection == ListSortDirection.Descending)
@@ -268,7 +268,7 @@ namespace AMDownloader.Views
             var columnBinding = columnHeader.Column.DisplayMemberBinding as Binding;
             var columnToSort = columnBinding?.Path.Path ?? columnHeader.Column.Header as string;
 
-            // link the column header string value to the prop of the binded obj;
+            // Link the column header string value to the prop of the binded obj;
             // this is only needed for those columns whose header names are
             // different from the prop names
             switch (columnToSort.ToLower())
@@ -321,18 +321,18 @@ namespace AMDownloader.Views
             }
             else
             {
-                // if we're unsorting, store SelectedColumnHeader as null so that sorting isn't
+                // If we're unsorting, store SelectedColumnHeader as null so that sorting isn't
                 // applied incorrectly when the app is relaunched
                 Settings.Default.SelectedColumnHeader = null;
             }
 
-            // remove the arrow from the last sorted column
+            // Remove the arrow from the last sorted column
             if (_lastHeaderClicked != null)
             {
                 _lastHeaderClicked.Column.HeaderTemplate = Resources["HeaderTemplate"] as DataTemplate;
             }
 
-            // apply the arrow to the newly sorted column
+            // Apply the arrow to the newly sorted column
             if (direction == ListSortDirection.Descending)
             {
                 columnHeader.Column.HeaderTemplate = Resources["HeaderTemplateArrowDown"] as DataTemplate;
