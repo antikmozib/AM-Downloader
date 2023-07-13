@@ -60,6 +60,7 @@ namespace AMDownloader.ViewModels
         private TaskCompletionSource _refreshingViewTcs;
         private TaskCompletionSource _reportingSpeedTcs;
         private TaskCompletionSource _closingTcs;
+        private TaskCompletionSource _triggerUpdateCheckTcs;
         private readonly object _refreshViewCtsListLock;
         private readonly object _downloadItemsCollectionLock;
         private readonly object _bytesDownloadedLock;
@@ -84,10 +85,12 @@ namespace AMDownloader.ViewModels
         public int FinishedCount { get; private set; }
         public int ErroredCount { get; private set; }
         public int PausedCount { get; private set; }
+        public string Status { get; private set; }
+        public bool IsDownloading => DownloadingCount > 0;
         public bool IsBackgroundWorking => _updatingListTcs != null
             && _updatingListTcs.Task.Status != TaskStatus.RanToCompletion;
-        public bool IsDownloading => DownloadingCount > 0;
-        public string Status { get; private set; }
+        public bool IsCheckingForUpdates => _triggerUpdateCheckTcs != null
+            && _triggerUpdateCheckTcs.Task.Status != TaskStatus.RanToCompletion;
 
         #endregion
 
@@ -217,7 +220,8 @@ namespace AMDownloader.ViewModels
                 ClearFinishedDownloads, ClearFinishedDownloads_CanExecute);
             CancelBackgroundTaskCommand = new RelayCommand<object>(
                 CancelBackgroundTask, CancelBackgroundTask_CanExecute);
-            CheckForUpdatesCommand = new RelayCommand<object>(CheckForUpdates);
+            CheckForUpdatesCommand = new RelayCommand<object>(
+                CheckForUpdates, CheckForUpdates_CanExecute);
             UIClosedCommand = new RelayCommand<object>(UIClosed);
 
             foreach (Category cat in (Category[])Enum.GetValues(typeof(Category)))
@@ -252,7 +256,7 @@ namespace AMDownloader.ViewModels
 
                 var ct = _updatingListCts.Token;
 
-                Task.Run(async () =>
+                Task.Run(() =>
                 {
                     try
                     {
@@ -316,7 +320,8 @@ namespace AMDownloader.ViewModels
                     {
                         Log.Error(ex.Message, ex);
                     }
-
+                }).ContinueWith(async (t) =>
+                {
                     _updatingListTcs.SetResult();
                     _updatingListCts.Dispose();
 
@@ -557,14 +562,12 @@ namespace AMDownloader.ViewModels
 
             if (items.Length > 1)
             {
-                var result = _showPrompt.Invoke(
-                    "Opening too many files at the same file may cause the system to crash.\n\nProceed anyway?",
-                    "Open",
-                    PromptButton.YesNo,
-                    PromptIcon.Exclamation,
-                    false);
-
-                if (result == false)
+                if (_showPrompt.Invoke(
+                     "Opening too many files at the same file may cause the system to crash.\n\nProceed anyway?",
+                     "Open",
+                     PromptButton.YesNo,
+                     PromptIcon.Exclamation,
+                     false) == false)
                 {
                     return;
                 }
@@ -603,14 +606,12 @@ namespace AMDownloader.ViewModels
 
             if (itemsOpenable.Length > 1)
             {
-                var result = _showPrompt.Invoke(
+                if (_showPrompt.Invoke(
                     "Opening too many folders at the same time may cause the system to crash.\n\nProceed anyway?",
                     "Open Folder",
                     PromptButton.YesNo,
                     PromptIcon.Exclamation,
-                    false);
-
-                if (result == false)
+                    false) == false)
                 {
                     return;
                 }
@@ -811,7 +812,7 @@ namespace AMDownloader.ViewModels
             }
             catch (ObjectDisposedException)
             {
-
+                // already canceled
             }
         }
 
@@ -822,7 +823,15 @@ namespace AMDownloader.ViewModels
 
         private void CheckForUpdates(object obj)
         {
-            Task.Run(async () => await TriggerUpdateCheckAsync());
+            _triggerUpdateCheckTcs = new TaskCompletionSource();
+
+            Task.Run(async () => await TriggerUpdateCheckAsync())
+                .ContinueWith(t => _triggerUpdateCheckTcs.SetResult());
+        }
+
+        private bool CheckForUpdates_CanExecute(object obj)
+        {
+            return !IsCheckingForUpdates;
         }
 
         private void UIClosed(object obj)
