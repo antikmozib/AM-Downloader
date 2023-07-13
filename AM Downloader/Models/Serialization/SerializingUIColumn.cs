@@ -3,10 +3,10 @@
 using System;
 using System.Collections.Generic;
 
-namespace AMDownloader.Models.Serializable
+namespace AMDownloader.Models.Serialization
 {
     [Serializable]
-    public class SerializableUIColumn
+    public class SerializingUIColumn
     {
         public int Index { get; set; }
         public string Name { get; set; }
@@ -14,11 +14,11 @@ namespace AMDownloader.Models.Serializable
     }
 
     [Serializable]
-    public class SerializableUIColumnList
+    public class SerializingUIColumnList
     {
-        public List<SerializableUIColumn> Objects { get; set; }
+        public List<SerializingUIColumn> Objects { get; set; }
 
-        public SerializableUIColumnList()
+        public SerializingUIColumnList()
         {
             Objects = new();
         }

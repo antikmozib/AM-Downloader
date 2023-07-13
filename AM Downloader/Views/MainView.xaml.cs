@@ -2,7 +2,7 @@
 
 using AMDownloader.Helpers;
 using AMDownloader.Models;
-using AMDownloader.Models.Serializable;
+using AMDownloader.Models.Serialization;
 using AMDownloader.Properties;
 using AMDownloader.Updating;
 using AMDownloader.ViewModels;
@@ -94,7 +94,7 @@ namespace AMDownloader.Views
             {
                 try
                 {
-                    var restoreCols = Common.Functions.Deserialize<SerializableUIColumnList>(Common.Paths.UIColumnOrderFile);
+                    var restoreCols = Common.Functions.Deserialize<SerializingUIColumnList>(Common.Paths.UIColumnOrderFile);
                     var gridCols = ((GridView)DownloadsListView.View).Columns;
 
                     for (int i = 0; i < restoreCols.Objects.Count; i++)
@@ -141,11 +141,11 @@ namespace AMDownloader.Views
 
             // save column order and widths
 
-            var columnOrderList = new SerializableUIColumnList();
+            var columnOrderList = new SerializingUIColumnList();
 
             foreach (var column in ((GridView)DownloadsListView.View).Columns)
             {
-                SerializableUIColumn serializableUIColumnOrder = new()
+                SerializingUIColumn serializableUIColumnOrder = new()
                 {
                     Index = ((GridView)DownloadsListView.View).Columns.IndexOf(column),
                     Name = column.Header.ToString(),

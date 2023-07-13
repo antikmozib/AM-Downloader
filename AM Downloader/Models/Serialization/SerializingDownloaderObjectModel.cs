@@ -4,10 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 
-namespace AMDownloader.Models.Serializable
+namespace AMDownloader.Models.Serialization
 {
     [Serializable]
-    public class SerializableDownloaderObjectModel
+    public class SerializingDownloaderObjectModel
     {
         public int Index { get; set; }
         public string Url { get; set; }
@@ -22,13 +22,13 @@ namespace AMDownloader.Models.Serializable
     }
 
     [Serializable]
-    public class SerializableDownloaderObjectModelList
+    public class SerializingDownloaderObjectModelList
     {
-        public List<SerializableDownloaderObjectModel> Objects { get; set; }
+        public List<SerializingDownloaderObjectModel> Objects { get; set; }
 
-        public SerializableDownloaderObjectModelList()
+        public SerializingDownloaderObjectModelList()
         {
-            Objects = new List<SerializableDownloaderObjectModel>();
+            Objects = new List<SerializingDownloaderObjectModel>();
         }
     }
 }

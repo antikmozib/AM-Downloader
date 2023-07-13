@@ -2,7 +2,7 @@
 
 using AMDownloader.Helpers;
 using AMDownloader.Models;
-using AMDownloader.Models.Serializable;
+using AMDownloader.Models.Serialization;
 using AMDownloader.Properties;
 using Serilog;
 using System;
@@ -83,7 +83,7 @@ namespace AMDownloader.ViewModels
                 {
                     try
                     {
-                        var list = Common.Functions.Deserialize<SerializableSavedLocationList>(Common.Paths.SavedLocationsFile);
+                        var list = Common.Functions.Deserialize<SerializingSavedLocationList>(Common.Paths.SavedLocationsFile);
                         foreach (var item in list.Objects)
                         {
                             if (SavedLocationsContains(item.Path))
@@ -271,10 +271,10 @@ namespace AMDownloader.ViewModels
 
             Settings.Default.LastDownloadLocation = SaveLocation;
 
-            var list = new SerializableSavedLocationList();
+            var list = new SerializingSavedLocationList();
             foreach (var savedLocation in SavedLocations)
             {
-                var item = new SerializableSavedLocation
+                var item = new SerializingSavedLocation
                 {
                     Path = savedLocation.ToString()
                 };

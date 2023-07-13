@@ -3,7 +3,7 @@
 using AMDownloader.ClipboardObservation;
 using AMDownloader.Helpers;
 using AMDownloader.Models;
-using AMDownloader.Models.Serializable;
+using AMDownloader.Models.Serialization;
 using AMDownloader.Properties;
 using AMDownloader.QueueProcessing;
 using AMDownloader.Updating;
@@ -260,7 +260,7 @@ namespace AMDownloader.ViewModels
                 {
                     try
                     {
-                        var source = Common.Functions.Deserialize<SerializableDownloaderObjectModelList>(Common.Paths.DownloadsHistoryFile);
+                        var source = Common.Functions.Deserialize<SerializingDownloaderObjectModelList>(Common.Paths.DownloadsHistoryFile);
                         var sourceObjects = source.Objects.ToArray();
                         var itemsToAdd = new List<DownloaderObjectModel>();
                         var itemsToEnqueue = new List<IQueueable>();
@@ -917,7 +917,7 @@ namespace AMDownloader.ViewModels
 
                 try
                 {
-                    var list = new SerializableDownloaderObjectModelList();
+                    var list = new SerializingDownloaderObjectModelList();
                     var index = 0;
 
                     Directory.CreateDirectory(Common.Paths.LocalAppDataFolder);
@@ -933,7 +933,7 @@ namespace AMDownloader.ViewModels
                             continue;
                         }
 
-                        var sItem = new SerializableDownloaderObjectModel
+                        var sItem = new SerializingDownloaderObjectModel
                         {
                             Index = index++,
                             Url = item.Url,
