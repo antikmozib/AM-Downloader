@@ -10,51 +10,6 @@ namespace AMDownloader.Helpers.Native
         public const int MAX_PATH = 256;
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct SHITEMID
-        {
-            public ushort cb;
-
-            [MarshalAs(UnmanagedType.LPArray)]
-            public byte[] abID;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct ITEMIDLIST
-        {
-            public SHITEMID mkid;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct BROWSEINFO
-        {
-            public IntPtr hwndOwner;
-            public IntPtr pidlRoot;
-            public IntPtr pszDisplayName;
-
-            [MarshalAs(UnmanagedType.LPTStr)]
-            public string lpszTitle;
-
-            public uint ulFlags;
-            public IntPtr lpfn;
-            public int lParam;
-            public IntPtr iImage;
-        }
-
-        public const uint BIF_RETURNONLYFSDIRS = 0x0001;
-        public const uint BIF_DONTGOBELOWDOMAIN = 0x0002;
-        public const uint BIF_STATUSTEXT = 0x0004;
-        public const uint BIF_RETURNFSANCESTORS = 0x0008;
-        public const uint BIF_EDITBOX = 0x0010;
-        public const uint BIF_VALIDATE = 0x0020;
-        public const uint BIF_NEWDIALOGSTYLE = 0x0040;
-        public const uint BIF_USENEWUI = (BIF_NEWDIALOGSTYLE | BIF_EDITBOX);
-        public const uint BIF_BROWSEINCLUDEURLS = 0x0080;
-        public const uint BIF_BROWSEFORCOMPUTER = 0x1000;
-        public const uint BIF_BROWSEFORPRINTER = 0x2000;
-        public const uint BIF_BROWSEINCLUDEFILES = 0x4000;
-        public const uint BIF_SHAREABLE = 0x8000;
-
-        [StructLayout(LayoutKind.Sequential)]
         public struct SHFILEINFO
         {
             public const int NAMESIZE = 80;
