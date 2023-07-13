@@ -126,12 +126,19 @@ namespace AMDownloader.Helpers
                 }
             }
 
-            public static void Serialize<T>(T obj, string path)
+            public static void Serialize<T>(T obj, string outputFile)
             {
-                using var fileStream = new FileStream(path, FileMode.Create, FileAccess.Write);
+                var dirName = Path.GetDirectoryName(outputFile);
 
                 try
                 {
+                    if (!Directory.Exists(dirName) && dirName.Length > 0)
+                    {
+                        Directory.CreateDirectory(dirName);
+                    }
+
+                    using var fileStream = new FileStream(outputFile, FileMode.Create, FileAccess.Write);
+
                     JsonSerializer.Serialize(fileStream, obj, new JsonSerializerOptions { WriteIndented = true });
                 }
                 catch (Exception ex)
@@ -142,10 +149,10 @@ namespace AMDownloader.Helpers
 
             public static T Deserialize<T>(string path)
             {
-                using var fs = new FileStream(path, FileMode.Open, FileAccess.Read);
-
                 try
                 {
+                    using var fs = new FileStream(path, FileMode.Open, FileAccess.Read);
+
                     return JsonSerializer.Deserialize<T>(fs);
                 }
                 catch (Exception ex)
