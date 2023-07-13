@@ -34,12 +34,16 @@ namespace AMDownloader.Updating
     {
         [JsonPropertyName("major")]
         public int Major { get; set; }
+
         [JsonPropertyName("minor")]
         public int Minor { get; set; }
+
         [JsonPropertyName("build")]
         public int Build { get; set; }
+
         [JsonPropertyName("revision")]
         public int Revision { get; set; }
+
         public override readonly string ToString()
         {
             return $"{Major}.{Minor}.{Build}.{Revision}";
