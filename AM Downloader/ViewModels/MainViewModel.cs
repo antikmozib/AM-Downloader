@@ -318,7 +318,7 @@ namespace AMDownloader.ViewModels
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex.Message, ex);
+                        Log.Error(ex, ex.Message);
                     }
                 }).ContinueWith(async (t) =>
                 {
@@ -788,7 +788,7 @@ namespace AMDownloader.ViewModels
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex.Message, ex);
+                    Log.Error(ex, ex.Message);
                 }
             }).ContinueWith(t =>
             {
@@ -954,7 +954,7 @@ namespace AMDownloader.ViewModels
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex.Message, ex);
+                    Log.Error(ex, ex.Message);
 
                     // close even when an exception occurs
                 }
@@ -1228,7 +1228,7 @@ namespace AMDownloader.ViewModels
             }
             catch (Exception ex)
             {
-                Log.Error(ex.Message, ex);
+                Log.Error(ex, ex.Message);
             }
             finally
             {
@@ -1447,7 +1447,7 @@ namespace AMDownloader.ViewModels
             }
             catch (Exception ex)
             {
-                Log.Error(ex.Message, ex);
+                Log.Error(ex, ex.Message);
 
                 if (!silent)
                 {

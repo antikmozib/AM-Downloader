@@ -95,7 +95,7 @@ namespace AMDownloader.ViewModels
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex.Message, ex);
+                        Log.Error(ex, ex.Message);
                     }
                 }
             }
@@ -153,7 +153,7 @@ namespace AMDownloader.ViewModels
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex.Message, ex);
+                    Log.Error(ex, ex.Message);
                 }
             }
 
@@ -287,7 +287,7 @@ namespace AMDownloader.ViewModels
             }
             catch (Exception ex)
             {
-                Log.Error(ex.Message, ex);
+                Log.Error(ex, ex.Message);
             }
 
             RaiseEvent(Closed);

@@ -121,7 +121,7 @@ namespace AMDownloader.Views
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex.Message, ex);
+                    Log.Error(ex, ex.Message);
                 }
             }
         }
@@ -161,7 +161,7 @@ namespace AMDownloader.Views
             }
             catch (Exception ex)
             {
-                Log.Error(ex.Message, ex);
+                Log.Error(ex, ex.Message);
             }
         }
 
