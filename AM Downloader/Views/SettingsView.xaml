@@ -29,7 +29,7 @@
         <Style x:Key="SeparatorStyle"
                TargetType="{x:Type Separator}">
             <Setter Property="Background"
-                    Value="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" />
+                    Value="{DynamicResource {x:Static SystemColors.ControlLightBrushKey}}" />
         </Style>
     </Window.Resources>
     <StackPanel Margin="8">
