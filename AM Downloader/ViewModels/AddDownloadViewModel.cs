@@ -27,7 +27,6 @@ namespace AMDownloader.ViewModels
         public ShowWindowDelegate ShowList { get; set; }
         public ShowPromptDelegate ShowPrompt { get; set; }
         public ShowFolderBrowserDelegate ShowFolderBrowser { get; set; }
-        public bool MonitorClipboard { get; set; }
         public string Urls { get; set; }
         /// <summary>
         /// Returns the list of URLs exploded from the supplied patterned URLs.
@@ -54,7 +53,6 @@ namespace AMDownloader.ViewModels
 
         public AddDownloadViewModel()
         {
-            MonitorClipboard = Settings.Default.MonitorClipboard;
             SavedLocations = new();
             Enqueue = Settings.Default.EnqueueAddedItems;
             StartDownload = Settings.Default.StartDownloadingAddedItems;
@@ -263,7 +261,6 @@ namespace AMDownloader.ViewModels
             RaiseEvent(Closing);
 
             // save settings
-            Settings.Default.MonitorClipboard = MonitorClipboard;
             Settings.Default.EnqueueAddedItems = Enqueue;
             Settings.Default.StartDownloadingAddedItems = StartDownload;
 

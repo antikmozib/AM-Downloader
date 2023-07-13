@@ -38,9 +38,6 @@
     <Setting Name="AddDownloadWindowFontSize" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">14</Value>
     </Setting>
-    <Setting Name="MonitorClipboard" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
     <Setting Name="LastDownloadLocation" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>

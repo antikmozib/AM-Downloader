@@ -51,7 +51,6 @@
                       VerticalAlignment="Center"
                       HorizontalAlignment="Right"
                       ToolTip="Automatically monitor the clipboard for URLs and add them to the list"
-                      IsChecked="{Binding MonitorClipboard}"
                       Checked="MonitorClipboardCheckBox_Checked"
                       Unchecked="MonitorClipboardCheckBox_Unchecked" />
         </Grid>

@@ -85,11 +85,8 @@ namespace AMDownloader.Views
             context.Closed += Context_Closed;
 
             // Add any urls from the clipboard
-            if (!IsClipboardMonitorRunning)
-            {
-                var clipUrls = AddDownloadViewModel.GenerateValidUrl(ClipboardObserver.GetText());
-                UrlTextBox.Text = !string.IsNullOrWhiteSpace(clipUrls) ? clipUrls + Environment.NewLine : string.Empty;
-            }
+            var clipUrls = AddDownloadViewModel.GenerateValidUrl(ClipboardObserver.GetText());
+            UrlTextBox.Text = !string.IsNullOrWhiteSpace(clipUrls) ? clipUrls + Environment.NewLine : string.Empty;
 
             // Move cursor to the end of UrlTextBox
             if (UrlTextBox.Text.Length > 0)
