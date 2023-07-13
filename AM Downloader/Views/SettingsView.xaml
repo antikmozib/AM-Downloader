@@ -25,6 +25,12 @@
             <Setter Property="IsTabStop"
                     Value="True" />
         </Style>
+
+        <Style x:Key="SeparatorStyle"
+               TargetType="{x:Type Separator}">
+            <Setter Property="Background"
+                    Value="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" />
+        </Style>
     </Window.Resources>
     <StackPanel Margin="8">
         <DockPanel LastChildFill="True">
@@ -36,7 +42,7 @@
         </DockPanel>
 
         <Separator Margin="0 4 0 4"
-                   Opacity="0.5" />
+                   Style="{StaticResource SeparatorStyle}" />
 
         <DockPanel LastChildFill="True">
             <Label Content="Maximum parallel connections per download (1 - 5):" />
@@ -46,7 +52,7 @@
         </DockPanel>
 
         <Separator Margin="0 4 0 4"
-                   Opacity="0.5" />
+                   Style="{StaticResource SeparatorStyle}" />
 
         <DockPanel LastChildFill="True">
             <Label Content="Limit speed per download, KB/s (0 = Unlimited):" />
@@ -57,7 +63,7 @@
         </DockPanel>
 
         <Separator Margin="0 4 0 4"
-                   Opacity="0.5" />
+                   Style="{StaticResource SeparatorStyle}" />
 
         <DockPanel LastChildFill="True">
             <Label Content="*Connection timeout, seconds (0 = Never):" />
@@ -68,7 +74,7 @@
         </DockPanel>
 
         <Separator Margin="0 4 0 4"
-                   Opacity="0.5" />
+                   Style="{StaticResource SeparatorStyle}" />
 
         <CheckBox VerticalContentAlignment="Center"
                   IsChecked="{Binding Path=RememberLastDownloadLocation}">
@@ -76,7 +82,7 @@
         </CheckBox>
 
         <Separator Margin="0 4 0 4"
-                   Opacity="0.5" />
+                   Style="{StaticResource SeparatorStyle}" />
 
         <CheckBox VerticalContentAlignment="Center"
                   IsChecked="{Binding Path=ClearFinishedDownloadsOnExit}">
@@ -84,7 +90,7 @@
         </CheckBox>
 
         <Separator Margin="0 4 0 4"
-                   Opacity="0.5" />
+                   Style="{StaticResource SeparatorStyle}" />
 
         <CheckBox VerticalContentAlignment="Center"
                   IsChecked="{Binding Path=AutoCheckForUpdates}">
