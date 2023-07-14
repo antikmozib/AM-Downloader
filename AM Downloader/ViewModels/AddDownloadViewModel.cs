@@ -58,9 +58,9 @@ namespace AMDownloader.ViewModels
             StartDownload = Settings.Default.StartDownloadingAddedItems;
             ItemsAdded = false;
 
-            BrowseCommand = new RelayCommand<object>(Browse, Browse_CanExecute);
-            AddCommand = new RelayCommand<object>(Add, Add_CanExecute);
-            PreviewCommand = new RelayCommand<object>(Preview, Preview_CanExecute);
+            BrowseCommand = new RelayCommand(Browse, Browse_CanExecute);
+            AddCommand = new RelayCommand(Add, Add_CanExecute);
+            PreviewCommand = new RelayCommand(Preview, Preview_CanExecute);
 
             // add the default download location
             SavedLocations.Add(Common.Paths.UserDownloadsFolder);
@@ -99,7 +99,7 @@ namespace AMDownloader.ViewModels
             }
         }
 
-        private void Browse(object obj)
+        private void Browse()
         {
             var (selected, selectedPath) = ShowFolderBrowser.Invoke();
 
@@ -116,22 +116,22 @@ namespace AMDownloader.ViewModels
             }
         }
 
-        private bool Browse_CanExecute(object obj)
+        private bool Browse_CanExecute()
         {
             return true;
         }
 
-        private void Preview(object obj)
+        private void Preview()
         {
             ShowList.Invoke(new ListViewerViewModel(ExplodedUrls.ToList(), "URLs exploded from their patterns:", "Preview"));
         }
 
-        private bool Preview_CanExecute(object obj)
+        private bool Preview_CanExecute()
         {
             return !string.IsNullOrWhiteSpace(Urls);
         }
 
-        private void Add(object obj)
+        private void Add()
         {
             // ensure the selected location is valid and accessible
 
@@ -165,7 +165,7 @@ namespace AMDownloader.ViewModels
             Close();
         }
 
-        private bool Add_CanExecute(object obj)
+        private bool Add_CanExecute()
         {
             return !string.IsNullOrWhiteSpace(Urls) && !string.IsNullOrWhiteSpace(SaveLocation);
         }

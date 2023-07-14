@@ -135,16 +135,16 @@ namespace AMDownloader.ViewModels
 
             ResetSettingsOnClose = false;
 
-            SaveCommand = new RelayCommand<object>(Save);
-            CancelCommand = new RelayCommand<object>(Cancel);
-            ResetCommand = new RelayCommand<object>(Reset);
+            SaveCommand = new RelayCommand(Save);
+            CancelCommand = new RelayCommand(Cancel);
+            ResetCommand = new RelayCommand(Reset);
         }
 
         #endregion
 
         #region Private methods
 
-        private void Save(object obj)
+        private void Save()
         {
             Settings.Default.MaxParallelDownloads = _maxParallelDownloads;
             Settings.Default.MaxParallelConnPerDownload = _maxParallelConnPerDownload;
@@ -156,11 +156,11 @@ namespace AMDownloader.ViewModels
             Settings.Default.Save();
         }
 
-        private void Cancel(object obj)
+        private void Cancel()
         {
         }
 
-        private void Reset(object obj)
+        private void Reset()
         {
             Settings.Default.Reset();
 

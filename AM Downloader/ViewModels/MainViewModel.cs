@@ -190,7 +190,7 @@ namespace AMDownloader.ViewModels
             _bytesTransferredOverLifetimeLock = Settings.Default.BytesTransferredOverLifetime;
             _resetAllSettingsOnClose = false;
 
-            AddCommand = new RelayCommand<object>(
+            AddCommand = new RelayCommand(
                 Add, Add_CanExecute);
             StartCommand = new RelayCommand<object>(
                 Start, Start_CanExecute);
@@ -204,25 +204,25 @@ namespace AMDownloader.ViewModels
                 Open, Open_CanExecute);
             OpenContainingFolderCommand = new RelayCommand<object>(
                 OpenContainingFolder, OpenContainingFolder_CanExecute);
-            StartQueueCommand = new RelayCommand<object>(
+            StartQueueCommand = new RelayCommand(
                 StartQueue, StartQueue_CanExecute);
-            StopQueueCommand = new RelayCommand<object>(
+            StopQueueCommand = new RelayCommand(
                 StopQueue, StopQueue_CanExecute);
             CategoryChangedCommand = new RelayCommand<object>(CategoryChanged);
-            SettingsCommand = new RelayCommand<object>(ShowSettings);
+            SettingsCommand = new RelayCommand(ShowSettings);
             EnqueueCommand = new RelayCommand<object>(
                 Enqueue, Enqueue_CanExecute);
             DequeueCommand = new RelayCommand<object>(
                 Dequeue, Dequeue_CanExecute);
             CopyLinkToClipboardCommand = new RelayCommand<object>(
                 CopyLinkToClipboard, CopyLinkToClipboardCommand_CanExecute);
-            ClearFinishedDownloadsCommand = new RelayCommand<object>(
+            ClearFinishedDownloadsCommand = new RelayCommand(
                 ClearFinishedDownloads, ClearFinishedDownloads_CanExecute);
-            CancelBackgroundTaskCommand = new RelayCommand<object>(
+            CancelBackgroundTaskCommand = new RelayCommand(
                 CancelBackgroundTask, CancelBackgroundTask_CanExecute);
-            CheckForUpdatesCommand = new RelayCommand<object>(
+            CheckForUpdatesCommand = new RelayCommand(
                 CheckForUpdates, CheckForUpdates_CanExecute);
-            UIClosedCommand = new RelayCommand<object>(UIClosed);
+            UIClosedCommand = new RelayCommand(UIClosed);
 
             foreach (Category cat in (Category[])Enum.GetValues(typeof(Category)))
             {
@@ -435,7 +435,7 @@ namespace AMDownloader.ViewModels
                     select item).Count() == items.Count();
         }
 
-        private void Add(object obj)
+        private void Add()
         {
             AddDownloadViewModel addDownloadViewModel = new();
             DownloaderObjectModel[] itemsCreated = null;
@@ -486,7 +486,7 @@ namespace AMDownloader.ViewModels
             }
         }
 
-        private bool Add_CanExecute(object obj)
+        private bool Add_CanExecute()
         {
             return !IsBackgroundWorking;
         }
@@ -650,7 +650,7 @@ namespace AMDownloader.ViewModels
             return items.Any();
         }
 
-        private void StartQueue(object obj)
+        private void StartQueue()
         {
             Task.Run(async () =>
             {
@@ -658,22 +658,22 @@ namespace AMDownloader.ViewModels
             });
         }
 
-        private bool StartQueue_CanExecute(object obj)
+        private bool StartQueue_CanExecute()
         {
             return !QueueProcessor.IsBusy && QueueProcessor.Count > 0;
         }
 
-        private void StopQueue(object obj)
+        private void StopQueue()
         {
             QueueProcessor.Stop();
         }
 
-        private bool StopQueue_CanExecute(object obj)
+        private bool StopQueue_CanExecute()
         {
             return QueueProcessor.IsBusy;
         }
 
-        private void ShowSettings(object obj)
+        private void ShowSettings()
         {
             var settingsViewModel = new SettingsViewModel();
 
@@ -772,7 +772,7 @@ namespace AMDownloader.ViewModels
             return items.Any();
         }
 
-        private void ClearFinishedDownloads(object obj)
+        private void ClearFinishedDownloads()
         {
             _updatingListTcs = new TaskCompletionSource();
             _updatingListCts = new CancellationTokenSource();
@@ -802,12 +802,12 @@ namespace AMDownloader.ViewModels
             });
         }
 
-        private bool ClearFinishedDownloads_CanExecute(object obj)
+        private bool ClearFinishedDownloads_CanExecute()
         {
             return !IsBackgroundWorking && FinishedCount > 0;
         }
 
-        private void CancelBackgroundTask(object obj)
+        private void CancelBackgroundTask()
         {
             try
             {
@@ -819,12 +819,12 @@ namespace AMDownloader.ViewModels
             }
         }
 
-        private bool CancelBackgroundTask_CanExecute(object obj)
+        private bool CancelBackgroundTask_CanExecute()
         {
             return IsBackgroundWorking;
         }
 
-        private void CheckForUpdates(object obj)
+        private void CheckForUpdates()
         {
             _triggerUpdateCheckTcs = new TaskCompletionSource();
 
@@ -832,12 +832,12 @@ namespace AMDownloader.ViewModels
                 .ContinueWith(t => _triggerUpdateCheckTcs.SetResult());
         }
 
-        private bool CheckForUpdates_CanExecute(object obj)
+        private bool CheckForUpdates_CanExecute()
         {
             return !IsCheckingForUpdates;
         }
 
-        private void UIClosed(object obj)
+        private void UIClosed()
         {
             if (_resetAllSettingsOnClose)
             {

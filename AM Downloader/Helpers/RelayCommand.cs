@@ -12,31 +12,25 @@ namespace AMDownloader.Helpers
         private readonly Action<T> _execute;
         private readonly Predicate<T> _canExecute;
 
-        #endregion Fields
+        #endregion
 
         #region Constructors
 
-        public RelayCommand(Action<T> execute)
-            : this(execute, null)
-        {
-        }
+        public RelayCommand(Action<T> execute) : this(execute, null) { }
 
         public RelayCommand(Action<T> execute, Predicate<T> canExecute)
         {
-            if (execute == null)
-                throw new ArgumentNullException("execute");
-
-            _execute = execute;
+            _execute = execute ?? throw new ArgumentNullException(nameof(execute));
             _canExecute = canExecute;
         }
 
-        #endregion Constructors
+        #endregion
 
         #region ICommand Members
 
         public bool CanExecute(object parameter)
         {
-            return _canExecute == null ? true : _canExecute((T)parameter);
+            return _canExecute == null || _canExecute((T)parameter);
         }
 
         public event EventHandler CanExecuteChanged
@@ -50,6 +44,13 @@ namespace AMDownloader.Helpers
             _execute((T)parameter);
         }
 
-        #endregion ICommand Members
+        #endregion
+    }
+
+    public class RelayCommand : RelayCommand<object>
+    {
+        public RelayCommand(Action execute) : this(execute, null) { }
+
+        public RelayCommand(Action execute, Func<bool> canExecute) : base(param => execute(), param => canExecute == null || canExecute()) { }
     }
 }
