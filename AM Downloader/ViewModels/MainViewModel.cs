@@ -242,7 +242,7 @@ namespace AMDownloader.ViewModels
             // Check for updates
             if (Settings.Default.AutoCheckForUpdates)
             {
-                Task.Run(async () => await TriggerUpdateCheckAsync(true));
+                CheckForUpdates();
             }
 
             // Populate history
@@ -829,7 +829,12 @@ namespace AMDownloader.ViewModels
             _triggerUpdateCheckTcs = new TaskCompletionSource();
 
             Task.Run(async () => await TriggerUpdateCheckAsync())
-                .ContinueWith(t => _triggerUpdateCheckTcs.SetResult());
+                .ContinueWith(t =>
+                {
+                    _triggerUpdateCheckTcs.SetResult();
+
+                    RaisePropertyChanged(nameof(IsCheckingForUpdates));
+                });
         }
 
         private bool CheckForUpdates_CanExecute()
