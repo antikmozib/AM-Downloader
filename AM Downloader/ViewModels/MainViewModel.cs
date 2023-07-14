@@ -220,7 +220,7 @@ namespace AMDownloader.ViewModels
                 ClearFinishedDownloads, ClearFinishedDownloads_CanExecute);
             CancelBackgroundTaskCommand = new RelayCommand(
                 CancelBackgroundTask, CancelBackgroundTask_CanExecute);
-            CheckForUpdatesCommand = new RelayCommand(
+            CheckForUpdatesCommand = new RelayCommand<object>(
                 CheckForUpdates, CheckForUpdates_CanExecute);
             UIClosedCommand = new RelayCommand(UIClosed);
 
@@ -242,7 +242,7 @@ namespace AMDownloader.ViewModels
             // Check for updates
             if (Settings.Default.AutoCheckForUpdates)
             {
-                CheckForUpdates();
+                CheckForUpdates(true);
             }
 
             // Populate history
@@ -824,11 +824,13 @@ namespace AMDownloader.ViewModels
             return IsBackgroundWorking;
         }
 
-        private void CheckForUpdates()
+        private void CheckForUpdates(object obj)
         {
+            bool silent = (bool)obj;
+
             _triggerUpdateCheckTcs = new TaskCompletionSource();
 
-            Task.Run(async () => await TriggerUpdateCheckAsync())
+            Task.Run(async () => await TriggerUpdateCheckAsync(silent))
                 .ContinueWith(t =>
                 {
                     _triggerUpdateCheckTcs.SetResult();
@@ -837,7 +839,7 @@ namespace AMDownloader.ViewModels
                 });
         }
 
-        private bool CheckForUpdates_CanExecute()
+        private bool CheckForUpdates_CanExecute(object obj)
         {
             return !IsCheckingForUpdates;
         }
@@ -1429,7 +1431,7 @@ namespace AMDownloader.ViewModels
             });
         }
 
-        private async Task TriggerUpdateCheckAsync(bool silent = false)
+        private async Task TriggerUpdateCheckAsync(bool silent)
         {
             try
             {

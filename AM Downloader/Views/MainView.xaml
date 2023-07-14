@@ -185,7 +185,8 @@
             <MenuItem Header="_Help">
                 <MenuItem x:Name="CheckForUpdatesMenu"
                           Header="Check For _Updates"
-                          Command="{Binding CheckForUpdatesCommand}">
+                          Command="{Binding CheckForUpdatesCommand}"
+                          CommandParameter="{StaticResource FalseValue}">
                     <MenuItem.Icon>
                         <Viewbox>
                             <Frame Source="pack://application:,,,/Resources/Icons/GetWebSite_16x.xaml" />
