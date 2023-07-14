@@ -190,38 +190,23 @@ namespace AMDownloader.ViewModels
             _bytesTransferredOverLifetimeLock = Settings.Default.BytesTransferredOverLifetime;
             _resetAllSettingsOnClose = false;
 
-            AddCommand = new RelayCommand(
-                Add, Add_CanExecute);
-            StartCommand = new RelayCommand<object>(
-                Start, Start_CanExecute);
-            RemoveCommand = new RelayCommand<object>(
-                Remove, Remove_CanExecute);
-            CancelCommand = new RelayCommand<object>(
-                Cancel, Cancel_CanExecute);
-            PauseCommand = new RelayCommand<object>(
-                Pause, Pause_CanExecute);
-            OpenCommand = new RelayCommand<object>(
-                Open, Open_CanExecute);
-            OpenContainingFolderCommand = new RelayCommand<object>(
-                OpenContainingFolder, OpenContainingFolder_CanExecute);
-            StartQueueCommand = new RelayCommand(
-                StartQueue, StartQueue_CanExecute);
-            StopQueueCommand = new RelayCommand(
-                StopQueue, StopQueue_CanExecute);
+            AddCommand = new RelayCommand(Add, Add_CanExecute);
+            StartCommand = new RelayCommand<object>(Start, Start_CanExecute);
+            RemoveCommand = new RelayCommand<object>(Remove, Remove_CanExecute);
+            CancelCommand = new RelayCommand<object>(Cancel, Cancel_CanExecute);
+            PauseCommand = new RelayCommand<object>(Pause, Pause_CanExecute);
+            OpenCommand = new RelayCommand<object>(Open, Open_CanExecute);
+            OpenContainingFolderCommand = new RelayCommand<object>(OpenContainingFolder, OpenContainingFolder_CanExecute);
+            StartQueueCommand = new RelayCommand(StartQueue, StartQueue_CanExecute);
+            StopQueueCommand = new RelayCommand(StopQueue, StopQueue_CanExecute);
             CategoryChangedCommand = new RelayCommand<object>(CategoryChanged);
             SettingsCommand = new RelayCommand(ShowSettings);
-            EnqueueCommand = new RelayCommand<object>(
-                Enqueue, Enqueue_CanExecute);
-            DequeueCommand = new RelayCommand<object>(
-                Dequeue, Dequeue_CanExecute);
-            CopyLinkToClipboardCommand = new RelayCommand<object>(
-                CopyLinkToClipboard, CopyLinkToClipboardCommand_CanExecute);
-            ClearFinishedDownloadsCommand = new RelayCommand(
-                ClearFinishedDownloads, ClearFinishedDownloads_CanExecute);
-            CancelBackgroundTaskCommand = new RelayCommand(
-                CancelBackgroundTask, CancelBackgroundTask_CanExecute);
-            CheckForUpdatesCommand = new RelayCommand<object>(
-                CheckForUpdates, CheckForUpdates_CanExecute);
+            EnqueueCommand = new RelayCommand<object>(Enqueue, Enqueue_CanExecute);
+            DequeueCommand = new RelayCommand<object>(Dequeue, Dequeue_CanExecute);
+            CopyLinkToClipboardCommand = new RelayCommand<object>(CopyLinkToClipboard, CopyLinkToClipboardCommand_CanExecute);
+            ClearFinishedDownloadsCommand = new RelayCommand(ClearFinishedDownloads, ClearFinishedDownloads_CanExecute);
+            CancelBackgroundTaskCommand = new RelayCommand(CancelBackgroundTask, CancelBackgroundTask_CanExecute);
+            CheckForUpdatesCommand = new RelayCommand<object>(CheckForUpdates, CheckForUpdates_CanExecute);
             UIClosedCommand = new RelayCommand(UIClosed);
 
             foreach (Category cat in (Category[])Enum.GetValues(typeof(Category)))
@@ -265,6 +250,7 @@ namespace AMDownloader.ViewModels
                         var itemsToAdd = new List<DownloaderObjectModel>();
                         var itemsToEnqueue = new List<IQueueable>();
                         var total = sourceObjects.Length;
+                        var progress = 0;
 
                         for (int i = 0; i < sourceObjects.Length; i++)
                         {
@@ -278,7 +264,7 @@ namespace AMDownloader.ViewModels
                                 continue;
                             }
 
-                            int progress = (int)((double)(i + 1) / total * 100);
+                            progress = (int)((double)(i + 1) / total * 100);
                             Progress = progress;
                             Status = $"Loading {i + 1} of {total}: {Path.GetFileName(sourceObjects[i].Destination)}";
                             RaisePropertyChanged(nameof(Progress));
