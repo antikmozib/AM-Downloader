@@ -31,7 +31,7 @@ namespace AMDownloader.ViewModels
         /// <summary>
         /// Returns the list of URLs exploded from the supplied patterned URLs.
         /// </summary>
-        public List<string> ExplodedUrls => ExplodePatterns(Urls.Split(Environment.NewLine).ToArray());
+        public List<string> ExplodedUrls => ExplodePatterns(Urls.Split(Environment.NewLine));
         /// <summary>
         /// Contains the list of locations where files have been previously downloaded and saved to.
         /// </summary>
@@ -123,7 +123,7 @@ namespace AMDownloader.ViewModels
 
         private void Preview()
         {
-            ShowList.Invoke(new ListViewerViewModel(ExplodedUrls.ToList(), "URLs exploded from their patterns:", "Preview"));
+            ShowList.Invoke(new ListViewerViewModel(ExplodedUrls, "URLs exploded from their patterns:", "Preview"));
         }
 
         private bool Preview_CanExecute()
