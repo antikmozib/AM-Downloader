@@ -57,7 +57,6 @@ namespace AMDownloader.ViewModels
         private CancellationTokenSource _updatingListCts;
         private readonly List<CancellationTokenSource> _refreshViewCtsList;
         private TaskCompletionSource _updatingListTcs;
-        private TaskCompletionSource _refreshingViewTcs;
         private TaskCompletionSource _reportingSpeedTcs;
         private TaskCompletionSource _closingTcs;
         private TaskCompletionSource _triggerUpdateCheckTcs;
@@ -315,7 +314,7 @@ namespace AMDownloader.ViewModels
                     RaisePropertyChanged(nameof(IsBackgroundWorking));
                     RaisePropertyChanged(nameof(Status));
 
-                    await RefreshCollectionViewAsync();
+                    await RefreshCollectionViewAsync(GetRefreshTokenSource().Token);
                 });
             }
         }
@@ -462,7 +461,7 @@ namespace AMDownloader.ViewModels
                     RaisePropertyChanged(nameof(IsBackgroundWorking));
                     RaisePropertyChanged(nameof(Status));
 
-                    await RefreshCollectionViewAsync();
+                    await RefreshCollectionViewAsync(GetRefreshTokenSource().Token);
 
                     if (addDownloadViewModel.StartDownload && itemsCreated.Length > 0)
                     {
@@ -527,7 +526,7 @@ namespace AMDownloader.ViewModels
                 RaisePropertyChanged(nameof(IsBackgroundWorking));
                 RaisePropertyChanged(nameof(Status));
 
-                await RefreshCollectionViewAsync();
+                await RefreshCollectionViewAsync(GetRefreshTokenSource().Token);
             });
         }
 
@@ -1051,65 +1050,62 @@ namespace AMDownloader.ViewModels
                 return;
             }
 
-            // cancel all pending refreshes
+            var ct = GetRefreshTokenSource().Token;
 
+            Task.Run(async () => await RefreshCollectionViewAsync(ct), ct);
+        }
+
+        private async Task RefreshCollectionViewAsync(CancellationToken ct)
+        {
+            var semTask = _refreshingViewSemaphore.WaitAsync(ct);
+            var throttle = Task.Delay(1000);
+
+            try
+            {
+                await semTask;
+
+                Application.Current?.Dispatcher?.Invoke(() =>
+                {
+                    DownloadItemsView.Refresh();
+                    CommandManager.InvalidateRequerySuggested();
+                });
+
+                await throttle;
+
+                Log.Debug($"{nameof(DownloadItemsView)} refreshed.");
+            }
+            catch (OperationCanceledException)
+            {
+
+            }
+            finally
+            {
+                if (semTask.IsCompletedSuccessfully)
+                {
+                    _refreshingViewSemaphore.Release();
+                }
+            }
+        }
+
+        private CancellationTokenSource GetRefreshTokenSource()
+        {
             Monitor.Enter(_refreshViewCtsListLock);
 
-            foreach (var oldCts in _refreshViewCtsList)
+            // cancel all pending refreshes
+            foreach (var cts in _refreshViewCtsList)
             {
-                oldCts.Cancel();
-                oldCts.Dispose();
+                cts.Cancel();
+                cts.Dispose();
             }
 
             _refreshViewCtsList.Clear();
 
-            _refreshingViewTcs = new TaskCompletionSource();
-
-            var newCts = new CancellationTokenSource();
-            var ct = newCts.Token;
-
+            CancellationTokenSource newCts = new();
             _refreshViewCtsList.Add(newCts);
 
             Monitor.Exit(_refreshViewCtsListLock);
 
-            Task.Run(async () =>
-            {
-                var semTask = _refreshingViewSemaphore.WaitAsync(ct);
-                var throttle = Task.Delay(2000);
-                try
-                {
-                    await semTask;
-
-                    Application.Current?.Dispatcher?.Invoke(() =>
-                    {
-                        DownloadItemsView.Refresh();
-                        CommandManager.InvalidateRequerySuggested();
-                    });
-
-                    await throttle;
-
-                    Log.Debug($"{nameof(DownloadItemsView)} refreshed.");
-                }
-                catch (OperationCanceledException)
-                {
-
-                }
-                finally
-                {
-                    if (semTask.IsCompletedSuccessfully)
-                    {
-                        _refreshingViewSemaphore.Release();
-                    }
-                }
-
-                _refreshingViewTcs.SetResult();
-            }, ct);
-        }
-
-        private async Task RefreshCollectionViewAsync()
-        {
-            RefreshCollectionView();
-            await _refreshingViewTcs.Task;
+            return newCts;
         }
 
         /// <summary>
