@@ -200,9 +200,9 @@ namespace AMDownloader.QueueProcessing
                     await Task.WhenAll(tasks);
                 });
             }
-            catch (OperationCanceledException ex)
+            catch (OperationCanceledException)
             {
-                Log.Debug(ex.Message, ex);
+
             }
             catch (Exception ex)
             {
