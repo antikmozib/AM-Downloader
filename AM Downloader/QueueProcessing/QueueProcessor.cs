@@ -187,7 +187,7 @@ namespace AMDownloader.QueueProcessing
                             }
                             finally
                             {
-                                if (semTask.IsCompletedSuccessfully)
+                                if (semTask.Status == TaskStatus.RanToCompletion)
                                 {
                                     _semaphore.Release();
                                 }
