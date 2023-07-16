@@ -1057,18 +1057,23 @@ namespace AMDownloader.ViewModels
 
             foreach (var oldCts in _refreshViewCtsList)
             {
-                oldCts.Cancel();
-                oldCts.Dispose();
+                try
+                {
+                    oldCts.Cancel();
+                    oldCts.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, ex.Message);
+                }
             }
 
             _refreshViewCtsList.Clear();
-
-            _refreshingViewTcs = new TaskCompletionSource();
-
             var newCts = new CancellationTokenSource();
-            var ct = newCts.Token;
-
             _refreshViewCtsList.Add(newCts);
+
+            var ct = newCts.Token;
+            _refreshingViewTcs = new TaskCompletionSource();
 
             Monitor.Exit(_refreshViewCtsListLock);
 
@@ -1076,6 +1081,7 @@ namespace AMDownloader.ViewModels
             {
                 var semTask = _refreshingViewSemaphore.WaitAsync(ct);
                 var throttle = Task.Delay(2000);
+
                 try
                 {
                     await semTask;
@@ -1088,21 +1094,28 @@ namespace AMDownloader.ViewModels
 
                     await throttle;
 
+                    if (_refreshingViewTcs.Task.Status != TaskStatus.RanToCompletion)
+                    {
+                        _refreshingViewTcs.SetResult();
+                    }
+
                     Log.Debug($"{nameof(DownloadItemsView)} refreshed.");
                 }
                 catch (OperationCanceledException)
                 {
 
                 }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, ex.Message);
+                }
                 finally
                 {
-                    if (semTask.IsCompletedSuccessfully)
+                    if (semTask.Status == TaskStatus.RanToCompletion)
                     {
                         _refreshingViewSemaphore.Release();
                     }
                 }
-
-                _refreshingViewTcs.SetResult();
             }, ct);
         }
 
