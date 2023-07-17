@@ -16,6 +16,8 @@ namespace AMDownloader.QueueProcessing
 
         private readonly List<IQueueable> _queueList;
         private readonly object _queueListLock;
+        private readonly List<IQueueable> _itemsProcessing;
+        private readonly object _itemsProcessingLock;
         private readonly SemaphoreSlim _semaphore;
         private TaskCompletionSource _tcs;
         private CancellationTokenSource _cts;
@@ -52,6 +54,8 @@ namespace AMDownloader.QueueProcessing
         {
             _queueList = new List<IQueueable>();
             _queueListLock = _queueList;
+            _itemsProcessing = new List<IQueueable>();
+            _itemsProcessingLock = _itemsProcessing;
             _semaphore = new SemaphoreSlim(maxParallelDownloads);
 
             IsBusy = false;
@@ -133,72 +137,80 @@ namespace AMDownloader.QueueProcessing
 
             _tcs = new TaskCompletionSource();
             _cts = new CancellationTokenSource();
-
             var ct = _cts.Token;
 
             IsBusy = true;
             RaisePropertyChanged(nameof(IsBusy));
             RaiseEvent(QueueProcessorStarted);
 
-            try
-            {
-                await Task.Run(async () =>
-                {
-                    List<Task> tasks = new();
-                    // _queueList must be copied before enumerating and setting up the tasks;
-                    // otherwise, if adding too many items, some items may be processed and
-                    // removed from _queueList while we're still enumerating over _queueList,
-                    // raising an exception
-                    List<IQueueable> cached = _queueList.ToList();
+            _itemsProcessing.Clear();
 
-                    foreach (var item in cached)
+            List<Task> tasks = new();
+            // _queueList must be copied before enumerating and setting up the tasks;
+            // otherwise, if adding too many items, some items may be processed and
+            // removed from _queueList while we're still enumerating over _queueList,
+            // raising an exception
+            List<IQueueable> cached = _queueList.ToList();
+
+            Log.Debug($"First item in {nameof(_queueList)}: {cached.First()}");
+
+            foreach (var item in cached)
+            {
+                if (item.IsCompleted)
+                {
+                    continue;
+                }
+
+                var t = Task.Run(async () =>
+                {
+                    var semTask = _semaphore.WaitAsync(ct);
+
+                    try
                     {
-                        if (item.IsCompleted)
+                        await semTask;
+
+                        ct.ThrowIfCancellationRequested();
+
+                        // Ensure the item is still enqueued before commencing download
+                        if (!_queueList.Contains(item))
                         {
-                            continue;
+                            return;
                         }
 
-                        var t = Task.Run(async () =>
+                        Monitor.Enter(_itemsProcessingLock);
+                        _itemsProcessing.Add(item);
+                        Monitor.Exit(_itemsProcessingLock);
+
+                        await item.StartAsync();
+
+                        Monitor.Enter(_itemsProcessingLock);
+                        _itemsProcessing.Remove(item);
+                        Monitor.Exit(_itemsProcessingLock);
+
+                        if (item.IsCompleted || item.IsErrored)
                         {
-                            var semTask = _semaphore.WaitAsync(ct);
+                            // Item processed
 
-                            try
-                            {
-                                await semTask;
-
-                                ct.ThrowIfCancellationRequested();
-
-                                // Ensure the item is still enqueued before commencing download
-                                if (!_queueList.Contains(item))
-                                {
-                                    return;
-                                }
-
-                                await item.StartAsync();
-
-                                if (item.IsCompleted || item.IsErrored)
-                                {
-                                    // Item processed
-
-                                    Monitor.Enter(_queueListLock);
-                                    _queueList.Remove(item);
-                                    Monitor.Exit(_queueListLock);
-                                }
-                            }
-                            finally
-                            {
-                                if (semTask.Status == TaskStatus.RanToCompletion)
-                                {
-                                    _semaphore.Release();
-                                }
-                            }
-                        }, ct);
-
-                        tasks.Add(t);
+                            Monitor.Enter(_queueListLock);
+                            _queueList.Remove(item);
+                            Monitor.Exit(_queueListLock);
+                        }
                     }
+                    finally
+                    {
+                        if (semTask.Status == TaskStatus.RanToCompletion)
+                        {
+                            _semaphore.Release();
+                        }
+                    }
+                }, ct);
 
-                    await Task.WhenAll(tasks);
-                });
+                tasks.Add(t);
+            }
+
+            try
+            {
+                await Task.WhenAll(tasks);
             }
             catch (OperationCanceledException)
             {
@@ -265,14 +277,19 @@ namespace AMDownloader.QueueProcessing
             if (!IsBusy)
             {
                 return;
-            };
+            }
 
             try
             {
                 _cts?.Cancel();
 
-                // Pause items being downloaded
-                Parallel.ForEach(_queueList, (item) => item.Pause());
+                // Pause items being downloaded;
+                // Items must be paused concurrently as once download begins,
+                // those items can no longer be canceled in any other way and
+                // the queue processing won't end until all tasks have come
+                // to an end; pausing is the only way to end those tasks which
+                // have already started downloading
+                Parallel.ForEach(_itemsProcessing, (item) => item.Pause());
             }
             catch (Exception ex)
             {
