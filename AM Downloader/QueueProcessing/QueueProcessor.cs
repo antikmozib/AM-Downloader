@@ -286,9 +286,9 @@ namespace AMDownloader.QueueProcessing
                 // Pause items being downloaded;
                 // Items must be paused concurrently as once download begins,
                 // those items can no longer be canceled in any other way and
-                // the queue processing won't end until all tasks have come
-                // to an end; pausing is the only way to end those tasks which
-                // have already started downloading
+                // the queue processor won't stop until all tasks have come
+                // to an end; pausing is the only way to end tasks which have
+                // already started
                 Parallel.ForEach(_itemsProcessing, (item) => item.Pause());
             }
             catch (Exception ex)
@@ -304,10 +304,10 @@ namespace AMDownloader.QueueProcessing
         }
 
         /// <summary>
-        /// Determines if the <paramref name="item"/> is enqueued.
+        /// Determines if <paramref name="item"/> is enqueued.
         /// </summary>
         /// <param name="item">The item to check.</param>
-        /// <returns><see langword="true"/> if the <paramref name="item"/> is enqueued.</returns>
+        /// <returns><see langword="true"/> if <paramref name="item"/> is enqueued.</returns>
         public bool IsQueued(IQueueable item)
         {
             return _queueList.Contains(item);
