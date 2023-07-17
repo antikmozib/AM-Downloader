@@ -209,6 +209,11 @@ namespace AMDownloader.Models
 
         #region Public methods
 
+        public override string ToString()
+        {
+            return $"{Url}: {Destination}";
+        }
+
         public async Task StartAsync()
         {
             if (IsDownloading || IsCompleted)
