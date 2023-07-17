@@ -293,7 +293,11 @@ namespace AMDownloader.Models
                     // e.g. no connection, invalid url
                     Status = DownloadStatus.Errored;
 
-                    if (ex is not AMDownloaderUrlException)
+                    if (ex is AMDownloaderUrlException || ex.InnerException is AMDownloaderUrlException)
+                    {
+                        Log.Debug(ex.Message);
+                    }
+                    else
                     {
                         Log.Error(ex, Name);
                     }
