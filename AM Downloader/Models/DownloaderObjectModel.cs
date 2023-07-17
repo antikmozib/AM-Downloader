@@ -70,11 +70,11 @@ namespace AMDownloader.Models
             ? (int)(BytesDownloaded / (double)TotalBytesToDownload * 100)
             : 0;
         /// <summary>
-        /// Gets the estimated time remaining (in milliseconds) to complete the download.
+        /// Gets the estimated time remaining, in milliseconds, to complete the download.
         /// </summary>
         public double? TimeRemaining { get; private set; }
         /// <summary>
-        /// Gets the estimated speed of the download (in bytes/second).
+        /// Gets the estimated speed of the download, in bytes/second.
         /// </summary>
         public long? Speed { get; private set; }
         public int Connections => _connections;
@@ -243,7 +243,7 @@ namespace AMDownloader.Models
 
                     Directory.CreateDirectory(Path.GetDirectoryName(Destination));
 
-                    // for new downloads, we can reset the number of conns allowed
+                    // For new downloads, we can reset the number of conns allowed
                     ConnLimit = Settings.Default.MaxParallelConnPerDownload;
                     RaisePropertyChanged(nameof(ConnLimit));
                 }
@@ -746,9 +746,9 @@ namespace AMDownloader.Models
         }
 
         /// <summary>
-        /// Calculates the sum of the lengths of all the temp files (in bytes).
+        /// Calculates the sum of the lengths of all the temp files, in bytes.
         /// </summary>
-        /// <returns>The combined lengths of all the temp files (in bytes).</returns>
+        /// <returns>The combined lengths of all the temp files, in bytes.</returns>
         private long GetTempFilesLength()
         {
             long length = 0;
