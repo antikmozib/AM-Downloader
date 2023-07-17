@@ -216,8 +216,9 @@ namespace AMDownloader.QueueProcessing
 
             cancellationRequested = ct.IsCancellationRequested;
 
-            _tcs.SetResult();
+            // _tcs result must be set *after* _cts is disposed
             _cts.Dispose();
+            _tcs.SetResult();
 
             // Keep running the queue recursively until there are
             // no more queued items or cancellation is requested
@@ -266,16 +267,16 @@ namespace AMDownloader.QueueProcessing
                 return;
             };
 
-            _cts?.Cancel();
-
-            // Pause items being downloaded
             try
             {
+                _cts?.Cancel();
+
+                // Pause items being downloaded
                 Parallel.ForEach(_queueList, (item) => item.Pause());
             }
-            catch
+            catch (Exception ex)
             {
-
+                Log.Error(ex, ex.Message);
             }
         }
 
