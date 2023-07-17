@@ -292,13 +292,13 @@ namespace AMDownloader.Models
                 }
             }
 
+            _tcs.SetResult();
             _ctsLinked.Dispose();
             _ctsPause.Dispose();
             _ctsCancel.Dispose();
             _ctLinked = default;
             _ctPause = default;
             _ctCancel = default;
-            _tcs.SetResult();
 
             RaisePropertyChanged(nameof(BytesDownloaded));
             RaisePropertyChanged(nameof(Progress));

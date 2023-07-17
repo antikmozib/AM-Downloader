@@ -133,7 +133,7 @@ namespace AMDownloader.ViewModels
             EventHandler closing,
             EventHandler closed)
         {
-            DownloadItemsCollection = new();
+            DownloadItemsCollection = new ObservableCollection<DownloaderObjectModel>();
 
             CategoriesCollection = new ObservableCollection<Category>();
 
@@ -183,7 +183,7 @@ namespace AMDownloader.ViewModels
             _showWindow = showWindow;
             _showPrompt = showPrompt;
             _notifyUpdateAvailable = notifyUpdateAvailable;
-            _refreshViewCtsList = new();
+            _refreshViewCtsList = new List<CancellationTokenSource>();
             _refreshViewCtsListLock = _refreshViewCtsList;
             _downloadItemsCollectionLock = DownloadItemsCollection;
             _bytesDownloadedLock = BytesDownloadedThisSession;
@@ -1069,11 +1069,12 @@ namespace AMDownloader.ViewModels
             }
 
             _refreshViewCtsList.Clear();
-            var newCts = new CancellationTokenSource();
-            _refreshViewCtsList.Add(newCts);
 
-            var ct = newCts.Token;
             _refreshingViewTcs = new TaskCompletionSource();
+            var newCts = new CancellationTokenSource();
+            var ct = newCts.Token;
+
+            _refreshViewCtsList.Add(newCts);
 
             Monitor.Exit(_refreshViewCtsListLock);
 
