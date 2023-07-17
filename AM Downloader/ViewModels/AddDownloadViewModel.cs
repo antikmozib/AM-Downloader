@@ -53,7 +53,7 @@ namespace AMDownloader.ViewModels
 
         public AddDownloadViewModel()
         {
-            SavedLocations = new();
+            SavedLocations = new ObservableCollection<string>();
             Enqueue = Settings.Default.EnqueueAddedItems;
             StartDownload = Settings.Default.StartDownloadingAddedItems;
             ItemsAdded = false;

@@ -50,7 +50,7 @@ namespace AMDownloader.QueueProcessing
             EventHandler itemEnqueuedEventHandler,
             EventHandler itemDequeuedEventHandler)
         {
-            _queueList = new();
+            _queueList = new List<IQueueable>();
             _queueListLock = _queueList;
             _semaphore = new SemaphoreSlim(maxParallelDownloads);
 
@@ -131,8 +131,8 @@ namespace AMDownloader.QueueProcessing
                 return;
             };
 
-            _tcs = new();
-            _cts = new();
+            _tcs = new TaskCompletionSource();
+            _cts = new CancellationTokenSource();
 
             var ct = _cts.Token;
 
@@ -168,7 +168,7 @@ namespace AMDownloader.QueueProcessing
 
                                 ct.ThrowIfCancellationRequested();
 
-                                // ensure the item is still enqueued before commencing download
+                                // Ensure the item is still enqueued before commencing download
                                 if (!_queueList.Contains(item))
                                 {
                                     return;
@@ -178,7 +178,7 @@ namespace AMDownloader.QueueProcessing
 
                                 if (item.IsCompleted || item.IsErrored)
                                 {
-                                    // item processed
+                                    // Item processed
 
                                     Monitor.Enter(_queueListLock);
                                     _queueList.Remove(item);
@@ -209,7 +209,7 @@ namespace AMDownloader.QueueProcessing
                 Log.Error(ex, ex.Message);
             }
 
-            // must be set before auto restarting the queue;
+            // IsBusy must be set before auto restarting the queue;
             // also, must be set before setting _tcs due to a race
             // condition when canceling and restarting the queue
             IsBusy = false;
@@ -219,7 +219,7 @@ namespace AMDownloader.QueueProcessing
             _tcs.SetResult();
             _cts.Dispose();
 
-            // keep running the queue recursively until there are
+            // Keep running the queue recursively until there are
             // no more queued items or cancellation is requested
             if (_queueList.Count > 0 && !cancellationRequested)
             {
@@ -268,7 +268,7 @@ namespace AMDownloader.QueueProcessing
 
             _cts?.Cancel();
 
-            // pause items being downloaded
+            // Pause items being downloaded
             try
             {
                 Parallel.ForEach(_queueList, (item) => item.Pause());
