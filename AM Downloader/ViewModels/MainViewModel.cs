@@ -308,8 +308,8 @@ namespace AMDownloader.ViewModels
                     }
                 }).ContinueWith(async (t) =>
                 {
-                    _updatingListTcs.SetResult();
                     _updatingListCts.Dispose();
+                    _updatingListTcs.SetResult();
 
                     Status = "Refreshing...";
                     RaisePropertyChanged(nameof(IsBackgroundWorking));
@@ -455,8 +455,8 @@ namespace AMDownloader.ViewModels
 
                 }).ContinueWith(async (t) =>
                 {
-                    _updatingListTcs.SetResult();
                     _updatingListCts.Dispose();
+                    _updatingListTcs.SetResult();
 
                     Status = "Refreshing...";
                     RaisePropertyChanged(nameof(IsBackgroundWorking));
@@ -520,8 +520,8 @@ namespace AMDownloader.ViewModels
                 }
             }).ContinueWith(async (t) =>
             {
-                _updatingListTcs.SetResult();
                 _updatingListCts.Dispose();
+                _updatingListTcs.SetResult();
 
                 Status = "Refreshing...";
                 RaisePropertyChanged(nameof(IsBackgroundWorking));
@@ -779,8 +779,8 @@ namespace AMDownloader.ViewModels
                 }
             }).ContinueWith(t =>
             {
-                _updatingListTcs.SetResult();
                 _updatingListCts.Dispose();
+                _updatingListTcs.SetResult();
 
                 RaisePropertyChanged(nameof(IsBackgroundWorking));
 

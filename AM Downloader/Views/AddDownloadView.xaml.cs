@@ -177,8 +177,8 @@ namespace AMDownloader.Views
                     Log.Debug("Stopped polling clipboard.");
                 }
 
-                _monitorClipboardTcs.SetResult();
                 _monitorClipboardCts.Dispose();
+                _monitorClipboardTcs.SetResult();
             });
         }
 
