@@ -211,7 +211,7 @@ namespace AMDownloader.Models
 
         public override string ToString()
         {
-            return $"{Url}: {Destination}";
+            return Name;
         }
 
         public async Task StartAsync()
@@ -295,11 +295,11 @@ namespace AMDownloader.Models
 
                     if (ex is AMDownloaderUrlException || ex.InnerException is AMDownloaderUrlException)
                     {
-                        Log.Debug(ex.Message);
+                        Log.Debug($"{Name}: {ex.Message}");
                     }
                     else
                     {
-                        Log.Error(ex, Name);
+                        Log.Error(ex, ex.Message);
                     }
                 }
             }
