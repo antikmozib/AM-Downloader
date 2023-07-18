@@ -152,7 +152,8 @@ namespace AMDownloader.QueueProcessing
             // raising an exception
             List<IQueueable> cached = _queueList.ToList();
 
-            Log.Debug($"First item in {nameof(_queueList)}: {cached.First()}");
+            Log.Debug($"First item in {nameof(QueueProcessor)}: {cached.First()}");
+            Log.Debug($"Last item in {nameof(QueueProcessor)}: {cached.Last()}");
 
             foreach (var item in cached)
             {
