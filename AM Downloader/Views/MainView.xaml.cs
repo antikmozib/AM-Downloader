@@ -215,14 +215,21 @@ namespace AMDownloader.Views
 
         private void CategoriesList_Loaded(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrEmpty(Settings.Default.LastSelectedCatagory))
+            try
             {
-                (CategoriesList.ItemContainerGenerator.ContainerFromIndex(0) as ListBoxItem).IsSelected = true;
+                if (string.IsNullOrEmpty(Settings.Default.LastSelectedCatagory))
+                {
+                    (CategoriesList.ItemContainerGenerator.ContainerFromIndex(0) as ListBoxItem).IsSelected = true;
+                }
+                else
+                {
+                    (CategoriesList.ItemContainerGenerator.ContainerFromIndex(
+                        (int)(Category)Enum.Parse(typeof(Category), Settings.Default.LastSelectedCatagory)) as ListBoxItem).IsSelected = true;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                (CategoriesList.ItemContainerGenerator.ContainerFromIndex(
-                    (int)(Category)Enum.Parse(typeof(Category), Settings.Default.LastSelectedCatagory)) as ListBoxItem).IsSelected = true;
+                Log.Error(ex, ex.Message);
             }
         }
 
