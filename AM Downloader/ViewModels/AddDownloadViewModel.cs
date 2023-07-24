@@ -24,7 +24,7 @@ namespace AMDownloader.ViewModels
         public event EventHandler Closing;
         public event EventHandler Closed;
 
-        public ShowWindowDelegate ShowList { get; set; }
+        public Func<object, bool?> ShowList { get; set; }
         public ShowPromptDelegate ShowPrompt { get; set; }
         public ShowFolderBrowserDelegate ShowFolderBrowser { get; set; }
         public string Urls { get; set; }

@@ -10,7 +10,7 @@ namespace AMDownloader.Helpers
         #region Fields
 
         private readonly Action<T> _execute;
-        private readonly Predicate<T> _canExecute;
+        private readonly Func<T, bool> _canExecute;
 
         #endregion
 
@@ -18,7 +18,7 @@ namespace AMDownloader.Helpers
 
         public RelayCommand(Action<T> execute) : this(execute, null) { }
 
-        public RelayCommand(Action<T> execute, Predicate<T> canExecute)
+        public RelayCommand(Action<T> execute, Func<T, bool> canExecute)
         {
             _execute = execute ?? throw new ArgumentNullException(nameof(execute));
             _canExecute = canExecute;

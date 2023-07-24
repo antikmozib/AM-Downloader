@@ -26,8 +26,6 @@ using System.Windows.Input;
 
 namespace AMDownloader.ViewModels
 {
-    public delegate bool? ShowWindowDelegate(object viewModel);
-
     public delegate bool? ShowPromptDelegate(
         string promptText,
         string caption = "",
@@ -49,7 +47,7 @@ namespace AMDownloader.ViewModels
         private readonly HttpClient _client;
         private readonly IProgress<long> _progressReporter;
         private readonly SemaphoreSlim _refreshingViewSemaphore;
-        private readonly ShowWindowDelegate _showWindow;
+        private readonly Func<object, bool?> _showWindow;
         private readonly ShowPromptDelegate _showPrompt;
         private readonly NotifyUpdateAvailableDelegate _notifyUpdateAvailable;
         private CancellationTokenSource _updatingListCts;
@@ -125,7 +123,7 @@ namespace AMDownloader.ViewModels
 
         #region Constructors
 
-        public MainViewModel(ShowWindowDelegate showWindow,
+        public MainViewModel(Func<object, bool?> showWindow,
             ShowPromptDelegate showPrompt,
             NotifyUpdateAvailableDelegate notifyUpdateAvailable,
             EventHandler closing,
