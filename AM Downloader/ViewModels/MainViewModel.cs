@@ -26,8 +26,6 @@ using System.Windows.Input;
 
 namespace AMDownloader.ViewModels
 {
-    public delegate Task AddItemsAsyncDelegate(string destination, bool enqueue, bool start, params string[] urls);
-
     public delegate bool? ShowWindowDelegate(object viewModel);
 
     public delegate bool? ShowPromptDelegate(
