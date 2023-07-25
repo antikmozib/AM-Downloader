@@ -487,9 +487,9 @@ namespace AMDownloader.Models
                         if (SupportsResume)
                         {
                             var connFileInfo = new FileInfo(connFile);
-                            long connStart = (TotalBytesToDownload ?? 0) / connCount * conn;
+                            long connStartPos = (TotalBytesToDownload ?? 0) / connCount * conn;
                             // If this is the last conn, read till the end of the file
-                            long connEnd = conn == connCount - 1
+                            long connEndPos = conn == connCount - 1
                                 ? (TotalBytesToDownload ?? 0)
                                 : (TotalBytesToDownload ?? 0) / connCount * (conn + 1);
 
@@ -499,16 +499,16 @@ namespace AMDownloader.Models
                                 {
                                     // If resuming a paused download, add the bytes already downloaded
                                     // which is determined from the length of the existing conn file
-                                    connStart += connFileInfo.Length;
+                                    connStartPos += connFileInfo.Length;
                                 }
                             }
 
-                            connLength = connEnd - connStart;
+                            connLength = connEndPos - connStartPos;
 
                             Log.Debug("{0,1}{1,2}{2,12}{3,12}{4,12}{5,12}{6,12}{7,12}",
                                 "Conn = ", conn,
-                                "Start = ", connStart,
-                                "End = ", connEnd,
+                                "Start = ", connStartPos,
+                                "End = ", connEndPos,
                                 "Length = ", connLength);
 
                             // Conn already completed its allocated bytes
@@ -518,7 +518,7 @@ namespace AMDownloader.Models
                                 return;
                             }
 
-                            connRequest.Headers.Range = new RangeHeaderValue(connStart, connEnd - 1);
+                            connRequest.Headers.Range = new RangeHeaderValue(connStartPos, connEndPos - 1);
                         }
                         else
                         {
