@@ -5,7 +5,7 @@
     <system:String x:Key="resetSettingsMsg">The application needs to be restarted for the changes to take effect.</system:String>
     <system:String x:Key="addDownloadHelpTitle">How to use URL patterns</system:String>
     <system:String x:Key="addDownloadHelpText"
-                   xml:space="preserve">Patterns can be applied to download multiple files from a single URL. For example, entering the following pattern:
+                   xml:space="preserve">Patterns can be used to download multiple files from a single URL. For example, entering the following pattern:
 
         http://www.example.com/file[1:10].png
 
