@@ -422,7 +422,7 @@ namespace AMDownloader.ViewModels
             AddDownloadViewModel addDownloadViewModel = new();
             DownloaderObjectModel[] itemsCreated = null;
 
-            _showWindow.Invoke(addDownloadViewModel);
+            _showWindow(addDownloadViewModel);
 
             if (addDownloadViewModel.ItemsAdded)
             {
@@ -481,7 +481,7 @@ namespace AMDownloader.ViewModels
 
             if (itemsDeleteable.Any())
             {
-                var result = _showPrompt.Invoke(
+                var result = _showPrompt(
                     $"Also delete the file{(items.Length > 1 ? "s" : "")} from storage?",
                     "Remove",
                     PromptButton.YesNoCancel,
@@ -545,7 +545,7 @@ namespace AMDownloader.ViewModels
 
             if (items.Length > 1)
             {
-                if (_showPrompt.Invoke(
+                if (_showPrompt(
                      "Opening too many files at the same file may cause the system to crash.\n\nProceed anyway?",
                      "Open",
                      PromptButton.YesNo,
@@ -589,7 +589,7 @@ namespace AMDownloader.ViewModels
 
             if (itemsOpenable.Length > 1)
             {
-                if (_showPrompt.Invoke(
+                if (_showPrompt(
                     "Opening too many folders at the same time may cause the system to crash.\n\nProceed anyway?",
                     "Open Folder",
                     PromptButton.YesNo,
@@ -659,7 +659,7 @@ namespace AMDownloader.ViewModels
         {
             var settingsViewModel = new SettingsViewModel();
 
-            if (_showWindow.Invoke(settingsViewModel) == true)
+            if (_showWindow(settingsViewModel) == true)
             {
                 if (settingsViewModel.ResetSettingsOnClose)
                 {
@@ -848,7 +848,7 @@ namespace AMDownloader.ViewModels
 
             if (IsBackgroundWorking)
             {
-                if (_showPrompt.Invoke(
+                if (_showPrompt(
                     "Background operation in progress. Cancel and exit program?",
                     "Exit",
                     PromptButton.YesNo,
@@ -876,7 +876,7 @@ namespace AMDownloader.ViewModels
 
                 if (unPauseableDownloads.Any())
                 {
-                    if (_showPrompt.Invoke(
+                    if (_showPrompt(
                     "The following ongoing downloads cannot be paused and will be canceled. Proceed?\n\n"
                     + string.Join("\n", unPauseableDownloads.Select(o => o.Name).ToArray()),
                     "Exit",
@@ -1193,14 +1193,14 @@ namespace AMDownloader.ViewModels
 
             if (itemsExist.Count > 0)
             {
-                _showWindow.Invoke(new ListViewerViewModel(itemsExist,
+                _showWindow(new ListViewerViewModel(itemsExist,
                     "The following URLs were not added because they are already in the list:",
                     "Duplicate Entries"));
             }
 
             if (itemsErrored.Count > 0)
             {
-                _showWindow.Invoke(new ListViewerViewModel(itemsErrored,
+                _showWindow(new ListViewerViewModel(itemsErrored,
                     "The following URLs were not added because they are invalid:",
                     "Invalid Entries"));
             }
@@ -1437,13 +1437,13 @@ namespace AMDownloader.ViewModels
 
                 if (UpdateService.IsUpdateAvailable(latestUpdateInfo.Versions, currentVer))
                 {
-                    _notifyUpdateAvailable.Invoke(latestUpdateInfo, silent);
+                    _notifyUpdateAvailable(latestUpdateInfo, silent);
                 }
                 else
                 {
                     if (!silent)
                     {
-                        _showPrompt.Invoke(
+                        _showPrompt(
                             (string)Application.Current.FindResource("noUpdateMsg"),
                             "Update",
                             icon: PromptIcon.Information);
@@ -1456,8 +1456,8 @@ namespace AMDownloader.ViewModels
 
                 if (!silent)
                 {
-                    _showPrompt.Invoke(
-                        (string)Application.Current.FindResource("erroredUpdateMsg"),
+                    _showPrompt(
+                        string.Format((string)Application.Current.FindResource("erroredUpdateMsg"), ex.Message),
                         "Update",
                         icon: PromptIcon.Error);
                 }

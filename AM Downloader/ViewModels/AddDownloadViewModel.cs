@@ -101,7 +101,7 @@ namespace AMDownloader.ViewModels
 
         private void Browse()
         {
-            var (selected, selectedPath) = ShowFolderBrowser.Invoke();
+            var (selected, selectedPath) = ShowFolderBrowser();
 
             if (selected)
             {
@@ -123,7 +123,7 @@ namespace AMDownloader.ViewModels
 
         private void Preview()
         {
-            ShowList.Invoke(new ListViewerViewModel(ExplodedUrls, "URLs exploded from their patterns:", "Preview"));
+            ShowList(new ListViewerViewModel(ExplodedUrls, "URLs exploded from their patterns:", "Preview"));
         }
 
         private bool Preview_CanExecute()
