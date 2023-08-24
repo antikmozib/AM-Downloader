@@ -6,15 +6,16 @@ A modern download manager for Windows.
 
 <h3>Features</h3>
 
-* Support for parallel downloading of many items
-* Pause and resume downloads
-* Batch download items using URL patterns
-* Throttle speed to reduce network pressure
-* Easy-to-use and modern interface
+* Concurrent downloading of many items.
+* Multiple download streams per download to speed up transfer rates.
+* Pausing and resuming of downloads.
+* Batch downloading of items using URL patterns.
+* Speed throttling to reduce network pressure.
+* Easy-to-use and modern interface.
 
 <h3>Installing</h3>
 
-_System Requirements:_ Windows 7 SP1 (64-bit) or later with [.NET Desktop Runtime 6.0 x86](https://dotnet.microsoft.com/en-us/download/dotnet/6.0)
+_System Requirements:_ Windows 7 SP1 (64-bit) or later with [.NET Desktop Runtime 6.0 (x86)](https://dotnet.microsoft.com/en-us/download/dotnet/6.0)
 
 Download and run the setup program and follow its instructions.
 
