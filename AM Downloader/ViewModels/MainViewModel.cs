@@ -1457,7 +1457,7 @@ namespace AMDownloader.ViewModels
                 if (!silent)
                 {
                     _showPrompt(
-                        string.Format((string)Application.Current.FindResource("erroredUpdateMsg"), ex.Message),
+                        string.Format((string)Application.Current.FindResource("erroredUpdateMsg")),
                         "Update",
                         icon: PromptIcon.Error);
                 }
