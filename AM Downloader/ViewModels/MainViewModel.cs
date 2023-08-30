@@ -1016,7 +1016,7 @@ namespace AMDownloader.ViewModels
                     DownloadItemsView.Filter = new Predicate<object>((o) =>
                     {
                         var item = o as DownloaderObjectModel;
-                        return QueueProcessor.IsQueued(item);
+                        return QueueProcessor.IsQueued(item) && !item.IsDownloading;
                     });
                     break;
 
@@ -1554,7 +1554,7 @@ namespace AMDownloader.ViewModels
         private void CollectionView_CurrentChanged(object sender, EventArgs e)
         {
             Count = DownloadItemsCollection.Count;
-            QueuedCount = QueueProcessor.Count;
+            QueuedCount = QueueProcessor.Items.Where(o => !((DownloaderObjectModel)o).IsDownloading).Count();
             ReadyCount = DownloadItemsCollection.Count(o => o.IsReady && !QueueProcessor.IsQueued(o));
             DownloadingCount = DownloadItemsCollection.Count(o => o.IsDownloading);
             PausedCount = DownloadItemsCollection.Count(o => o.IsPaused);
