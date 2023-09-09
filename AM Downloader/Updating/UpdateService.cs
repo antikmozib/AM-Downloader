@@ -52,7 +52,7 @@ namespace AMDownloader.Updating
 
     public static class UpdateService
     {
-        private const string ApiAddress = @"https://mozib.io/downloads/update.php";
+        private const string ApiAddress = @"https://mozib.io/downloads/update/";
 
         /// <summary>
         /// Requests the update API to send information about the latest available update for <paramref name="appName"/>.
