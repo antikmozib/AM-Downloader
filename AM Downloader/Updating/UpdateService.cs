@@ -20,6 +20,9 @@ namespace AMDownloader.Updating
         [JsonPropertyName("version")]
         public VersionInfo Versions { get; set; }
 
+        [JsonPropertyName("channel")]
+        public string Channel { get; set; }
+
         [JsonPropertyName("released")]
         public string Released { get; set; }
 
