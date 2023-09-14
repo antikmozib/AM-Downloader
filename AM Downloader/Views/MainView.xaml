@@ -1167,7 +1167,7 @@
 
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
                                         HeaderContainerStyle="{StaticResource HeaderRightAlignedStyle}"
-                                        Header="Created"
+                                        Header="Added"
                                         Width="148">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
@@ -1186,7 +1186,7 @@
 
                         <GridViewColumn HeaderTemplate="{StaticResource HeaderTemplate}"
                                         HeaderContainerStyle="{StaticResource HeaderRightAlignedStyle}"
-                                        Header="Finished"
+                                        Header="Completed"
                                         Width="148">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
