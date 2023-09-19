@@ -125,7 +125,7 @@
     </i:Interaction.Triggers>
 
     <Window.InputBindings>
-        <KeyBinding Command="{Binding ClearFinishedDownloadsCommand}"
+        <KeyBinding Command="{Binding ClearCompletedDownloadsCommand}"
                     Key="Delete"
                     Modifiers="Alt" />
         <KeyBinding Command="{Binding RemoveCommand}"
@@ -152,8 +152,8 @@
         <!--#region MENU -->
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
-                <MenuItem Command="{Binding ClearFinishedDownloadsCommand}"
-                          Header="Clear Finished Downloads"
+                <MenuItem Command="{Binding ClearCompletedDownloadsCommand}"
+                          Header="Clear Completed Downloads"
                           InputGestureText="Alt+Del">
                     <MenuItem.Icon>
                         <Viewbox>
@@ -613,9 +613,9 @@
                                             </DataTrigger>
 
                                             <DataTrigger Binding="{Binding}"
-                                                         Value="Finished">
+                                                         Value="Completed">
                                                 <Setter Property="Fill"
-                                                        Value="{StaticResource CategoryFinishedColor}" />
+                                                        Value="{StaticResource CategoryCompletedColor}" />
                                             </DataTrigger>
 
                                             <DataTrigger Binding="{Binding}"
@@ -685,9 +685,9 @@
                                             </DataTrigger>
 
                                             <DataTrigger Binding="{Binding}"
-                                                         Value="Finished">
+                                                         Value="Completed">
                                                 <Setter Property="Text"
-                                                        Value="{Binding DataContext.FinishedCount, Converter={StaticResource TreeViewCountConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+                                                        Value="{Binding DataContext.CompletedCount, Converter={StaticResource TreeViewCountConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
                                             </DataTrigger>
 
                                             <DataTrigger Binding="{Binding}"
@@ -1177,7 +1177,7 @@
                                         </Grid.RowDefinitions>
 
                                         <TextBlock Style="{StaticResource DownloadsGridTextBlockStyle}"
-                                                   Text="{Binding DateCreated, Converter={StaticResource DownloaderDateConverter}}"
+                                                   Text="{Binding CreatedOn, Converter={StaticResource DownloaderDateConverter}}"
                                                    TextAlignment="Right" />
                                     </Grid>
                                 </DataTemplate>
@@ -1196,7 +1196,7 @@
                                         </Grid.RowDefinitions>
 
                                         <TextBlock Style="{StaticResource DownloadsGridTextBlockStyle}"
-                                                   Text="{Binding DateFinished, Converter={StaticResource DownloaderDateConverter}}"
+                                                   Text="{Binding CompletedOn, Converter={StaticResource DownloaderDateConverter}}"
                                                    TextAlignment="Right" />
                                     </Grid>
                                 </DataTemplate>

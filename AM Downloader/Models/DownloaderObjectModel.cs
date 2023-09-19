@@ -21,7 +21,7 @@ namespace AMDownloader.Models
 {
     public enum DownloadStatus
     {
-        Ready, Downloading, Paused, Finished, Errored
+        Ready, Downloading, Paused, Completed, Errored
     }
 
     public class DownloaderObjectModel : IQueueable, INotifyPropertyChanged
@@ -52,8 +52,8 @@ namespace AMDownloader.Models
         /// </summary>
         public string Destination { get; }
         public string Extension => Path.GetExtension(Destination);
-        public DateTime DateCreated { get; }
-        public DateTime? DateFinished { get; private set; }
+        public DateTime CreatedOn { get; }
+        public DateTime? CompletedOn { get; private set; }
         /// <summary>
         /// Gets the total number of bytes of the file.
         /// </summary>
@@ -92,7 +92,7 @@ namespace AMDownloader.Models
         public bool IsReady => Status == DownloadStatus.Ready;
         public bool IsDownloading => Status == DownloadStatus.Downloading;
         public bool IsPaused => Status == DownloadStatus.Paused;
-        public bool IsCompleted => Status == DownloadStatus.Finished;
+        public bool IsCompleted => Status == DownloadStatus.Completed;
         public bool IsErrored => Status == DownloadStatus.Errored;
 
         #endregion
@@ -118,8 +118,8 @@ namespace AMDownloader.Models
                 httpClient: httpClient,
                 url: url,
                 destination: destination,
-                dateCreated: DateTime.Now,
-                dateFinished: null,
+                createdOn: DateTime.Now,
+                completedOn: null,
                 bytesToDownload: null,
                 connLimit: Settings.Default.MaxParallelConnPerDownload,
                 httpStatusCode: null,
@@ -135,8 +135,8 @@ namespace AMDownloader.Models
             HttpClient httpClient,
             string url,
             string destination,
-            DateTime dateCreated,
-            DateTime? dateFinished,
+            DateTime createdOn,
+            DateTime? completedOn,
             long? bytesToDownload,
             int connLimit,
             HttpStatusCode? httpStatusCode,
@@ -155,8 +155,8 @@ namespace AMDownloader.Models
 
             Url = url;
             Destination = destination;
-            DateCreated = dateCreated;
-            DateFinished = dateFinished;
+            CreatedOn = createdOn;
+            CompletedOn = completedOn;
             TotalBytesToDownload = bytesToDownload;
             BytesDownloaded = 0;
             BytesDownloadedThisSession = 0;
@@ -250,13 +250,13 @@ namespace AMDownloader.Models
 
                 await DownloadAsync();
 
-                DateFinished = DateTime.Now;
+                CompletedOn = DateTime.Now;
                 // Update sizes to reflect actual size on disk
                 BytesDownloaded = new FileInfo(Destination).Length;
                 TotalBytesToDownload = BytesDownloaded;
-                Status = DownloadStatus.Finished;
+                Status = DownloadStatus.Completed;
 
-                RaisePropertyChanged(nameof(DateFinished));
+                RaisePropertyChanged(nameof(CompletedOn));
                 RaisePropertyChanged(nameof(TotalBytesToDownload));
             }
             catch (Exception ex)

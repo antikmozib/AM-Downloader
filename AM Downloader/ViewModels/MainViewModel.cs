@@ -37,7 +37,7 @@ namespace AMDownloader.ViewModels
 
     public enum Category
     {
-        All, Ready, Queued, Downloading, Paused, Finished, Errored
+        All, Ready, Queued, Downloading, Paused, Completed, Errored
     }
 
     public class MainViewModel : INotifyPropertyChanged, ICloseable
@@ -78,7 +78,7 @@ namespace AMDownloader.ViewModels
         public int ReadyCount { get; private set; }
         public int DownloadingCount { get; private set; }
         public int QueuedCount { get; private set; }
-        public int FinishedCount { get; private set; }
+        public int CompletedCount { get; private set; }
         public int ErroredCount { get; private set; }
         public int PausedCount { get; private set; }
         public string Status { get; private set; }
@@ -114,7 +114,7 @@ namespace AMDownloader.ViewModels
         public ICommand EnqueueCommand { get; private set; }
         public ICommand DequeueCommand { get; private set; }
         public ICommand CopyLinkToClipboardCommand { get; private set; }
-        public ICommand ClearFinishedDownloadsCommand { get; private set; }
+        public ICommand ClearCompletedDownloadsCommand { get; private set; }
         public ICommand CancelBackgroundTaskCommand { get; private set; }
         public ICommand CheckForUpdatesCommand { get; private set; }
         public ICommand UIClosedCommand { get; private set; }
@@ -151,7 +151,7 @@ namespace AMDownloader.ViewModels
             ReadyCount = 0;
             DownloadingCount = 0;
             QueuedCount = 0;
-            FinishedCount = 0;
+            CompletedCount = 0;
             ErroredCount = 0;
             PausedCount = 0;
             Status = "Ready";
@@ -200,7 +200,7 @@ namespace AMDownloader.ViewModels
             EnqueueCommand = new RelayCommand<object>(Enqueue, Enqueue_CanExecute);
             DequeueCommand = new RelayCommand<object>(Dequeue, Dequeue_CanExecute);
             CopyLinkToClipboardCommand = new RelayCommand<object>(CopyLinkToClipboard, CopyLinkToClipboardCommand_CanExecute);
-            ClearFinishedDownloadsCommand = new RelayCommand(ClearFinishedDownloads, ClearFinishedDownloads_CanExecute);
+            ClearCompletedDownloadsCommand = new RelayCommand(ClearCompletedDownloads, ClearCompletedDownloads_CanExecute);
             CancelBackgroundTaskCommand = new RelayCommand(CancelBackgroundTask, CancelBackgroundTask_CanExecute);
             CheckForUpdatesCommand = new RelayCommand<object>(CheckForUpdates, CheckForUpdates_CanExecute);
             UIClosedCommand = new RelayCommand(UIClosed);
@@ -270,8 +270,8 @@ namespace AMDownloader.ViewModels
                                 httpClient: _client,
                                 url: sourceObjects[i].Url,
                                 destination: sourceObjects[i].Destination,
-                                dateCreated: sourceObjects[i].DateCreated,
-                                dateFinished: sourceObjects[i].DateFinished,
+                                createdOn: sourceObjects[i].CreatedOn,
+                                completedOn: sourceObjects[i].CompletedOn,
                                 bytesToDownload: sourceObjects[i].TotalBytesToDownload,
                                 connLimit: sourceObjects[i].ConnLimit,
                                 httpStatusCode: sourceObjects[i].StatusCode,
@@ -754,7 +754,7 @@ namespace AMDownloader.ViewModels
             return items.Any();
         }
 
-        private void ClearFinishedDownloads()
+        private void ClearCompletedDownloads()
         {
             _updatingListTcs = new TaskCompletionSource();
             _updatingListCts = new CancellationTokenSource();
@@ -784,9 +784,9 @@ namespace AMDownloader.ViewModels
             });
         }
 
-        private bool ClearFinishedDownloads_CanExecute()
+        private bool ClearCompletedDownloads_CanExecute()
         {
-            return !IsBackgroundWorking && FinishedCount > 0;
+            return !IsBackgroundWorking && CompletedCount > 0;
         }
 
         private void CancelBackgroundTask()
@@ -920,7 +920,7 @@ namespace AMDownloader.ViewModels
                         {
                             await item.PauseAsync();
                         }
-                        else if (item.IsCompleted && Settings.Default.ClearFinishedDownloadsOnExit)
+                        else if (item.IsCompleted && Settings.Default.ClearCompletedDownloadsOnExit)
                         {
                             continue;
                         }
@@ -930,8 +930,8 @@ namespace AMDownloader.ViewModels
                             Index = index++,
                             Url = item.Url,
                             Destination = item.Destination,
-                            DateCreated = item.DateCreated,
-                            DateFinished = item.DateFinished,
+                            CreatedOn = item.CreatedOn,
+                            CompletedOn = item.CompletedOn,
                             TotalBytesToDownload = item.TotalBytesToDownload,
                             ConnLimit = item.ConnLimit,
                             StatusCode = item.StatusCode,
@@ -996,7 +996,7 @@ namespace AMDownloader.ViewModels
                     });
                     break;
 
-                case Category.Finished:
+                case Category.Completed:
                     DownloadItemsView.Filter = new Predicate<object>((o) =>
                     {
                         var item = o as DownloaderObjectModel;
@@ -1558,13 +1558,13 @@ namespace AMDownloader.ViewModels
             ReadyCount = DownloadItemsCollection.Count(o => o.IsReady && !QueueProcessor.IsQueued(o));
             DownloadingCount = DownloadItemsCollection.Count(o => o.IsDownloading);
             PausedCount = DownloadItemsCollection.Count(o => o.IsPaused);
-            FinishedCount = DownloadItemsCollection.Count(o => o.IsCompleted);
+            CompletedCount = DownloadItemsCollection.Count(o => o.IsCompleted);
             ErroredCount = DownloadItemsCollection.Count(o => o.IsErrored);
 
             RaisePropertyChanged(nameof(Count));
             RaisePropertyChanged(nameof(DownloadingCount));
             RaisePropertyChanged(nameof(ErroredCount));
-            RaisePropertyChanged(nameof(FinishedCount));
+            RaisePropertyChanged(nameof(CompletedCount));
             RaisePropertyChanged(nameof(PausedCount));
             RaisePropertyChanged(nameof(QueuedCount));
             RaisePropertyChanged(nameof(ReadyCount));

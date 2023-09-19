@@ -129,7 +129,7 @@ namespace AMDownloader.ViewModels
             _maxDownloadSpeed = Settings.Default.MaxDownloadSpeed;
             _connectionTimeout = Settings.Default.ConnectionTimeout;
 
-            ClearFinishedDownloadsOnExit = Settings.Default.ClearFinishedDownloadsOnExit;
+            ClearFinishedDownloadsOnExit = Settings.Default.ClearCompletedDownloadsOnExit;
             RememberLastDownloadLocation = Settings.Default.RememberLastDownloadLocation;
             AutoCheckForUpdates = Settings.Default.AutoCheckForUpdates;
 
@@ -150,7 +150,7 @@ namespace AMDownloader.ViewModels
             Settings.Default.MaxParallelConnPerDownload = _maxParallelConnPerDownload;
             Settings.Default.MaxDownloadSpeed = _maxDownloadSpeed;
             Settings.Default.ConnectionTimeout = _connectionTimeout;
-            Settings.Default.ClearFinishedDownloadsOnExit = ClearFinishedDownloadsOnExit;
+            Settings.Default.ClearCompletedDownloadsOnExit = ClearFinishedDownloadsOnExit;
             Settings.Default.RememberLastDownloadLocation = RememberLastDownloadLocation;
             Settings.Default.AutoCheckForUpdates = AutoCheckForUpdates;
             Settings.Default.Save();

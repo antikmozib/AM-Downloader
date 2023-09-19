@@ -22,7 +22,7 @@
                      Color="Orange" />
     <SolidColorBrush x:Key="CategoryPausedColor"
                      Color="Gold" />
-    <SolidColorBrush x:Key="CategoryFinishedColor"
+    <SolidColorBrush x:Key="CategoryCompletedColor"
                      Color="SlateGray" />
     <SolidColorBrush x:Key="CategoryErroredColor"
                      Color="Red" />
