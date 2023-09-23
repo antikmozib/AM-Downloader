@@ -304,12 +304,12 @@ namespace AMDownloader.Views
                     columnToSort = "Url";
                     break;
 
-                case "created":
-                    columnToSort = "DateCreated";
+                case "added":
+                    columnToSort = "CreatedOn";
                     break;
 
-                case "finished":
-                    columnToSort = "DateFinished";
+                case "completed":
+                    columnToSort = "CompletedOn";
                     break;
 
                 case "http status":
