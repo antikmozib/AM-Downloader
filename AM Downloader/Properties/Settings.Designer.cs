@@ -109,7 +109,7 @@ namespace AMDownloader.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Created")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Added")]
         public string SelectedColumnHeader {
             get {
                 return ((string)(this["SelectedColumnHeader"]));

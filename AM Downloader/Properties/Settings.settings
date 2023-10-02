@@ -24,7 +24,7 @@
       <Value Profile="(Default)">All</Value>
     </Setting>
     <Setting Name="SelectedColumnHeader" Type="System.String" Scope="User">
-      <Value Profile="(Default)">Created</Value>
+      <Value Profile="(Default)">Added</Value>
     </Setting>
     <Setting Name="SelectedColumnHeaderDirection" Type="System.ComponentModel.ListSortDirection" Scope="User">
       <Value Profile="(Default)">Descending</Value>
