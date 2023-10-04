@@ -55,7 +55,7 @@ namespace AMDownloader.Updating
 
     public static class UpdateService
     {
-        private const string ApiAddress = @"https://mozib.io/downloads/update";
+        private const string ApiAddress = @"https://mozib.io/downloads/update.php";
 
         /// <summary>
         /// Requests the update API to send information about the latest available update for <paramref name="appName"/>.
@@ -68,12 +68,17 @@ namespace AMDownloader.Updating
         /// <exception cref="Exception"></exception>
         public static async Task<UpdateInfo> GetLatestUpdateInfoAsync(string appName, HttpClient httpClient = null)
         {
+            var builder = new UriBuilder(ApiAddress);
+            var query = HttpUtility.ParseQueryString(builder.Query);
+
             httpClient ??= new HttpClient();
             appName = HttpUtility.UrlEncode(appName);
+            query["app"] = appName;
+            builder.Query = query.ToString();
 
             try
             {
-                using var response = await httpClient.GetAsync(ApiAddress + "?app=" + appName);
+                using var response = await httpClient.GetAsync(builder.ToString());
 
                 if (response.IsSuccessStatusCode)
                 {
