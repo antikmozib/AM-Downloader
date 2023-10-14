@@ -40,6 +40,8 @@ namespace AMDownloader.ViewModels
         /// Gets or sets the location where the files will be downloaded and saved to.
         /// </summary>
         public string SaveLocation { get; set; }
+        public ObservableCollection<FileReplacementMode> ReplacementModes { get; }
+        public FileReplacementMode ReplacementMode { get; set; }
         public bool Enqueue { get; set; }
         public bool StartDownload { get; set; }
         /// <summary>
@@ -54,6 +56,12 @@ namespace AMDownloader.ViewModels
         public AddDownloadViewModel()
         {
             SavedLocations = new ObservableCollection<string>();
+            ReplacementModes = new ObservableCollection<FileReplacementMode>();
+            foreach (FileReplacementMode mode in Enum.GetValues(typeof(FileReplacementMode)))
+            {
+                ReplacementModes.Add(mode);
+            }
+            ReplacementMode = Settings.Default.ReplacementMode;
             Enqueue = Settings.Default.EnqueueAddedItems;
             StartDownload = Settings.Default.StartDownloadingAddedItems;
             ItemsAdded = false;
@@ -261,6 +269,7 @@ namespace AMDownloader.ViewModels
             RaiseEvent(Closing);
 
             // save settings
+            Settings.Default.ReplacementMode = ReplacementMode;
             Settings.Default.EnqueueAddedItems = Enqueue;
             Settings.Default.StartDownloadingAddedItems = StartDownload;
 

@@ -12,6 +12,7 @@ namespace AMDownloader.Models.Serialization
         public int Index { get; set; }
         public string Url { get; set; }
         public string Destination { get; set; }
+        public FileReplacementMode ReplacementMode { get; set; }
         public DateTime CreatedOn { get; set; }
         public DateTime? CompletedOn { get; set; }
         public long? TotalBytesToDownload { get; set; }

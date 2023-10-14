@@ -24,6 +24,11 @@ namespace AMDownloader.Models
         Ready, Downloading, Paused, Completed, Errored
     }
 
+    public enum FileReplacementMode
+    {
+        Overwrite, Rename, Skip
+    }
+
     public class DownloaderObjectModel : IQueueable, INotifyPropertyChanged
     {
         #region Fields
@@ -36,6 +41,7 @@ namespace AMDownloader.Models
         private TaskCompletionSource _tcs;
         private CancellationTokenSource _ctsPause, _ctsCancel, _ctsLinked;
         private CancellationToken _ctPause, _ctCancel, _ctLinked;
+        private FileReplacementMode _replacementMode;
 
         #endregion
 
@@ -110,6 +116,7 @@ namespace AMDownloader.Models
             HttpClient httpClient,
             string url,
             string destination,
+            FileReplacementMode replacementMode,
             EventHandler downloadCreated,
             EventHandler downloadStarted,
             EventHandler downloadStopped,
@@ -118,6 +125,7 @@ namespace AMDownloader.Models
                 httpClient: httpClient,
                 url: url,
                 destination: destination,
+                replacementMode: replacementMode,
                 createdOn: DateTime.Now,
                 completedOn: null,
                 bytesToDownload: null,
@@ -135,6 +143,7 @@ namespace AMDownloader.Models
             HttpClient httpClient,
             string url,
             string destination,
+            FileReplacementMode replacementMode,
             DateTime createdOn,
             DateTime? completedOn,
             long? bytesToDownload,
@@ -152,6 +161,7 @@ namespace AMDownloader.Models
             _httpClient = httpClient;
             _reportProgressBytes = bytesReporter;
             _connections = 0;
+            _replacementMode = replacementMode;
 
             Url = url;
             Destination = destination;
@@ -242,6 +252,12 @@ namespace AMDownloader.Models
                     // Creating a new download
 
                     Directory.CreateDirectory(Path.GetDirectoryName(Destination));
+
+                    // If we've been instructed to overwrite existing files, do it.
+                    if (_replacementMode == FileReplacementMode.Overwrite && File.Exists(Destination))
+                    {
+                        File.Delete(Destination);
+                    }
 
                     // For new downloads, we can reset the number of conns allowed
                     ConnLimit = Settings.Default.MaxParallelConnPerDownload;

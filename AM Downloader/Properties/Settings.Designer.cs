@@ -133,7 +133,7 @@ namespace AMDownloader.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("640")]
+        [global::System.Configuration.DefaultSettingValueAttribute("700")]
         public string AddWindowWidth {
             get {
                 return ((string)(this["AddWindowWidth"]));
@@ -145,7 +145,7 @@ namespace AMDownloader.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("256")]
+        [global::System.Configuration.DefaultSettingValueAttribute("260")]
         public string AddWindowHeight {
             get {
                 return ((string)(this["AddWindowHeight"]));
@@ -296,6 +296,18 @@ namespace AMDownloader.Properties {
             }
             set {
                 this["RememberLastDownloadLocation"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Rename")]
+        public global::AMDownloader.Models.FileReplacementMode ReplacementMode {
+            get {
+                return ((global::AMDownloader.Models.FileReplacementMode)(this["ReplacementMode"]));
+            }
+            set {
+                this["ReplacementMode"] = value;
             }
         }
         

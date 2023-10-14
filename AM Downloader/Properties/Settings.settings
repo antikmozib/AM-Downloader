@@ -30,10 +30,10 @@
       <Value Profile="(Default)">Descending</Value>
     </Setting>
     <Setting Name="AddWindowWidth" Type="System.String" Scope="User">
-      <Value Profile="(Default)">640</Value>
+      <Value Profile="(Default)">700</Value>
     </Setting>
     <Setting Name="AddWindowHeight" Type="System.String" Scope="User">
-      <Value Profile="(Default)">256</Value>
+      <Value Profile="(Default)">260</Value>
     </Setting>
     <Setting Name="AddDownloadWindowFontSize" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">14</Value>
@@ -70,6 +70,9 @@
     </Setting>
     <Setting Name="RememberLastDownloadLocation" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="ReplacementMode" Type="AMDownloader.Models.FileReplacementMode" Scope="User">
+      <Value Profile="(Default)">Rename</Value>
     </Setting>
     <Setting Name="ClearCompletedDownloadsOnExit" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>

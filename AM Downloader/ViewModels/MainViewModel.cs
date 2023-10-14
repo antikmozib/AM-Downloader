@@ -270,6 +270,7 @@ namespace AMDownloader.ViewModels
                                 httpClient: _client,
                                 url: sourceObjects[i].Url,
                                 destination: sourceObjects[i].Destination,
+                                replacementMode: sourceObjects[i].ReplacementMode,
                                 createdOn: sourceObjects[i].CreatedOn,
                                 completedOn: sourceObjects[i].CompletedOn,
                                 bytesToDownload: sourceObjects[i].TotalBytesToDownload,
@@ -437,6 +438,7 @@ namespace AMDownloader.ViewModels
                     itemsCreated = CreateObjects(
                         addDownloadViewModel.ExplodedUrls,
                         addDownloadViewModel.SaveLocation,
+                        addDownloadViewModel.ReplacementMode,
                         ct);
 
                     Status = "Updating...";
@@ -1127,14 +1129,16 @@ namespace AMDownloader.ViewModels
         /// </summary>
         /// <param name="urls">The URLs to the files to add.</param>
         /// <param name="saveToFolder">The folder where to download the files.</param>
+        /// <param name="replacementMode">How to treat pre-existing files.</param>
         /// <param name="ct">The <see cref="CancellationToken"/> to cancel the process.</param>
         /// <returns>An array of <see cref="DownloaderObjectModel"/>s which have been successfully
         /// created.</returns>
-        private DownloaderObjectModel[] CreateObjects(IEnumerable<string> urls, string saveToFolder, CancellationToken ct)
+        private DownloaderObjectModel[] CreateObjects(IEnumerable<string> urls, string saveToFolder, FileReplacementMode replacementMode, CancellationToken ct)
         {
             var existingItems = DownloadItemsCollection.ToList();
             var itemsCreated = new List<DownloaderObjectModel>();
-            var itemsExist = new List<string>(); // skipped
+            var itemsExistInDownloadsList = new List<string>(); // skipped
+            var itemsExistOnDisk = new List<string>();
             var itemsErrored = new List<string>(); // errored
             var totalItems = urls.Count();
             var counter = 0;
@@ -1168,19 +1172,29 @@ namespace AMDownloader.ViewModels
                     o.Url.ToLower() == url.ToLower()
                     && Path.GetDirectoryName(o.Destination.ToLower()) == saveToFolder.ToLower()).Any())
                 {
-                    itemsExist.Add(url);
+                    itemsExistInDownloadsList.Add(url);
+                    continue;
+                }
+
+                // If we've been instructed to skip existing files, check if it already exists and skip it.
+                if (replacementMode == FileReplacementMode.Skip
+                    && File.Exists(Path.Combine(saveToFolder, Common.Functions.GetFileNameFromUrl(url))))
+                {
+                    itemsExistOnDisk.Add(url);
                     continue;
                 }
 
                 filePath = GenerateNewDestination(
                     Path.Combine(saveToFolder, Common.Functions.GetFileNameFromUrl(url)),
-                    existingItems.Select(o => o.Destination).ToArray());
+                    existingItems.Select(o => o.Destination).ToArray(),
+                    replacementMode == FileReplacementMode.Rename ? true : false);
 
                 DownloaderObjectModel item;
                 item = new DownloaderObjectModel(
                         httpClient: _client,
                         url: url,
                         destination: filePath,
+                        replacementMode: replacementMode,
                         downloadCreated: Download_Created,
                         downloadStarted: Download_Started,
                         downloadStopped: Download_Stopped,
@@ -1191,11 +1205,18 @@ namespace AMDownloader.ViewModels
                 itemsCreated.Add(item);
             }
 
-            if (itemsExist.Count > 0)
+            if (itemsExistInDownloadsList.Count > 0)
             {
-                _showWindow(new ListViewerViewModel(itemsExist,
+                _showWindow(new ListViewerViewModel(itemsExistInDownloadsList,
                     "The following URLs were not added because they are already in the list:",
                     "Duplicate Entries"));
+            }
+
+            if (itemsExistOnDisk.Count > 0)
+            {
+                _showWindow(new ListViewerViewModel(itemsExistOnDisk,
+                    "The following files were skipped because they already exist in the chosen folder:",
+                    "Skipped Entries"));
             }
 
             if (itemsErrored.Count > 0)
@@ -1465,14 +1486,15 @@ namespace AMDownloader.ViewModels
         }
 
         /// <summary>
-        /// Generates a new path if <paramref name="originalDestination"/> already exists on disk or in
+        /// Generates a new path if <paramref name="originalDestination"/> already exists either on disk or in
         /// <paramref name="existingDestinations"/>.
         /// </summary>
-        /// <param name="originalDestination">The path to the file for which to generate a new path.</param>
-        /// <param name="existingDestinations">The list of existing paths against which to perform checks.</param>
-        /// <returns>A new path which is guaranteed to not exist on disk or in <paramref name="existingDestinations"/>.
+        /// <param name="originalDestination">The original path to the file for which to generate a new path.</param>
+        /// <param name="existingDestinations">The list of existing file paths to search.</param>
+        /// <param name="searchDisk">Whether to search the disk for existing files.</param>
+        /// <returns>A new path which is guaranteed to not exist either on disk or in <paramref name="existingDestinations"/>.
         /// </returns>
-        private static string GenerateNewDestination(string originalDestination, string[] existingDestinations)
+        private static string GenerateNewDestination(string originalDestination, string[] existingDestinations, bool searchDisk)
         {
             string dirPath = Path.GetDirectoryName(originalDestination);
             string newDestination = originalDestination;
@@ -1480,7 +1502,7 @@ namespace AMDownloader.ViewModels
 
             existingDestinations = existingDestinations.Select(o => o.ToLower()).ToArray();
 
-            while (File.Exists(newDestination) || existingDestinations.Contains(newDestination.ToLower()))
+            while ((searchDisk && File.Exists(newDestination)) || existingDestinations.Contains(newDestination.ToLower()))
             {
                 newDestination = Path.Combine(
                     dirPath,

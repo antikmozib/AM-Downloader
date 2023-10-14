@@ -11,8 +11,8 @@
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False"
         ResizeMode="CanResizeWithGrip"
-        Height="{Binding Source={x:Static properties:Settings.Default}, Path=AddWindowHeight, Mode=TwoWay}"
         Width="{Binding Source={x:Static properties:Settings.Default}, Path=AddWindowWidth, Mode=TwoWay}"
+        Height="{Binding Source={x:Static properties:Settings.Default}, Path=AddWindowHeight, Mode=TwoWay}"
         Loaded="Window_Loaded"
         x:Name="AddDownloadViewWindow"
         Closing="Window_Closing">
@@ -30,9 +30,9 @@
             <RowDefinition Height="auto" />
             <RowDefinition Height="8" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="8" />
+            <RowDefinition Height="16" />
             <RowDefinition Height="auto" />
-            <RowDefinition Height="8" />
+            <RowDefinition Height="16" />
             <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
 
@@ -67,19 +67,20 @@
                  PreviewMouseWheel="UrlTextBox_PreviewMouseWheel"
                  FontSize="{Binding Source={x:Static properties:Settings.Default}, Path=AddDownloadWindowFontSize, Mode=TwoWay}" />
 
-        <DockPanel Grid.Row="4"
+        <Grid Grid.Row="4"
                    HorizontalAlignment="Stretch">
-            <Label Margin="0 0 4 0"
-                   DockPanel.Dock="Left"
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="auto" />
+            </Grid.ColumnDefinitions>
+            
+            <Label Margin="0 0 4 0"                   
                    Content="_Save to:"
                    Target="{Binding ElementName=DestinationComboBox}" />
-
-            <Button x:Name="BrowseButton"
-                    DockPanel.Dock="Right"
-                    Content="_Browse"
-                    Command="{Binding BrowseCommand}" />
-
+            
             <ComboBox x:Name="DestinationComboBox"
+                      Grid.Column="1"
                       Margin="0 0 8 0"
                       Width="auto"
                       HorizontalAlignment="Stretch"
@@ -87,37 +88,56 @@
                       ItemsSource="{Binding SavedLocations}"
                       Text="{Binding SaveLocation, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                       IsEditable="True" />
+            
+            <Button x:Name="BrowseButton"
+                    Grid.Column="2"
+                    Content="_Browse"
+                    Command="{Binding BrowseCommand}" />
+        </Grid>
+
+        <DockPanel Grid.Row="6"
+                   LastChildFill="True">
+            <StackPanel Orientation="Horizontal">
+                <Label Content="_On conflict: " Target="{Binding ElementName=ReplacementModeComboBox}" />
+                
+                <ComboBox x:Name="ReplacementModeComboBox"
+                          ItemsSource="{Binding ReplacementModes}"
+                          SelectedItem="{Binding Path=ReplacementMode}"
+                          Width="96"
+                          Margin="0 0 8 0" />
+                
+                <CheckBox x:Name="AddToQueueCheckBox"
+                          Content="A_dd to queue"
+                          IsChecked="{Binding Enqueue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                          VerticalAlignment="Center"
+                          Margin="0 0 8 0" />
+                
+                <CheckBox x:Name="StartDownloadingCheckBox"
+                          Content="S_tart downloading"
+                          IsChecked="{Binding StartDownload, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                          VerticalAlignment="Center"
+                          Margin="0 0 8 0" />
+            </StackPanel>
+            
+            <StackPanel Orientation="Horizontal"
+                        DockPanel.Dock="Right">
+                <Button x:Name="AddButton"
+                        Margin="0 0 8 0"
+                        Content="_Add"
+                        Command="{Binding AddCommand}"
+                        IsDefault="True"
+                        Click="AddButton_Click" />
+                
+                <Button x:Name="CancelButton"
+                        Margin="0 0 8 0"
+                        Content="_Cancel"
+                        IsCancel="True" />
+                
+                <Button Command="{Binding PreviewCommand}"
+                        Content="_Preview" />
+            </StackPanel>
+            
+            <Border />
         </DockPanel>
-
-        <StackPanel Grid.Row="6"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Right">
-            <CheckBox x:Name="AddToQueueCheckBox"
-                      Content="A_dd to queue"
-                      IsChecked="{Binding Enqueue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                      VerticalAlignment="Center"
-                      Margin="0 0 8 0" />
-
-            <CheckBox x:Name="StartDownloadingCheckBox"
-                      Content="S_tart downloading"
-                      IsChecked="{Binding StartDownload, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                      VerticalAlignment="Center"
-                      Margin="0 0 8 0" />
-
-            <Button x:Name="AddButton"
-                    Margin="0 0 8 0"
-                    Content="_Add"
-                    Command="{Binding AddCommand}"
-                    IsDefault="True"
-                    Click="AddButton_Click" />
-
-            <Button x:Name="CancelButton"
-                    Margin="0 0 8 0"
-                    Content="_Cancel"
-                    IsCancel="True" />
-
-            <Button Command="{Binding PreviewCommand}"
-                    Content="_Preview" />
-        </StackPanel>
     </Grid>
 </Window>
