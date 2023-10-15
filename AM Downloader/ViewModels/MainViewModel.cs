@@ -40,6 +40,11 @@ namespace AMDownloader.ViewModels
         All, Ready, Queued, Downloading, Paused, Completed, Errored
     }
 
+    public enum FileReplacementMode
+    {
+        Overwrite, Rename, Skip
+    }
+
     public class MainViewModel : INotifyPropertyChanged, ICloseable
     {
         #region Fields
@@ -270,7 +275,7 @@ namespace AMDownloader.ViewModels
                                 httpClient: _client,
                                 url: sourceObjects[i].Url,
                                 destination: sourceObjects[i].Destination,
-                                replacementMode: sourceObjects[i].ReplacementMode,
+                                overwrite: sourceObjects[i].Overwrite,
                                 createdOn: sourceObjects[i].CreatedOn,
                                 completedOn: sourceObjects[i].CompletedOn,
                                 bytesToDownload: sourceObjects[i].TotalBytesToDownload,
@@ -1194,7 +1199,7 @@ namespace AMDownloader.ViewModels
                         httpClient: _client,
                         url: url,
                         destination: filePath,
-                        replacementMode: replacementMode,
+                        overwrite: replacementMode == FileReplacementMode.Overwrite,
                         downloadCreated: Download_Created,
                         downloadStarted: Download_Started,
                         downloadStopped: Download_Stopped,

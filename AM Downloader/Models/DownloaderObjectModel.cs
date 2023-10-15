@@ -24,11 +24,6 @@ namespace AMDownloader.Models
         Ready, Downloading, Paused, Completed, Errored
     }
 
-    public enum FileReplacementMode
-    {
-        Overwrite, Rename, Skip
-    }
-
     public class DownloaderObjectModel : IQueueable, INotifyPropertyChanged
     {
         #region Fields
@@ -41,7 +36,7 @@ namespace AMDownloader.Models
         private TaskCompletionSource _tcs;
         private CancellationTokenSource _ctsPause, _ctsCancel, _ctsLinked;
         private CancellationToken _ctPause, _ctCancel, _ctLinked;
-        private FileReplacementMode _replacementMode;
+        private bool _overwrite;
 
         #endregion
 
@@ -116,7 +111,7 @@ namespace AMDownloader.Models
             HttpClient httpClient,
             string url,
             string destination,
-            FileReplacementMode replacementMode,
+            bool overwrite,
             EventHandler downloadCreated,
             EventHandler downloadStarted,
             EventHandler downloadStopped,
@@ -125,7 +120,7 @@ namespace AMDownloader.Models
                 httpClient: httpClient,
                 url: url,
                 destination: destination,
-                replacementMode: replacementMode,
+                overwrite: overwrite,
                 createdOn: DateTime.Now,
                 completedOn: null,
                 bytesToDownload: null,
@@ -143,7 +138,7 @@ namespace AMDownloader.Models
             HttpClient httpClient,
             string url,
             string destination,
-            FileReplacementMode replacementMode,
+            bool overwrite,
             DateTime createdOn,
             DateTime? completedOn,
             long? bytesToDownload,
@@ -161,7 +156,7 @@ namespace AMDownloader.Models
             _httpClient = httpClient;
             _reportProgressBytes = bytesReporter;
             _connections = 0;
-            _replacementMode = replacementMode;
+            _overwrite = overwrite;
 
             Url = url;
             Destination = destination;
@@ -254,7 +249,7 @@ namespace AMDownloader.Models
                     Directory.CreateDirectory(Path.GetDirectoryName(Destination));
 
                     // If we've been instructed to overwrite existing files, do it.
-                    if (_replacementMode == FileReplacementMode.Overwrite && File.Exists(Destination))
+                    if (_overwrite && File.Exists(Destination))
                     {
                         File.Delete(Destination);
                     }

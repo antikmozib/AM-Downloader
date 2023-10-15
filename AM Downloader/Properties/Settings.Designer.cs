@@ -302,9 +302,9 @@ namespace AMDownloader.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("Rename")]
-        public global::AMDownloader.Models.FileReplacementMode ReplacementMode {
+        public global::AMDownloader.ViewModels.FileReplacementMode ReplacementMode {
             get {
-                return ((global::AMDownloader.Models.FileReplacementMode)(this["ReplacementMode"]));
+                return ((global::AMDownloader.ViewModels.FileReplacementMode)(this["ReplacementMode"]));
             }
             set {
                 this["ReplacementMode"] = value;
