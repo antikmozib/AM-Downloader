@@ -38,7 +38,7 @@
 
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition />
+                <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="auto" />
             </Grid.ColumnDefinitions>
 
@@ -50,7 +50,7 @@
                       Content="_Monitor clipboard"
                       VerticalAlignment="Center"
                       HorizontalAlignment="Right"
-                      ToolTip="Automatically monitor the clipboard for URLs and add them to the list"
+                      ToolTip="Automatically monitor the clipboard for URLs and add them to the list."
                       Checked="MonitorClipboardCheckBox_Checked"
                       Unchecked="MonitorClipboardCheckBox_Unchecked" />
         </Grid>
@@ -68,17 +68,17 @@
                  FontSize="{Binding Source={x:Static properties:Settings.Default}, Path=AddDownloadWindowFontSize, Mode=TwoWay}" />
 
         <Grid Grid.Row="4"
-                   HorizontalAlignment="Stretch">
+              HorizontalAlignment="Stretch">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="auto" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="auto" />
             </Grid.ColumnDefinitions>
-            
-            <Label Margin="0 0 4 0"                   
+
+            <Label Margin="0 0 4 0"
                    Content="_Save to:"
                    Target="{Binding ElementName=DestinationComboBox}" />
-            
+
             <ComboBox x:Name="DestinationComboBox"
                       Grid.Column="1"
                       Margin="0 0 8 0"
@@ -88,7 +88,7 @@
                       ItemsSource="{Binding SavedLocations}"
                       Text="{Binding SaveLocation, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                       IsEditable="True" />
-            
+
             <Button x:Name="BrowseButton"
                     Grid.Column="2"
                     Content="_Browse"
@@ -98,27 +98,32 @@
         <DockPanel Grid.Row="6"
                    LastChildFill="True">
             <StackPanel Orientation="Horizontal">
-                <Label Content="_On conflict: " Target="{Binding ElementName=ReplacementModeComboBox}" />
-                
+                <Label Content="_On conflict: "
+                       Target="{Binding ElementName=ReplacementModeComboBox}" />
+
                 <ComboBox x:Name="ReplacementModeComboBox"
                           ItemsSource="{Binding ReplacementModes}"
                           SelectedItem="{Binding Path=ReplacementMode}"
-                          Width="96"
-                          Margin="0 0 8 0" />
-                
-                <CheckBox x:Name="AddToQueueCheckBox"
-                          Content="A_dd to queue"
+                          Width="96" />
+
+                <Rectangle Width="0.5"
+                           Fill="{x:Static SystemColors.ActiveBorderBrush}"
+                           VerticalAlignment="Stretch"
+                           Margin="8 0 8 0" />
+
+                <CheckBox x:Name="EnqueueCheckBox"
+                          Content="_Enqueue"
                           IsChecked="{Binding Enqueue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                           VerticalAlignment="Center"
                           Margin="0 0 8 0" />
-                
-                <CheckBox x:Name="StartDownloadingCheckBox"
-                          Content="S_tart downloading"
+
+                <CheckBox x:Name="StartCheckBox"
+                          Content="S_tart"
                           IsChecked="{Binding StartDownload, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                           VerticalAlignment="Center"
                           Margin="0 0 8 0" />
             </StackPanel>
-            
+
             <StackPanel Orientation="Horizontal"
                         DockPanel.Dock="Right">
                 <Button x:Name="AddButton"
@@ -127,16 +132,16 @@
                         Command="{Binding AddCommand}"
                         IsDefault="True"
                         Click="AddButton_Click" />
-                
+
                 <Button x:Name="CancelButton"
                         Margin="0 0 8 0"
                         Content="_Cancel"
                         IsCancel="True" />
-                
+
                 <Button Command="{Binding PreviewCommand}"
                         Content="_Preview" />
             </StackPanel>
-            
+
             <Border />
         </DockPanel>
     </Grid>

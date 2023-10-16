@@ -15,10 +15,10 @@
             <FontFamily x:Key="FontAwesomeSolid">pack://application:,,,/AM Downloader;component/Resources/Fonts/Font Awesome 5 Free-Solid-900.otf#Font Awesome 5 Free Solid</FontFamily>
 
             <Style TargetType="Button">
-                <Setter Property="Height"
-                        Value="24" />
                 <Setter Property="Width"
-                        Value="72" />
+                        Value="80" />
+                <Setter Property="Height"
+                        Value="25.96" />
             </Style>
 
             <Style TargetType="MenuItem">
