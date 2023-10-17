@@ -5,14 +5,14 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:converters="clr-namespace:AMDownloader.Converters"
         mc:Ignorable="d"
-        Height="320"
-        Width="640"
-        ShowInTaskbar="False"
-        WindowStartupLocation="CenterOwner"
         Title="{Binding Title}"
         d:Title="List Viewer"
-        ResizeMode="CanResizeWithGrip"
-        SourceInitialized="Window_SourceInitialized">
+        SourceInitialized="Window_SourceInitialized"
+        Width="640"
+        Height="320"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResizeWithGrip">
     <Window.Resources>
         <converters:ListViewerItemCountConverter x:Key="ListViewerItemCountConverter" />
     </Window.Resources>

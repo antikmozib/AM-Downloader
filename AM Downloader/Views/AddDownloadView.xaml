@@ -8,14 +8,14 @@
         xmlns:converters="clr-namespace:AMDownloader.Converters"
         mc:Ignorable="d"
         Title="Add"
+        x:Name="AddDownloadViewWindow"
+        Loaded="Window_Loaded"
+        Closing="Window_Closing"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False"
         ResizeMode="CanResizeWithGrip"
         Width="{Binding Source={x:Static properties:Settings.Default}, Path=AddWindowWidth, Mode=TwoWay}"
-        Height="{Binding Source={x:Static properties:Settings.Default}, Path=AddWindowHeight, Mode=TwoWay}"
-        Loaded="Window_Loaded"
-        x:Name="AddDownloadViewWindow"
-        Closing="Window_Closing">
+        Height="{Binding Source={x:Static properties:Settings.Default}, Path=AddWindowHeight, Mode=TwoWay}">
     <Window.Resources>
         <converters:DownloaderDestinationFolderNameConverter x:Key="DownloaderDestinationConverter" />
 

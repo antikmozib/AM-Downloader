@@ -6,11 +6,11 @@
         xmlns:converters="clr-namespace:AMDownloader.Converters"
         mc:Ignorable="d"
         Title="Settings"
+        SourceInitialized="Window_SourceInitialized"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False"
         SizeToContent="WidthAndHeight"
-        ResizeMode="NoResize"
-        SourceInitialized="Window_SourceInitialized">
+        ResizeMode="NoResize">
     <Window.Resources>
         <converters:SettingsSpeedConverter x:Key="SettingsSpeedConverter" />
         <converters:SettingsConnectionTimeoutConverter x:Key="SettingsConnectionTimeoutConverter" />
