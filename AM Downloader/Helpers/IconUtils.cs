@@ -24,7 +24,7 @@ namespace AMDownloader.Helpers
             string ext = Path.GetExtension(path).ToLower();
             path = path.ToLower();
 
-            // have we seen this item before?
+            // Have we seen this item before?
             if (isDirectory && _iconRepo.ContainsKey(path))
             {
                 _iconRepo.TryGetValue(path, out imageSource);
@@ -59,20 +59,22 @@ namespace AMDownloader.Helpers
                 fileAttributes = Native.Shell32.FILE_ATTRIBUTE_NORMAL;
             }
 
-            // grab the actual icons
+            // Grab the actual icons.
             Native.Shell32.SHGetFileInfo(
                 pszPath: path,
                 dwFileAttributes: fileAttributes,
                 psfi: ref shFileInfo,
                 cbFileInfo: (uint)Marshal.SizeOf(shFileInfo),
                 uFlags: flags);
+
             icon = Icon.FromHandle(shFileInfo.hIcon);
-            // create the image from the icon
+
+            // Create the image from the icon.
             imageSource = Imaging.CreateBitmapSourceFromHIcon(icon.Handle,
                 new Int32Rect(0, 0, icon.Width, icon.Height),
                 BitmapSizeOptions.FromEmptyOptions());
 
-            // save the keys and images
+            // Save the keys and images.
             if (isDirectory)
             {
                 _iconRepo.Add(path, imageSource);
@@ -89,7 +91,7 @@ namespace AMDownloader.Helpers
                 }
             }
 
-            // cleanup
+            // Cleanup.
             Native.User32.DestroyIcon(shFileInfo.hIcon);
 
             return imageSource;
