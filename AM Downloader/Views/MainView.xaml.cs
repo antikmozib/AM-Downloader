@@ -44,7 +44,7 @@ namespace AMDownloader.Views
 
         private void Window_Initialized(object sender, EventArgs e)
         {
-            // If running for the 1st time, center window
+            // If running for the first time, center window.
 
             if (Settings.Default.FirstRun)
             {
@@ -58,11 +58,11 @@ namespace AMDownloader.Views
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            // Restore column sort direction
+            // Restore column sort direction.
 
             if (Settings.Default.SelectedColumnHeader != null)
             {
-                // Get the column to sort
+                // Get the column to sort.
                 GridViewColumn gridViewColumn =
                     ((GridView)DownloadsListView.View).Columns.FirstOrDefault(
                         x => (string)x.Header == Settings.Default.SelectedColumnHeader);
@@ -72,7 +72,7 @@ namespace AMDownloader.Views
                     List<GridViewColumnHeader> headers = GetVisualChildren<GridViewColumnHeader>(DownloadsListView).ToList();
                     GridViewColumnHeader gridViewColumnHeader = null;
 
-                    // Get the header of the column to sort
+                    // Get the header of the column to sort.
                     foreach (GridViewColumnHeader header in headers)
                     {
                         if (header.Column == null || header.Column.Header == null) continue;
@@ -88,7 +88,7 @@ namespace AMDownloader.Views
                 }
             }
 
-            // Restore column order and widths
+            // Restore column order and widths.
 
             if (File.Exists(Common.Paths.UIColumnOrderFile))
             {
@@ -139,7 +139,7 @@ namespace AMDownloader.Views
                 }
             }
 
-            // Save column order and widths
+            // Save column order and widths.
 
             var columnOrderList = new SerializingUIColumnList();
 
@@ -235,7 +235,7 @@ namespace AMDownloader.Views
 
         private void DownloadsListView_HeaderClick(object sender, RoutedEventArgs e)
         {
-            // Default sorting direction for a previously unsorted column
+            // Default sorting direction for a previously unsorted column.
             ListSortDirection? direction = ListSortDirection.Descending;
 
             var headerClicked = e.OriginalSource as GridViewColumnHeader;
@@ -245,7 +245,7 @@ namespace AMDownloader.Views
                 return;
             }
 
-            // Change the sorting direction if the column is already sorted
+            // Change the sorting direction if the column is already sorted.
             if (headerClicked == _lastHeaderClicked)
             {
                 if (_lastDirection == ListSortDirection.Descending)
@@ -275,9 +275,8 @@ namespace AMDownloader.Views
             var columnBinding = columnHeader.Column.DisplayMemberBinding as Binding;
             var columnToSort = columnBinding?.Path.Path ?? columnHeader.Column.Header as string;
 
-            // Link the column header string value to the prop of the binded obj;
-            // this is only needed for those columns whose header names are
-            // different from the prop names
+            // Link the column header string value to the prop of the binded obj; this is only needed for those columns
+            // whose header names are different from the prop names.
             switch (columnToSort.ToLower())
             {
                 case "type":
@@ -328,18 +327,18 @@ namespace AMDownloader.Views
             }
             else
             {
-                // If we're unsorting, store SelectedColumnHeader as null so that sorting isn't
-                // applied incorrectly when the app is relaunched
+                // If we're unsorting, store SelectedColumnHeader as null so that sorting isn't applied incorrectly when
+                // the app is relaunched.
                 Settings.Default.SelectedColumnHeader = null;
             }
 
-            // Remove the arrow from the last sorted column
+            // Remove the arrow from the last sorted column.
             if (_lastHeaderClicked != null)
             {
                 _lastHeaderClicked.Column.HeaderTemplate = Resources["HeaderTemplate"] as DataTemplate;
             }
 
-            // Apply the arrow to the newly sorted column
+            // Apply the arrow to the newly sorted column.
             if (direction == ListSortDirection.Descending)
             {
                 columnHeader.Column.HeaderTemplate = Resources["HeaderTemplateArrowDown"] as DataTemplate;
@@ -379,8 +378,7 @@ namespace AMDownloader.Views
             Window window = null;
             bool? result = null;
 
-            // ViewModels must be assigned and the window must be
-            // initialized and shown explicitly from the main thread
+            // ViewModels must be assigned and the window must be initialized and shown explicitly from the main thread.
             Dispatcher.Invoke(() =>
             {
                 if (viewModel is AddDownloadViewModel)
@@ -412,8 +410,8 @@ namespace AMDownloader.Views
         /// Displays information about the latest available update.
         /// </summary>
         /// <param name="latestUpdateInfo">Information provided by the update API about the latest available update.</param>
-        /// <param name="showReminderButton">If <see langword="true"/>, a button to stop reminding about updates will
-        /// be shown.</param>
+        /// <param name="showReminderButton">If <see langword="true"/>, a button to stop reminding about updates will be 
+        /// shown.</param>
         private void NotifyUpdateAvailable(UpdateInfo latestUpdateInfo, bool showReminderButton)
         {
             TaskDialog taskDialog = new()

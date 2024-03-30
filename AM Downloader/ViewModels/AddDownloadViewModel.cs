@@ -70,13 +70,13 @@ namespace AMDownloader.ViewModels
             AddCommand = new RelayCommand(Add, Add_CanExecute);
             PreviewCommand = new RelayCommand(Preview, Preview_CanExecute);
 
-            // add the default download location
+            // Add the default download location.
             SavedLocations.Add(Common.Paths.UserDownloadsFolder);
             SaveLocation = Common.Paths.UserDownloadsFolder;
 
             if (Settings.Default.RememberLastDownloadLocation)
             {
-                // add the last used download location
+                // Add the last used download location.
                 if (!string.IsNullOrWhiteSpace(Settings.Default.LastDownloadLocation)
                     && !IsSameLocation(Settings.Default.LastDownloadLocation, Common.Paths.UserDownloadsFolder))
                 {
@@ -84,7 +84,7 @@ namespace AMDownloader.ViewModels
                     SaveLocation = Settings.Default.LastDownloadLocation;
                 }
 
-                // add all previously used download locations
+                // Add all previously used download locations.
                 if (File.Exists(Common.Paths.SavedLocationsFile))
                 {
                     try
@@ -141,7 +141,7 @@ namespace AMDownloader.ViewModels
 
         private void Add()
         {
-            // ensure the selected location is valid and accessible
+            // Ensure the selected location is valid and accessible.
 
             bool isDirAccessible = false;
 
@@ -185,7 +185,7 @@ namespace AMDownloader.ViewModels
         /// <returns>The list of strings exploded from the supplied patterned strings.</returns>
         private static List<string> ExplodePatterns(params string[] patterns)
         {
-            var filteredStrings = patterns.Select(o => o.Trim()).Where(o => o.Length > 0); // trim and discard empty
+            var filteredStrings = patterns.Select(o => o.Trim()).Where(o => o.Length > 0); // Trim and discard empty.
             var explodedStrings = new List<string>();
             var pattern = @"(\[\d+:\d+\])";
             var regex = new Regex(pattern);
@@ -194,11 +194,11 @@ namespace AMDownloader.ViewModels
             {
                 if (regex.Match(value).Success)
                 {
-                    // string has patterns
+                    // String has patterns.
 
                     string bounds = regex.Match(value).Value;
 
-                    // patterns can be [1:20] or [01:20] - account for this difference
+                    // Patterns can be [1:20] or [01:20] - account for this difference.
                     int minLength = bounds.Substring(1, bounds.IndexOf(':') - 1).Length;
                     int.TryParse(bounds.Substring(1, bounds.IndexOf(':') - 1), out int lBound);
                     int.TryParse(bounds.Substring(bounds.IndexOf(':') + 1, bounds.Length - bounds.IndexOf(':') - 2), out int uBound);
@@ -221,7 +221,7 @@ namespace AMDownloader.ViewModels
                 }
                 else
                 {
-                    // normal string
+                    // Normal string.
                     explodedStrings.Add(value);
                 }
             }
@@ -232,8 +232,7 @@ namespace AMDownloader.ViewModels
         /// <summary>
         /// Extracts all valid URLs out of <paramref name="value"/>.
         /// </summary>
-        /// <param name="value">A list of strings, separated by newlines, to 
-        /// check for the existence of valid URLs.</param>
+        /// <param name="value">A list of strings, separated by newlines, to check for the existence of valid URLs.</param>
         /// <returns>A list of validated URLs separated by newlines.</returns>
         public static string GenerateValidUrl(string value)
         {
@@ -268,12 +267,12 @@ namespace AMDownloader.ViewModels
         {
             RaiseEvent(Closing);
 
-            // save settings
+            // Save settings.
             Settings.Default.ReplacementMode = ReplacementMode;
             Settings.Default.EnqueueAddedItems = Enqueue;
             Settings.Default.StartDownloadingAddedItems = StartDownload;
 
-            // save download locations
+            // Save download locations.
 
             Settings.Default.LastDownloadLocation = SaveLocation;
 

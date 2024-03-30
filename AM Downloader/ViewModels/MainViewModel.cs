@@ -215,7 +215,7 @@ namespace AMDownloader.ViewModels
                 CategoriesCollection.Add(cat);
             }
 
-            // Load last selected category
+            // Load last selected category.
             if (string.IsNullOrEmpty(Settings.Default.LastSelectedCatagory))
             {
                 SwitchCategory(Category.All);
@@ -225,13 +225,13 @@ namespace AMDownloader.ViewModels
                 SwitchCategory((Category)Enum.Parse(typeof(Category), Settings.Default.LastSelectedCatagory));
             }
 
-            // Check for updates
+            // Check for updates.
             if (Settings.Default.AutoCheckForUpdates)
             {
                 CheckForUpdates(true);
             }
 
-            // Populate history
+            // Populate history.
             if (File.Exists(Common.Paths.DownloadsHistoryFile))
             {
                 Status = "Loading...";
@@ -804,7 +804,7 @@ namespace AMDownloader.ViewModels
             }
             catch (ObjectDisposedException)
             {
-                // already canceled
+                // Already canceled.
             }
         }
 
@@ -849,7 +849,7 @@ namespace AMDownloader.ViewModels
         {
             if (_closingTcs != null && _closingTcs.Task.Status != TaskStatus.RanToCompletion)
             {
-                // already closing
+                // Already closing.
                 return;
             }
 
@@ -871,7 +871,7 @@ namespace AMDownloader.ViewModels
                 }
                 catch (ObjectDisposedException)
                 {
-                    // background task may be done by the time cancellation is requested
+                    // Background task may be done by the time cancellation is requested.
                 }
             }
             else if (DownloadingCount > 0)
@@ -955,7 +955,7 @@ namespace AMDownloader.ViewModels
                 {
                     Log.Error(ex, ex.Message);
 
-                    // close even when an exception occurs
+                    // Close even when an exception occurs.
                 }
 
                 if (Settings.Default.FirstRun)
@@ -1054,7 +1054,7 @@ namespace AMDownloader.ViewModels
                 return;
             }
 
-            // cancel all pending refreshes
+            // Cancel all pending refreshes.
 
             Monitor.Enter(_refreshViewCtsListLock);
 
@@ -1136,15 +1136,14 @@ namespace AMDownloader.ViewModels
         /// <param name="saveToFolder">The folder where to download the files.</param>
         /// <param name="replacementMode">How to treat pre-existing files.</param>
         /// <param name="ct">The <see cref="CancellationToken"/> to cancel the process.</param>
-        /// <returns>An array of <see cref="DownloaderObjectModel"/>s which have been successfully
-        /// created.</returns>
+        /// <returns>An array of <see cref="DownloaderObjectModel"/>s which have been successfully created.</returns>
         private DownloaderObjectModel[] CreateObjects(IEnumerable<string> urls, string saveToFolder, FileReplacementMode replacementMode, CancellationToken ct)
         {
             var existingItems = DownloadItemsCollection.ToList();
             var itemsCreated = new List<DownloaderObjectModel>();
-            var itemsExistInDownloadsList = new List<string>(); // skipped
+            var itemsExistInDownloadsList = new List<string>(); // Skipped
             var itemsExistOnDisk = new List<string>();
-            var itemsErrored = new List<string>(); // errored
+            var itemsErrored = new List<string>(); // Errored
             var totalItems = urls.Count();
             var counter = 0;
 
@@ -1172,7 +1171,7 @@ namespace AMDownloader.ViewModels
                     continue;
                 }
 
-                // check if an item already exists with the same url and destination
+                // Check if an item already exists with the same url and destination.
                 if (existingItems.Where(o =>
                     o.Url.ToLower() == url.ToLower()
                     && Path.GetDirectoryName(o.Destination.ToLower()) == saveToFolder.ToLower()).Any())
@@ -1375,8 +1374,8 @@ namespace AMDownloader.ViewModels
         }
 
         /// <summary>
-        /// Starts downloading the specified items. If the number of items is larger than the
-        /// maximum number of parallel downloads allowed, the items are enqueued instead.
+        /// Starts downloading the specified items. If the number of items is larger than the maximum number of parallel 
+        /// downloads allowed, the items are enqueued instead.
         /// </summary>
         /// <param name="enqueue">Whether to enqueue the items instead of immediately starting the download.</param>
         /// <param name="items">The items to download.</param>
@@ -1420,7 +1419,7 @@ namespace AMDownloader.ViewModels
         {
             if (_reportingSpeedTcs != null && _reportingSpeedTcs.Task.Status != TaskStatus.RanToCompletion)
             {
-                // already reporting speed
+                // Already reporting speed.
                 return;
             }
 
