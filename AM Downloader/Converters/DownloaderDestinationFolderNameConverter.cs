@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2020-2023 Antik Mozib. All rights reserved.
+﻿// Copyright (C) 2020-2024 Antik Mozib. All rights reserved.
 
 using AMDownloader.Helpers;
 using System;
@@ -15,7 +15,7 @@ namespace AMDownloader.Converters
             string path = value.ToString();
             if (Path.GetDirectoryName(Path.GetDirectoryName(path)) == null)
             {
-                // parent folder is root drive
+                // Parent folder is root drive.
                 string parent = Path.GetDirectoryName(path);
                 return Common.Functions.GetDriveType(parent);
             }

@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2020-2023 Antik Mozib. All rights reserved.
+﻿// Copyright (C) 2020-2024 Antik Mozib. All rights reserved.
 
 using Serilog;
 using System;
@@ -124,8 +124,7 @@ namespace AMDownloader.QueueProcessing
         /// <summary>
         /// Starts this <see cref="QueueProcessor"/> unless it is already running.
         /// </summary>
-        /// <returns>A task that represents the successful completion of all 
-        /// enqueued items.</returns>
+        /// <returns>A task that represents the successful completion of all enqueued items.</returns>
         public async Task StartAsync()
         {
             bool cancellationRequested;
@@ -146,10 +145,9 @@ namespace AMDownloader.QueueProcessing
             _itemsProcessing.Clear();
 
             List<Task> tasks = new();
-            // _queueList must be copied before enumerating and setting up the tasks;
-            // otherwise, if adding too many items, some items may be processed and
-            // removed from _queueList while we're still enumerating over _queueList,
-            // raising an exception
+            // _queueList must be copied before enumerating and setting up the tasks; otherwise, if adding too many
+            // items, some items may be processed and removed from _queueList while we're still enumerating over
+            // _queueList, raising an exception.
             List<IQueueable> cached = _queueList.ToList();
 
             Log.Debug($"First item in {nameof(QueueProcessor)}: {cached.First()}");
@@ -172,7 +170,7 @@ namespace AMDownloader.QueueProcessing
 
                         ct.ThrowIfCancellationRequested();
 
-                        // Ensure the item is still enqueued before commencing download
+                        // Ensure the item is still enqueued before commencing download.
                         if (!_queueList.Contains(item))
                         {
                             return;
@@ -190,7 +188,7 @@ namespace AMDownloader.QueueProcessing
 
                         if (item.IsCompleted || item.IsErrored)
                         {
-                            // Item processed
+                            // Item processed.
 
                             Monitor.Enter(_queueListLock);
                             _queueList.Remove(item);
@@ -222,9 +220,8 @@ namespace AMDownloader.QueueProcessing
                 Log.Error(ex, ex.Message);
             }
 
-            // IsBusy must be set before auto restarting the queue;
-            // also, must be set before setting _tcs due to a race
-            // condition when canceling and restarting the queue
+            // IsBusy must be set before auto restarting the queue; also, must be set before setting _tcs due to a race
+            // condition when canceling and restarting the queue.
             IsBusy = false;
 
             cancellationRequested = ct.IsCancellationRequested;
@@ -245,12 +242,10 @@ namespace AMDownloader.QueueProcessing
         }
 
         /// <summary>
-        /// Starts (or restarts) this <see cref="QueueProcessor"/> with the 
-        /// specified <paramref name="items"/> at the top.
+        /// Starts (or restarts) this <see cref="QueueProcessor"/> with the specified <paramref name="items"/> at the top.
         /// </summary>
         /// <param name="items">The items to put at the top of the queue.</param>
-        /// <returns>A task that represents the successful completion of all 
-        /// enqueued items.</returns>
+        /// <returns>A task that represents the successful completion of all enqueued items.</returns>
         public async Task StartWithAsync(IEnumerable<IQueueable> items)
         {
             List<IQueueable> temp = new();
@@ -284,12 +279,9 @@ namespace AMDownloader.QueueProcessing
             {
                 _cts?.Cancel();
 
-                // Pause items being downloaded;
-                // Items must be paused concurrently as once download begins,
-                // those items can no longer be canceled in any other way and
-                // the queue processor won't stop until all tasks have come
-                // to an end; pausing is the only way to end tasks which have
-                // already started
+                // Pause items being downloaded; Items must be paused concurrently as once download begins, those items
+                // can no longer be canceled in any other way and the queue processor won't stop until all tasks have
+                // come to an end; pausing is the only way to end tasks which have already started
                 Parallel.ForEach(_itemsProcessing, (item) => item.Pause());
             }
             catch (Exception ex)

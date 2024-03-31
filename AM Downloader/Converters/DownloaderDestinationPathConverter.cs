@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2020-2023 Antik Mozib. All rights reserved.
+﻿// Copyright (C) 2020-2024 Antik Mozib. All rights reserved.
 
 using AMDownloader.Helpers;
 using System;
@@ -17,18 +17,18 @@ namespace AMDownloader.Converters
 
             if (Path.GetDirectoryName(path) == null)
             {
-                // downloading to drive root
+                // Downloading to drive root.
                 output = "";
             }
             else if (Path.GetDirectoryName(Path.GetDirectoryName(path)) == null)
             {
-                // downloading to a first-level folder in drive
+                // Downloading to a first-level folder in drive.
                 string parent = Path.GetDirectoryName(path);
                 output += Common.Functions.GetDriveType(parent);
             }
             else
             {
-                // downloading to some other folder deep in the drive
+                // Downloading to some other folder deep in the drive.
                 output += Path.GetDirectoryName(path);
             }
 
