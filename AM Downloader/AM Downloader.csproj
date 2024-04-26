@@ -9,7 +9,7 @@
         <ApplicationIcon>Resources\Icons\AMDownloader.ico</ApplicationIcon>
         <Company>Antik Mozib</Company>
         <Description>A modern download manager for Windows.</Description>
-        <Copyright>Copyright © 2020-2023 Antik Mozib. All rights reserved.</Copyright>
+        <Copyright>Copyright © 2020-2024 Antik Mozib. All rights reserved.</Copyright>
         <StartupObject />
         <PackageIcon>Resources\Icons\AMDownloader.ico</PackageIcon>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
