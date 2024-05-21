@@ -135,9 +135,7 @@ namespace AMDownloader.ViewModels
             EventHandler closed)
         {
             DownloadItemsCollection = new ObservableCollection<DownloaderObjectModel>();
-
             CategoriesCollection = new ObservableCollection<Category>();
-
             QueueProcessor = new QueueProcessor(
                 Settings.Default.MaxParallelDownloads,
                 QueueProcessor_PropertyChanged,
@@ -145,8 +143,8 @@ namespace AMDownloader.ViewModels
                 QueueProcessor_Stopped,
                 QueueProcessor_ItemEnqueued,
                 QueueProcessor_ItemDequeued);
-
             DownloadItemsView = CollectionViewSource.GetDefaultView(DownloadItemsCollection);
+
             DownloadItemsView.CurrentChanged += CollectionView_CurrentChanged;
 
             Progress = 0;
@@ -239,20 +237,17 @@ namespace AMDownloader.ViewModels
                 _updatingListCts = new CancellationTokenSource();
                 RaisePropertyChanged(nameof(Status));
                 RaisePropertyChanged(nameof(IsBackgroundWorking));
-
-                var ct = _updatingListCts.Token;
-
+                CancellationToken ct = _updatingListCts.Token;
                 Task.Run(() =>
                 {
                     try
                     {
-                        var source = Common.Functions.Deserialize<SerializingDownloaderObjectModelList>(Common.Paths.DownloadsHistoryFile);
-                        var sourceObjects = source.Objects.ToArray();
-                        var itemsToAdd = new List<DownloaderObjectModel>();
-                        var itemsToEnqueue = new List<IQueueable>();
-                        var total = sourceObjects.Length;
-                        var progress = 0;
-
+                        SerializingDownloaderObjectModelList source = Common.Functions.Deserialize<SerializingDownloaderObjectModelList>(Common.Paths.DownloadsHistoryFile);
+                        SerializingDownloaderObjectModel[] sourceObjects = [.. source.Objects];
+                        List<DownloaderObjectModel> itemsToAdd = [];
+                        List<IQueueable> itemsToEnqueue = [];
+                        int total = sourceObjects.Length;
+                        int progress = 0;
                         for (int i = 0; i < sourceObjects.Length; i++)
                         {
                             if (ct.IsCancellationRequested)
@@ -287,7 +282,6 @@ namespace AMDownloader.ViewModels
                                 downloadStopped: Download_Stopped,
                                 propertyChanged: Download_PropertyChanged,
                                 bytesReporter: _progressReporter);
-
                             if (sourceObjects[i].IsQueued)
                             {
                                 itemsToEnqueue.Add(item);
@@ -301,8 +295,8 @@ namespace AMDownloader.ViewModels
                         RaisePropertyChanged(nameof(Progress));
                         RaisePropertyChanged(nameof(Status));
 
-                        AddObjects(itemsToAdd.ToArray());
-                        QueueProcessor.Enqueue(itemsToEnqueue.ToArray());
+                        AddObjects([.. itemsToAdd]);
+                        QueueProcessor.Enqueue([.. itemsToEnqueue]);
                     }
                     catch (Exception ex)
                     {
@@ -312,11 +306,9 @@ namespace AMDownloader.ViewModels
                 {
                     _updatingListCts.Dispose();
                     _updatingListTcs.SetResult();
-
                     Status = "Refreshing...";
                     RaisePropertyChanged(nameof(IsBackgroundWorking));
                     RaisePropertyChanged(nameof(Status));
-
                     await RefreshCollectionViewAsync();
                 });
             }
@@ -338,8 +330,7 @@ namespace AMDownloader.ViewModels
 
         private void Start(object obj)
         {
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
-
+            DownloaderObjectModel[] items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
             Task.Run(async () => await StartDownloadAsync(false, items));
         }
 
@@ -350,23 +341,18 @@ namespace AMDownloader.ViewModels
                 return false;
             }
 
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>();
-
+            IEnumerable<DownloaderObjectModel> items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>();
             if (!items.Any())
             {
                 return false;
             }
 
-            return (from item
-                    in items
-                    where !item.IsDownloading && !item.IsCompleted
-                    select item).Count() == items.Count();
+            return items.All(x => !x.IsDownloading && !x.IsCompleted);
         }
 
         private void Pause(object obj)
         {
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
-
+            DownloaderObjectModel[] items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
             QueueProcessor.Dequeue(items);
             Parallel.ForEach(items, (item) => item.Pause());
 
@@ -380,23 +366,18 @@ namespace AMDownloader.ViewModels
                 return false;
             }
 
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>();
-
+            IEnumerable<DownloaderObjectModel> items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>();
             if (!items.Any())
             {
                 return false;
             }
 
-            return (from item
-                    in items
-                    where item.IsDownloading && item.SupportsResume
-                    select item).Count() == items.Count();
+            return items.All(x => x.IsDownloading && x.SupportsResume);
         }
 
         private void Cancel(object obj)
         {
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
-
+            DownloaderObjectModel[] items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
             QueueProcessor.Dequeue(items);
             Parallel.ForEach(items, (item) => item.Cancel());
 
@@ -410,34 +391,26 @@ namespace AMDownloader.ViewModels
                 return false;
             }
 
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>();
-
+            IEnumerable<DownloaderObjectModel> items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>();
             if (!items.Any())
             {
                 return false;
             }
 
-            return (from item
-                    in items
-                    where item.IsDownloading || item.IsPaused || item.IsErrored && item.SupportsResume
-                    select item).Count() == items.Count();
+            return items.All(x => (x.IsDownloading || x.IsPaused || x.IsErrored) && x.SupportsResume);
         }
 
         private void Add()
         {
             AddDownloadViewModel addDownloadViewModel = new();
             DownloaderObjectModel[] itemsCreated = null;
-
             _showWindow(addDownloadViewModel);
-
             if (addDownloadViewModel.ItemsAdded)
             {
                 _updatingListTcs = new TaskCompletionSource();
                 _updatingListCts = new CancellationTokenSource();
                 RaisePropertyChanged(nameof(IsBackgroundWorking));
-
-                var ct = _updatingListCts.Token;
-
+                CancellationToken ct = _updatingListCts.Token;
                 Task.Run(() =>
                 {
                     itemsCreated = CreateObjects(
@@ -450,7 +423,6 @@ namespace AMDownloader.ViewModels
                     RaisePropertyChanged(nameof(Status));
 
                     AddObjects(itemsCreated);
-
                     if (addDownloadViewModel.Enqueue)
                     {
                         QueueProcessor.Enqueue(itemsCreated);
@@ -460,13 +432,10 @@ namespace AMDownloader.ViewModels
                 {
                     _updatingListCts.Dispose();
                     _updatingListTcs.SetResult();
-
                     Status = "Refreshing...";
                     RaisePropertyChanged(nameof(IsBackgroundWorking));
                     RaisePropertyChanged(nameof(Status));
-
                     await RefreshCollectionViewAsync();
-
                     if (addDownloadViewModel.StartDownload && itemsCreated.Length > 0)
                     {
                         await StartDownloadAsync(addDownloadViewModel.Enqueue, itemsCreated);
@@ -482,19 +451,17 @@ namespace AMDownloader.ViewModels
 
         private void Remove(object obj)
         {
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
-            var itemsDeleteable = from item in items where item.IsCompleted select item;
-            var delete = true;
-
-            if (itemsDeleteable.Any())
+            DownloaderObjectModel[] items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
+            IEnumerable<DownloaderObjectModel> deletableItems = items.Where(x => x.IsCompleted);
+            bool delete = true;
+            if (deletableItems.Any())
             {
-                var result = _showPrompt(
+                bool? result = _showPrompt(
                     $"Also delete the file{(items.Length > 1 ? "s" : "")} from storage?",
                     "Remove",
                     PromptButton.YesNoCancel,
                     PromptIcon.Warning,
                     false);
-
                 if (result == false)
                 {
                     delete = false;
@@ -508,9 +475,7 @@ namespace AMDownloader.ViewModels
             _updatingListTcs = new TaskCompletionSource();
             _updatingListCts = new CancellationTokenSource();
             RaisePropertyChanged(nameof(IsBackgroundWorking));
-
-            var ct = _updatingListCts.Token;
-
+            CancellationToken ct = _updatingListCts.Token;
             Task.Run(async () =>
             {
                 try
@@ -525,11 +490,9 @@ namespace AMDownloader.ViewModels
             {
                 _updatingListCts.Dispose();
                 _updatingListTcs.SetResult();
-
                 Status = "Refreshing...";
                 RaisePropertyChanged(nameof(IsBackgroundWorking));
                 RaisePropertyChanged(nameof(Status));
-
                 await RefreshCollectionViewAsync();
             });
         }
@@ -541,23 +504,22 @@ namespace AMDownloader.ViewModels
                 return false;
             }
 
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>();
+            IEnumerable<DownloaderObjectModel> items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>();
 
             return items.Any();
         }
 
         private void Open(object obj)
         {
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
-
+            DownloaderObjectModel[] items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
             if (items.Length > 1)
             {
                 if (_showPrompt(
-                     "Opening too many files at the same file may cause the system to crash.\n\nProceed anyway?",
-                     "Open",
-                     PromptButton.YesNo,
-                     PromptIcon.Exclamation,
-                     false) == false)
+                    "Opening too many files at the same file may cause the system to crash.\n\nProceed anyway?",
+                    "Open",
+                    PromptButton.YesNo,
+                    PromptIcon.Exclamation,
+                    false) == false)
                 {
                     return;
                 }
@@ -573,28 +535,20 @@ namespace AMDownloader.ViewModels
                 return false;
             }
 
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>();
-
+            IEnumerable<DownloaderObjectModel> items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>();
             if (!items.Any())
             {
                 return false;
             }
 
-            return (from item
-                    in items
-                    where item.IsCompleted
-                    select item).Count() == items.Count();
+            return items.All(x => x.IsCompleted);
         }
 
         private void OpenContainingFolder(object obj)
         {
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
-            var itemsOpenable = (from item in items
-                                 where File.Exists(item.Destination) ||
-                                 Directory.Exists(Path.GetDirectoryName(item.Destination))
-                                 select item).ToArray();
-
-            if (itemsOpenable.Length > 1)
+            DownloaderObjectModel[] items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
+            DownloaderObjectModel[] openableItems = items.Where(x => File.Exists(x.Destination) || Directory.Exists(Path.GetDirectoryName(x.Destination))).ToArray();
+            if (openableItems.Length > 1)
             {
                 if (_showPrompt(
                     "Opening too many folders at the same time may cause the system to crash.\n\nProceed anyway?",
@@ -607,10 +561,9 @@ namespace AMDownloader.ViewModels
                 }
             }
 
-            Parallel.ForEach(itemsOpenable, (item) =>
+            Parallel.ForEach(openableItems, (item) =>
             {
                 string explorerParam = string.Empty;
-
                 if (File.Exists(item.Destination))
                 {
                     explorerParam = "/select, \"\"" + item.Destination + "\"\"";
@@ -634,17 +587,14 @@ namespace AMDownloader.ViewModels
                 return false;
             }
 
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>();
+            IEnumerable<DownloaderObjectModel> items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>();
 
             return items.Any();
         }
 
         private void StartQueue()
         {
-            Task.Run(async () =>
-            {
-                await QueueProcessor.StartAsync();
-            });
+            Task.Run(QueueProcessor.StartAsync);
         }
 
         private bool StartQueue_CanExecute()
@@ -665,7 +615,6 @@ namespace AMDownloader.ViewModels
         private void ShowSettings()
         {
             var settingsViewModel = new SettingsViewModel();
-
             if (_showWindow(settingsViewModel) == true)
             {
                 if (settingsViewModel.ResetSettingsOnClose)
@@ -677,8 +626,7 @@ namespace AMDownloader.ViewModels
 
         private void Enqueue(object obj)
         {
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
-
+            DownloaderObjectModel[] items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
             QueueProcessor.Enqueue(items);
         }
 
@@ -689,23 +637,18 @@ namespace AMDownloader.ViewModels
                 return false;
             }
 
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>();
-
+            IEnumerable<DownloaderObjectModel> items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>();
             if (!items.Any())
             {
                 return false;
             }
 
-            return (from item
-                    in items
-                    where !item.IsDownloading && !item.IsCompleted && !QueueProcessor.IsQueued(item)
-                    select item).Count() == items.Count();
+            return items.All(x => !x.IsDownloading && !x.IsCompleted && !QueueProcessor.IsQueued(x));
         }
 
         private void Dequeue(object obj)
         {
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
-
+            DownloaderObjectModel[] items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
             QueueProcessor.Dequeue(items);
         }
 
@@ -716,33 +659,29 @@ namespace AMDownloader.ViewModels
                 return false;
             }
 
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>();
-
+            IEnumerable<DownloaderObjectModel> items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>();
             if (!items.Any())
             {
                 return false;
             }
 
-            return (from item
-                    in items
-                    where !item.IsDownloading && QueueProcessor.IsQueued(item)
-                    select item).Count() == items.Count();
+            return items.All(x => !x.IsDownloading && QueueProcessor.IsQueued(x));
         }
 
         private void CopyLinkToClipboard(object obj)
         {
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
-            var clipText = string.Empty;
-            var counter = 0;
-            var total = items.Length;
-
-            foreach (var item in items)
+            DownloaderObjectModel[] items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
+            string clipText = string.Empty;
+            int counter = 0;
+            int total = items.Length;
+            foreach (DownloaderObjectModel item in items)
             {
                 clipText += item.Url;
                 if (counter < total - 1)
                 {
                     clipText += Environment.NewLine;
                 }
+
                 counter++;
             }
 
@@ -756,7 +695,7 @@ namespace AMDownloader.ViewModels
                 return false;
             }
 
-            var items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>();
+            IEnumerable<DownloaderObjectModel> items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>();
 
             return items.Any();
         }
@@ -766,10 +705,9 @@ namespace AMDownloader.ViewModels
             _updatingListTcs = new TaskCompletionSource();
             _updatingListCts = new CancellationTokenSource();
             RaisePropertyChanged(nameof(IsBackgroundWorking));
+            CancellationToken ct = _updatingListCts.Token;
 
-            var ct = _updatingListCts.Token;
-            var items = (from item in DownloadItemsCollection where item.IsCompleted select item).ToArray();
-
+            DownloaderObjectModel[] items = (from item in DownloadItemsCollection where item.IsCompleted select item).ToArray();
             Task.Run(async () =>
             {
                 try
@@ -784,9 +722,7 @@ namespace AMDownloader.ViewModels
             {
                 _updatingListCts.Dispose();
                 _updatingListTcs.SetResult();
-
                 RaisePropertyChanged(nameof(IsBackgroundWorking));
-
                 RefreshCollectionView();
             });
         }
@@ -815,10 +751,9 @@ namespace AMDownloader.ViewModels
 
         private void CheckForUpdates(object obj)
         {
-            bool silent = (bool)obj;
+            var silent = (bool)obj;
 
             _triggerUpdateCheckTcs = new TaskCompletionSource();
-
             Task.Run(async () => await TriggerUpdateCheckAsync(silent))
                 .ContinueWith(t =>
                 {
@@ -856,11 +791,11 @@ namespace AMDownloader.ViewModels
             if (IsBackgroundWorking)
             {
                 if (_showPrompt(
-                    "Background operation in progress. Cancel and exit program?",
-                    "Exit",
-                    PromptButton.YesNo,
-                    PromptIcon.Exclamation,
-                    false) == false)
+                        "Background operation in progress. Cancel and exit program?",
+                        "Exit",
+                        PromptButton.YesNo,
+                        PromptIcon.Exclamation,
+                        false) == false)
                 {
                     return;
                 }
@@ -876,20 +811,16 @@ namespace AMDownloader.ViewModels
             }
             else if (DownloadingCount > 0)
             {
-                var unPauseableDownloads = from item
-                                           in DownloadItemsCollection
-                                           where item.IsDownloading && !item.SupportsResume && item.BytesDownloaded > 0
-                                           select item;
-
-                if (unPauseableDownloads.Any())
+                IEnumerable<DownloaderObjectModel> resumeableDownloads = DownloadItemsCollection.Where(x => x.IsDownloading && !x.SupportsResume && x.BytesDownloaded > 0);
+                if (resumeableDownloads.Any())
                 {
                     if (_showPrompt(
-                    "The following ongoing downloads cannot be paused and will be canceled. Proceed?\n\n"
-                    + string.Join("\n", unPauseableDownloads.Select(o => o.Name).ToArray()),
-                    "Exit",
-                    PromptButton.YesNo,
-                    PromptIcon.Exclamation,
-                    false) == false)
+                        "The following ongoing downloads cannot be paused and will be canceled. Proceed?\n\n"
+                        + string.Join("\n", resumeableDownloads.Select(o => o.Name).ToArray()),
+                        "Exit",
+                        PromptButton.YesNo,
+                        PromptIcon.Exclamation,
+                        false) == false)
                     {
                         return;
                     }
@@ -898,7 +829,6 @@ namespace AMDownloader.ViewModels
 
             _closingTcs = new TaskCompletionSource();
             RaiseEvent(Closing);
-
             Task.Run(async () =>
             {
                 if (IsBackgroundWorking)
@@ -913,15 +843,12 @@ namespace AMDownloader.ViewModels
 
                 Status = "Saving...";
                 RaisePropertyChanged(nameof(Status));
-
                 try
                 {
                     var list = new SerializingDownloaderObjectModelList();
-                    var index = 0;
-
+                    int index = 0;
                     Directory.CreateDirectory(Common.Paths.LocalAppDataFolder);
-
-                    foreach (var item in DownloadItemsCollection)
+                    foreach (DownloaderObjectModel item in DownloadItemsCollection)
                     {
                         if (item.IsDownloading)
                         {
@@ -998,7 +925,8 @@ namespace AMDownloader.ViewModels
                 case Category.Downloading:
                     DownloadItemsView.Filter = new Predicate<object>((o) =>
                     {
-                        var item = o as DownloaderObjectModel;
+                        var item = (DownloaderObjectModel)o;
+
                         return item.IsDownloading;
                     });
                     break;
@@ -1006,7 +934,8 @@ namespace AMDownloader.ViewModels
                 case Category.Completed:
                     DownloadItemsView.Filter = new Predicate<object>((o) =>
                     {
-                        var item = o as DownloaderObjectModel;
+                        var item = (DownloaderObjectModel)o;
+
                         return item.IsCompleted;
                     });
                     break;
@@ -1014,7 +943,8 @@ namespace AMDownloader.ViewModels
                 case Category.Paused:
                     DownloadItemsView.Filter = new Predicate<object>((o) =>
                     {
-                        var item = o as DownloaderObjectModel;
+                        var item = (DownloaderObjectModel)o;
+
                         return item.IsPaused;
                     });
                     break;
@@ -1022,7 +952,8 @@ namespace AMDownloader.ViewModels
                 case Category.Queued:
                     DownloadItemsView.Filter = new Predicate<object>((o) =>
                     {
-                        var item = o as DownloaderObjectModel;
+                        var item = (DownloaderObjectModel)o;
+
                         return QueueProcessor.IsQueued(item) && !item.IsDownloading;
                     });
                     break;
@@ -1030,7 +961,8 @@ namespace AMDownloader.ViewModels
                 case Category.Ready:
                     DownloadItemsView.Filter = new Predicate<object>((o) =>
                     {
-                        var item = o as DownloaderObjectModel;
+                        var item = (DownloaderObjectModel)o;
+
                         return item.IsReady && !QueueProcessor.IsQueued(item);
                     });
                     break;
@@ -1038,7 +970,8 @@ namespace AMDownloader.ViewModels
                 case Category.Errored:
                     DownloadItemsView.Filter = new Predicate<object>((o) =>
                     {
-                        var item = o as DownloaderObjectModel;
+                        var item = (DownloaderObjectModel)o;
+
                         return item.IsErrored;
                     });
                     break;
@@ -1057,8 +990,7 @@ namespace AMDownloader.ViewModels
             // Cancel all pending refreshes.
 
             Monitor.Enter(_refreshViewCtsListLock);
-
-            foreach (var oldCts in _refreshViewCtsList)
+            foreach (CancellationTokenSource oldCts in _refreshViewCtsList)
             {
                 try
                 {
@@ -1072,24 +1004,18 @@ namespace AMDownloader.ViewModels
             }
 
             _refreshViewCtsList.Clear();
-
             _refreshingViewTcs = new TaskCompletionSource();
             var newCts = new CancellationTokenSource();
             var ct = newCts.Token;
-
             _refreshViewCtsList.Add(newCts);
-
             Monitor.Exit(_refreshViewCtsListLock);
-
             Task.Run(async () =>
             {
-                var semTask = _refreshingViewSemaphore.WaitAsync(ct);
-                var throttle = Task.Delay(2000);
-
+                Task semTask = _refreshingViewSemaphore.WaitAsync(ct);
+                Task throttle = Task.Delay(2000);
                 try
                 {
                     await semTask;
-
                     Application.Current?.Dispatcher?.Invoke(() =>
                     {
                         DownloadItemsView.Refresh();
@@ -1097,7 +1023,6 @@ namespace AMDownloader.ViewModels
                     });
 
                     await throttle;
-
                     if (_refreshingViewTcs.Task.Status != TaskStatus.RanToCompletion)
                     {
                         _refreshingViewTcs.SetResult();
@@ -1139,44 +1064,43 @@ namespace AMDownloader.ViewModels
         /// <returns>An array of <see cref="DownloaderObjectModel"/>s which have been successfully created.</returns>
         private DownloaderObjectModel[] CreateObjects(IEnumerable<string> urls, string saveToFolder, FileReplacementMode replacementMode, CancellationToken ct)
         {
-            var existingItems = DownloadItemsCollection.ToList();
-            var itemsCreated = new List<DownloaderObjectModel>();
-            var itemsExistInDownloadsList = new List<string>(); // Skipped
-            var itemsExistOnDisk = new List<string>();
-            var itemsErrored = new List<string>(); // Errored
-            var totalItems = urls.Count();
-            var counter = 0;
-
-            foreach (var url in urls.Distinct())
+            List<DownloaderObjectModel> existingItems = DownloadItemsCollection.ToList();
+            List<DownloaderObjectModel> itemsCreated = [];
+            List<string> itemsExistInDownloadsList = []; // Skipped
+            List<string> itemsExistOnDisk = [];
+            List<string> itemsErrored = []; // Errored
+            int totalItems = urls.Count();
+            int counter = 0;
+            foreach (string url in urls.Distinct())
             {
                 if (ct.IsCancellationRequested)
                 {
                     break;
                 }
 
-                string fileName, filePath;
 
                 counter++;
-
                 Progress = (int)((double)counter / totalItems * 100);
                 Status = $"Adding {counter} of {totalItems}: {url}";
                 RaisePropertyChanged(nameof(Status));
                 RaisePropertyChanged(nameof(Progress));
 
+                string fileName, filePath;
                 fileName = Common.Functions.GetFileNameFromUrl(url);
-
                 if (string.IsNullOrEmpty(fileName))
                 {
                     itemsErrored.Add(url);
+
                     continue;
                 }
 
                 // Check if an item already exists with the same url and destination.
                 if (existingItems.Where(o =>
-                    o.Url.ToLower() == url.ToLower()
-                    && Path.GetDirectoryName(o.Destination.ToLower()) == saveToFolder.ToLower()).Any())
+                    o.Url.Equals(url, StringComparison.OrdinalIgnoreCase)
+                    && Path.GetDirectoryName(o.Destination).Equals(saveToFolder, StringComparison.OrdinalIgnoreCase)).Any())
                 {
                     itemsExistInDownloadsList.Add(url);
+
                     continue;
                 }
 
@@ -1185,47 +1109,49 @@ namespace AMDownloader.ViewModels
                     && File.Exists(Path.Combine(saveToFolder, Common.Functions.GetFileNameFromUrl(url))))
                 {
                     itemsExistOnDisk.Add(url);
+
                     continue;
                 }
 
                 filePath = GenerateNewDestination(
                     Path.Combine(saveToFolder, Common.Functions.GetFileNameFromUrl(url)),
                     existingItems.Select(o => o.Destination).ToArray(),
-                    replacementMode == FileReplacementMode.Rename ? true : false);
-
+                    replacementMode == FileReplacementMode.Rename);
                 DownloaderObjectModel item;
                 item = new DownloaderObjectModel(
-                        httpClient: _client,
-                        url: url,
-                        destination: filePath,
-                        overwrite: replacementMode == FileReplacementMode.Overwrite,
-                        downloadCreated: Download_Created,
-                        downloadStarted: Download_Started,
-                        downloadStopped: Download_Stopped,
-                        propertyChanged: Download_PropertyChanged,
-                        bytesReporter: _progressReporter);
-
+                    httpClient: _client,
+                    url: url,
+                    destination: filePath,
+                    overwrite: replacementMode == FileReplacementMode.Overwrite,
+                    downloadCreated: Download_Created,
+                    downloadStarted: Download_Started,
+                    downloadStopped: Download_Stopped,
+                    propertyChanged: Download_PropertyChanged,
+                    bytesReporter: _progressReporter);
                 existingItems.Add(item);
                 itemsCreated.Add(item);
             }
 
             if (itemsExistInDownloadsList.Count > 0)
             {
-                _showWindow(new ListViewerViewModel(itemsExistInDownloadsList,
+                _showWindow(new ListViewerViewModel(
+                    itemsExistInDownloadsList,
                     "The following URLs were not added because they are already in the list:",
                     "Duplicate Entries"));
             }
 
             if (itemsExistOnDisk.Count > 0)
             {
-                _showWindow(new ListViewerViewModel(itemsExistOnDisk,
+                _showWindow(new ListViewerViewModel(
+                    itemsExistOnDisk,
                     "The following files were skipped because they already exist in the chosen folder:",
                     "Skipped Entries"));
             }
 
             if (itemsErrored.Count > 0)
             {
-                _showWindow(new ListViewerViewModel(itemsErrored,
+                _showWindow(new ListViewerViewModel(
+                    itemsErrored,
                     "The following URLs were not added because they are invalid:",
                     "Invalid Entries"));
             }
@@ -1233,15 +1159,13 @@ namespace AMDownloader.ViewModels
             Progress = 0;
             RaisePropertyChanged(nameof(Progress));
 
-            return itemsCreated.ToArray();
+            return [.. itemsCreated];
         }
 
         private void AddObjects(params DownloaderObjectModel[] objects)
         {
             int total = objects.Length;
-
             Monitor.Enter(_downloadItemsCollectionLock);
-
             try
             {
                 Application.Current.Dispatcher.Invoke(() =>
@@ -1269,14 +1193,13 @@ namespace AMDownloader.ViewModels
 
         private async Task RemoveObjectsAsync(IEnumerable<DownloaderObjectModel> items, bool delete, CancellationToken ct)
         {
-            List<DownloaderObjectModel> itemsToRemove = new();
-            List<IQueueable> itemsToDequeue = new();
-            List<string> failed = new();
+            List<DownloaderObjectModel> itemsToRemove = [];
+            List<IQueueable> itemsToDequeue = [];
+            List<string> failed = [];
             int counter = 0;
             int total = items.Count();
             string primaryStatus = delete ? "Deleting" : "Removing";
-
-            foreach (var item in items)
+            foreach (DownloaderObjectModel item in items)
             {
                 if (ct.IsCancellationRequested)
                 {
@@ -1284,14 +1207,12 @@ namespace AMDownloader.ViewModels
                 }
 
                 counter++;
-
                 Status = $"{primaryStatus} {counter} of {total}: {item.Name}";
                 Progress = (int)((double)counter / total * 100);
                 RaisePropertyChanged(nameof(Status));
                 RaisePropertyChanged(nameof(Progress));
 
-                var queued = QueueProcessor.IsQueued(item);
-
+                bool queued = QueueProcessor.IsQueued(item);
                 if (item.IsDownloading && queued)
                 {
                     await QueueProcessor.StopAsync();
@@ -1300,7 +1221,6 @@ namespace AMDownloader.ViewModels
                 if (!item.IsCompleted && !item.IsReady)
                 {
                     await item.CancelAsync();
-
                     if (item.TempFilesExist())
                     {
                         failed.Add(item.Destination);
@@ -1316,7 +1236,6 @@ namespace AMDownloader.ViewModels
                                 item.Destination,
                                 UIOption.OnlyErrorDialogs,
                                 RecycleOption.SendToRecycleBin);
-
                             if (File.Exists(item.Destination))
                             {
                                 failed.Add(item.Destination);
@@ -1339,11 +1258,9 @@ namespace AMDownloader.ViewModels
 
             Status = "Updating...";
             RaisePropertyChanged(nameof(Status));
-
             Application.Current.Dispatcher.Invoke(() =>
             {
                 Monitor.Enter(_downloadItemsCollectionLock);
-
                 if (itemsToRemove.Count == DownloadItemsCollection.Count)
                 {
                     DownloadItemsCollection.Clear();
@@ -1359,16 +1276,14 @@ namespace AMDownloader.ViewModels
                 Monitor.Exit(_downloadItemsCollectionLock);
             });
 
-            QueueProcessor.Dequeue(itemsToDequeue.ToArray());
+            QueueProcessor.Dequeue([.. itemsToDequeue]);
 
             Progress = 0;
             RaisePropertyChanged(nameof(Progress));
-
             if (failed.Count > 0)
             {
                 string title = delete ? "Delete" : "Remove";
                 string description = $"The following files could not be {(delete ? "deleted" : "removed")} due to errors:";
-
                 _showWindow(new ListViewerViewModel(failed, description, title));
             }
         }
@@ -1383,15 +1298,14 @@ namespace AMDownloader.ViewModels
         private async Task StartDownloadAsync(bool enqueue, params DownloaderObjectModel[] items)
         {
             bool forceEnqueue = enqueue;
-            List<IQueueable> itemsToEnqueue = new();
-            List<Task> itemsToDownload = new();
-
+            List<IQueueable> itemsToEnqueue = [];
+            List<Task> itemsToDownload = [];
             if (items.Length > Settings.Default.MaxParallelDownloads)
             {
                 forceEnqueue = true;
             }
 
-            foreach (var item in items)
+            foreach (DownloaderObjectModel item in items)
             {
                 if (forceEnqueue)
                 {
@@ -1424,20 +1338,16 @@ namespace AMDownloader.ViewModels
             }
 
             _reportingSpeedTcs = new TaskCompletionSource();
-
             Task.Run(async () =>
             {
                 Stopwatch stopwatch = new();
                 long bytesFrom;
                 long bytesCaptured;
-
                 do
                 {
                     stopwatch.Restart();
                     bytesFrom = BytesDownloadedThisSession;
-
                     await Task.Delay(1000);
-
                     bytesCaptured = BytesDownloadedThisSession - bytesFrom;
                     stopwatch.Stop();
 
@@ -1456,10 +1366,9 @@ namespace AMDownloader.ViewModels
         {
             try
             {
-                var appName = Assembly.GetExecutingAssembly().GetName().Name;
-                var currentVer = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-                var latestUpdateInfo = await UpdateService.GetLatestUpdateInfoAsync(appName, _client);
-
+                string appName = Assembly.GetExecutingAssembly().GetName().Name;
+                string currentVer = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+                UpdateInfo latestUpdateInfo = await UpdateService.GetLatestUpdateInfoAsync(appName, _client);
                 if (UpdateService.IsUpdateAvailable(latestUpdateInfo.Versions, currentVer))
                 {
                     _notifyUpdateAvailable(latestUpdateInfo, silent);
@@ -1503,9 +1412,7 @@ namespace AMDownloader.ViewModels
             string dirPath = Path.GetDirectoryName(originalDestination);
             string newDestination = originalDestination;
             int i = 0;
-
             existingDestinations = existingDestinations.Select(o => o.ToLower()).ToArray();
-
             while ((searchDisk && File.Exists(newDestination)) || existingDestinations.Contains(newDestination.ToLower()))
             {
                 newDestination = Path.Combine(
@@ -1564,7 +1471,6 @@ namespace AMDownloader.ViewModels
         private void Download_Stopped(object sender, EventArgs e)
         {
             RefreshCollectionView();
-
             Monitor.Enter(_bytesTransferredOverLifetimeLock);
             try
             {
@@ -1595,7 +1501,6 @@ namespace AMDownloader.ViewModels
             RaisePropertyChanged(nameof(QueuedCount));
             RaisePropertyChanged(nameof(ReadyCount));
             RaisePropertyChanged(nameof(IsDownloading));
-
             if (!IsBackgroundWorking)
             {
                 if (DownloadingCount > 0)
