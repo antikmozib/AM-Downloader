@@ -50,22 +50,39 @@ namespace AMDownloader.ViewModels
         #region Fields
 
         private readonly HttpClient _client;
+
         private readonly IProgress<long> _progressReporter;
+
         private readonly SemaphoreSlim _refreshingViewSemaphore;
+
         private readonly Func<object, bool?> _showWindow;
+
         private readonly ShowPromptDelegate _showPrompt;
+
         private readonly NotifyUpdateAvailableDelegate _notifyUpdateAvailable;
+
         private CancellationTokenSource _updatingListCts;
+
         private readonly List<CancellationTokenSource> _refreshViewCtsList;
+
         private TaskCompletionSource _updatingListTcs;
+
         private TaskCompletionSource _refreshingViewTcs;
+
         private TaskCompletionSource _reportingSpeedTcs;
+
         private TaskCompletionSource _closingTcs;
+
         private TaskCompletionSource _triggerUpdateCheckTcs;
+
         private readonly object _refreshViewCtsListLock;
+
         private readonly object _downloadItemsCollectionLock;
+
         private readonly object _bytesDownloadedLock;
+
         private readonly object _bytesTransferredOverLifetimeLock;
+
         private bool _resetAllSettingsOnClose;
 
         #endregion
@@ -73,23 +90,40 @@ namespace AMDownloader.ViewModels
         #region Properties
 
         public ObservableCollection<DownloaderObjectModel> DownloadItemsCollection { get; }
+
         public ObservableCollection<Category> CategoriesCollection { get; }
+
         public ICollectionView DownloadItemsView { get; }
+
         public QueueProcessor QueueProcessor { get; }
+
         public int Progress { get; private set; }
+
         public long BytesDownloadedThisSession { get; private set; }
+
         public long? Speed { get; private set; }
+
         public int Count { get; private set; }
+
         public int ReadyCount { get; private set; }
+
         public int DownloadingCount { get; private set; }
+
         public int QueuedCount { get; private set; }
+
         public int CompletedCount { get; private set; }
+
         public int ErroredCount { get; private set; }
+
         public int PausedCount { get; private set; }
+
         public string Status { get; private set; }
+
         public bool IsDownloading => DownloadingCount > 0;
+
         public bool IsBackgroundWorking => _updatingListTcs != null
             && _updatingListTcs.Task.Status != TaskStatus.RanToCompletion;
+
         public bool IsCheckingForUpdates => _triggerUpdateCheckTcs != null
             && _triggerUpdateCheckTcs.Task.Status != TaskStatus.RanToCompletion;
 
@@ -98,7 +132,9 @@ namespace AMDownloader.ViewModels
         #region Events
 
         public event PropertyChangedEventHandler PropertyChanged;
+
         public event EventHandler Closing;
+
         public event EventHandler Closed;
 
         #endregion
@@ -106,22 +142,39 @@ namespace AMDownloader.ViewModels
         #region Commands
 
         public ICommand AddCommand { get; private set; }
+
         public ICommand StartCommand { get; private set; }
+
         public ICommand RemoveCommand { private get; set; }
+
         public ICommand CancelCommand { private get; set; }
+
         public ICommand PauseCommand { get; private set; }
+
         public ICommand OpenCommand { get; private set; }
+
         public ICommand OpenContainingFolderCommand { get; private set; }
+
         public ICommand StartQueueCommand { get; private set; }
+
         public ICommand StopQueueCommand { get; private set; }
+
         public ICommand CategoryChangedCommand { get; private set; }
+
         public ICommand SettingsCommand { get; private set; }
+
         public ICommand EnqueueCommand { get; private set; }
+
         public ICommand DequeueCommand { get; private set; }
+
         public ICommand CopyLinkToClipboardCommand { get; private set; }
+
         public ICommand ClearCompletedDownloadsCommand { get; private set; }
+
         public ICommand CancelBackgroundTaskCommand { get; private set; }
+
         public ICommand CheckForUpdatesCommand { get; private set; }
+
         public ICommand UIClosedCommand { get; private set; }
 
         #endregion
@@ -144,9 +197,7 @@ namespace AMDownloader.ViewModels
                 QueueProcessor_ItemEnqueued,
                 QueueProcessor_ItemDequeued);
             DownloadItemsView = CollectionViewSource.GetDefaultView(DownloadItemsCollection);
-
             DownloadItemsView.CurrentChanged += CollectionView_CurrentChanged;
-
             Progress = 0;
             BytesDownloadedThisSession = 0;
             Speed = null;
@@ -158,7 +209,6 @@ namespace AMDownloader.ViewModels
             ErroredCount = 0;
             PausedCount = 0;
             Status = "Ready";
-
             Closing += closing;
             Closed += closed;
 
@@ -166,6 +216,7 @@ namespace AMDownloader.ViewModels
             {
                 Timeout = TimeSpan.FromMilliseconds(Settings.Default.ConnectionTimeout)
             };
+
             _progressReporter = new Progress<long>(value =>
             {
                 Monitor.Enter(_bytesDownloadedLock);
@@ -178,6 +229,7 @@ namespace AMDownloader.ViewModels
                     Monitor.Exit(_bytesDownloadedLock);
                 }
             });
+
             _refreshingViewSemaphore = new SemaphoreSlim(1);
             _showWindow = showWindow;
             _showPrompt = showPrompt;
@@ -207,7 +259,6 @@ namespace AMDownloader.ViewModels
             CancelBackgroundTaskCommand = new RelayCommand(CancelBackgroundTask, CancelBackgroundTask_CanExecute);
             CheckForUpdatesCommand = new RelayCommand<object>(CheckForUpdates, CheckForUpdates_CanExecute);
             UIClosedCommand = new RelayCommand(UIClosed);
-
             foreach (Category cat in (Category[])Enum.GetValues(typeof(Category)))
             {
                 CategoriesCollection.Add(cat);
@@ -265,7 +316,6 @@ namespace AMDownloader.ViewModels
                             Status = $"Loading {i + 1} of {total}: {Path.GetFileName(sourceObjects[i].Destination)}";
                             RaisePropertyChanged(nameof(Progress));
                             RaisePropertyChanged(nameof(Status));
-
                             var item = new DownloaderObjectModel(
                                 httpClient: _client,
                                 url: sourceObjects[i].Url,
@@ -294,7 +344,6 @@ namespace AMDownloader.ViewModels
                         Status = "Updating...";
                         RaisePropertyChanged(nameof(Progress));
                         RaisePropertyChanged(nameof(Status));
-
                         AddObjects([.. itemsToAdd]);
                         QueueProcessor.Enqueue([.. itemsToEnqueue]);
                     }
@@ -355,7 +404,6 @@ namespace AMDownloader.ViewModels
             DownloaderObjectModel[] items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
             QueueProcessor.Dequeue(items);
             Parallel.ForEach(items, (item) => item.Pause());
-
             RefreshCollectionView();
         }
 
@@ -380,7 +428,6 @@ namespace AMDownloader.ViewModels
             DownloaderObjectModel[] items = (obj as ObservableCollection<object>).Cast<DownloaderObjectModel>().ToArray();
             QueueProcessor.Dequeue(items);
             Parallel.ForEach(items, (item) => item.Cancel());
-
             RefreshCollectionView();
         }
 
@@ -418,10 +465,8 @@ namespace AMDownloader.ViewModels
                         addDownloadViewModel.SaveLocation,
                         addDownloadViewModel.ReplacementMode,
                         ct);
-
                     Status = "Updating...";
                     RaisePropertyChanged(nameof(Status));
-
                     AddObjects(itemsCreated);
                     if (addDownloadViewModel.Enqueue)
                     {
@@ -706,7 +751,6 @@ namespace AMDownloader.ViewModels
             _updatingListCts = new CancellationTokenSource();
             RaisePropertyChanged(nameof(IsBackgroundWorking));
             CancellationToken ct = _updatingListCts.Token;
-
             DownloaderObjectModel[] items = (from item in DownloadItemsCollection where item.IsCompleted select item).ToArray();
             Task.Run(async () =>
             {
@@ -752,13 +796,11 @@ namespace AMDownloader.ViewModels
         private void CheckForUpdates(object obj)
         {
             var silent = (bool)obj;
-
             _triggerUpdateCheckTcs = new TaskCompletionSource();
             Task.Run(async () => await TriggerUpdateCheckAsync(silent))
                 .ContinueWith(t =>
                 {
                     _triggerUpdateCheckTcs.SetResult();
-
                     RaisePropertyChanged(nameof(IsCheckingForUpdates));
                 });
         }
@@ -785,6 +827,7 @@ namespace AMDownloader.ViewModels
             if (_closingTcs != null && _closingTcs.Task.Status != TaskStatus.RanToCompletion)
             {
                 // Already closing.
+
                 return;
             }
 
@@ -891,7 +934,6 @@ namespace AMDownloader.ViewModels
                 }
 
                 Settings.Default.Save();
-
                 _closingTcs.SetResult();
                 RaiseEvent(Closed);
             });
@@ -920,8 +962,8 @@ namespace AMDownloader.ViewModels
                     {
                         return true;
                     });
-                    break;
 
+                    break;
                 case Category.Downloading:
                     DownloadItemsView.Filter = new Predicate<object>((o) =>
                     {
@@ -929,8 +971,8 @@ namespace AMDownloader.ViewModels
 
                         return item.IsDownloading;
                     });
-                    break;
 
+                    break;
                 case Category.Completed:
                     DownloadItemsView.Filter = new Predicate<object>((o) =>
                     {
@@ -938,8 +980,8 @@ namespace AMDownloader.ViewModels
 
                         return item.IsCompleted;
                     });
-                    break;
 
+                    break;
                 case Category.Paused:
                     DownloadItemsView.Filter = new Predicate<object>((o) =>
                     {
@@ -947,8 +989,8 @@ namespace AMDownloader.ViewModels
 
                         return item.IsPaused;
                     });
-                    break;
 
+                    break;
                 case Category.Queued:
                     DownloadItemsView.Filter = new Predicate<object>((o) =>
                     {
@@ -956,8 +998,8 @@ namespace AMDownloader.ViewModels
 
                         return QueueProcessor.IsQueued(item) && !item.IsDownloading;
                     });
-                    break;
 
+                    break;
                 case Category.Ready:
                     DownloadItemsView.Filter = new Predicate<object>((o) =>
                     {
@@ -965,8 +1007,8 @@ namespace AMDownloader.ViewModels
 
                         return item.IsReady && !QueueProcessor.IsQueued(item);
                     });
-                    break;
 
+                    break;
                 case Category.Errored:
                     DownloadItemsView.Filter = new Predicate<object>((o) =>
                     {
@@ -974,9 +1016,9 @@ namespace AMDownloader.ViewModels
 
                         return item.IsErrored;
                     });
+
                     break;
             }
-
             Settings.Default.LastSelectedCatagory = category.ToString();
         }
 
@@ -988,7 +1030,6 @@ namespace AMDownloader.ViewModels
             }
 
             // Cancel all pending refreshes.
-
             Monitor.Enter(_refreshViewCtsListLock);
             foreach (CancellationTokenSource oldCts in _refreshViewCtsList)
             {
@@ -1006,7 +1047,7 @@ namespace AMDownloader.ViewModels
             _refreshViewCtsList.Clear();
             _refreshingViewTcs = new TaskCompletionSource();
             var newCts = new CancellationTokenSource();
-            var ct = newCts.Token;
+            CancellationToken ct = newCts.Token;
             _refreshViewCtsList.Add(newCts);
             Monitor.Exit(_refreshViewCtsListLock);
             Task.Run(async () =>
@@ -1066,9 +1107,9 @@ namespace AMDownloader.ViewModels
         {
             List<DownloaderObjectModel> existingItems = DownloadItemsCollection.ToList();
             List<DownloaderObjectModel> itemsCreated = [];
-            List<string> itemsExistInDownloadsList = []; // Skipped
+            List<string> itemsExistInDownloadsList = []; // Skipped.
             List<string> itemsExistOnDisk = [];
-            List<string> itemsErrored = []; // Errored
+            List<string> itemsErrored = []; // Errored.
             int totalItems = urls.Count();
             int counter = 0;
             foreach (string url in urls.Distinct())
@@ -1078,13 +1119,11 @@ namespace AMDownloader.ViewModels
                     break;
                 }
 
-
                 counter++;
                 Progress = (int)((double)counter / totalItems * 100);
                 Status = $"Adding {counter} of {totalItems}: {url}";
                 RaisePropertyChanged(nameof(Status));
                 RaisePropertyChanged(nameof(Progress));
-
                 string fileName, filePath;
                 fileName = Common.Functions.GetFileNameFromUrl(url);
                 if (string.IsNullOrEmpty(fileName))
@@ -1211,7 +1250,6 @@ namespace AMDownloader.ViewModels
                 Progress = (int)((double)counter / total * 100);
                 RaisePropertyChanged(nameof(Status));
                 RaisePropertyChanged(nameof(Progress));
-
                 bool queued = QueueProcessor.IsQueued(item);
                 if (item.IsDownloading && queued)
                 {
@@ -1277,7 +1315,6 @@ namespace AMDownloader.ViewModels
             });
 
             QueueProcessor.Dequeue([.. itemsToDequeue]);
-
             Progress = 0;
             RaisePropertyChanged(nameof(Progress));
             if (failed.Count > 0)
@@ -1317,7 +1354,6 @@ namespace AMDownloader.ViewModels
                     itemsToDownload.Add(Task.Run(async () => await item.StartAsync()));
                 }
             }
-
             if (forceEnqueue)
             {
                 QueueProcessor.Enqueue(itemsToEnqueue.ToArray());
@@ -1334,6 +1370,7 @@ namespace AMDownloader.ViewModels
             if (_reportingSpeedTcs != null && _reportingSpeedTcs.Task.Status != TaskStatus.RanToCompletion)
             {
                 // Already reporting speed.
+
                 return;
             }
 
@@ -1350,7 +1387,6 @@ namespace AMDownloader.ViewModels
                     await Task.Delay(1000);
                     bytesCaptured = BytesDownloadedThisSession - bytesFrom;
                     stopwatch.Stop();
-
                     Speed = (long)(bytesCaptured / ((double)stopwatch.ElapsedMilliseconds / 1000));
                     RaisePropertyChanged(nameof(Speed));
                     RaisePropertyChanged(nameof(BytesDownloadedThisSession));
@@ -1492,7 +1528,6 @@ namespace AMDownloader.ViewModels
             PausedCount = DownloadItemsCollection.Count(o => o.IsPaused);
             CompletedCount = DownloadItemsCollection.Count(o => o.IsCompleted);
             ErroredCount = DownloadItemsCollection.Count(o => o.IsErrored);
-
             RaisePropertyChanged(nameof(Count));
             RaisePropertyChanged(nameof(DownloadingCount));
             RaisePropertyChanged(nameof(ErroredCount));
