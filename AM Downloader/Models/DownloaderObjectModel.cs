@@ -489,7 +489,7 @@ namespace AMDownloader.Models
 
                 for (int i = 0; i < connCount; i++)
                 {
-                    // Must be declared here to ensure var is captured correctly in the tasks.
+                    // Must be declared here to ensure variable is captured correctly in the tasks.
                     int conn = i;
 
                     var t = Task.Run(async () =>
@@ -507,7 +507,7 @@ namespace AMDownloader.Models
                             var connFileInfo = new FileInfo(connFile);
                             long connStartPos = (TotalBytesToDownload ?? 0) / connCount * conn;
 
-                            // If this is the last connection, read till the end of the file
+                            // If this is the last connection, read till the end of the file.
                             long connEndPos = conn == connCount - 1
                                 ? (TotalBytesToDownload ?? 0)
                                 : (TotalBytesToDownload ?? 0) / connCount * (conn + 1);
@@ -525,7 +525,7 @@ namespace AMDownloader.Models
                             connLength = connEndPos - connStartPos;
 
                             Log.Debug("{0,1}{1,2}{2,12}{3,12}{4,12}{5,12}{6,12}{7,12}",
-                                "Conn = ", conn,
+                                "Connection = ", conn,
                                 "Start = ", connStartPos,
                                 "End = ", connEndPos,
                                 "Length = ", connLength);
@@ -567,7 +567,7 @@ namespace AMDownloader.Models
                         long t_BytesExpected = 0, t_BytesReceived = 0;
                         long t_TimeExpected = 0, t_TimeTaken = 0, t_Delay = 0; // ms.
 
-                        Log.Debug($"Conn {conn} speed limit = {connSpeedLimit}");
+                        Log.Debug($"Connection {conn} speed limit = {connSpeedLimit}");
 
                         Interlocked.Increment(ref _connections);
 
@@ -608,7 +608,7 @@ namespace AMDownloader.Models
                                     t_Delay = t_TimeExpected - t_TimeTaken;
                                     if (t_Delay > 0)
                                     {
-                                        Log.Debug($"Conn {conn} sleeping for {t_Delay} ms");
+                                        Log.Debug($"Connection {conn} sleeping for {t_Delay} ms");
 
                                         await Task.Delay((int)t_Delay, _ctLinked);
                                     }
@@ -619,7 +619,7 @@ namespace AMDownloader.Models
                             }
                         }
 
-                        Log.Debug($"Conn {conn} completed, Read this session = {readThisConn}");
+                        Log.Debug($"Connection {conn} completed, Read this session = {readThisConn}");
 
                         Interlocked.Decrement(ref _connections);
                     });
