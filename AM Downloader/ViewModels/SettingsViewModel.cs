@@ -102,7 +102,9 @@ namespace AMDownloader.ViewModels
             }
         }
 
-        public bool ClearFinishedDownloadsOnExit { get; set; }
+        public bool ClearCompletedDownloadsOnExt { get; set; }
+
+        public bool AutoClearOldDownloads { get; set; }
 
         public bool RememberLastDownloadLocation { get; set; }
 
@@ -129,7 +131,8 @@ namespace AMDownloader.ViewModels
             _maxDownloadSpeed = Settings.Default.MaxDownloadSpeed;
             _connectionTimeout = Settings.Default.ConnectionTimeout;
 
-            ClearFinishedDownloadsOnExit = Settings.Default.ClearCompletedDownloadsOnExit;
+            ClearCompletedDownloadsOnExt = Settings.Default.ClearCompletedDownloadsOnExit;
+            AutoClearOldDownloads = Settings.Default.AutoClearOldDownloads;
             RememberLastDownloadLocation = Settings.Default.RememberLastDownloadLocation;
             AutoCheckForUpdates = Settings.Default.AutoCheckForUpdates;
 
@@ -150,7 +153,8 @@ namespace AMDownloader.ViewModels
             Settings.Default.MaxParallelConnPerDownload = _maxParallelConnPerDownload;
             Settings.Default.MaxDownloadSpeed = _maxDownloadSpeed;
             Settings.Default.ConnectionTimeout = _connectionTimeout;
-            Settings.Default.ClearCompletedDownloadsOnExit = ClearFinishedDownloadsOnExit;
+            Settings.Default.ClearCompletedDownloadsOnExit = ClearCompletedDownloadsOnExt;
+            Settings.Default.AutoClearOldDownloads = AutoClearOldDownloads;
             Settings.Default.RememberLastDownloadLocation = RememberLastDownloadLocation;
             Settings.Default.AutoCheckForUpdates = AutoCheckForUpdates;
             Settings.Default.Save();

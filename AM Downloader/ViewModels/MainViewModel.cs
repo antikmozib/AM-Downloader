@@ -294,9 +294,22 @@ namespace AMDownloader.ViewModels
                     try
                     {
                         SerializingDownloaderObjectModelList source = Common.Functions.Deserialize<SerializingDownloaderObjectModelList>(Common.Paths.DownloadsHistoryFile);
-                        SerializingDownloaderObjectModel[] sourceObjects = [.. source.Objects];
+                        SerializingDownloaderObjectModel[] sourceObjects = null;
                         List<DownloaderObjectModel> itemsToAdd = [];
                         List<IQueueable> itemsToEnqueue = [];
+                        if (Settings.Default.AutoClearOldDownloads)
+                        {
+                            var oldItems = source.Objects.Where(x =>
+                                (x.Status != DownloadStatus.Completed || x.Status != DownloadStatus.Errored)
+                                && (DateTime.Now - x.CreatedOn) > TimeSpan.FromDays(30));
+
+                            sourceObjects = source.Objects.Except(oldItems).ToArray();
+                        }
+                        else
+                        {
+                            sourceObjects = source.Objects.ToArray();
+                        }
+
                         int total = sourceObjects.Length;
                         int progress = 0;
                         for (int i = 0; i < sourceObjects.Length; i++)

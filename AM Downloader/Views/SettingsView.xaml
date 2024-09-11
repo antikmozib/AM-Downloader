@@ -46,7 +46,8 @@
 
         <DockPanel LastChildFill="True">
             <Label Content="Maximum parallel connections per download (1 - 5):" />
-            <TextBox Text="{Binding Path=MaxParallelConnPerDownload}"
+            <TextBox DockPanel.Dock="Right"
+                     Text="{Binding Path=MaxParallelConnPerDownload}"
                      Style="{StaticResource InputBoxStyle}" />
             <Border />
         </DockPanel>
@@ -85,8 +86,16 @@
                    Style="{StaticResource SeparatorStyle}" />
 
         <CheckBox VerticalContentAlignment="Center"
-                  IsChecked="{Binding Path=ClearFinishedDownloadsOnExit}">
-            <Label Content="Clear finished downloads on exit" />
+                  IsChecked="{Binding Path=ClearCompletedDownloadsOnExit}">
+            <Label Content="Clear completed downloads on exit" />
+        </CheckBox>
+
+        <Separator Margin="0 4 0 4"
+                   Style="{StaticResource SeparatorStyle}" />
+
+        <CheckBox VerticalContentAlignment="Center"
+                  IsChecked="{Binding Path=AutoClearOldDownloads}">
+            <Label Content="Automatically clear completed downloads older than 30 days" />
         </CheckBox>
 
         <Separator Margin="0 4 0 4"
