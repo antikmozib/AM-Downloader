@@ -1,5 +1,5 @@
 #define MyAppName "AM Downloader"
-#define MyAppVersion GetVersionNumbersString("..\AM Downloader\bin\Release\net6.0-windows\publish\Setup\AM Downloader.exe")
+#define MyAppVersion GetVersionNumbersString("..\AM Downloader\bin\Release\net8.0-windows7.0\publish\Installer\AM Downloader.exe")
 #define MyAppPublisher "Antik Mozib"
 #define MyAppURL "https://mozib.io/amdownloader"
 #define MyAppExeName "AM Downloader.exe"
@@ -30,6 +30,7 @@ UninstallDisplayIcon={app}\{#MyAppName}.exe
 ;ArchitecturesInstallIn64BitMode=x64
 WizardStyle=modern
 PrivilegesRequired=lowest
+CloseApplications=yes
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -38,7 +39,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: 
 
 [Files]
-Source: "{#SourcePath}\..\AM Downloader\bin\Release\net6.0-windows\publish\Setup\*"; Excludes: "*.pdb"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#SourcePath}\..\AM Downloader\bin\Release\net8.0-windows7.0\publish\Installer\*"; Excludes: "*.pdb"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]

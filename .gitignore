@@ -1,8 +1,8 @@
 .vscode/
 .idea/
 Docs/
-Setup/*
-!Setup/AM Downloader.iss
+Installer/*
+!Installer/AM Downloader.iss
 AM Downloader.svg
 
 ## Ignore Visual Studio temporary files, build results, and
