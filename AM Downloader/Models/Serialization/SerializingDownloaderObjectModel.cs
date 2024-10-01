@@ -10,6 +10,7 @@ namespace AMDownloader.Models.Serialization
     public class SerializingDownloaderObjectModel
     {
         public int Index { get; set; }
+        public string Id { get; set; }
         public string Url { get; set; }
         public string Destination { get; set; }
         public bool Overwrite { get; set; }

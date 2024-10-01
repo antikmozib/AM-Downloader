@@ -6,6 +6,7 @@ namespace AMDownloader.QueueProcessing
 {
     public interface IQueueable
     {
+        string Id { get; }
         Task StartAsync();
         void Pause();
         bool IsCompleted { get; }

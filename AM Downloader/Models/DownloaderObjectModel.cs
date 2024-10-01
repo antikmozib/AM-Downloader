@@ -48,6 +48,8 @@ namespace AMDownloader.Models
 
         #region Properties
 
+        public string Id { get; }
+
         /// <summary>
         /// <see langword="true"/> if this download can be resumed after pausing.
         /// </summary>
@@ -145,6 +147,7 @@ namespace AMDownloader.Models
             PropertyChangedEventHandler propertyChanged,
             IProgress<long> bytesReporter) : this(
                 httpClient: httpClient,
+                id: Guid.NewGuid().ToString(),
                 url: url,
                 destination: destination,
                 overwrite: overwrite,
@@ -163,6 +166,7 @@ namespace AMDownloader.Models
 
         public DownloaderObjectModel(
             HttpClient httpClient,
+            string id,
             string url,
             string destination,
             bool overwrite,
@@ -183,6 +187,7 @@ namespace AMDownloader.Models
             _reportProgressBytes = bytesReporter;
             _connections = 0;
             _overwrite = overwrite;
+            Id = id;
             Url = url;
             Destination = destination;
             CreatedOn = createdOn;

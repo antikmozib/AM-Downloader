@@ -331,6 +331,7 @@ namespace AMDownloader.ViewModels
                             RaisePropertyChanged(nameof(Status));
                             var item = new DownloaderObjectModel(
                                 httpClient: _client,
+                                id: sourceObjects[i].Id,
                                 url: sourceObjects[i].Url,
                                 destination: sourceObjects[i].Destination,
                                 overwrite: sourceObjects[i].Overwrite,
@@ -918,6 +919,7 @@ namespace AMDownloader.ViewModels
                         var sItem = new SerializingDownloaderObjectModel
                         {
                             Index = index++,
+                            Id = item.Id,
                             Url = item.Url,
                             Destination = item.Destination,
                             CreatedOn = item.CreatedOn,
