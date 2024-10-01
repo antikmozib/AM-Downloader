@@ -482,57 +482,51 @@ namespace AMDownloader.Models
 
                 // Setup the connections.
 
-                List<Task> connTasks = new();
-                int connCount = ConnLimit;
+                var connTasks = new List<Task>();
+                var totalConnCount = ConnLimit;
+                var connCompletedCount = 0;
 
                 // If the file doesn't support resume or is too small, override ConnLimit.
                 if (!SupportsResume)
                 {
-                    connCount = 1;
+                    totalConnCount = 1;
                 }
-                else if (TotalBytesToDownload < (BufferLength * connCount))
+                else if (TotalBytesToDownload < (BufferLength * totalConnCount))
                 {
-                    connCount = Math.Max((int)(TotalBytesToDownload / (double)BufferLength), 1);
+                    totalConnCount = Math.Max((int)(TotalBytesToDownload / (double)BufferLength), 1);
                 }
 
-                if (connCount != ConnLimit)
+                if (totalConnCount != ConnLimit)
                 {
                     // If ConnLimit was overridden, update ConnLimit to reflect this.
-                    ConnLimit = connCount;
+                    ConnLimit = totalConnCount;
                     RaisePropertyChanged(nameof(ConnLimit));
                 }
 
                 Log.Debug(
-                    $"{Id}: " +
-                    $"Total = {TotalBytesToDownload}, " +
-                    $"Remaining = {TotalBytesToDownload - BytesDownloaded}, " +
-                    $"Connections = {connCount}");
+                    $"{Id}: "
+                    + $"Total = {TotalBytesToDownload}, "
+                    + $"Remaining = {TotalBytesToDownload - BytesDownloaded}, "
+                    + $"Connections = {totalConnCount}");
 
-                for (int i = 0; i < connCount; i++)
+                for (var i = 0; i < totalConnCount; i++)
                 {
-                    // Must be declared here to ensure variable is captured correctly in the tasks.
-                    int conn = i;
-
+                    var currentConnCount = i; // Must be declared here to ensure variable is captured correctly in the tasks.
                     var t = Task.Run(async () =>
                     {
-                        var connFile = $"{Destination}.{conn}{Common.Constants.TempDownloadExtension}";
-                        long connLength = 0;
-                        using var connRequest = new HttpRequestMessage()
-                        {
-                            RequestUri = new Uri(Url),
-                            Method = HttpMethod.Get
-                        };
+                        var connFile = $"{Destination}.{currentConnCount}{Common.Constants.TempDownloadExtension}";
+                        var connFileInfo = new FileInfo(connFile);
+                        var connStartPos = (TotalBytesToDownload ?? 0) / totalConnCount * currentConnCount;
 
+                        // If this is the last connection, read till the end of the file.
+                        var connEndPos = currentConnCount == totalConnCount - 1
+                            ? (TotalBytesToDownload ?? 0)
+                            : (TotalBytesToDownload ?? 0) / totalConnCount * (currentConnCount + 1);
+
+                        long connLength = 0;
+                        var connFailureRetryAttempt = 0;
                         if (SupportsResume)
                         {
-                            var connFileInfo = new FileInfo(connFile);
-                            long connStartPos = (TotalBytesToDownload ?? 0) / connCount * conn;
-
-                            // If this is the last connection, read till the end of the file.
-                            long connEndPos = conn == connCount - 1
-                                ? (TotalBytesToDownload ?? 0)
-                                : (TotalBytesToDownload ?? 0) / connCount * (conn + 1);
-
                             if (File.Exists(connFile))
                             {
                                 if (connFileInfo.Length > 0)
@@ -545,21 +539,20 @@ namespace AMDownloader.Models
 
                             connLength = connEndPos - connStartPos;
 
-                            Log.Debug("{0,1}{1,2}{2,12}{3,12}{4,12}{5,12}{6,12}{7,12}",
-                                "Connection = ", conn,
+                            /*Log.Debug(
+                                "{0,1}{1,2}{2,12}{3,12}{4,12}{5,12}{6,12}{7,12}",
+                                "Connection = ", connId,
                                 "Start = ", connStartPos,
                                 "End = ", connEndPos,
-                                "Length = ", connLength);
+                                "Length = ", connTotalLength);*/
 
                             // Connection already completed its allocated bytes.
                             if (connLength <= 0)
                             {
-                                Log.Debug($"Connection {conn} already completed.");
+                                Log.Debug($"{Id}: Connection {currentConnCount} already completed.");
 
                                 return;
                             }
-
-                            connRequest.Headers.Range = new RangeHeaderValue(connStartPos, connEndPos - 1);
                         }
                         else
                         {
@@ -568,21 +561,29 @@ namespace AMDownloader.Models
                             File.Delete(connFile);
                         }
 
-                        using var connResponse = await _httpClient.SendAsync(
-                            connRequest,
-                            HttpCompletionOption.ResponseHeadersRead,
-                            _ctLinked);
-                        using var readStream = await connResponse.Content.ReadAsStreamAsync(_ctLinked);
-                        using var writeStream = new FileStream(
-                            connFile,
-                            FileMode.Append,
-                            FileAccess.Write);
-                        using var writer = new BinaryWriter(writeStream);
-                        long readThisConn = 0;
-                        int read = 0;
-                        var buffer = new byte[BufferLength];
+                        while (true)
+                        {
+                            try
+                            {
+                                using var connRequestMsg = new HttpRequestMessage(HttpMethod.Get, Url);
+                                if (SupportsResume)
+                                {
+                                    connRequestMsg.Headers.Range = new RangeHeaderValue(connStartPos, connEndPos - 1);
+                                }
 
-                        // Variables for speed throttler.
+                                using var connResponseMsg = await _httpClient.SendAsync(connRequestMsg, HttpCompletionOption.ResponseHeadersRead, _ctLinked);
+                                using var readStream = await connResponseMsg.Content.ReadAsStreamAsync(_ctLinked);
+                                using var writeStream = new FileStream(
+                                    connFile,
+                                    FileMode.Append,
+                                    FileAccess.Write);
+
+                                using var writer = new BinaryWriter(writeStream);
+                                long readConnLength = 0;
+                                var read = 0;
+                                var buffer = new byte[BufferLength];
+
+                                // Variables for speed throttler.
                                 var t_Stopwatch = new Stopwatch();
                                 var connSpeedLimit = Settings.Default.MaxDownloadSpeed / totalConnCount; // B/s.
                                 long t_BytesExpected = 0;
@@ -591,62 +592,89 @@ namespace AMDownloader.Models
                                 long t_TimeTaken = 0;
                                 long t_Delay = 0; // ms.
 
-                        Log.Debug($"Connection {conn} speed limit = {connSpeedLimit}");
+                                //Log.Debug($"Connection {connId} speed limit = {connSpeedLimit}");
 
-                        Interlocked.Increment(ref _connections);
+                                Log.Debug($"{Id}: Connection {currentConnCount} starting, To read this session = {connLength}");
 
-                        // Start downloading.
-                        while (true)
-                        {
-                            t_Stopwatch.Start();
-                            read = await timeoutPolicy.ExecuteAsync(async ct =>
-                            await readStream.ReadAsync(buffer.AsMemory(0, buffer.Length), ct), _ctLinked);
-                            t_Stopwatch.Stop();
+                                Interlocked.Increment(ref _connections);
 
-                            if (read == 0)
-                            {
-                                break;
-                            }
-
-                            readThisConn += read;
-                            var data = new byte[read];
-                            Array.Copy(buffer, 0, data, 0, read);
-                            writer.Write(data, 0, read);
-                            progressReporter.Report(read);
-
-                            // Reached the end of this connection's allocated bytes.
-                            if (SupportsResume && readThisConn >= connLength)
-                            {
-                                break;
-                            }
-
-                            // Speed throttler.
-
-                            t_BytesReceived += read;
-                            t_TimeTaken = t_Stopwatch.ElapsedMilliseconds;
-                            if (connSpeedLimit > 0 && t_TimeTaken > 0)
-                            {
-                                t_BytesExpected = (long)((double)connSpeedLimit / 1000 * t_TimeTaken);
-                                t_TimeExpected = (long)(1000 / (double)connSpeedLimit * t_BytesReceived);
-                                if (t_BytesReceived > t_BytesExpected || t_TimeTaken < t_TimeExpected)
+                                // Start downloading.
+                                while (true)
                                 {
-                                    t_Delay = t_TimeExpected - t_TimeTaken;
-                                    if (t_Delay > 0)
-                                    {
-                                        Log.Debug($"Connection {conn} sleeping for {t_Delay} ms");
+                                    t_Stopwatch.Start();
+                                    read = await timeoutPolicy.ExecuteAsync(async ct => await readStream.ReadAsync(buffer.AsMemory(0, buffer.Length), ct), _ctLinked);
+                                    t_Stopwatch.Stop();
 
-                                        await Task.Delay((int)t_Delay, _ctLinked);
+                                    if (read == 0)
+                                    {
+                                        break;
                                     }
 
-                                    t_BytesReceived = 0;
-                                    t_Stopwatch.Reset();
+                                    readConnLength += read;
+                                    var data = new byte[read];
+                                    Array.Copy(buffer, 0, data, 0, read);
+                                    writer.Write(data, 0, read);
+                                    progressReporter.Report(read);
+
+                                    // Reached the end of this connection's allocated bytes.
+                                    if (SupportsResume && readConnLength >= connLength)
+                                    {
+                                        break;
+                                    }
+
+                                    // Speed throttler.
+
+                                    t_BytesReceived += read;
+                                    t_TimeTaken = t_Stopwatch.ElapsedMilliseconds;
+                                    if (connSpeedLimit > 0 && t_TimeTaken > 0)
+                                    {
+                                        t_BytesExpected = (long)((double)connSpeedLimit / 1000 * t_TimeTaken);
+                                        t_TimeExpected = (long)(1000 / (double)connSpeedLimit * t_BytesReceived);
+                                        if (t_BytesReceived > t_BytesExpected || t_TimeTaken < t_TimeExpected)
+                                        {
+                                            t_Delay = t_TimeExpected - t_TimeTaken;
+                                            if (t_Delay > 0)
+                                            {
+                                                //Log.Debug($"Connection {connId} sleeping for {t_Delay} ms");
+
+                                                await Task.Delay((int)t_Delay, _ctLinked);
+                                            }
+
+                                            t_BytesReceived = 0;
+                                            t_Stopwatch.Reset();
+                                        }
+                                    }
                                 }
+
+                                Interlocked.Decrement(ref _connections);
+                                Interlocked.Increment(ref connCompletedCount);
+
+                                Log.Debug($"{Id}: Connection {currentConnCount} completed, Read this session = {readConnLength}");
+
+                                break;
+                            }
+                            catch (Exception ex)
+                            {
+                                if (ex is HttpRequestException
+                                    || ex is TimeoutRejectedException
+                                    || (ex.InnerException != null && ex.InnerException is TimeoutException))
+                                {
+                                    // Make the specified number of attempts to establish a connection in case of failures.
+                                    if (connFailureRetryAttempt++ < ConnFailureMaxRetryAttempts)
+                                    {
+                                        Log.Debug(
+                                            $"{Id}: {ex.GetType().Name} occurred for connection {currentConnCount}. "
+                                            + $"Retrying (attempt {connFailureRetryAttempt} of {ConnFailureMaxRetryAttempts})...");
+
+                                        await Task.Delay(connFailureRetryAttempt * 1000);
+
+                                        continue;
+                                    }
+                                }
+
+                                throw;
                             }
                         }
-
-                        Log.Debug($"Connection {conn} completed, Read this session = {readThisConn}");
-
-                        Interlocked.Decrement(ref _connections);
                     });
 
                     connTasks.Add(t);
