@@ -235,7 +235,7 @@ namespace AMDownloader.Models
             PropertyChanged += propertyChanged;
             RaiseEvent(DownloadCreated);
 
-            Log.Debug($"Created {Name}, Status = {Status}");
+            Log.Debug($"{Id}: Created, Status = {Status}");
         }
 
         #endregion
@@ -328,7 +328,7 @@ namespace AMDownloader.Models
                     Status = DownloadStatus.Errored;
                     if (ex is AMDownloaderUrlException || ex.InnerException is AMDownloaderUrlException)
                     {
-                        Log.Debug($"{Name}: {ex.Message}");
+                        Log.Debug($"{Id}: {ex.Message}");
                     }
                     else
                     {
@@ -349,7 +349,7 @@ namespace AMDownloader.Models
             RaisePropertyChanged(nameof(Status));
             RaiseEvent(DownloadStopped);
 
-            Log.Debug($"Processed {Name}, Status = {Status}");
+            Log.Debug($"{Id}: Processed, Status = {Status}");
         }
 
         public void Pause()
@@ -487,7 +487,8 @@ namespace AMDownloader.Models
                     RaisePropertyChanged(nameof(ConnLimit));
                 }
 
-                Log.Debug($"{Name}: " +
+                Log.Debug(
+                    $"{Id}: " +
                     $"Total = {TotalBytesToDownload}, " +
                     $"Remaining = {TotalBytesToDownload - BytesDownloaded}, " +
                     $"Connections = {connCount}");
