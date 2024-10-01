@@ -354,11 +354,11 @@ namespace AMDownloader.ViewModels
                         }
 
                         Progress = 0;
-                        Status = "Updating...";
+                        Status = "Refreshing...";
                         RaisePropertyChanged(nameof(Progress));
                         RaisePropertyChanged(nameof(Status));
-                        AddObjects([.. itemsToAdd]);
-                        QueueProcessor.Enqueue([.. itemsToEnqueue]);
+                        AddObjects(itemsToAdd.ToArray());
+                        QueueProcessor.Enqueue(itemsToEnqueue.ToArray());
                     }
                     catch (Exception ex)
                     {
@@ -478,7 +478,7 @@ namespace AMDownloader.ViewModels
                         addDownloadViewModel.SaveLocation,
                         addDownloadViewModel.ReplacementMode,
                         ct);
-                    Status = "Updating...";
+                    Status = "Refreshing...";
                     RaisePropertyChanged(nameof(Status));
                     AddObjects(itemsCreated);
                     if (addDownloadViewModel.Enqueue)
@@ -1211,7 +1211,7 @@ namespace AMDownloader.ViewModels
             Progress = 0;
             RaisePropertyChanged(nameof(Progress));
 
-            return [.. itemsCreated];
+            return itemsCreated.ToArray();
         }
 
         private void AddObjects(params DownloaderObjectModel[] objects)
@@ -1307,7 +1307,7 @@ namespace AMDownloader.ViewModels
                 itemsToRemove.Add(item);
             }
 
-            Status = "Updating...";
+            Status = "Refreshing...";
             RaisePropertyChanged(nameof(Status));
             Application.Current.Dispatcher.Invoke(() =>
             {
@@ -1327,7 +1327,7 @@ namespace AMDownloader.ViewModels
                 Monitor.Exit(_downloadItemsCollectionLock);
             });
 
-            QueueProcessor.Dequeue([.. itemsToDequeue]);
+            QueueProcessor.Dequeue(itemsToDequeue.ToArray());
             Progress = 0;
             RaisePropertyChanged(nameof(Progress));
             if (failed.Count > 0)

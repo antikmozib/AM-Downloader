@@ -205,10 +205,12 @@ namespace AMDownloader.Views
                 ExpandedInformation = $"\n\nTotal downloaded since installation: {totalDownloaded.ToString("n0", cultureInfo)} MB"
                     + $"\nNumber of times launched: {Settings.Default.LaunchCount}"
             };
+
             aboutDialog.HyperlinkClicked += (s, e) =>
             {
                 Process.Start("explorer.exe", e.Href);
             };
+
             aboutDialog.Buttons.Add(new TaskDialogButton(ButtonType.Ok));
             aboutDialog.ShowDialog(this);
         }
@@ -275,8 +277,8 @@ namespace AMDownloader.Views
             var columnBinding = columnHeader.Column.DisplayMemberBinding as Binding;
             var columnToSort = columnBinding?.Path.Path ?? columnHeader.Column.Header as string;
 
-            // Link the column header string value to the prop of the binded obj; this is only needed for those columns
-            // whose header names are different from the prop names.
+            // Link the column header string value to the property of the binded object; this is only needed for those
+            // columns whose header names are different from the property names.
             switch (columnToSort.ToLower())
             {
                 case "type":
@@ -425,20 +427,24 @@ namespace AMDownloader.Views
                 MainIcon = TaskDialogIcon.Information,
                 EnableHyperlinks = true
             };
+
             TaskDialogButton downloadButton = new("Download")
             {
                 Default = true
             };
+
             TaskDialogButton noReminderButton = new()
             {
                 Text = "Don't Remind Again"
             };
+
             TaskDialogButton result = null;
 
             taskDialog.HyperlinkClicked += (s, e) =>
             {
                 Process.Start("explorer.exe", e.Href);
             };
+
             taskDialog.Buttons.Add(downloadButton);
             taskDialog.Buttons.Add(new TaskDialogButton(ButtonType.Cancel));
             if (showReminderButton)
@@ -465,10 +471,14 @@ namespace AMDownloader.Views
             {
                 DependencyObject child = VisualTreeHelper.GetChild(parent, i);
                 if (child is T t)
+                {
                     yield return t;
+                }
 
                 foreach (var descendant in GetVisualChildren<T>(child))
+                {
                     yield return descendant;
+                }
             }
         }
     }

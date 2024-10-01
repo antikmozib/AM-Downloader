@@ -151,7 +151,7 @@
                          ProgressValue="{Binding Progress, Converter={StaticResource TaskBarProgressConverter}}" />
     </Window.TaskbarItemInfo>
     <DockPanel>
-        <!--#region MENU -->
+        <!--#region Main menu -->
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
                 <MenuItem Command="{Binding ClearCompletedDownloadsCommand}"
@@ -203,7 +203,8 @@
             </MenuItem>
         </Menu>
         <!--#endregion-->
-        <!--#region TOOLBAR -->
+
+        <!--#region Toolbar -->
         <ToolBarTray DockPanel.Dock="Top"
                      IsLocked="True">
             <ToolBar>
@@ -321,7 +322,7 @@
         </ToolBarTray>
         <!--#endregion-->
 
-        <!--#region STATUSBAR -->
+        <!--#region Statusbar -->
         <DockPanel DockPanel.Dock="Bottom">
             <StatusBar Padding="4">
                 <StatusBar.Resources>
@@ -552,8 +553,7 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <!--#region CATEGORIESLIST -->
-
+            <!--#region Categories -->
             <ListBox x:Name="CategoriesList"
                      ItemsSource="{Binding CategoriesCollection}"
                      Loaded="CategoriesList_Loaded">
@@ -724,14 +724,12 @@
                     </Style>
                 </ListBox.Style>
             </ListBox>
-
             <!--#endregion-->
 
             <GridSplitter Grid.Column="1"
                           HorizontalAlignment="Stretch" />
 
-            <!--#region DOWNLOADLIST -->
-
+            <!--#region Downloads -->
             <ListView ItemsSource="{Binding DownloadItemsView}"
                       x:Name="DownloadsListView"
                       Grid.Column="2"
@@ -739,6 +737,7 @@
                       SelectionMode="Extended"
                       ScrollViewer.HorizontalScrollBarVisibility="Auto"
                       ScrollViewer.VerticalScrollBarVisibility="Auto"
+                      VirtualizingPanel.IsVirtualizing="True"
                       VirtualizingPanel.VirtualizationMode="Recycling">
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="MouseDoubleClick">
