@@ -50,7 +50,7 @@ namespace AMDownloader
 #if DEBUG
                 Log.Logger = debugLoggerConfig;
 #else
-                if (args.Select(o => o.ToLower()).Contains("-debug"))
+                if (args.Select(o => o.ToLower()).Contains("--debug"))
                 {
                     Log.Logger = debugLoggerConfig;
                     Log.Debug("Debug logging configuration enabled.");
