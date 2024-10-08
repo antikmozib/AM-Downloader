@@ -1117,7 +1117,9 @@ namespace AMDownloader.ViewModels
         /// <returns>An array of <see cref="DownloaderObjectModel"/>s which have been successfully created.</returns>
         private DownloaderObjectModel[] CreateObjects(IEnumerable<string> urls, string saveToFolder, FileReplacementMode replacementMode, CancellationToken ct)
         {
-            List<DownloaderObjectModel> existingItems = DownloadItemsCollection.ToList();
+            List<DownloaderObjectModel> existingItems = DownloadItemsCollection
+                .Where(x => x.Status != DownloadStatus.Completed && x.Status != DownloadStatus.Errored)
+                .ToList();
             List<DownloaderObjectModel> itemsCreated = [];
             List<string> itemsExistInDownloadsList = []; // Skipped.
             List<string> itemsExistOnDisk = [];
@@ -1187,7 +1189,7 @@ namespace AMDownloader.ViewModels
             {
                 _showWindow(new ListViewerViewModel(
                     itemsExistInDownloadsList,
-                    "The following URLs were not added because they are already in the list:",
+                    "The following URLs were not added because they are already in the list of files to download:",
                     "Duplicate Entries"));
             }
 
