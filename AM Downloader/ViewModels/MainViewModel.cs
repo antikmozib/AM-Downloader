@@ -81,8 +81,6 @@ namespace AMDownloader.ViewModels
 
         private readonly object _bytesDownloadedLock;
 
-        private readonly object _bytesTransferredOverLifetimeLock;
-
         private bool _resetAllSettingsOnClose;
 
         #endregion
@@ -238,7 +236,6 @@ namespace AMDownloader.ViewModels
             _refreshViewCtsListLock = _refreshViewCtsList;
             _downloadItemsCollectionLock = DownloadItemsCollection;
             _bytesDownloadedLock = BytesDownloadedThisSession;
-            _bytesTransferredOverLifetimeLock = Settings.Default.BytesTransferredOverLifetime;
             _resetAllSettingsOnClose = false;
 
             AddCommand = new RelayCommand(Add, Add_CanExecute);
@@ -1522,16 +1519,6 @@ namespace AMDownloader.ViewModels
         private void Download_Stopped(object sender, EventArgs e)
         {
             RefreshCollectionView();
-            Monitor.Enter(_bytesTransferredOverLifetimeLock);
-            try
-            {
-                Settings.Default.BytesTransferredOverLifetime +=
-                    (ulong)(sender as DownloaderObjectModel).BytesDownloadedThisSession;
-            }
-            finally
-            {
-                Monitor.Exit(_bytesTransferredOverLifetimeLock);
-            }
         }
 
         private void CollectionView_CurrentChanged(object sender, EventArgs e)

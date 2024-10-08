@@ -50,12 +50,6 @@
     <Setting Name="FirstRun" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="LaunchCount" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">0</Value>
-    </Setting>
-    <Setting Name="BytesTransferredOverLifetime" Type="System.UInt64" Scope="User">
-      <Value Profile="(Default)">0</Value>
-    </Setting>
     <Setting Name="MaxParallelDownloads" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">5</Value>
     </Setting>

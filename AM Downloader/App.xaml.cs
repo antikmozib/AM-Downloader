@@ -34,8 +34,6 @@ namespace AMDownloader
             {
                 Log.Debug("Starting app...");
 
-                ++Settings.Default.LaunchCount;
-
                 string[] args = Environment.GetCommandLineArgs();
                 var debugLoggerConfig = new LoggerConfiguration()
                     .MinimumLevel.Debug()

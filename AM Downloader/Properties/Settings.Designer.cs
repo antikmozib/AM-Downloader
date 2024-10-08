@@ -217,30 +217,6 @@ namespace AMDownloader.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int LaunchCount {
-            get {
-                return ((int)(this["LaunchCount"]));
-            }
-            set {
-                this["LaunchCount"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public ulong BytesTransferredOverLifetime {
-            get {
-                return ((ulong)(this["BytesTransferredOverLifetime"]));
-            }
-            set {
-                this["BytesTransferredOverLifetime"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("5")]
         public int MaxParallelDownloads {
             get {

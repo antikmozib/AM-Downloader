@@ -191,8 +191,6 @@ namespace AMDownloader.Views
                 AssemblyCopyrightAttribute), true).OfType<AssemblyCopyrightAttribute>().FirstOrDefault()?.Copyright;
             var website = (string)Application.Current.FindResource("productUrl");
             var websiteDisplay = $"<a href=\"{website}\">{website}</a>";
-            var totalDownloaded = Math.Round(Settings.Default.BytesTransferredOverLifetime
-                / (double)Common.Constants.ByteConstants.MEGABYTE);
 
             var aboutDialog = new TaskDialog
             {
@@ -201,9 +199,7 @@ namespace AMDownloader.Views
                 MainIcon = TaskDialogIcon.Information,
                 WindowTitle = "About",
                 MainInstruction = name,
-                Content = $"Version {version}\n\n{copyright}\n{websiteDisplay}",
-                ExpandedInformation = $"\n\nTotal downloaded since installation: {totalDownloaded.ToString("n0", cultureInfo)} MB"
-                    + $"\nNumber of times launched: {Settings.Default.LaunchCount}"
+                Content = $"Version {version}\n\n{copyright}\n{websiteDisplay}"
             };
 
             aboutDialog.HyperlinkClicked += (s, e) =>
