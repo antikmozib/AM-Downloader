@@ -47,7 +47,7 @@
 
             <CheckBox Grid.Column="1"
                       x:Name="MonitorClipboardCheckBox"
-                      Content="_Monitor clipboard"
+                      Content="_Monitor Clipboard"
                       VerticalAlignment="Center"
                       HorizontalAlignment="Right"
                       ToolTip="Automatically monitor the clipboard for URLs and add them to the list."
@@ -98,7 +98,7 @@
         <DockPanel Grid.Row="6"
                    LastChildFill="True">
             <StackPanel Orientation="Horizontal">
-                <Label Content="_On conflict: "
+                <Label Content="_On Conflict: "
                        Target="{Binding ElementName=ReplacementModeComboBox}" />
 
                 <ComboBox x:Name="ReplacementModeComboBox"
