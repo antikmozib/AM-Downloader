@@ -187,8 +187,12 @@ namespace AMDownloader.Views
             var cultureInfo = CultureInfo.CurrentCulture;
             var name = Assembly.GetExecutingAssembly().GetName().Name;
             var version = Assembly.GetExecutingAssembly().GetName().Version;
-            var copyright = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(
-                AssemblyCopyrightAttribute), true).OfType<AssemblyCopyrightAttribute>().FirstOrDefault()?.Copyright;
+            var copyright = Assembly
+                .GetExecutingAssembly()
+                .GetCustomAttributes(typeof(AssemblyCopyrightAttribute), true)
+                .OfType<AssemblyCopyrightAttribute>()
+                .FirstOrDefault()
+                ?.Copyright;
             var website = (string)Application.Current.FindResource("productUrl");
             var websiteDisplay = $"<a href=\"{website}\">{website}</a>";
 
@@ -275,41 +279,41 @@ namespace AMDownloader.Views
 
             // Link the column header string value to the property of the binded object; this is only needed for those
             // columns whose header names are different from the property names.
-            switch (columnToSort.ToLower())
+            switch (columnToSort)
             {
-                case "type":
+                case "Type":
                     columnToSort = "Extension";
                     break;
 
-                case "downloaded":
+                case "Downloaded":
                     columnToSort = "BytesDownloaded";
                     break;
 
-                case "size":
+                case "Size":
                     columnToSort = "TotalBytesToDownload";
                     break;
 
-                case "eta":
+                case "ETA":
                     columnToSort = "TimeRemaining";
                     break;
 
-                case "location":
+                case "Location":
                     columnToSort = "Destination";
                     break;
 
-                case "url":
+                case "URL":
                     columnToSort = "Url";
                     break;
 
-                case "added":
+                case "Added":
                     columnToSort = "CreatedOn";
                     break;
 
-                case "completed":
+                case "Completed":
                     columnToSort = "CompletedOn";
                     break;
 
-                case "http status":
+                case "HTTP Status":
                     columnToSort = "StatusCode";
                     break;
             }
