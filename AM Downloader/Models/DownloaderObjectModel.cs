@@ -511,58 +511,57 @@ namespace AMDownloader.Models
 
                 for (var i = 0; i < totalConnCount; i++)
                 {
-                    var currentConnCount = i; // Must be declared here to ensure variable is captured correctly in the tasks.
+                    var currentConnNum = i; // Must be declared here to ensure variable is captured correctly in the tasks.
                     var t = Task.Run(async () =>
                     {
-                        var connFile = $"{Destination}.{currentConnCount}{Common.Constants.TempDownloadExtension}";
-                        var connFileInfo = new FileInfo(connFile);
-                        var connStartPos = (TotalBytesToDownload ?? 0) / totalConnCount * currentConnCount;
-
-                        // If this is the last connection, read till the end of the file.
-                        var connEndPos = currentConnCount == totalConnCount - 1
-                            ? (TotalBytesToDownload ?? 0)
-                            : (TotalBytesToDownload ?? 0) / totalConnCount * (currentConnCount + 1);
-
-                        long connLength = 0;
-                        var connFailureRetryAttempt = 0;
-                        if (SupportsResume)
-                        {
-                            if (File.Exists(connFile))
-                            {
-                                if (connFileInfo.Length > 0)
-                                {
-                                    // If resuming a paused download, add the bytes already downloaded which is
-                                    // determined from the length of the existing conn file.
-                                    connStartPos += connFileInfo.Length;
-                                }
-                            }
-
-                            connLength = connEndPos - connStartPos;
-
-                            /*Log.Debug(
-                                "{0,1}{1,2}{2,12}{3,12}{4,12}{5,12}{6,12}{7,12}",
-                                "Connection = ", connId,
-                                "Start = ", connStartPos,
-                                "End = ", connEndPos,
-                                "Length = ", connTotalLength);*/
-
-                            // Connection already completed its allocated bytes.
-                            if (connLength <= 0)
-                            {
-                                Log.Debug($"{Id}: Connection {currentConnCount} already completed.");
-
-                                return;
-                            }
-                        }
-                        else
-                        {
-                            // If the download doesn't support resume, simply delete any existing conn file and start
-                            // from the beginning.
-                            File.Delete(connFile);
-                        }
-
                         while (true)
                         {
+                            var connFile = $"{Destination}.{currentConnNum}{Common.Constants.TempDownloadExtension}";
+                            var connFileInfo = new FileInfo(connFile);
+                            var connStartPos = (TotalBytesToDownload ?? 0) / totalConnCount * currentConnNum;
+
+                            // If this is the last connection, read till the end of the file.
+                            var connEndPos = currentConnNum == totalConnCount - 1
+                                ? (TotalBytesToDownload ?? 0)
+                                : (TotalBytesToDownload ?? 0) / totalConnCount * (currentConnNum + 1);
+
+                            long connLength = 0;
+                            var connFailureRetryAttempt = 0;
+                            if (SupportsResume)
+                            {
+                                if (File.Exists(connFile))
+                                {
+                                    if (connFileInfo.Length > 0)
+                                    {
+                                        // If resuming a paused download, add the bytes already downloaded which is
+                                        // determined from the length of the existing conn file.
+                                        connStartPos += connFileInfo.Length;
+                                    }
+                                }
+
+                                connLength = connEndPos - connStartPos;
+
+                                /*Log.Debug(
+                                    "{0,1}{1,2}{2,12}{3,12}{4,12}{5,12}{6,12}{7,12}",
+                                    "Connection = ", connId,
+                                    "Start = ", connStartPos,
+                                    "End = ", connEndPos,
+                                    "Length = ", connTotalLength);*/
+
+                                // Connection already completed its allocated bytes.
+                                if (connLength <= 0)
+                                {
+                                    Log.Debug($"{Id}: Connection {currentConnNum} already completed.");
+
+                                    return;
+                                }
+                            }
+                            else
+                            {
+                                // If the download doesn't support resume, simply delete any existing conn file and start
+                                // from the beginning.
+                                File.Delete(connFile);
+                            }
                             try
                             {
                                 using var connRequestMsg = new HttpRequestMessage(HttpMethod.Get, Url);
@@ -594,7 +593,7 @@ namespace AMDownloader.Models
 
                                 //Log.Debug($"Connection {connId} speed limit = {connSpeedLimit}");
 
-                                Log.Debug($"{Id}: Connection {currentConnCount} starting, To read this session = {connLength}");
+                                Log.Debug($"{Id}: Connection {currentConnNum} starting, To read this session = {connLength}");
 
                                 Interlocked.Increment(ref _connections);
 
@@ -649,7 +648,7 @@ namespace AMDownloader.Models
                                 Interlocked.Decrement(ref _connections);
                                 Interlocked.Increment(ref connCompletedCount);
 
-                                Log.Debug($"{Id}: Connection {currentConnCount} completed, Read this session = {readConnLength}");
+                                Log.Debug($"{Id}: Connection {currentConnNum} completed, Read this session = {readConnLength}");
 
                                 break;
                             }
@@ -663,7 +662,7 @@ namespace AMDownloader.Models
                                     if (connFailureRetryAttempt++ < ConnFailureMaxRetryAttempts)
                                     {
                                         Log.Debug(
-                                            $"{Id}: {ex.GetType().Name} occurred for connection {currentConnCount}. "
+                                            $"{Id}: {ex.GetType().Name} occurred for connection {currentConnNum}. "
                                             + $"Retrying (attempt {connFailureRetryAttempt} of {ConnFailureMaxRetryAttempts})...");
 
                                         await Task.Delay(connFailureRetryAttempt * 1000);
