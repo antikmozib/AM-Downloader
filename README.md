@@ -21,6 +21,4 @@ Download and run the setup program and follow its instructions.
 
 ## Building
 
-_Requirements:_ VS2022 with [.NET 6.0 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/6.0)
-
-`clone` the repository, `cd` into the root directory and run `dotnet restore`.
+Open the `.sln` file in Visual Studio 2022 and press F6.
