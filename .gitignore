@@ -1,7 +1,5 @@
-build.py
 Docs/
-Installer/*
-!Installer/AM Downloader.iss
+package/*
 AM Downloader.svg
 
 ## Ignore Visual Studio temporary files, build results, and
