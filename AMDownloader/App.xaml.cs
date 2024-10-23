@@ -24,7 +24,7 @@ namespace AMDownloader
         {
             if (!_mutex.WaitOne(0, false))
             {
-                var name = Assembly.GetExecutingAssembly().GetName().Name;
+                var name = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyProductAttribute>().Product;
                 MessageBox.Show(
                     "Another instance of " + name + " is already running.",
                     name, MessageBoxButton.OK, MessageBoxImage.Error);

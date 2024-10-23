@@ -185,7 +185,7 @@ namespace AMDownloader.Views
         private void AboutMenu_Click(object sender, RoutedEventArgs e)
         {
             var cultureInfo = CultureInfo.CurrentCulture;
-            var name = Assembly.GetExecutingAssembly().GetName().Name;
+            var name = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyProductAttribute>().Product;
             var version = Assembly.GetExecutingAssembly().GetName().Version;
             var copyright = Assembly
                 .GetExecutingAssembly()

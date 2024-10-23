@@ -1416,7 +1416,7 @@ namespace AMDownloader.ViewModels
         {
             try
             {
-                string appName = Assembly.GetExecutingAssembly().GetName().Name;
+                string appName = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyProductAttribute>().Product;
                 string currentVer = Assembly.GetExecutingAssembly().GetName().Version.ToString();
                 UpdateInfo latestUpdateInfo = await UpdateService.GetLatestUpdateInfoAsync(appName, _client);
                 if (UpdateService.IsUpdateAvailable(latestUpdateInfo.Versions, currentVer))
