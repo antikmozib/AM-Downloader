@@ -37,9 +37,9 @@ namespace AMDownloader.Models
         private const int ConnFailureMaxRetryAttempts = 3;
 
         /// <summary>
-        /// Number of attempts to make to read the response stream of a connection in case of failures.
+        /// The delay between establishing consecutive connections or making retry attempts.
         /// </summary>
-        private const int ConnReadRetryAttempts = 3;
+        private const int ConnAttemptDelay = 250;
 
         private readonly HttpClient _httpClient;
 
@@ -450,7 +450,7 @@ namespace AMDownloader.Models
 
         private async Task DownloadAsync()
         {
-            IAsyncPolicy timeoutPolicy = Policy.TimeoutAsync(_httpClient.Timeout);
+            var timeoutPolicy = Policy.TimeoutAsync(_httpClient.Timeout);
 
             // Reports the lifetime number of bytes.
             IProgress<int> progressReporter = new Progress<int>((value) =>
@@ -562,6 +562,10 @@ namespace AMDownloader.Models
                                 // from the beginning.
                                 File.Delete(connFile);
                             }
+
+                            // Wait for attempting to establish another connection for the same file.
+                            await Task.Delay(currentConnNum * ConnAttemptDelay);
+
                             try
                             {
                                 using var connRequestMsg = new HttpRequestMessage(HttpMethod.Get, Url);
@@ -665,7 +669,7 @@ namespace AMDownloader.Models
                                             $"{Id}: {ex.GetType().Name} occurred for connection {currentConnNum}. "
                                             + $"Retrying (attempt {connFailureRetryAttempt} of {ConnFailureMaxRetryAttempts})...");
 
-                                        await Task.Delay(connFailureRetryAttempt * 1000);
+                                        await Task.Delay(connFailureRetryAttempt * ConnAttemptDelay);
 
                                         continue;
                                     }

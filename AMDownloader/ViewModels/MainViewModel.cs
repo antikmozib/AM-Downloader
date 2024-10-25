@@ -1368,6 +1368,7 @@ namespace AMDownloader.ViewModels
                     itemsToDownload.Add(Task.Run(async () => await item.StartAsync()));
                 }
             }
+
             if (forceEnqueue)
             {
                 QueueProcessor.Enqueue(itemsToEnqueue.ToArray());
