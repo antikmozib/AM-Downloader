@@ -908,8 +908,9 @@ namespace AMDownloader.ViewModels
                         {
                             await item.PauseAsync();
                         }
-                        else if (item.IsCompleted && Settings.Default.ClearCompletedDownloadsOnExit)
+                        else if ((item.IsCompleted || item.IsErrored) && Settings.Default.ClearCompletedDownloadsOnExit)
                         {
+                            // Clear completed downloads on exit.
                             continue;
                         }
 
