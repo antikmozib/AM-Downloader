@@ -762,7 +762,7 @@ namespace AMDownloader.ViewModels
             _updatingListCts = new CancellationTokenSource();
             RaisePropertyChanged(nameof(IsBackgroundWorking));
             CancellationToken ct = _updatingListCts.Token;
-            DownloaderObjectModel[] items = (from item in DownloadItemsCollection where item.IsCompleted select item).ToArray();
+            DownloaderObjectModel[] items = (from item in DownloadItemsCollection where item.IsCompleted || item.IsErrored select item).ToArray();
             Task.Run(async () =>
             {
                 try
@@ -784,7 +784,7 @@ namespace AMDownloader.ViewModels
 
         private bool ClearCompletedDownloads_CanExecute()
         {
-            return !IsBackgroundWorking && CompletedCount > 0;
+            return !IsBackgroundWorking && (CompletedCount > 0 || ErroredCount > 0);
         }
 
         private void CancelBackgroundTask()
