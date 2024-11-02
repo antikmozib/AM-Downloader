@@ -85,7 +85,10 @@ namespace AMDownloader.ViewModels
 
         private bool _resetAllSettingsOnClose;
 
-        private readonly UpdateServiceProvider _updateService = new UpdateServiceProvider("amdownloader", AppPlatform.Windows, "https://api.mozib.io/app-update/");
+        private readonly UpdateServiceProvider _updateService = new UpdateServiceProvider(
+            Common.Constants.UpdateApiAppId,
+            AppPlatform.Windows,
+            Common.Constants.UpdateApiAddress);
 
         #endregion
 

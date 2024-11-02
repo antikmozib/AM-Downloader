@@ -15,6 +15,8 @@ namespace AMDownloader.Helpers
             public const int ParallelDownloadsLimit = 10;
             public const int ParallelConnPerDownloadLimit = 5;
             public const string TempDownloadExtension = ".AMDownload";
+            public const string UpdateApiAddress = @"https://api.mozib.io/app-update/";
+            public const string UpdateApiAppId = "amdownloader";
 
             public enum ByteConstants
             {
