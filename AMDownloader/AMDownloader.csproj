@@ -72,6 +72,12 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Reference Include="AppUpdater">
+        <HintPath>..\Libraries\AppUpdater.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
       <Resource Include="Resources\Fonts\Font Awesome 5 Free-Regular-400.otf" />
       <Resource Include="Resources\Fonts\Font Awesome 5 Free-Solid-900.otf" />
       <Resource Include="Resources\Icons\AMDownloader.ico" />

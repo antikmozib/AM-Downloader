@@ -4,7 +4,6 @@ using AMDownloader.Helpers;
 using AMDownloader.Models;
 using AMDownloader.Models.Serialization;
 using AMDownloader.Properties;
-using AMDownloader.Updating;
 using AMDownloader.ViewModels;
 using Ookii.Dialogs.Wpf;
 using Serilog;
@@ -414,14 +413,14 @@ namespace AMDownloader.Views
         /// <param name="latestUpdateInfo">Information provided by the update API about the latest available update.</param>
         /// <param name="showReminderButton">If <see langword="true"/>, a button to stop reminding about updates will be 
         /// shown.</param>
-        private void NotifyUpdateAvailable(UpdateInfo latestUpdateInfo, bool showReminderButton)
+        private void NotifyUpdateAvailable(Mozib.AppUpdater.Models.UpdateInfo latestUpdateInfo, bool showReminderButton)
         {
             TaskDialog taskDialog = new()
             {
                 WindowTitle = "Update",
                 CenterParent = true,
                 MainInstruction = "An update is available.",
-                Content = $"Latest version: {latestUpdateInfo.Versions}" +
+                Content = $"Latest version: {latestUpdateInfo.Version}" +
                     $"\nCurrent version: {Assembly.GetExecutingAssembly().GetName().Version}" +
                     $"\n\n<a href=\"{latestUpdateInfo.UpdateInfoUrl}\">More information</a>",
                 MainIcon = TaskDialogIcon.Information,

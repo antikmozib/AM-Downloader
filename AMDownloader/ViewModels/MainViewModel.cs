@@ -6,8 +6,10 @@ using AMDownloader.Models;
 using AMDownloader.Models.Serialization;
 using AMDownloader.Properties;
 using AMDownloader.QueueProcessing;
-using AMDownloader.Updating;
 using Microsoft.VisualBasic.FileIO;
+using Mozib.AppUpdater;
+using Mozib.AppUpdater.Helpers;
+using Mozib.AppUpdater.Models;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -82,6 +84,8 @@ namespace AMDownloader.ViewModels
         private readonly object _bytesDownloadedLock;
 
         private bool _resetAllSettingsOnClose;
+
+        private readonly UpdateServiceProvider _updateService = new UpdateServiceProvider("amdownloader", AppPlatform.Windows, "https://api.mozib.io/app-update/");
 
         #endregion
 
@@ -1419,9 +1423,9 @@ namespace AMDownloader.ViewModels
             try
             {
                 string appName = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyProductAttribute>().Product;
-                string currentVer = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-                UpdateInfo latestUpdateInfo = await UpdateService.GetLatestUpdateInfoAsync(appName, _client);
-                if (UpdateService.IsUpdateAvailable(latestUpdateInfo.Versions, currentVer))
+                var currentVer = Assembly.GetExecutingAssembly().GetName().Version;
+                UpdateInfo latestUpdateInfo = await _updateService.GetUpdateInfoAsync();
+                if (latestUpdateInfo.IsNewerThan(currentVer))
                 {
                     _notifyUpdateAvailable(latestUpdateInfo, silent);
                 }
