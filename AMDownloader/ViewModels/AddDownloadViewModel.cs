@@ -71,25 +71,25 @@ namespace AMDownloader.ViewModels
             PreviewCommand = new RelayCommand(Preview, Preview_CanExecute);
 
             // Add the default download location.
-            SavedLocations.Add(Common.Paths.UserDownloadsFolder);
-            SaveLocation = Common.Paths.UserDownloadsFolder;
+            SavedLocations.Add(Constants.UserDownloadsFolder);
+            SaveLocation = Constants.UserDownloadsFolder;
 
             if (Settings.Default.RememberLastDownloadLocation)
             {
                 // Add the last used download location.
                 if (!string.IsNullOrWhiteSpace(Settings.Default.LastDownloadLocation)
-                    && !IsSameLocation(Settings.Default.LastDownloadLocation, Common.Paths.UserDownloadsFolder))
+                    && !IsSameLocation(Settings.Default.LastDownloadLocation, Constants.UserDownloadsFolder))
                 {
                     SavedLocations.Add(Settings.Default.LastDownloadLocation);
                     SaveLocation = Settings.Default.LastDownloadLocation;
                 }
 
                 // Add all previously used download locations.
-                if (File.Exists(Common.Paths.SavedLocationsFile))
+                if (File.Exists(Constants.SavedLocationsFile))
                 {
                     try
                     {
-                        var list = Common.Functions.Deserialize<SerializingSavedLocationList>(Common.Paths.SavedLocationsFile);
+                        var list = Common.Deserialize<SerializingSavedLocationList>(Constants.SavedLocationsFile);
                         foreach (var item in list.Objects)
                         {
                             if (SavedLocationsContains(item.Path))
@@ -288,7 +288,7 @@ namespace AMDownloader.ViewModels
 
             try
             {
-                Common.Functions.Serialize(list, Common.Paths.SavedLocationsFile);
+                Common.Serialize(list, Constants.SavedLocationsFile);
             }
             catch (Exception ex)
             {

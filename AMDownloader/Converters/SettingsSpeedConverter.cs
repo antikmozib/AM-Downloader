@@ -16,7 +16,7 @@ namespace AMDownloader.Converters
                 return 0;
             }
 
-            return ((long)value / (int)Common.Constants.ByteConstants.KILOBYTE).ToString();
+            return ((long)value / (int)Constants.Kilobyte).ToString();
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
@@ -28,7 +28,7 @@ namespace AMDownloader.Converters
 
             if (int.TryParse((string)value, out int speed))
             {
-                return speed * (long)Common.Constants.ByteConstants.KILOBYTE;
+                return speed * (long)Constants.Kilobyte;
             }
             else
             {

@@ -24,7 +24,7 @@ namespace AMDownloader.Converters
             {
                 // Downloading to a first-level folder in drive.
                 string parent = Path.GetDirectoryName(path);
-                output += Common.Functions.GetDriveType(parent);
+                output += Common.GetDriveType(parent);
             }
             else
             {

@@ -86,9 +86,9 @@ namespace AMDownloader.ViewModels
         private bool _resetAllSettingsOnClose;
 
         private readonly UpdateServiceProvider _updateService = new UpdateServiceProvider(
-            Common.Constants.UpdateApiAppId,
+            Constants.UpdateApiAppId,
             AppPlatform.Windows,
-            Common.Constants.UpdateApiAddress);
+            Constants.UpdateApiAddress);
 
         #endregion
 
@@ -285,7 +285,7 @@ namespace AMDownloader.ViewModels
             }
 
             // Populate history.
-            if (File.Exists(Common.Paths.DownloadsHistoryFile))
+            if (File.Exists(Constants.DownloadsHistoryFile))
             {
                 Status = "Loading...";
                 _updatingListTcs = new TaskCompletionSource();
@@ -297,7 +297,7 @@ namespace AMDownloader.ViewModels
                 {
                     try
                     {
-                        SerializingDownloaderObjectModelList source = Common.Functions.Deserialize<SerializingDownloaderObjectModelList>(Common.Paths.DownloadsHistoryFile);
+                        SerializingDownloaderObjectModelList source = Common.Deserialize<SerializingDownloaderObjectModelList>(Constants.DownloadsHistoryFile);
                         SerializingDownloaderObjectModel[] sourceObjects = null;
                         List<DownloaderObjectModel> itemsToAdd = [];
                         List<IQueueable> itemsToEnqueue = [];
@@ -832,7 +832,7 @@ namespace AMDownloader.ViewModels
         {
             if (_resetAllSettingsOnClose)
             {
-                Common.Functions.ResetAllSettings();
+                Common.ResetAllSettings();
             }
         }
 
@@ -908,7 +908,7 @@ namespace AMDownloader.ViewModels
                 {
                     var list = new SerializingDownloaderObjectModelList();
                     int index = 0;
-                    Directory.CreateDirectory(Common.Paths.LocalAppDataFolder);
+                    Directory.CreateDirectory(Constants.LocalAppDataFolder);
                     foreach (DownloaderObjectModel item in DownloadItemsCollection)
                     {
                         if (item.IsDownloading)
@@ -939,7 +939,7 @@ namespace AMDownloader.ViewModels
                         list.Objects.Add(sItem);
                     }
 
-                    Common.Functions.Serialize(list, Common.Paths.DownloadsHistoryFile);
+                    Common.Serialize(list, Constants.DownloadsHistoryFile);
                 }
                 catch (Exception ex)
                 {
@@ -1147,7 +1147,7 @@ namespace AMDownloader.ViewModels
                 RaisePropertyChanged(nameof(Status));
                 RaisePropertyChanged(nameof(Progress));
                 string fileName, filePath;
-                fileName = Common.Functions.GetFileNameFromUrl(url);
+                fileName = Common.GetFileNameFromUrl(url);
                 if (string.IsNullOrEmpty(fileName))
                 {
                     itemsErrored.Add(url);
@@ -1167,7 +1167,7 @@ namespace AMDownloader.ViewModels
 
                 // If we've been instructed to skip existing files, check if it already exists and skip it.
                 if (replacementMode == FileReplacementMode.Skip
-                    && File.Exists(Path.Combine(saveToFolder, Common.Functions.GetFileNameFromUrl(url))))
+                    && File.Exists(Path.Combine(saveToFolder, Common.GetFileNameFromUrl(url))))
                 {
                     itemsExistOnDisk.Add(url);
 
@@ -1175,7 +1175,7 @@ namespace AMDownloader.ViewModels
                 }
 
                 filePath = GenerateNewDestination(
-                    Path.Combine(saveToFolder, Common.Functions.GetFileNameFromUrl(url)),
+                    Path.Combine(saveToFolder, Common.GetFileNameFromUrl(url)),
                     existingItems.Select(o => o.Destination).ToArray(),
                     replacementMode == FileReplacementMode.Rename);
                 DownloaderObjectModel item;

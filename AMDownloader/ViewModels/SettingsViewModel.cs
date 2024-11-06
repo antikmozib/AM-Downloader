@@ -29,9 +29,9 @@ namespace AMDownloader.ViewModels
                 {
                     _maxParallelDownloads = 1;
                 }
-                else if (value > Common.Constants.ParallelDownloadsLimit)
+                else if (value > Constants.ParallelDownloadsLimit)
                 {
-                    _maxParallelDownloads = Common.Constants.ParallelDownloadsLimit;
+                    _maxParallelDownloads = Constants.ParallelDownloadsLimit;
                 }
                 else
                 {
@@ -50,9 +50,9 @@ namespace AMDownloader.ViewModels
                 {
                     _maxParallelConnPerDownload = 1;
                 }
-                else if (value > Common.Constants.ParallelConnPerDownloadLimit)
+                else if (value > Constants.ParallelConnPerDownloadLimit)
                 {
-                    _maxParallelConnPerDownload = Common.Constants.ParallelConnPerDownloadLimit;
+                    _maxParallelConnPerDownload = Constants.ParallelConnPerDownloadLimit;
                 }
                 else
                 {

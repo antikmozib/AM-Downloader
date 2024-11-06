@@ -516,7 +516,7 @@ namespace AMDownloader.Models
                     {
                         while (true)
                         {
-                            var connFile = $"{Destination}.{currentConnNum}{Common.Constants.TempDownloadExtension}";
+                            var connFile = $"{Destination}.{currentConnNum}{Constants.TempDownloadExtension}";
                             var connFileInfo = new FileInfo(connFile);
                             var connStartPos = (TotalBytesToDownload ?? 0) / totalConnCount * currentConnNum;
 
@@ -790,7 +790,7 @@ namespace AMDownloader.Models
             var files = new List<FileInfo>();
             for (var i = 0; i < ConnLimit; i++)
             {
-                var tempFile = $"{Destination}.{i}{Common.Constants.TempDownloadExtension}";
+                var tempFile = $"{Destination}.{i}{Constants.TempDownloadExtension}";
                 if (File.Exists(tempFile))
                 {
                     files.Add(new FileInfo(tempFile));

@@ -287,7 +287,7 @@ namespace AMDownloader.Views
             }
             else
             {
-                openWithFolder = Common.Paths.UserDownloadsFolder;
+                openWithFolder = Constants.UserDownloadsFolder;
             }
 
             // Ensure there's a trailing slash so that FolderBrowserDialog opens inside SelectedPath

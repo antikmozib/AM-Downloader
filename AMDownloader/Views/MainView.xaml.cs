@@ -89,11 +89,11 @@ namespace AMDownloader.Views
 
             // Restore column order and widths.
 
-            if (File.Exists(Common.Paths.UIColumnOrderFile))
+            if (File.Exists(Constants.UIColumnOrderFile))
             {
                 try
                 {
-                    var restoreCols = Common.Functions.Deserialize<SerializingUIColumnList>(Common.Paths.UIColumnOrderFile);
+                    var restoreCols = Common.Deserialize<SerializingUIColumnList>(Constants.UIColumnOrderFile);
                     var gridCols = ((GridView)DownloadsListView.View).Columns;
 
                     for (int i = 0; i < restoreCols.Objects.Count; i++)
@@ -155,8 +155,8 @@ namespace AMDownloader.Views
 
             try
             {
-                Directory.CreateDirectory(Common.Paths.LocalAppDataFolder);
-                Common.Functions.Serialize(columnOrderList, Common.Paths.UIColumnOrderFile);
+                Directory.CreateDirectory(Constants.LocalAppDataFolder);
+                Common.Serialize(columnOrderList, Constants.UIColumnOrderFile);
             }
             catch (Exception ex)
             {

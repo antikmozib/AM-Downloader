@@ -17,7 +17,7 @@ namespace AMDownloader.Converters
             {
                 // Parent folder is root drive.
                 string parent = Path.GetDirectoryName(path);
-                return Common.Functions.GetDriveType(parent);
+                return Common.GetDriveType(parent);
             }
             return Path.GetFileName(Path.GetDirectoryName(path));
         }
