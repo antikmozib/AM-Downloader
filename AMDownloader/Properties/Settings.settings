@@ -65,7 +65,7 @@
     <Setting Name="RememberLastDownloadLocation" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="ReplacementMode" Type="AMDownloader.Models.FileReplacementMode" Scope="User">
+    <Setting Name="ReplacementMode" Type="AMDownloader.ViewModels.FileReplacementMode" Scope="User">
       <Value Profile="(Default)">Rename</Value>
     </Setting>
     <Setting Name="ClearCompletedDownloadsOnExit" Type="System.Boolean" Scope="User">
