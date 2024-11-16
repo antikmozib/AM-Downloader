@@ -32,7 +32,8 @@
                     Value="{DynamicResource {x:Static SystemColors.ControlLightBrushKey}}" />
         </Style>
     </Window.Resources>
-    <StackPanel Margin="8">
+
+    <StackPanel Margin="16">
         <DockPanel LastChildFill="True">
             <Label Content="*Maximum parallel downloads (1 - 10):" />
             <TextBox DockPanel.Dock="Right"
@@ -107,7 +108,7 @@
         </CheckBox>
 
         <Label Content="*Application restart required"
-               Margin="0 16 0 4" />
+               Margin="0 16 0 8" />
 
         <StackPanel HorizontalAlignment="Right"
                     Orientation="Horizontal"

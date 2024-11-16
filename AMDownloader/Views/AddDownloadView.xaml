@@ -25,7 +25,7 @@
         </Style>
     </Window.Resources>
 
-    <Grid Margin="8">
+    <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="auto" />
             <RowDefinition Height="8" />
