@@ -33,7 +33,7 @@
         </Style>
     </Window.Resources>
 
-    <StackPanel Margin="16">
+    <StackPanel Margin="12">
         <DockPanel LastChildFill="True">
             <Label Content="*Maximum parallel downloads (1 - 10):" />
             <TextBox DockPanel.Dock="Right"
