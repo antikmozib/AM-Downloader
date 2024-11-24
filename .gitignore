@@ -1,5 +1,5 @@
 Docs/
-package/*
+package/
 AMDownloader.svg
 
 ## Ignore Visual Studio temporary files, build results, and
