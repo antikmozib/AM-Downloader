@@ -26,8 +26,6 @@ namespace AMDownloader.Helpers
 
         public const string UpdateApiAddress = @"https://api.mozib.io/app-update/";
 
-        public const string UpdateApiAppId = "amdownloader";
-
         /// <summary>
         /// Gets the path to the %LOCALAPPDATA% folder.
         /// </summary>
