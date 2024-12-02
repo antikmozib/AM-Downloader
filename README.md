@@ -19,6 +19,10 @@ _System Requirements:_ Windows 7 SP1 or later with [.NET Desktop Runtime 6.0 (x8
 
 Download and run the setup program and follow its instructions.
 
+__Note:__ Future releases will only support Windows 10 and higher.
+
 ## Building
 
-Open the `.sln` file in Visual Studio 2022 and press F6.
+_Requirements:_ [.NET 8 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
+
+`clone` the repository, `cd` into the root directory and execute `dotnet build`.
