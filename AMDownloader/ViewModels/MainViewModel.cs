@@ -87,6 +87,7 @@ namespace AMDownloader.ViewModels
 
         private readonly UpdateServiceProvider _updateService = new UpdateServiceProvider(
             Constants.UpdateApiAppId,
+            Assembly.GetExecutingAssembly().GetName().Version.ToString(),
             AppPlatform.Windows,
             Constants.UpdateApiAddress);
 
@@ -1425,7 +1426,6 @@ namespace AMDownloader.ViewModels
         {
             try
             {
-                string appName = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyProductAttribute>().Product;
                 var currentVer = Assembly.GetExecutingAssembly().GetName().Version;
                 UpdateInfo latestUpdateInfo = await _updateService.GetUpdateInfoAsync();
                 if (latestUpdateInfo.IsNewerThan(currentVer))
