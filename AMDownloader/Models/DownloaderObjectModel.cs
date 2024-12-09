@@ -12,6 +12,7 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Serilog;
@@ -484,7 +485,6 @@ namespace AMDownloader.Models
 
                 var connTasks = new List<Task>();
                 var totalConnCount = ConnLimit;
-                var connCompletedCount = 0;
 
                 // If the file doesn't support resume or is too small, override ConnLimit.
                 if (!SupportsResume)
@@ -575,6 +575,10 @@ namespace AMDownloader.Models
                                 }
 
                                 using var connResponseMsg = await _httpClient.SendAsync(connRequestMsg, HttpCompletionOption.ResponseHeadersRead, _ctLinked);
+                                if (connResponseMsg.StatusCode != HttpStatusCode.PartialContent)
+                                {
+                                    throw new AMDownloaderException($"The URL response returned an invalid HttpStatusCode. ({connResponseMsg.StatusCode})");
+                                }
                                 using var readStream = await connResponseMsg.Content.ReadAsStreamAsync(_ctLinked);
                                 using var writeStream = new FileStream(
                                     connFile,
@@ -650,7 +654,6 @@ namespace AMDownloader.Models
                                 }
 
                                 Interlocked.Decrement(ref _connections);
-                                Interlocked.Increment(ref connCompletedCount);
 
                                 Log.Debug($"{Id}: Connection {currentConnNum} completed, Read this session = {readConnLength}");
 
@@ -660,7 +663,8 @@ namespace AMDownloader.Models
                             {
                                 if (ex is HttpRequestException
                                     || ex is TimeoutRejectedException
-                                    || (ex.InnerException != null && ex.InnerException is TimeoutException))
+                                    || ex?.InnerException is TimeoutException
+                                    || ex?.InnerException is SocketException sockEx && sockEx.ErrorCode == (int)SocketError.ConnectionReset)
                                 {
                                     // Make the specified number of attempts to establish a connection in case of failures.
                                     if (connFailureRetryAttempt++ < ConnFailureMaxRetryAttempts)
