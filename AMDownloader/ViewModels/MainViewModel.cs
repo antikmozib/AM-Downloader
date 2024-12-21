@@ -86,10 +86,10 @@ namespace AMDownloader.ViewModels
         private bool _resetAllSettingsOnClose;
 
         private readonly UpdateServiceProvider _updateService = new UpdateServiceProvider(
+            Constants.UpdateApiAddress,
             Constants.UpdateApiAppId,
             Assembly.GetExecutingAssembly().GetName().Version.ToString(),
-            AppPlatform.Windows,
-            Constants.UpdateApiAddress);
+            IntPtr.Size == 8);
 
         #endregion
 
