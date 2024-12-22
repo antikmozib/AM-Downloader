@@ -84,12 +84,20 @@ namespace AMDownloader.ViewModels
         private readonly object _bytesDownloadedLock;
 
         private bool _resetAllSettingsOnClose;
-
+#if DEBUG
         private readonly UpdateServiceProvider _updateService = new UpdateServiceProvider(
+            Assembly.GetExecutingAssembly().Location,
             Constants.UpdateApiAddress,
             Constants.UpdateApiAppId,
-            Assembly.GetExecutingAssembly().GetName().Version.ToString(),
+            false,
+            InstallMethod.Installed);
+#else
+        private readonly UpdateServiceProvider _updateService = new UpdateServiceProvider(
+            Assembly.GetExecutingAssembly().Location,
+            Constants.UpdateApiAddress,
+            Constants.UpdateApiAppId,
             IntPtr.Size == 8);
+#endif
 
         #endregion
 
@@ -1564,6 +1572,6 @@ namespace AMDownloader.ViewModels
             }
         }
 
-        #endregion    
+        #endregion
     }
 }
