@@ -7,7 +7,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon>Resources\Icons\AMDownloader.ico</ApplicationIcon>
     <Description>A modern download manager for Windows.</Description>
-    <Copyright>Copyright © 2020-2024 Antik Mozib. All rights reserved.</Copyright>
+    <Copyright>Copyright © 2020-2025 Antik Mozib. All rights reserved.</Copyright>
     <StartupObject />
     <AssemblyVersion>1.3.4.0</AssemblyVersion>
     <Platforms>AnyCPU;x86;x64</Platforms>
