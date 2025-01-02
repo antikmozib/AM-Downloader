@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Antik Mozib. All rights reserved.
+// Copyright (C) 2020-2025 Antik Mozib. All rights reserved.
 
 using System;
 using System.Globalization;

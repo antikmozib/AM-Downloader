@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Copyright (C) 2020-2025 Antik Mozib. All rights reserved.
+
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
