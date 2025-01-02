@@ -754,7 +754,7 @@ namespace AMDownloader.Models
         /// <param name="sources">The list of files to merge.</param>
         /// <param name="target">The output file of the merging operation.</param>
         /// <param name="deleteSource">If <see langword="true"/>, the sources will be deleted once merged.</param>
-        private static void MergeFiles(IEnumerable<string> sources, string target, bool deleteSource = true)
+        private void MergeFiles(IEnumerable<string> sources, string target, bool deleteSource = true)
         {
             using var writeStream = new FileStream(target, FileMode.OpenOrCreate, FileAccess.Write);
             using var writer = new BinaryWriter(writeStream);
@@ -764,6 +764,7 @@ namespace AMDownloader.Models
                 {
                     continue;
                 }
+
 
                 var readStream = new FileStream(source, FileMode.Open);
                 var reader = new BinaryReader(readStream);
@@ -778,6 +779,9 @@ namespace AMDownloader.Models
 
                 reader.Dispose();
                 readStream.Dispose();
+
+                Log.Debug($"{Id}: Merged {source} into {target}");
+
                 if (deleteSource)
                 {
                     File.Delete(source);
