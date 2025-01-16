@@ -780,7 +780,9 @@ namespace AMDownloader.Models
                 reader.Dispose();
                 readStream.Dispose();
 
-                Log.Debug($"{Id}: Merged {source} into {target}");
+                var parts = source.Split('.');
+                var partNum = parts[^2] + "." + parts[^1];
+                Log.Debug($"{Id}: Merged {partNum}");
 
                 if (deleteSource)
                 {
