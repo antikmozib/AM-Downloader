@@ -123,6 +123,11 @@ namespace AMDownloader.Views
                     Log.Error(ex, ex.Message);
                 }
             }
+
+            if (WindowState == WindowState.Minimized)
+            {
+                WindowState = WindowState.Normal;
+            }
         }
 
         private void Window_Closing(object sender, CancelEventArgs e)
