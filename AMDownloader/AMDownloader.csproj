@@ -68,10 +68,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Properties\PublishProfiles\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Reference Include="AppUpdater">
       <HintPath>..\Libraries\AppUpdater.dll</HintPath>
     </Reference>
