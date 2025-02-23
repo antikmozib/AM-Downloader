@@ -226,10 +226,12 @@ namespace AMDownloader.ViewModels
             Closing += closing;
             Closed += closed;
 
-            _client = new HttpClient
+            _client = new HttpClient();
+            var connectionTimeout = TimeSpan.FromMilliseconds(Settings.Default.ConnectionTimeout);
+            if (connectionTimeout.TotalSeconds > 0)
             {
-                Timeout = TimeSpan.FromMilliseconds(Settings.Default.ConnectionTimeout)
-            };
+                _client.Timeout = connectionTimeout;
+            }
 
             _progressReporter = new Progress<long>(value =>
             {
