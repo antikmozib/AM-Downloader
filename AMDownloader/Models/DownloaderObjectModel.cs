@@ -247,7 +247,7 @@ namespace AMDownloader.Models
 
             RaiseEvent(DownloadCreated);
 
-            Log.Debug($"{Id}: Created, Status = {Status}");
+            Log.Debug($"{Name}: Created, Status = {Status}");
         }
 
         #endregion
@@ -342,7 +342,7 @@ namespace AMDownloader.Models
                     Status = DownloadStatus.Errored;
                     if (ex is AMDownloaderUrlException || ex.InnerException is AMDownloaderUrlException)
                     {
-                        Log.Debug($"{Id}: {ex.Message}");
+                        Log.Debug($"{Name}: {ex.Message}");
                     }
                     else
                     {
@@ -364,7 +364,7 @@ namespace AMDownloader.Models
             RaisePropertyChanged(nameof(Status));
             RaiseEvent(DownloadStopped);
 
-            Log.Debug($"{Id}: Processed, Status = {Status}");
+            Log.Debug($"{Name}: Processed, Status = {Status}");
         }
 
         public void Pause()
@@ -504,7 +504,7 @@ namespace AMDownloader.Models
                 }
 
                 Log.Debug(
-                    $"{Id}: "
+                    $"{Name}: "
                     + $"Total = {TotalBytesToDownload}, "
                     + $"Remaining = {TotalBytesToDownload - BytesDownloaded}, "
                     + $"Connections = {totalConnCount}");
@@ -551,7 +551,7 @@ namespace AMDownloader.Models
                                 // Connection already completed its allocated bytes.
                                 if (connLength <= 0)
                                 {
-                                    Log.Debug($"{Id}: Connection {currentConnNum} already completed.");
+                                    Log.Debug($"{Name}: Connection {currentConnNum} already completed.");
 
                                     return;
                                 }
@@ -597,7 +597,7 @@ namespace AMDownloader.Models
 
                                 //Log.Debug($"Connection {connId} speed limit = {connSpeedLimit}");
 
-                                Log.Debug($"{Id}: Connection {currentConnNum} starting, To read this session = {connLength}");
+                                Log.Debug($"{Name}: Connection {currentConnNum} starting, To read this session = {connLength}");
 
                                 Interlocked.Increment(ref _connections);
 
@@ -652,7 +652,7 @@ namespace AMDownloader.Models
                                 Interlocked.Decrement(ref _connections);
                                 Interlocked.Increment(ref connCompletedCount);
 
-                                Log.Debug($"{Id}: Connection {currentConnNum} completed, Read this session = {readConnLength}");
+                                Log.Debug($"{Name}: Connection {currentConnNum} completed, Read this session = {readConnLength}");
 
                                 break;
                             }
@@ -666,7 +666,7 @@ namespace AMDownloader.Models
                                     if (connFailureRetryAttempt++ < ConnFailureMaxRetryAttempts)
                                     {
                                         Log.Debug(
-                                            $"{Id}: {ex.GetType().Name} occurred for connection {currentConnNum}. "
+                                            $"{Name}: {ex.GetType().Name} occurred for connection {currentConnNum}. "
                                             + $"Retrying (attempt {connFailureRetryAttempt} of {ConnFailureMaxRetryAttempts})...");
 
                                         await Task.Delay(connFailureRetryAttempt * ConnAttemptDelay);
@@ -782,7 +782,7 @@ namespace AMDownloader.Models
 
                 var parts = source.Split('.');
                 var partNum = parts[^2] + "." + parts[^1];
-                Log.Debug($"{Id}: Merged {partNum}");
+                Log.Debug($"{Name}: Merged {partNum}");
 
                 if (deleteSource)
                 {
