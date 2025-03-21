@@ -84,19 +84,22 @@ namespace AMDownloader.ViewModels
         private readonly object _bytesDownloadedLock;
 
         private bool _resetAllSettingsOnClose;
+
 #if DEBUG
         private readonly UpdateServiceProvider _updateService = new UpdateServiceProvider(
-            Assembly.GetExecutingAssembly().Location,
             Constants.UpdateApiAddress,
             Constants.UpdateApiAppId,
-            false,
-            InstallMethod.Installed);
+            FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).FileVersion,
+            AppArchitecture.X86_32,
+            InstallMethod.Installer,
+            AppChannel.Release);
 #else
         private readonly UpdateServiceProvider _updateService = new UpdateServiceProvider(
             Assembly.GetExecutingAssembly().Location,
             Constants.UpdateApiAddress,
             Constants.UpdateApiAppId,
-            IntPtr.Size == 8);
+            IntPtr.Size == 8 ? AppArchitecture.X86_64 : AppArchitecture.X86_32,
+            AppChannel.Release);
 #endif
 
         #endregion
