@@ -190,7 +190,7 @@ namespace AMDownloader.Views
         {
             var cultureInfo = CultureInfo.CurrentCulture;
             var name = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyProductAttribute>().Product;
-            var version = Assembly.GetExecutingAssembly().GetName().Version;
+            var version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
             var copyright = Assembly
                 .GetExecutingAssembly()
                 .GetCustomAttributes(typeof(AssemblyCopyrightAttribute), true)

@@ -9,7 +9,8 @@
         <Description>A modern download manager for Windows.</Description>
         <Copyright>Copyright © 2020-2025 Antik Mozib. All rights reserved.</Copyright>
         <StartupObject />
-        <AssemblyVersion>1.3.4</AssemblyVersion>
+        <Version>1.3.4</Version>
+        <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
         <Platforms>AnyCPU;x86;x64</Platforms>
         <DelaySign>true</DelaySign>
         <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
