@@ -91,15 +91,13 @@ namespace AMDownloader.ViewModels
             Constants.UpdateApiAppId,
             FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).FileVersion,
             AppArchitecture.X86_32,
-            InstallMethod.Installer,
-            AppChannel.Release);
+            InstallMethod.Installer);
 #else
         private readonly UpdateServiceProvider _updateService = new UpdateServiceProvider(
             Assembly.GetExecutingAssembly().Location,
             Constants.UpdateApiAddress,
             Constants.UpdateApiAppId,
-            IntPtr.Size == 8 ? AppArchitecture.X86_64 : AppArchitecture.X86_32,
-            AppChannel.Release);
+            IntPtr.Size == 8 ? AppArchitecture.X86_64 : AppArchitecture.X86_32);
 #endif
 
         #endregion
@@ -1439,7 +1437,7 @@ namespace AMDownloader.ViewModels
         {
             try
             {
-                var currentVer = Assembly.GetExecutingAssembly().GetName().Version;
+                var currentVer = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
                 UpdateInfo latestUpdateInfo = await _updateService.GetUpdateInfoAsync();
                 if (latestUpdateInfo.IsNewerThan(currentVer))
                 {
