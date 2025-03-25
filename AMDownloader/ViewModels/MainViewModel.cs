@@ -89,7 +89,7 @@ namespace AMDownloader.ViewModels
         private readonly UpdateServiceProvider _updateService = new UpdateServiceProvider(
             Constants.UpdateApiAddress,
             Constants.UpdateApiAppId,
-            FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).FileVersion,
+            FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).ProductVersion,
             AppArchitecture.X86_32,
             InstallMethod.Installer);
 #else

@@ -460,7 +460,14 @@ namespace AMDownloader.Views
 
             if (result == downloadButton)
             {
-                Process.Start("explorer.exe", latestUpdateInfo.FileUrl);
+                if (!string.IsNullOrEmpty(latestUpdateInfo.FileUrl))
+                {
+                    Process.Start("explorer.exe", latestUpdateInfo.FileUrl);
+                }
+                else
+                {
+                    Process.Start("explorer.exe", latestUpdateInfo.UpdateInfoUrl);
+                }
             }
             else if (result == noReminderButton)
             {
