@@ -463,6 +463,7 @@ namespace AMDownloader.Views
                 if (!string.IsNullOrEmpty(latestUpdateInfo.FileUrl))
                 {
                     Process.Start("explorer.exe", latestUpdateInfo.FileUrl);
+                    Close();
                 }
                 else
                 {
