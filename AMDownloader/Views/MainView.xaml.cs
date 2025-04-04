@@ -191,6 +191,7 @@ namespace AMDownloader.Views
             var cultureInfo = CultureInfo.CurrentCulture;
             var name = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyProductAttribute>().Product;
             var version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+            var arch = IntPtr.Size == 8 ? "64-bit" : "32-bit";
             var copyright = Assembly
                 .GetExecutingAssembly()
                 .GetCustomAttributes(typeof(AssemblyCopyrightAttribute), true)
@@ -207,7 +208,7 @@ namespace AMDownloader.Views
                 MainIcon = TaskDialogIcon.Information,
                 WindowTitle = "About",
                 MainInstruction = name,
-                Content = $"Version {version}\n\n{copyright}\n{websiteDisplay}"
+                Content = $"Version {version} ({arch})\n\n{copyright}\n{websiteDisplay}"
             };
 
             aboutDialog.HyperlinkClicked += (s, e) =>
