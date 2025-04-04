@@ -208,7 +208,10 @@ namespace AMDownloader.Views
                 MainIcon = TaskDialogIcon.Information,
                 WindowTitle = "About",
                 MainInstruction = name,
-                Content = $"Version {version} ({arch})\n\n{copyright}\n{websiteDisplay}"
+                Content = $"Version {version} ({arch})"
+                    + $"\n\n{copyright.Substring(0, copyright.IndexOf('.'))}"
+                    + $"\n{copyright.Substring(copyright.IndexOf('.') + 2).Replace('.', ' ')}"
+                    + $"\n\n{websiteDisplay}"
             };
 
             aboutDialog.HyperlinkClicked += (s, e) =>
