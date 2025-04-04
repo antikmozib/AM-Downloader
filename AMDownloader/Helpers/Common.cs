@@ -15,11 +15,11 @@ namespace AMDownloader.Helpers
      /// <returns>The extracted filename if the URL is valid, otherwise an empty string.</returns>
         public static string GetFileNameFromUrl(string url)
         {
-            bool success = Uri.TryCreate(url, UriKind.Absolute, out Uri uri);
+            bool success = Uri.TryCreate(url, UriKind.RelativeOrAbsolute, out Uri uri);
 
             if (success)
             {
-                return System.IO.Path.GetFileName(uri.LocalPath);
+                return Path.GetFileName(uri.LocalPath);
             }
             else
             {

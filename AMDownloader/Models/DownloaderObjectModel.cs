@@ -451,6 +451,7 @@ namespace AMDownloader.Models
         private async Task DownloadAsync()
         {
             var timeoutPolicy = Policy.TimeoutAsync(_httpClient.Timeout);
+            var downloadUri = new Uri(Url);
 
             // Reports the lifetime number of bytes.
             IProgress<int> progressReporter = new Progress<int>((value) =>
@@ -462,7 +463,7 @@ namespace AMDownloader.Models
 
             try
             {
-                using (var request = new HttpRequestMessage(HttpMethod.Get, new Uri(Url)))
+                using (var request = new HttpRequestMessage(HttpMethod.Get, downloadUri))
                 {
                     using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, _ctLinked);
 
@@ -472,6 +473,9 @@ namespace AMDownloader.Models
                     {
                         throw new AMDownloaderUrlException($"The URL returned an invalid HttpStatusCode. ({StatusCode})");
                     }
+
+                    // Get the final uri after possible redirects
+                    downloadUri = response.RequestMessage.RequestUri;
 
                     // Get the size of the download
                     TotalBytesToDownload = response.Content.Headers.ContentLength;
@@ -568,7 +572,7 @@ namespace AMDownloader.Models
 
                             try
                             {
-                                using var connRequestMsg = new HttpRequestMessage(HttpMethod.Get, Url);
+                                using var connRequestMsg = new HttpRequestMessage(HttpMethod.Get, downloadUri);
                                 if (SupportsResume)
                                 {
                                     connRequestMsg.Headers.Range = new RangeHeaderValue(connStartPos, connEndPos - 1);
