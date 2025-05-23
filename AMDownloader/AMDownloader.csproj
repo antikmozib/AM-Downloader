@@ -16,6 +16,7 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <Product>AM Downloader</Product>
     <AssemblyName>AM Downloader</AssemblyName>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
