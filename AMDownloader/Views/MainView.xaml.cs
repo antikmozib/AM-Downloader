@@ -191,7 +191,7 @@ namespace AMDownloader.Views
             var cultureInfo = CultureInfo.CurrentCulture;
             var name = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyProductAttribute>().Product;
             var version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
-            var arch = IntPtr.Size == 8 ? "64-bit" : "32-bit";
+            var arch = IntPtr.Size == 8 ? "x64" : "x86";
             var copyright = Assembly
                 .GetExecutingAssembly()
                 .GetCustomAttributes(typeof(AssemblyCopyrightAttribute), true)
