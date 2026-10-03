@@ -48,11 +48,6 @@ namespace AMDownloader.Helpers
             if (isDirectory)
             {
                 fileAttributes = Native.Shell32.FILE_ATTRIBUTE_DIRECTORY;
-
-                if (Directory.Exists(path))
-                {
-                    flags = Native.Shell32.SHGFI_ICON | Native.Shell32.SHGFI_LARGEICON;
-                }
             }
             else
             {
@@ -73,6 +68,11 @@ namespace AMDownloader.Helpers
             imageSource = Imaging.CreateBitmapSourceFromHIcon(icon.Handle,
                 new Int32Rect(0, 0, icon.Width, icon.Height),
                 BitmapSizeOptions.FromEmptyOptions());
+
+            if (imageSource.CanFreeze)
+            {
+                imageSource.Freeze();
+            }
 
             // Save the keys and images.
             if (isDirectory)
