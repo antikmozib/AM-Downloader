@@ -92,7 +92,7 @@ namespace AMDownloader.Helpers
             }
 
             // Cleanup.
-            Native.User32.DestroyIcon(shFileInfo.hIcon);
+            _ = Native.User32.DestroyIcon(shFileInfo.hIcon);
 
             return imageSource;
         }
